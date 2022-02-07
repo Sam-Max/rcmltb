@@ -55,27 +55,23 @@ def add_handlers(bot: TelegramClient):
 
     bot.add_event_handler(
         handle_exec_message_f,
-        events.NewMessage(pattern=command_process(get_command("EXEC")),
-                          chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command("EXEC")))
     )
 
     bot.add_event_handler(
         about_me,
-        events.NewMessage(pattern=command_process(get_command("ABOUT")),
-                          chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command("ABOUT")))
     )
 
     bot.add_event_handler(
         get_logs_f,
-        events.NewMessage(pattern=command_process(get_command("GETLOGS")),
-                          chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command("GETLOGS")))
     )
 
 
     bot.add_event_handler(
         handle_server_command,
-        events.NewMessage(pattern=command_process(get_command("SERVER")),
-                          chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command("SERVER")))
     )
 
     bot.add_event_handler(
@@ -85,43 +81,29 @@ def add_handlers(bot: TelegramClient):
 
     bot.add_event_handler(
         speed_handler,
-        events.NewMessage(pattern=command_process(get_command("SPEEDTEST")),
-                          chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command("SPEEDTEST")))
     )
 
     bot.add_event_handler(
         cleardata_handler,
-        events.NewMessage(pattern=command_process(get_command("CRLDATA")),
-                          chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command("CRLDATA")))
     )
 
     bot.add_event_handler(
         handle_settings_command,
-        events.NewMessage(pattern=command_process(get_command("SETTINGS")),
-                          chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command("SETTINGS")))
     )
 
-    # signal.signal(signal.SIGINT, partial(term_handler,client=bot))
-    # signal.signal(signal.SIGTERM, partial(term_handler,client=bot))
     bot.loop.run_until_complete(booted(bot))
 
-    # *********** Callback Handlers ***********
-        
-    #pyrogram
-    @bot.pyro.on_callback_query()
-    async def callback_handler(client, callback_query):
-        data= callback_query.data
-        if "upcancel" in data: 
-            await handle_cancel(callback_query)
-        else:
-          pass    
+    # *********** Callback Handlers ***********  
 
     #telethon
 
-    # bot.add_event_handler(
-    #     handle_cancel,
-    #     events.CallbackQuery(pattern="upcancel")
-    # )
+    bot.add_event_handler(
+        handle_cancel,
+        events.CallbackQuery(pattern="upcancel")
+    )
 
     bot.add_event_handler(
         handle_server_command,
@@ -145,14 +127,17 @@ async def handle_download_command(client, message):
     await down_load_media_pyro(client, message)
 
 async def handle_copy_command(e):
-    header = "Seleccione unidad origen"
-    await copy(e, header, origin_menu=True, destination_menu=False)
-
+    if await is_admin(e.sender_id):
+         header = "Seleccione unidad origen"
+         await copy(e, header, origin_menu=True, destination_menu=False)
+    else:
+       await e.delete()
 
 async def speed_handler(e):
-    if await is_admin(e.client, e.sender_id, e.chat_id):
+    if await is_admin(e.sender_id):
         await get_speed(e)
-
+    else:
+        await e.delete()    
 
 async def handle_test_command(client, message):
     pass
@@ -180,17 +165,16 @@ async def handle_cancel(callback_query):
         torlog.info("Data is {}".format(data))
         SessionVars.update_var("UPCANCEL", True)
         # data = data.split(" ")
-        
 
 async def handle_settings_command(e):
-    if await is_admin(e.client, e.sender_id, e.chat_id):
+    if await is_admin(e.sender_id):
         await handle_settings(e)
     else:
-        await e.delete()
+        await e.delete()    
 
 
 async def handle_settings_cb(e):
-    if await is_admin(e.client, e.sender_id, e.chat_id):
+    if await is_admin(e.sender_id):
         await handle_setting_callback(e)
     else:
         await e.answer("⚠️ WARN ⚠️ Dont Touch Admin Settings.", alert=True)
@@ -244,7 +228,7 @@ async def handle_exec_message_f(e):
 
 
 async def get_logs_f(e):
-    if await is_admin(e.client, e.sender_id, e.chat_id, force_owner=True):
+    if await is_admin(e.sender_id):
         await e.client.send_file(
             entity=e.chat_id,
             file="torlog.txt",
@@ -255,9 +239,12 @@ async def get_logs_f(e):
         await e.delete()
 
 
-async def start_handler(event):
-    msg = "Hola bienvenido. Disfrute de este bot."
-    await event.reply(msg)
+async def start_handler(e):
+    if await is_admin(e.sender_id):
+        msg = "Hola bienvenido. Disfrute de este bot."
+        await e.reply(msg)
+    else:
+        await e.delete()
 
 
 def progress_bar(percentage):
@@ -393,26 +380,15 @@ async def handle_server_command(message):
 
 
 async def about_me(message):
-    val1 = get_val("LEECH_ENABLED")
-    if val1 is not None:
-        if val1:
-            leen = "Leech command enabled by admin."
-        else:
-            leen = "Leech command disabled by admin."
-    else:
-        leen = "N/A"
-
     diff = time.time() - uptime
     diff = human_format.human_readable_timedelta(diff)
 
     msg = (
-        "<b>Name</b>: <code>RcloneTg1.0</code>\n"
         f"<b>Telethon Version</b>: {telever}\n"
         f"<b>Pyrogram Version</b>: {pyrover}\n"
         "<u>Currents Configs:-</u>\n\n"
         f"<b>Bot Uptime:-</b> {diff}\n"
         "<b>Upload Engine:-</b> <code>RCLONE</code> \n"
-        f"<b>Leech:- </b> <code>{leen}</code>\n"
         "\n"
     )
 
@@ -420,7 +396,7 @@ async def about_me(message):
 
 
 async def cleardata_handler(e):
-    if await is_admin(e.client, e.sender_id, e.chat_id):
+    if await is_admin(e.sender_id):
         if isinstance(e, events.CallbackQuery.Event):
             data = e.data.decode("UTF-8").split(" ")
             if data[1] == "yes":
@@ -441,12 +417,11 @@ async def cleardata_handler(e):
 
 
 async def booted(client):
-    chats = get_val("ALD_USR")
-    for i in chats:
-        try:
-            await client.send_message(i, "El bot se ha iniciado y está listo para usar")
-        except Exception as e:
-            torlog.info(f"Not found the entity {i}")
+    id = get_val("OWNER_ID")
+    try:
+        await client.send_message(id, "El bot se ha iniciado y está listo para usar")
+    except Exception as e:
+        torlog.info(f"Not found the entity {id}")
 
 
 def command_process(command):

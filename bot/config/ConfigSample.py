@@ -6,8 +6,6 @@ class ExecConfig:
         API_ID = 0
         BOT_TOKEN = ""
 
-        # ALLOWED USERS [ids of user or supergroup] seperate by commas
-        ALD_USR = []
         OWNER_ID = 0
         
         # Chracter to use as a completed progress 
@@ -28,15 +26,11 @@ class ExecConfig:
         # if upload process is canceled        
         UPCANCEL= False
         
-        # This value will be considered only if Rclone is True - this may be defied now ;)
-        # Cuz at least one needs to be Ture at a time either RCLONE or Leech.
-        LEECH_ENABLED = True
-
         # For vps set path here or you can use runtime too
         RCLONE_CONFIG= os.path.join(os.getcwd(), 'rclone.conf')
         
         # Name of the RCLONE drive from the config
-        DEF_RCLONE_DRIVE = ""
+        DEF_RCLONE_DRIVE = "teamdrive"
 
         # if upload process is canceled        
         UPCANCEL= False
@@ -48,8 +42,6 @@ class ExecConfig:
         # /leech@Bot so the value will be @Bot
         BOT_CMD_POSTFIX = "" 
 
-        # CHANGE THESE AT YOUR RISK
-        RSTUFF = False
         
 
 
