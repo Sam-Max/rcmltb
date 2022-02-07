@@ -5,7 +5,7 @@ from .human_format import human_readable_bytes
 torlog = logging.getLogger(__name__)
 
 async def get_speed(message):
-    imspd = await message.reply("`Running speedtest...`")
+    imspd = await message.reply("Running speedtest...")
     test = Speedtest()
     test.get_best_server()
     test.download()
