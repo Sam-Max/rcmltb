@@ -32,9 +32,6 @@ class ExecConfig:
         # Name of the RCLONE drive from the config
         DEF_RCLONE_DRIVE = "teamdrive"
 
-        # if upload process is canceled        
-        UPCANCEL= False
-
         # Time to wait before edit message
         EDIT_SLEEP_SECS = 10
 

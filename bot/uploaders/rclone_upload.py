@@ -79,9 +79,6 @@ class RcloneUploader():
             self._rclone_pr = rclone_pr
             rcres= await self.rclone_process_update()
 
-            if(await self.check_errors(rclone_pr, self._user_msg)):
-                return
-        
             if rcres:
                 rclone_pr.kill()
                 await self._user_msg.edit("Subida cancelada")
@@ -107,9 +104,6 @@ class RcloneUploader():
             rcres= await self.rclone_process_update()
 
 
-            if(await self.check_errors(rclone_pr, self._user_msg)):
-                return
-        
             if rcres:
                 rclone_pr.kill()
                 await self._user_msg.edit("Subida cancelada")
@@ -179,21 +173,21 @@ class RcloneUploader():
 
         return None
 
-    async def check_errors(self, rclone, usermsg):
-        blank = 0
-        while True:
-            data = rclone.stderr.readline().decode()
-            data = data.strip()
-            if data == "":
-                blank += 1
-                if blank == 5:
-                    break
-            else:
-                mat= data
-                if mat is not None:
-                    if len(mat) > 0:
-                        log.info(f'Error:-{mat}')
-                        await usermsg.edit(mat)
-                        return True                 
+    # async def check_errors(self, rclone, usermsg):
+    #     blank = 0
+    #     while True:
+    #         data = rclone.stderr.readline().decode()
+    #         data = data.strip()
+    #         if data == "":
+    #             blank += 1
+    #             if blank == 5:
+    #                 break
+    #         else:
+    #             mat= data
+    #             if mat is not None:
+    #                 if len(mat) > 0:
+    #                     log.info(f'Error:-{mat}')
+    #                     await usermsg.edit(mat)
+    #                     return True                 
 
    
