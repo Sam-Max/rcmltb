@@ -22,10 +22,6 @@
         "description": "get this value from @BotFather",
         "value": ""
       },
-      "ALD_USR": {
-        "description": "should be an integer [123456].",
-        "value": ""
-      },
       "OWNER_ID": {
         "description": "should be an integer.",
         "value": ""
