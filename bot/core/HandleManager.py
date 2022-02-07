@@ -198,7 +198,7 @@ async def handle_exec_message_f(e):
         return
     message = e
     client = e.client
-    if await is_admin(client, message.sender_id, message.chat_id, force_owner=True):
+    if await is_admin(message.sender_id):
         PROCESS_RUN_TIME = 100
         cmd = message.text.split(" ", maxsplit=1)[1]
 
