@@ -62,13 +62,8 @@ class RcloneUploader():
             return 
 
         if os.path.isdir(path):
-            # handle dirs
             new_dest_base = os.path.join(self.dest_base, os.path.basename(path))
-            if get_val("RSTUFF"):
-                rclone_copy_cmd = [get_val("RSTUFF"), 'copy', f'--config={conf_path}', str(path),
-                                    f'{dest_drive}:{new_dest_base}', '-P']
-            else:
-                rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', str(path),
+            rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', str(path),
                                     f'{dest_drive}:{new_dest_base}', '-P']
 
             rclone_pr = subprocess.Popen(
@@ -79,6 +74,9 @@ class RcloneUploader():
             self._rclone_pr = rclone_pr
             rcres= await self.rclone_process_update()
 
+            # if(await self.check_errors(rclone_pr, self._user_msg)):
+            #     return
+        
             if rcres:
                 rclone_pr.kill()
                 await self._user_msg.edit("Subida cancelada")
@@ -88,11 +86,7 @@ class RcloneUploader():
 
         else:
             new_dest_base = self.dest_base
-            if get_val("RSTUFF"):
-                rclone_copy_cmd = [get_val("RSTUFF"), 'copy', f'--config={conf_path}', str(path),
-                                    f'{dest_drive}:{new_dest_base}', '-P']
-            else:
-                rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', str(path),
+            rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', str(path),
                                     f'{dest_drive}:{new_dest_base}', '-P']
 
             rclone_pr = subprocess.Popen(
@@ -104,6 +98,9 @@ class RcloneUploader():
             rcres= await self.rclone_process_update()
 
 
+            # if(await self.check_errors(rclone_pr, self._user_msg)):
+            #     return
+        
             if rcres:
                 rclone_pr.kill()
                 await self._user_msg.edit("Subida cancelada")
@@ -119,7 +116,6 @@ class RcloneUploader():
         sleeps = False
         start = time.time()
         edit_time = get_val("EDIT_SLEEP_SECS")
-        mat1=""
         
         while True:
             data = process.stdout.readline().decode()
@@ -141,12 +137,10 @@ class RcloneUploader():
                             percent = 0
                         prg = status(percent)
 
-                        if mat1 != mat:
-                            msg = "<b>Subiendo...\n{} \n{} \nVelocidad:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
-                            data = "upcancel"
-                            await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
-                                    InlineKeyboardButton("Cancel", callback_data=data)]]))
-                            mat1= mat            
+                        msg = "<b>Subiendo...\n{} \n{} \nVelocidad:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
+                        data = "upcancel"
+                        await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
+                                InlineKeyboardButton("Cancel", callback_data=data)]]))
         
 
             if data == "":
@@ -188,6 +182,6 @@ class RcloneUploader():
     #                 if len(mat) > 0:
     #                     log.info(f'Error:-{mat}')
     #                     await usermsg.edit(mat)
-    #                     return True                 
+    #                     return True            
 
    
