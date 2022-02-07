@@ -2,6 +2,7 @@
 
 #Commands for bot 
 - subir - subir a la nube 
+- copiar - copiar de una nube a la otra
 - configuracion - configurar rclone 
 - info - info del bot 
 - exec - ejecutar comandos linux 
