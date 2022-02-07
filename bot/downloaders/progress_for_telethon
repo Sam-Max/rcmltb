@@ -1,4 +1,6 @@
 from datetime import timedelta
+import math
+import time
 
 FINISHED_PROGRESS_STR = "■"
 UN_FINISHED_PROGRESS_STR = "□"
