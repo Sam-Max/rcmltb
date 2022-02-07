@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from bot.uploaders.rclone_copy_upload import rclone_copy_upload
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 from bot import SessionVars
+from bot.uploaders.rclone_copy import copy, list_selected_drive
 import asyncio as aio
 from .getVars import get_val
 from functools import partial
@@ -352,3 +354,47 @@ async def get_int_variable(var_name, menu, callback_name, session_id):
     )
 
     # todo handle the list value
+
+
+async def handle_copy_callback(e):
+    
+    conf_path = await get_config()
+    des_base = "/"
+    cmd = e.data.decode().split(" ")
+
+    if cmd[1] == "set_dir_origin":
+        torlog.info("DIR: {}".format(cmd[2]))
+        SessionVars.update_var("ORIGIN_DRIVE", cmd[2])
+        header_local = 'Selecciones carpeta desde la cual quieres copiar'
+        await list_selected_drive(e, header_local, cmd[2], des_base, conf_path, "set_drive_dest")
+
+    elif cmd[1] == "set_drive_dest":
+        header_local = '<u>Seleccione unidad destino</u>'
+        torlog.info("DIR: {}".format(cmd[2]))
+        SessionVars.update_var("DIR_ORIGIN", cmd[2])
+        await copy(e, header_local, origin_menu=False, destination_menu=True)
+
+    elif cmd[1] == "set_dir_dest":
+        torlog.info("DIR: {}".format(cmd[2]))
+        SessionVars.update_var("DEST_DRIVE", cmd[2])
+        header_local = 'Seleccione carpeta a la cual quieres copiar'
+        await list_selected_drive(e, header_local, cmd[2], des_base, conf_path, "start_copy")
+
+    elif cmd[1] == "start_copy":
+        torlog.info("DIR: {}".format(cmd[2]))
+        SessionVars.update_var("DIR_DEST", cmd[2])
+        await rclone_copy_upload(e, conf_path)
+
+    elif cmd[1] == "close":
+        await e.answer("Closed")
+        await e.delete()
+
+
+async def get_config():
+    config = get_val("RCLONE_CONFIG")
+    if config is not None:
+        if isinstance(config, str):
+            if os.path.exists(config):
+                return config
+
+    return None

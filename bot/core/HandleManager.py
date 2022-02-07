@@ -21,6 +21,7 @@ from pyrogram import filters
 from pyrogram.handlers import MessageHandler
 from .settings import handle_settings, handle_setting_callback
 from bot.downloaders.telegram_download import LOGGER, down_load_media_pyro
+from bot.uploaders.rclone_copy import copy
 import asyncio as aio
 import re, logging, time, os, psutil, shutil, signal
 from bot import __version__
@@ -48,6 +49,11 @@ def add_handlers(bot: TelegramClient):
    # telethon handlers
 
     bot.add_event_handler(
+        handle_copy_command,
+        events.NewMessage(pattern=command_process(get_command("COPY")))
+    )
+
+    bot.add_event_handler(
         handle_exec_message_f,
         events.NewMessage(pattern=command_process(get_command("EXEC")),
                           chats=get_val("ALD_USR"))
@@ -64,7 +70,6 @@ def add_handlers(bot: TelegramClient):
         events.NewMessage(pattern=command_process(get_command("GETLOGS")),
                           chats=get_val("ALD_USR"))
     )
-
 
 
     bot.add_event_handler(
@@ -138,6 +143,10 @@ def add_handlers(bot: TelegramClient):
 
 async def handle_download_command(client, message):
     await down_load_media_pyro(client, message)
+
+async def handle_copy_command(e):
+    header = "Seleccione unidad origen"
+    await copy(e, header, origin_menu=True, destination_menu=False)
 
 
 async def speed_handler(e):

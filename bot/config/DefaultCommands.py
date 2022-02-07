@@ -1,5 +1,6 @@
 class Commands:
     LEECH = "subir"
+    COPY = "copiar"
     SETTINGS= "configuracion"
     EXEC = "exec"
     ABOUT = "info"
