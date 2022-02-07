@@ -26,21 +26,17 @@ def menu_drive_create(menu, query):
     conf = configparser.ConfigParser()
     conf.read(path)
 
-    def_drive = get_val("DEF_RCLONE_DRIVE")
 
     for j in conf.sections():
         log.info(j)
-        prev = ""
-        if j == def_drive:
-            prev = yes
 
         if "team_drive" in list(conf[j]):
             menu.append(
-                [KeyboardButtonCallback(f"{prev}{j} - TD", f"copy {query} {j}")]
+                [KeyboardButtonCallback(f"{j} - TD", f"copy {query} {j}")]
             )
         else:
             menu.append(
-                [KeyboardButtonCallback(f"{prev}{j} - ND", f"copy {query} {j}")]
+                [KeyboardButtonCallback(f"{j} - ND", f"copy {query} {j}")]
             )
 
     menu.append(
