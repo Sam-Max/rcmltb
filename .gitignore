@@ -1,5 +1,6 @@
 # custom config
 ExecVars.py
+ConfigSample.py
 
 # you know these
 venv
