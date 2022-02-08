@@ -19,9 +19,8 @@ from ..utils.admin_check import is_admin
 from .. import SessionVars, uptime
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler
-from .settings import handle_copy_callback, handle_settings, handle_setting_callback
+from .settings import handle_settings, handle_setting_callback
 from bot.downloaders.telegram_download import LOGGER, down_load_media_pyro
-from bot.uploaders.rclone_copy import copy
 import asyncio as aio
 import re, logging, time, os, psutil, shutil, signal
 from bot import __version__
@@ -99,11 +98,6 @@ def add_handlers(bot: TelegramClient):
     # *********** Callback Handlers ***********  
 
     #telethon
-
-    bot.add_event_handler(
-        handle_copy_cb,
-        events.CallbackQuery(pattern="copy")
-    )
 
     bot.add_event_handler(
         handle_cancel,

@@ -13,12 +13,12 @@ log = logging.getLogger(__name__)
 async def rclone_copy_upload(e, conf_path):
 
     origin_drive = get_val("ORIGIN_DRIVE")
-    dir_origin = get_val("DIR_ORIGIN")
-    destination_dive = get_val("DEST_DRIVE")
-    dir_dest = get_val("DIR_DEST")
+    origin_dir = get_val("ORIGIN_DIR")
+    dest_drive = get_val("DEST_DRIVE")
+    dest_dir = get_val("DEST_DIR")
 
-    rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{dir_origin}',
-                       f'{destination_dive}:{dir_dest}', '-P']
+    rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
+                       f'{dest_drive}:{dest_dir}', '-P']
 
     message = await e.edit("Preparando para transferir...")
 
@@ -32,10 +32,10 @@ async def rclone_copy_upload(e, conf_path):
 
     if rcres:
         rclone_pr.kill()
-        await message.edit("Subida cancelada")
+        await message.edit("Transferencia cancelada")
         return
 
-    await message.edit("Subida exitosa ✅")
+    await message.edit("Transferencia exitosa ✅")
 
 
 async def rclone_process_update(rclone_pr, message):
