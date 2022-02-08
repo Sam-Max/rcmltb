@@ -1,6 +1,6 @@
 
 
-#Commands for bot 
+#Commands for bott 
 - subir - subir a la nube 
 - copiar - copiar de una nube a la otra
 - configuracion - configurar rclone 
