@@ -15,5 +15,4 @@ logging.basicConfig(
 )
 
 uptime = time.time()
-to_del = []
 SessionVars = VarHolder()

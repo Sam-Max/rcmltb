@@ -24,7 +24,7 @@ class ExecConfig:
         # Set this value to show all the remotes while leeching
         SHOW_REMOTE_LIST = False
 
-        # if upload process is canceled        
+        # value to determine if upload process is canceled        
         UPCANCEL= False
         
         # For vps set path here or you can use runtime too
