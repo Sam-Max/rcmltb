@@ -9,7 +9,7 @@ from pyrogram import __version__ as pyrover
 from telethon.tl.types import KeyboardButtonCallback
 from .. import SessionVars, uptime
 import asyncio
-from ..core.getCommand import get_command
+from ..core.getCommand import get_command, get_command_p
 from ..core.getVars import get_val
 from ..uploaders.rclone_upload import RcloneUploader
 from ..utils.speedtest import get_speed
@@ -35,14 +35,14 @@ def add_handlers(bot: TelegramClient):
     # pyro handler
     download_handler = MessageHandler(
         handle_download_command,
-        filters=filters.command(["subir"])
+        filters=filters.command([get_command_p("LEECH")])
     )
     bot.pyro.add_handler(download_handler)
 
 
     test_handler = MessageHandler(
         handle_test_command,
-        filters=filters.command(["test"])
+        filters=filters.command([get_command_p("TEST")])
     )
     bot.pyro.add_handler(test_handler)
 
@@ -133,8 +133,7 @@ async def handle_download_command(client, message):
 
 async def handle_copy_command(e):
     if await is_admin(e.sender_id):
-         header = "Seleccione unidad origen"
-         await copy(e, header, origin_menu=True, destination_menu=False)
+            await handle_settings(e, msg= "Seleccione unidad origen", submenu= "rclonemenucopy", data_cb= "list_drive")
     else:
        await e.delete()
 
@@ -183,14 +182,6 @@ async def handle_settings_cb(e):
         await handle_setting_callback(e)
     else:
         await e.answer("⚠️ WARN ⚠️ Dont Touch Admin Settings.", alert=True)
-
-
-async def handle_copy_cb(e):
-    if await is_admin(e.sender_id):
-        await handle_copy_callback(e)
-    else:
-        await e.answer("⚠️ WARN ⚠️ Dont Touch Admin Settings.", alert=True)
-
 
 
 async def handle_exec_message_f(e):
