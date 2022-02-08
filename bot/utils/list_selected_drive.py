@@ -26,7 +26,6 @@ async def list_selected_drive(drive_base, drive_name, conf_path, data_cb, menu):
 
     try:
         data = json.loads(stdout)
-        log.info(data)
         for i in data:
             path = i["Path"]
             size = i["Size"]
