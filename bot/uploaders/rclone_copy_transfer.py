@@ -10,7 +10,7 @@ from .progress_for_rclone import status
 
 log = logging.getLogger(__name__)
 
-async def rclone_copy_upload(e, conf_path):
+async def rclone_copy_transfer(e, conf_path):
 
     origin_drive = get_val("ORIGIN_DRIVE")
     origin_dir = get_val("ORIGIN_DIR")

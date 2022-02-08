@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from bot.uploaders.rclone_copy_upload import rclone_copy_upload
+from bot.uploaders.rclone_copy_transfer import rclone_copy_transfer
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 from bot import SessionVars
@@ -98,7 +98,7 @@ async def handle_setting_callback(e):
     elif cmd[1] == "start_copy":
         torlog.info("DIR: {}".format(cmd[2]))
         SessionVars.update_var("DEST_DIR", cmd[2])
-        await rclone_copy_upload(e, conf_path)
+        await rclone_copy_transfer(e, conf_path)
     
     elif cmd[1] == "selfdest":
         await e.answer("Closed")
