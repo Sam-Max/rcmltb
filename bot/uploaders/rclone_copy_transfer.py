@@ -76,8 +76,6 @@ async def rclone_process_update(rclone_pr, message):
 
                 if msg1 != msg:
                     await user_message.edit(text=msg, buttons=keyboard)
-                    log.info(msg1)
-                    log.info(msg)
                     msg1= msg
 
         if data == "":
