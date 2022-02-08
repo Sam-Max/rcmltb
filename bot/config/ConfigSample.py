@@ -2,12 +2,13 @@
 import os
 
 class ExecConfig:
-        API_HASH = ""
-        API_ID = 0
-        BOT_TOKEN = ""
 
-        OWNER_ID = 0
-        
+        API_HASH = "***REMOVED***"
+        API_ID = ***REMOVED***
+        BOT_TOKEN = "5282894676:AAE-QUN0U7sUVr9Y4YT48eFeiypj8AeU4Qs"
+
+        OWNER_ID = ***REMOVED***
+
         # Chracter to use as a completed progress 
         COMPLETED_STR = "▰"
 
@@ -30,7 +31,7 @@ class ExecConfig:
         RCLONE_CONFIG= os.path.join(os.getcwd(), 'rclone.conf')
         
         # Name of the RCLONE drive from the config
-        DEF_RCLONE_DRIVE = "teamdrive"
+        DEF_RCLONE_DRIVE = ""
 
         # Time to wait before edit message
         EDIT_SLEEP_SECS = 10
