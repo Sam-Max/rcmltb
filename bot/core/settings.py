@@ -21,16 +21,17 @@ TIMEOUT_SEC = 60
 
 no = "❌"
 yes = "✅"
-drive_icon= "📦"
+drive_icon= "☁️"
 # Central object is not used its Acknowledged 
-header = '<u>MENU CONFIGURACION</u>'
+header = ""
 
 
 async def handle_setting_callback(e):
     # db = tordb
     # session_id,_ = db.get_variable("SETTING_AUTH_CODE")
 
-    session_id = SessionVars.get_var("SETTING_AUTH_CODE")
+    #session_id = SessionVars.get_var("SETTING_AUTH_CODE")
+    session_id = None
     conf_path = await get_config()
     data = e.data.decode()
     cmd = data.split(" ")
@@ -67,7 +68,7 @@ async def handle_setting_callback(e):
         SessionVars.update_var("DEF_RCLONE_DRIVE", cmd[2])
 
         await handle_settings(await e.get_message(), True, f"<b><u>Cambió la nube predeterminada a {cmd[2]}</b></u>",
-                              "rclonemenu", session_id=session_id)
+                              submenu= "rclonemenu", session_id=session_id)
 
     elif cmd[1] == "remotelist":
         await e.answer("Done.")
@@ -120,11 +121,13 @@ async def handle_settings(e, edit=False, msg="", drive_name="", data_cb="", subm
             [KeyboardButtonCallback("Cerrar Menu", f"settings selfdest {session_id}".encode("UTF-8"))]
         )
 
+        header_m = '<u>MENU CONFIGURACION</u>'
+
         if edit:
-            rmess = await e.edit(header + msg,
+            rmess = await e.edit(header_m + msg,
                                  parse_mode="html", buttons=menu, link_preview=False)
         else:
-            rmess = await e.reply(header,
+            rmess = await e.reply(header_m,
                                   parse_mode="html", buttons=menu, link_preview=False)
 
     elif submenu == "rclonemenu":
@@ -148,7 +151,7 @@ async def handle_settings(e, edit=False, msg="", drive_name="", data_cb="", subm
 
                     if "team_drive" in list(conf[j]):
                         menu.append(
-                            [KeyboardButtonCallback(f"{prev}{j} - TD", f"settings change_drive {j} {session_id}")]
+                            [KeyboardButtonCallback(f"{prev}{j} - TD", f"settings change_drive {j} {session_id}")]   
                         )
                     else:
                         menu.append(

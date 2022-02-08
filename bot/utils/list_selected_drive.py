@@ -1,4 +1,3 @@
-import configparser
 from telethon.tl.types import KeyboardButtonCallback
 from bot.core.getVars import get_val
 import asyncio

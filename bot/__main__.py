@@ -15,7 +15,7 @@ if __name__ == "__main__":
     logging.getLogger("pyrogram").setLevel(logging.ERROR)
 
     # Telethon client creation
-    bot = RcloneTgClient("RcloneTgBot", get_val("API_ID"), get_val("API_HASH"), timeout=20, retry_delay=3,
+    bot = RcloneTgClient("telethonsession", get_val("API_ID"), get_val("API_HASH"), timeout=20, retry_delay=3,
                          request_retries=10, connection_retries=10)
     bot.start(bot_token=get_val("BOT_TOKEN"))
     logging.info("Telethon Client created.")
