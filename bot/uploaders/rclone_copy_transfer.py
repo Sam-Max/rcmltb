@@ -43,8 +43,10 @@ async def rclone_process_update(rclone_pr, message):
     process = rclone_pr
     user_message = message
     sleeps = False
-    start = time.time()
-    edit_time = get_val("EDIT_SLEEP_SECS")
+    #start = time.time()
+    msg = ""
+    msg1 = ""
+    #edit_time = get_val("EDIT_SLEEP_SECS")
 
     while True:
         data = process.stdout.readline().decode().strip()
@@ -53,25 +55,30 @@ async def rclone_process_update(rclone_pr, message):
         if mat is not None:
             if len(mat) > 0:
                 sleeps = True
-                log.info(time.time() - start)
-                if time.time() - start > edit_time:
-                    start = time.time()
-                    nstr = mat[0].replace("Transferred:", "")
-                    nstr = nstr.strip()
-                    nstr = nstr.split(",")
-                    log.info(nstr[1])
-                    percent = nstr[1].strip("% ")
-                    try:
-                        percent = int(percent)
-                    except:
-                        percent = 0
-                    prg = status(percent)
+                #log.info(time.time() - start)
+                #if time.time() - start > edit_time:
+                    #start = time.time()
+                nstr = mat[0].replace("Transferred:", "")
+                nstr = nstr.strip()
+                nstr = nstr.split(",")
+                log.info(nstr[1])
+                percent = nstr[1].strip("% ")
+                try:
+                    percent = int(percent)
+                except:
+                    percent = 0
+                prg = status(percent)
 
-                    msg = 'Transfiriendo...\n{} \n{} \nVelocidad:- {} \nETA:- {}\n'.format(nstr[0], prg, nstr[2],
-                                                                                           nstr[3].replace("ETA", ""))
+                msg = 'Transfiriendo...\n{} \n{} \nVelocidad:- {} \nETA:- {}\n'.format(nstr[0], prg, nstr[2],
+                                                                                    nstr[3].replace("ETA", ""))
 
-                    keyboard = [[Button.inline("Cancel", "upcancel")]]
+                keyboard = [[Button.inline("Cancel", "upcancel")]]
+
+                if msg1 != msg:
                     await user_message.edit(text=msg, buttons=keyboard)
+                    log.info(msg1)
+                    log.info(msg)
+                    msg1= msg
 
         if data == "":
             blank += 1

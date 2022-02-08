@@ -114,8 +114,10 @@ class RcloneUploader():
         process = self._rclone_pr
         user_message = self._user_msg
         sleeps = False
-        start = time.time()
-        edit_time = get_val("EDIT_SLEEP_SECS")
+        #start = time.time()
+        msg = ""
+        msg1 = ""
+        #edit_time = get_val("EDIT_SLEEP_SECS")
         
         while True:
             data = process.stdout.readline().decode()
@@ -125,23 +127,26 @@ class RcloneUploader():
             if mat is not None:
                 if len(mat) > 0:
                     sleeps = True
-                    if time.time() - start > edit_time:
-                        start = time.time()
-                        nstr = mat[0].replace("Transferred:","")
-                        nstr = nstr.strip()
-                        nstr = nstr.split(",")
-                        percent = nstr[1].strip("% ")
-                        try:
-                            percent = int(percent)
-                        except:
-                            percent = 0
-                        prg = status(percent)
+                    #if time.time() - start > edit_time:
+                        #start = time.time()
+                    nstr = mat[0].replace("Transferred:","")
+                    nstr = nstr.strip()
+                    nstr = nstr.split(",")
+                    percent = nstr[1].strip("% ")
+                    try:
+                        percent = int(percent)
+                    except:
+                        percent = 0
+                    prg = status(percent)
 
-                        msg = "<b>Subiendo...\n{} \n{} \nVelocidad:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
-                        data = "upcancel"
+                    msg = "<b>Subiendo...\n{} \n{} \nVelocidad:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
+                    
+                    data = "upcancel"
+
+                    if msg1 != msg:
                         await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
-                                InlineKeyboardButton("Cancel", callback_data=data)]]))
-        
+                                 InlineKeyboardButton("Cancel", callback_data=data)]]))
+                        msg1= msg
 
             if data == "":
                 blank += 1
