@@ -28,7 +28,7 @@ async def list_selected_drive(drive_base, drive_name, conf_path, data_cb, menu):
         for i in data:
             path = i["Path"]
             size = i["Size"]
-            if len(path) < 10:
+            if len(path) <= 15:
                 if size == -1:
                     format_path = path.strip()
                     menu.append(

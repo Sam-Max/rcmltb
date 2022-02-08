@@ -15,10 +15,6 @@ torlog = logging.getLogger(__name__)
 
 TIMEOUT_SEC = 60
 
-# this file will contian all the handlers and code for settings
-# code can be more modular i think but not bothering now
-# todo make the code more modular
-
 no = "❌"
 yes = "✅"
 drive_icon= "☁️"
@@ -27,9 +23,6 @@ header = ""
 
 
 async def handle_setting_callback(e):
-    # db = tordb
-    # session_id,_ = db.get_variable("SETTING_AUTH_CODE")
-
     #session_id = SessionVars.get_var("SETTING_AUTH_CODE")
     session_id = None
     conf_path = await get_config()
