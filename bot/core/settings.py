@@ -4,7 +4,7 @@ from bot.uploaders.rclone_copy_upload import rclone_copy_upload
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 from bot import SessionVars
-from bot.uploaders.list_selected_drive import list_selected_drive
+from bot.utils.list_selected_drive import list_selected_drive
 import asyncio as aio
 from .getVars import get_val
 from functools import partial
