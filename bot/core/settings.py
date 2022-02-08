@@ -70,22 +70,11 @@ async def handle_setting_callback(e):
         await handle_settings(await e.get_message(), True, f"<b><u>Cambió la nube predeterminada a {cmd[2]}</b></u>",
                               submenu= "rclonemenu", session_id=session_id)
 
-    elif cmd[1] == "remotelist":
-        await e.answer("Done.")
-        if cmd[2] == "true":
-            val = True
-        else:
-            val = False
-        SessionVars.update_var("SHOW_REMOTE_LIST", val)
-        mmes = await e.get_message()
-        await handle_settings(mmes, True, f"<b><u>Changed the value to {val} of Show rmeote list.</b></u>",
-                              "rclonemenu", session_id=session_id)
-
     elif cmd[1] == "list_drive":
         SessionVars.update_var("ORIGIN_DRIVE", cmd[2])
         await handle_settings(await e.get_message(), edit=True, msg='Seleccione directorio origen', drive_name= cmd[2],submenu="list_drive", data_cb="rclonemenucopy")
 
-    elif cmd[1] == "list_drive_second_time":
+    elif cmd[1] == "list_drive_dest":
         torlog.info("DIR: {}".format(cmd[2]))
         SessionVars.update_var("DEST_DRIVE", cmd[2])
         await handle_settings(await e.get_message(), edit=True, msg='Seleccione directorio destino', drive_name= cmd[2],
@@ -93,7 +82,7 @@ async def handle_setting_callback(e):
 
     elif cmd[1] == "rclonemenucopy":
         SessionVars.update_var("ORIGIN_DIR", cmd[2])
-        await handle_settings(await e.get_message(), edit=True, msg="Seleccione unidad destino", submenu="rclonemenucopy", data_cb="list_drive_second_time")                         
+        await handle_settings(await e.get_message(), edit=True, msg="Seleccione unidad destino", submenu="rclonemenucopy", data_cb="list_drive_dest")                         
 
     elif cmd[1] == "start_copy":
         torlog.info("DIR: {}".format(cmd[2]))
