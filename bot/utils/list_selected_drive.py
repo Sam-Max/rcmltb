@@ -10,7 +10,7 @@ folder = "📁"
 
 
 async def list_selected_drive(drive_base, drive_name, conf_path, data_cb, menu):
-    menu.append([KeyboardButtonCallback(f"{yes} Seleccione esta Carpeta", f"settings {data_cb} /)".encode("UTF-8"))])
+    menu.append([KeyboardButtonCallback(f"{yes} Seleccione esta Carpeta", f"settings {data_cb} / )".encode("UTF-8"))])
 
     cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only"]
 
@@ -28,7 +28,7 @@ async def list_selected_drive(drive_base, drive_name, conf_path, data_cb, menu):
         for i in data:
             path = i["Path"]
             size = i["Size"]
-            if len(path) <= 15:
+            if len(path) <= 20:
                 if size == -1:
                     format_path = path.strip()
                     menu.append(

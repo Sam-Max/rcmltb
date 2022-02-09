@@ -17,6 +17,8 @@ async def rclone_copy_transfer(e, conf_path):
     dest_drive = get_val("DEST_DRIVE")
     dest_dir = get_val("DEST_DIR")
 
+    log.info(f'{origin_drive}:{origin_dir}-{dest_drive}:{dest_dir}')
+
     rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
                        f'{dest_drive}:{dest_dir}', '-P']
 

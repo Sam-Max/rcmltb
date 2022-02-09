@@ -153,7 +153,9 @@ async def handle_settings(e, edit=False, msg="", drive_name="", data_cb="", subm
 
 
     elif submenu == "rclonemenucopy":
-        path = get_val("RCLONE_CONFIG")
+
+        #path = get_val("RCLONE_CONFIG")
+        path= os.path.join(os.getcwd(), "rclone.conf")
         conf = configparser.ConfigParser()
         conf.read(path)
 
@@ -416,10 +418,9 @@ async def get_int_variable(var_name, menu, callback_name, session_id):
 
 
 async def get_config():
-    config = get_val("RCLONE_CONFIG")
-    if config is not None:
-        if isinstance(config, str):
-            if os.path.exists(config):
-                return config
+    config = os.path.join(os.getcwd(), "rclone.conf")
+    if isinstance(config, str):
+        if os.path.exists(config):
+            return config
 
     return None
