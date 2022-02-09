@@ -1,5 +1,3 @@
-fdfdfdfdfddfdfdfdfdfdf
-
 #Commands for bott 
 - subir - subir a la nube 
 - copiar - copiar de una nube a la otra
