@@ -9,6 +9,8 @@ class ExecConfig:
 
         OWNER_ID = ***REMOVED***
 
+        RCLONE_CONFIG = ""
+
         # Chracter to use as a completed progress 
         COMPLETED_STR = "▰"
 
@@ -28,7 +30,7 @@ class ExecConfig:
         UPCANCEL= False
         
         # For vps set path here or you can use runtime too
-        RCLONE_CONFIG= os.path.join(os.getcwd(), 'rclone.conf')
+        #RCLONE_CONFIG= os.path.join(os.getcwd(), 'rclone.conf')
         
         # Name of the RCLONE drive from the config
         DEF_RCLONE_DRIVE = ""

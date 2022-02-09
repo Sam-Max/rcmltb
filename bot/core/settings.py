@@ -4,6 +4,7 @@ from bot.uploaders.rclone_copy_transfer import rclone_copy_transfer
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 from bot import SessionVars
+from bot.utils.get_rclone import get_rclone
 from bot.utils.list_selected_drive import list_selected_drive
 import asyncio as aio
 from .getVars import get_val
@@ -120,7 +121,8 @@ async def handle_settings(e, edit=False, msg="", drive_name="", data_cb="", subm
             # create a all drives menu
             if "Se cargo el archivo personalizado." in rcval:
 
-                path= get_val("RCLONE_CONFIG")
+                #path= get_val("RCLONE_CONFIG")
+                path= os.path.join(os.getcwd(), "rclone.conf")
                 conf = configparser.ConfigParser()
                 conf.read(path)
 
@@ -374,13 +376,23 @@ async def get_string_variable(var_name, menu, callback_name, session_id):
     # handle the vars having string value
     # condition for rclone config
 
-    val = SessionVars.get_var(var_name)
+    # val = SessionVars.get_var(var_name)
+
+    # if var_name == "RCLONE_CONFIG":
+    #     if val is not None:
+    #         val = "Se cargo el archivo personalizado. (Click para cargar otro)"
+    #     else:
+    #         val = "Haga clic aquí para cargar la configuración de RCLONE."
+
 
     if var_name == "RCLONE_CONFIG":
-        if val is not None:
-            val = "Se cargo el archivo personalizado. (Click para cargar otro)"
+
+        rfile= await get_rclone()
+
+        if os.path.exists(rfile):
+           val = "Se cargo el archivo personalizado. (Click para cargar otro)"
         else:
-            val = "Haga clic aquí para cargar la configuración de RCLONE."
+           val = "Haga clic aquí para cargar la configuración de RCLONE."
 
     msg = str(val)
     menu.append(

@@ -26,6 +26,10 @@
         "description": "should be an integer.",
         "value": ""
       },
+      "RCLONE_CONFIG":{
+        "description": "rclone config file text",
+        "value": ""
+      },
       "LANG": {
         "description": "Setting the encoding to UTF-8 Dont touch this",
         "value": "C.UTF-8"
