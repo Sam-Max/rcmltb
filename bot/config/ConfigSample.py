@@ -3,11 +3,11 @@ import os
 
 class ExecConfig:
 
-        API_HASH = "***REMOVED***"
-        API_ID = ***REMOVED***
-        BOT_TOKEN = "5282894676:AAE-QUN0U7sUVr9Y4YT48eFeiypj8AeU4Qs"
+        API_HASH = ""
+        API_ID = 0
+        BOT_TOKEN = ""
 
-        OWNER_ID = ***REMOVED***
+        OWNER_ID = 0
 
         # Chracter to use as a completed progress 
         COMPLETED_STR = "▰"
