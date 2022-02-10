@@ -149,7 +149,7 @@ class RcloneUploader():
                                 InlineKeyboardButton("Cancel", callback_data= data)]]))    
                             msg1= msg
                         except Exception: 
-                            log.info("Exception ocurred...")  
+                            log.info("Exception ocurred at line 148 on rclone_upload")  
                             pass                                
                         
             if data == "":
