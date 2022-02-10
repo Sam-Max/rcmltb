@@ -11,7 +11,7 @@ import time
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s",
-    handlers=[logging.StreamHandler(), logging.FileHandler("torlog.txt")]
+    handlers=[logging.StreamHandler(), logging.FileHandler("botlog.txt")]
 )
 
 uptime = time.time()
