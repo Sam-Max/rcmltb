@@ -95,7 +95,7 @@ async def down_load_media_pyro(client, message):
         ms = (end_t - start_t).seconds
         print(the_real_download_location)
         try:
-            await mess_age.edit_text(f"Descargado en <u>{ms}</u> segundos")
+            await mess_age.edit(text= f"Descargado en <u>{ms}</u> segundos")
         except Exception:
             logging.info("Exception ocurred at line 98 on telegram_download")
             pass
