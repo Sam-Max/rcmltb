@@ -1,5 +1,6 @@
 from telethon import Button
 from bot import SessionVars
+from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from ..core.getVars import get_val
 import subprocess
 import asyncio
@@ -77,8 +78,13 @@ async def rclone_process_update(rclone_pr, message):
                 keyboard = [[Button.inline("Cancel", "upcancel")]]
 
                 if msg1 != msg:
-                    await user_message.edit(text=msg, buttons=keyboard)
-                    msg1= msg
+                     try:
+                        await user_message.edit(text=msg, buttons=keyboard)
+                     except MessageNotModified as e: 
+                        log.info(e.ID)  
+                        pass    
+                     finally:
+                        msg1= msg
 
         if data == "":
             blank += 1
