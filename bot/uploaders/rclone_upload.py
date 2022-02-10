@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from configparser import ConfigParser
-
+from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot import SessionVars
 from ..core.getVars import get_val
 import os
@@ -144,10 +144,15 @@ class RcloneUploader():
                     data = "upcancel"
 
                     if msg1 != msg:
-                        await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
-                                 InlineKeyboardButton("Cancel", callback_data=data)]]))
-                        msg1= msg
-
+                        try:
+                            await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
+                                 InlineKeyboardButton("Cancel", callback_data= data)]]))    
+                        except MessageNotModified as e: 
+                            log.info(e.ID)  
+                            pass    
+                        finally:
+                            msg1= msg
+                        
             if data == "":
                 blank += 1
                 if blank == 20:
