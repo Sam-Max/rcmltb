@@ -19,30 +19,21 @@ TIMEOUT_SEC = 60
 no = "❌"
 yes = "✅"
 drive_icon= "☁️"
-# Central object is not used its Acknowledged 
 header = ""
 
 
 async def handle_setting_callback(e):
-    #session_id = SessionVars.get_var("SETTING_AUTH_CODE")
     session_id = None
     conf_path = await get_config()
     data = e.data.decode()
     cmd = data.split(" ")
     val = ""
 
-    # if cmd[-1] != session_id:
-    #     print("Session id", session_id, " - - ", cmd[-1])
-    #     await e.answer("Este menú de configuración ha caducado.", alert=True)
-    #     await e.delete()
-    #     return
-
     if cmd[1] == "rclonemenu":
         # this is menu
         mmes = await e.get_message()
         await handle_settings(mmes, True, "\nBienvenido al Menu de Configuracion de Rclone. TD= Team Drive, ND= Normal Drive",
                               submenu="rclonemenu", session_id=session_id)
-
     elif cmd[1] == "mainmenu":
         # this is menu
         mmes = await e.get_message()
@@ -56,13 +47,14 @@ async def handle_setting_callback(e):
 
         await general_input_manager(e, mmes, "RCLONE_CONFIG", "str", val, "rclonemenu")
 
-    elif cmd[1] == "change_drive":
-        # await e.answer(f"Changed default drive to {cmd[2]}.",alert=True)
-        torlog.info(cmd[2])
-        SessionVars.update_var("DEF_RCLONE_DRIVE", cmd[2])
+    elif cmd[1] == "rclonemenucopy":
+        SessionVars.update_var("ORIGIN_DIR", cmd[2])
+        await handle_settings(await e.get_message(), edit=True, msg="Seleccione unidad destino", submenu="rclonemenucopy", data_cb="list_drive_dest")                         
 
-        await handle_settings(await e.get_message(), True, f"<b><u>Cambió la nube predeterminada a {cmd[2]}</b></u>",
-                              submenu= "rclonemenu", session_id=session_id)
+    elif cmd[1] == "start_copy":
+        torlog.info("DIR: {}".format(cmd[2]))
+        SessionVars.update_var("DEST_DIR", cmd[2])
+        await rclone_copy_transfer(e, conf_path)
 
     elif cmd[1] == "list_drive":
         SessionVars.update_var("ORIGIN_DRIVE", cmd[2])
@@ -74,27 +66,25 @@ async def handle_setting_callback(e):
         await handle_settings(await e.get_message(), edit=True, msg='Seleccione directorio destino', drive_name= cmd[2],
                               submenu="list_drive", data_cb="start_copy")
 
-    elif cmd[1] == "rclonemenucopy":
-        SessionVars.update_var("ORIGIN_DIR", cmd[2])
-        await handle_settings(await e.get_message(), edit=True, msg="Seleccione unidad destino", submenu="rclonemenucopy", data_cb="list_drive_dest")                         
+    elif cmd[1] == "list_drive_main_menu":
+        base_dir = get_val("BASE_DIR")
+        SessionVars.update_var("DEF_RCLONE_DRIVE", cmd[2])
+        await handle_settings(await e.get_message(), edit=True, msg='Seleccione carpeta para subir', drive_name= cmd[2], rclone_dir= base_dir, submenu="list_drive", data_cb="reload_list_drive_main_menu")
 
-    elif cmd[1] == "start_copy":
-        torlog.info("DIR: {}".format(cmd[2]))
-        SessionVars.update_var("DEST_DIR", cmd[2])
-        await rclone_copy_transfer(e, conf_path)
+    elif cmd[1] == "reload_list_drive_main_menu":
+        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_route= rclone_drive + '/' + cmd[2]
+        SessionVars.update_var("BASE_DIR", cmd[2])
+        await handle_settings(await e.get_message(), edit=True, msg=f'Cambio al ruta predeterminada a {rclone_route}', drive_name= rclone_drive, rclone_dir= cmd[2], submenu="list_drive", data_cb="reload_list_drive_main_menu")     
     
     elif cmd[1] == "selfdest":
         await e.answer("Closed")
         await e.delete()
 
 
-async def handle_settings(e, edit=False, msg="", drive_name="", data_cb="", submenu=None, session_id=None):
+async def handle_settings(e, edit=False, msg="", drive_name="", rclone_dir='', data_cb="", submenu=None, session_id=None):
     # this function creates the menu
     # and now submenus too
-
-    # if session_id is None:
-    #     session_id = time.time()
-    #     SessionVars.update_var("SETTING_AUTH_CODE", str(session_id))
 
     menu = []
 
@@ -135,11 +125,11 @@ async def handle_settings(e, edit=False, msg="", drive_name="", data_cb="", subm
 
                     if "team_drive" in list(conf[j]):
                         menu.append(
-                            [KeyboardButtonCallback(f"{prev}{j} - TD", f"settings change_drive {j} {session_id}")]   
+                            [KeyboardButtonCallback(f"{prev}{j} - TD", f"settings list_drive_main_menu {j} {session_id}")]   
                         )
                     else:
                         menu.append(
-                            [KeyboardButtonCallback(f"{prev}{j} - ND", f"settings change_drive {j} {session_id}")]
+                            [KeyboardButtonCallback(f"{prev}{j} - ND", f"settings list_drive_main_menu {j} {session_id}")]
                         )
         await get_sub_menu("Ir Atras ⬅️", "mainmenu", session_id, menu)
 
@@ -182,14 +172,14 @@ async def handle_settings(e, edit=False, msg="", drive_name="", data_cb="", subm
 
     elif submenu == "list_drive":
         conf_path = await get_config()
-        await list_selected_drive("/", drive_name, conf_path, data_cb, menu)
+        await list_selected_drive("/", drive_name, conf_path, rclone_dir, data_cb, menu)
 
         menu.append(
             [KeyboardButtonCallback("Cerrar Menu", f"settings selfdest {session_id}".encode("UTF-8"))]
 
         )
         if edit:
-            rmess = await e.edit(header + msg,
+            rmess = await e.edit(msg,
                                  parse_mode="html", buttons=menu, link_preview=False)
         else:
             rmess = await e.reply(header,

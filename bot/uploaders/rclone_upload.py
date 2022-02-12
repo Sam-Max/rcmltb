@@ -8,8 +8,6 @@ import os
 import logging
 import subprocess
 import asyncio
-import json
-import time
 import re
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.raw.types import KeyboardButtonUrl
@@ -49,11 +47,11 @@ class RcloneUploader():
         for i in conf.sections():
             if dest_drive == str(i):
                 if conf[i]["type"] == "drive":
-                    self.dest_base = get_val("GDRIVE_BASE_DIR")
+                    self.dest_base = get_val("BASE_DIR")
                     log.info("Google Drive Upload Detected.")
                 else:
                     general_drive_name = conf[i]["type"]
-                    self.dest_base = get_val("RCLONE_BASE_DIR")
+                    self.dest_base = get_val("BASE_DIR")
                     log.info(f"{general_drive_name} Upload Detected.")
                 break
 
@@ -71,6 +69,10 @@ class RcloneUploader():
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
+
+            log.info(f'{dest_drive}:{new_dest_base}')
+            log.info("Uploading...")
+
             self._rclone_pr = rclone_pr
             rcres= await self.rclone_process_update()
 
@@ -79,15 +81,20 @@ class RcloneUploader():
         
             if rcres:
                 rclone_pr.kill()
+                log.info("subida cancelada")
                 await self._user_msg.edit("Subida cancelada")
                 return 
             
+            log.info("subida exitosa")
             await self._user_msg.edit("Subida exitosa ✅")
 
         else:
             new_dest_base = self.dest_base
             rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', str(path),
                                     f'{dest_drive}:{new_dest_base}', '-P']
+            
+            log.info(f'{dest_drive}:{new_dest_base}')
+            log.info("Uploading...")
 
             rclone_pr = subprocess.Popen(
                 rclone_copy_cmd,
@@ -103,9 +110,11 @@ class RcloneUploader():
         
             if rcres:
                 rclone_pr.kill()
+                log.info("subida cancelada")
                 await self._user_msg.edit("Subida cancelada")
                 return 
             
+            log.info("subida exitosa")
             await self._user_msg.edit("Subida exitosa ✅")
 
 

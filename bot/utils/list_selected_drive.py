@@ -9,7 +9,7 @@ yes = "✅"
 folder = "📁"
 
 
-async def list_selected_drive(drive_base, drive_name, conf_path, data_cb, menu):
+async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, data_cb, menu):
     menu.append([KeyboardButtonCallback(f"{yes} Seleccione esta Carpeta", f"settings {data_cb} / )".encode("UTF-8"))])
 
     cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only"]
@@ -27,11 +27,17 @@ async def list_selected_drive(drive_base, drive_name, conf_path, data_cb, menu):
         data = json.loads(stdout)
         for i in data:
             path = i["Path"]
+            path == path.strip()
+            log.info(path)
+            log.info(rclone_dir)
             size = i["Size"]
-            if len(path) <= 20:
-                if size == -1:
-                    format_path = path.strip()
-                    menu.append(
-                        [KeyboardButtonCallback(f"{folder}{format_path}", f"settings {data_cb} {format_path}".encode("UTF-8"))])
-    except:
-        log.info("Error")
+            prev= ''   
+            if len(path) <= 20 and size == -1:
+                if path == rclone_dir:
+                    prev= yes
+                if " " in path:
+                    continue    
+                menu.append(
+                    [KeyboardButtonCallback(f"{prev} {folder} {path}", f"settings {data_cb} {path}".encode("UTF-8"))])
+    except Exception as e:
+        log.info(e)
