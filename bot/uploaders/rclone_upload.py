@@ -150,12 +150,10 @@ class RcloneUploader():
 
                     msg = "<b>Subiendo...\n{} \n{} \nVelocidad:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
                     
-                    data = "upcancel"
-
                     if msg1 != msg:
                         try:
                             await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
-                                InlineKeyboardButton("Cancel", callback_data= data)]]))    
+                                InlineKeyboardButton("Cancel", callback_data= "upcancel")]]))    
                             msg1= msg
                         except Exception: 
                             log.info("Exception ocurred at line 148 on rclone_upload")  
@@ -170,8 +168,8 @@ class RcloneUploader():
 
             if sleeps:               
                 sleeps= False
-                if get_val("UPCANCEL"):
-                    SessionVars.update_var("UPCANCEL", False)
+                if get_val("UP_CANCEL"):
+                    SessionVars.update_var("UP_CANCEL", False)
                     return True
                 await asyncio.sleep(2)
                 process.stdout.flush()    

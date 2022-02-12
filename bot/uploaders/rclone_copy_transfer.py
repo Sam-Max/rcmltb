@@ -95,8 +95,8 @@ async def rclone_process_update(rclone_pr, message):
 
         if sleeps:
             sleeps = False
-            if get_val("UPCANCEL"):
-                SessionVars.update_var("UPCANCEL", False)
+            if get_val("UP_CANCEL"):
+                SessionVars.update_var("UP_CANCEL", False)
                 return True
             await asyncio.sleep(2)
             process.stdout.flush()

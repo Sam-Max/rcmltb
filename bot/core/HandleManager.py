@@ -161,7 +161,7 @@ async def handle_cancel(callback_query):
         data = callback_query.data
         #message= callback_query.message
         torlog.info("Data is {}".format(data))
-        SessionVars.update_var("UPCANCEL", True)
+        SessionVars.update_var("UP_CANCEL", True)
         # data = data.split(" ")
 
 async def handle_settings_command(e):
