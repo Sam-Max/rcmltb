@@ -31,8 +31,6 @@ async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, dat
         for i in data:
             path = i["Path"]
             path == path.strip()
-            log.info(path)
-            log.info(rclone_dir)
             size = i["Size"]
             prev2= ""   
             folder1= folder
