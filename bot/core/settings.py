@@ -73,7 +73,10 @@ async def handle_setting_callback(e):
 
     elif cmd[1] == "reload_list_drive_main_menu":
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
-        rclone_route= rclone_drive + '/' + cmd[2]
+        if cmd[2] != "/":
+            rclone_route= rclone_drive + '/' + cmd[2]
+        else:
+            rclone_route= rclone_drive
         SessionVars.update_var("BASE_DIR", cmd[2])
         await handle_settings(await e.get_message(), edit=True, msg=f'Cambio al ruta predeterminada a {rclone_route}', drive_name= rclone_drive, rclone_dir= cmd[2], submenu="list_drive", data_cb="reload_list_drive_main_menu")     
     

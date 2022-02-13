@@ -10,7 +10,10 @@ folder = "📁"
 
 
 async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, data_cb, menu):
-    menu.append([KeyboardButtonCallback(f"{yes} Seleccione esta Carpeta", f"settings {data_cb} / )".encode("UTF-8"))])
+    prev="" 
+    if get_val("BASE_DIR") == "/":
+        prev= yes
+    menu.append([KeyboardButtonCallback(f"{prev} Seleccione esta Carpeta", f"settings {data_cb} / )".encode("UTF-8"))])
 
     cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only"]
 
@@ -31,13 +34,15 @@ async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, dat
             log.info(path)
             log.info(rclone_dir)
             size = i["Size"]
-            prev= ''   
+            prev2= ""   
+            folder1= folder
             if len(path) <= 20 and size == -1:
                 if path == rclone_dir:
-                    prev= yes
+                    prev2= yes
+                    folder1= ""
                 if " " in path:
                     continue    
                 menu.append(
-                    [KeyboardButtonCallback(f"{prev} {folder} {path}", f"settings {data_cb} {path}".encode("UTF-8"))])
+                    [KeyboardButtonCallback(f"{prev2} {folder1} {path}", f"settings {data_cb} {path}".encode("UTF-8"))])
     except Exception as e:
         log.info(e)
