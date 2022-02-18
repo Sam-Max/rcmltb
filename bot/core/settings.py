@@ -91,7 +91,7 @@ async def handle_setting_callback(e):
         await e.delete()
 
 
-async def handle_settings(e, edit=False, msg="", drive_name="", rclone_dir='', data_cb="", submenu=None, session_id=None):
+async def handle_settings(e, edit=False, msg="", drive_name="", rclone_dir='', data_cb="", submenu=None, session_id=None, is_main_m= True):
     # this function creates the menu
     # and now submenus too
 
@@ -181,7 +181,7 @@ async def handle_settings(e, edit=False, msg="", drive_name="", rclone_dir='', d
 
     elif submenu == "list_drive":
         conf_path = await get_config()
-        await list_selected_drive("/", drive_name, conf_path, rclone_dir, data_cb, menu)
+        await list_selected_drive("/", drive_name, conf_path, rclone_dir, data_cb, menu, is_main_m= is_main_m)
 
         menu.append(
             [KeyboardButtonCallback("Cerrar Menu", f"settings selfdest {session_id}".encode("UTF-8"))]

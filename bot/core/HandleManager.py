@@ -101,26 +101,22 @@ def add_handlers(bot: TelegramClient):
         data= query.data
         list = data.split(" ")
         message= query.message
-        #messageid= query.message.message_id
+        messageid= query.message.message_id
         message_type= get_val("MESSAGE_TYPE")
 
         if "default" in list[1]:
             await down_load_media_pyro(client, message, message_type)
 
         if "rename" in list[1]: 
-            # await message.reply(
-            #     text= "Envíe el nuevo nombre para el archivo.", 
-            #     reply_to_message_id= messageid, 
-            #     reply_markup= ForceReply()
-            # )
-
-            await client.send_message(message.chat.id, "Envíe el nuevo nombre para el archivo( 15 seg para responder)")
-            reply_message = await client.listen.Message(filters.text, timeout = 15)
-            
+            mess_age = await message.reply(
+                 text= "Envíe el nuevo nombre para el archivo ( 15s para responder)", 
+                 reply_to_message_id= messageid, 
+                 reply_markup= ForceReply()
+             )
+            reply_message = await client.listen.Message(filters.reply, timeout = 15)
             await down_load_media_pyro(client, message, message_type, reply_message.text, True)
 
     #telethon
-
     bot.add_event_handler(
         handle_cancel,
         events.CallbackQuery(pattern="upcancel")
