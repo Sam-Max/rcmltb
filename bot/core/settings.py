@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 
+from bot.downloaders.telegram_download import LOGGER, down_load_media_pyro
 from bot.uploaders.rclone_copy_transfer import rclone_copy_transfer
+from bot.utils.get_size_p import get_size
+from bot.utils.get_file_id import get_message_type
 from telethon.tl.types import KeyboardButtonCallback
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton,ReplyKeyboardMarkup
 from telethon import events
+from pyrogram import filters
+from pyrogram.handlers import MessageHandler
 from bot import SessionVars
 from bot.utils.get_rclone import get_rclone
 from bot.utils.list_selected_drive import list_selected_drive
-import asyncio as aio
+import asyncio
 from .getVars import get_val
 from functools import partial
 import time, os, configparser, logging, traceback
@@ -186,8 +192,41 @@ async def handle_settings(e, edit=False, msg="", drive_name="", rclone_dir='', d
                                  parse_mode="html", buttons=menu, link_preview=False)
         else:
             rmess = await e.reply(header,
-                                  parse_mode="html", buttons=menu, link_preview=False)                             
+                                  parse_mode="html", buttons=menu, link_preview=False)
 
+async def start_rename_menu(client, message):
+    header_m = "Que nombre quieres usar?\n\n"
+   
+    #LOGGER.info(message)
+    replied_message= message.reply_to_message
+
+    if replied_message is not None :
+            if message.reply_to_message.text is None:
+
+                message_type = get_message_type(replied_message)
+
+                name= message_type.file_name
+                size= get_size(message_type.file_size)
+                #file_id= message_type.file_id
+
+                msg= f"Nombre: `{name}`\n\nTamano: `{size}`"
+
+                SessionVars.update_var("MESSAGE_TYPE", message_type)
+                    
+                keyboard = [[InlineKeyboardButton("Por Defecto", callback_data= f'renaming default'),
+                            InlineKeyboardButton("Renombrar", callback_data='renaming rename')],
+                            [InlineKeyboardButton("Cerrar", callback_data= f"settings selfdest".encode("UTF-8"))]
+                            ]
+
+                reply_markup = InlineKeyboardMarkup(inline_keyboard= keyboard)
+
+                await message.reply_text(header_m + msg, reply_markup= reply_markup)
+            else:
+               await message.reply("Responda a un archivo de Telegram para subir a la nube")          
+    else:
+        await message.reply("Responda a un archivo de Telegram para subir a la nube") 
+
+                                                                        
 # an attempt to manager all the input
 async def general_input_manager(e, mmes, var_name, datatype, value, sub_menu):
     if value is not None and not "ignore" in value:

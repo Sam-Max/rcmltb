@@ -2,16 +2,14 @@
 # (c) YashDK [yash-dk@github]
 
 from datetime import datetime
-
 from telethon import TelegramClient, events
 from telethon import __version__ as telever
 from pyrogram import __version__ as pyrover
 from telethon.tl.types import KeyboardButtonCallback
 from .. import SessionVars, uptime
-import asyncio
+from pyrogram.types import ForceReply
 from ..core.getCommand import get_command, get_command_p
 from ..core.getVars import get_val
-from ..uploaders.rclone_upload import RcloneUploader
 from ..utils.speedtest import get_speed
 from ..utils import human_format
 from ..utils.misc_utils import clear_stuff
@@ -19,8 +17,8 @@ from ..utils.admin_check import is_admin
 from .. import SessionVars, uptime
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler
-from .settings import handle_settings, handle_setting_callback
-from bot.downloaders.telegram_download import LOGGER, down_load_media_pyro
+from .settings import handle_settings, handle_setting_callback, start_rename_menu
+from bot.downloaders.telegram_download import down_load_media_pyro
 import asyncio as aio
 import re, logging, time, os, psutil, shutil, signal
 from bot import __version__
@@ -31,7 +29,7 @@ torlog = logging.getLogger(__name__)
 def add_handlers(bot: TelegramClient):
 
 
-    # pyro handler
+    #pyro handler
     download_handler = MessageHandler(
         handle_download_command,
         filters=filters.command([get_command_p("LEECH")])
@@ -95,7 +93,31 @@ def add_handlers(bot: TelegramClient):
 
     bot.loop.run_until_complete(booted(bot))
 
+   
     # *********** Callback Handlers ***********  
+
+    @bot.pyro.on_callback_query(filters="renaming")
+    async def handle_download_cb(client, query):
+        data= query.data
+        list = data.split(" ")
+        message= query.message
+        #messageid= query.message.message_id
+        message_type= get_val("MESSAGE_TYPE")
+
+        if "default" in list[1]:
+            await down_load_media_pyro(client, message, message_type)
+
+        if "rename" in list[1]: 
+            # await message.reply(
+            #     text= "Envíe el nuevo nombre para el archivo.", 
+            #     reply_to_message_id= messageid, 
+            #     reply_markup= ForceReply()
+            # )
+
+            await client.send_message(message.chat.id, "Envíe el nuevo nombre para el archivo(15 seg para responder)")
+            reply_message = await client.listen.Message(filters.text, timeout = 15)
+            
+            await down_load_media_pyro(client, message, message_type, reply_message.text, True)
 
     #telethon
 
@@ -121,9 +143,8 @@ def add_handlers(bot: TelegramClient):
 
 # *********** Handlers Below ***********
 
-
 async def handle_download_command(client, message):
-    await down_load_media_pyro(client, message)
+    await start_rename_menu(client, message)
 
 async def handle_copy_command(e):
     if await is_admin(e.sender_id):

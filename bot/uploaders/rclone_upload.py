@@ -3,6 +3,7 @@
 from configparser import ConfigParser
 from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot import SessionVars
+from bot.utils.rename_file import rename
 from ..core.getVars import get_val
 import os
 import logging
@@ -18,16 +19,20 @@ log = logging.getLogger(__name__)
 
 class RcloneUploader():
 
-    def __init__(self, path, user_msg, dest_drive=None):
+    def __init__(self, path, user_msg, new_name, dest_drive=None, is_rename= False):
         super().__init__()
         self._path = path
+        self._is_rename= is_rename
         self._user_msg = user_msg
+        self._new_name= new_name
         self._rclone_pr = None
         self._dest_drive = dest_drive
         self.dest_base= None
 
     async def execute(self):
         path = self._path
+        new_name= self._new_name
+        is_rename= self._is_rename
        
         if self._dest_drive is None:
             dest_drive = get_val("DEF_RCLONE_DRIVE")
@@ -59,6 +64,9 @@ class RcloneUploader():
             await self._user_msg.reply("the path {path} not found")
             return 
 
+        if is_rename:
+            path = await rename(path, new_name)
+            
         if os.path.isdir(path):
             new_dest_base = os.path.join(self.dest_base, os.path.basename(path))
             rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', str(path),

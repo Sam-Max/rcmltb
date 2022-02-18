@@ -75,8 +75,7 @@ async def download_media_tele(e):
 
 
 # PYROGRAM
-async def down_load_media_pyro(client, message):
-    if message.reply_to_message is not None:
+async def down_load_media_pyro(client, message, message_type, new_name= None, is_rename= False):
         mess_age = await message.reply_text("...", quote=True)
         LOGGER.info("downloading with pyro client")
         start_t = datetime.now()
@@ -84,7 +83,7 @@ async def down_load_media_pyro(client, message):
         path = path + "/"
         c_time = time.time()
         the_real_download_location = await client.download_media(
-            message=message.reply_to_message,
+            message=message_type,
             file_name=path,
             progress=progress_for_pyrogram,
             progress_args=(
@@ -94,12 +93,15 @@ async def down_load_media_pyro(client, message):
         end_t = datetime.now()
         ms = (end_t - start_t).seconds
         print(the_real_download_location)
+        
         try:
             await mess_age.edit(text= f"Descargado en <u>{ms}</u> segundos")
         except Exception:
             logging.info("Exception ocurred at line 98 on telegram_download")
             pass
-        rclone_up = RcloneUploader(the_real_download_location, mess_age, None)
+        
+        rclone_up = RcloneUploader(the_real_download_location, mess_age, new_name, is_rename= is_rename)
         await rclone_up.execute()
-    else:
-        await message.reply("Responda a un archivo de Telegram para subir a la nube")
+
+
+
