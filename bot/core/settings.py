@@ -1,18 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from bot.downloaders.telegram_download import LOGGER, down_load_media_pyro
 from bot.uploaders.rclone_copy_transfer import rclone_copy_transfer
-from bot.utils.get_size_p import get_size
-from bot.utils.get_file_id import get_message_type
 from telethon.tl.types import KeyboardButtonCallback
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton,ReplyKeyboardMarkup
 from telethon import events
-from pyrogram import filters
-from pyrogram.handlers import MessageHandler
 from bot import SessionVars
 from bot.utils.get_rclone import get_rclone
 from bot.utils.list_selected_drive import list_selected_drive
-import asyncio
 from .getVars import get_val
 from functools import partial
 import time, os, configparser, logging, traceback
@@ -35,17 +28,14 @@ async def handle_setting_callback(e):
     cmd = data.split(" ")
     val = ""
 
-    if cmd[1] == "rclonemenu":
+    # MAIN MENU
+    if cmd[1] == "rclone_main_menu":
         # this is menu
         mmes = await e.get_message()
         await handle_settings(mmes, True, "\nBienvenido al Menu de Configuracion de Rclone. TD= Team Drive, ND= Normal Drive",
-                              submenu="rclonemenu", session_id=session_id)
-    elif cmd[1] == "mainmenu":
-        # this is menu
-        mmes = await e.get_message()
-        await handle_settings(mmes, True, session_id=session_id)
-
-    elif cmd[1] == "rcloneconfig":
+                              submenu="main_menu_drives", session_id=session_id)
+   
+    elif cmd[1] == "load_rclone_config":
         await e.answer("Envíe el archivo de configuración rclone.conf", alert=True)
         mmes = await e.get_message()
         await mmes.edit(f"{mmes.raw_text}\n/ignore para ir atras", buttons=None)
@@ -53,29 +43,10 @@ async def handle_setting_callback(e):
 
         await general_input_manager(e, mmes, "RCLONE_CONFIG", "str", val, "rclonemenu")
 
-    elif cmd[1] == "rclonemenucopy":
-        SessionVars.update_var("ORIGIN_DIR", cmd[2])
-        await handle_settings(await e.get_message(), edit=True, msg="Seleccione unidad destino", submenu="rclonemenucopy", data_cb="list_drive_dest")                         
-
-    elif cmd[1] == "start_copy":
-        torlog.info("DIR: {}".format(cmd[2]))
-        SessionVars.update_var("DEST_DIR", cmd[2])
-        await rclone_copy_transfer(e, conf_path)
-
-    elif cmd[1] == "list_drive":
-        SessionVars.update_var("ORIGIN_DRIVE", cmd[2])
-        await handle_settings(await e.get_message(), edit=True, msg='Seleccione directorio origen', drive_name= cmd[2],submenu="list_drive", data_cb="rclonemenucopy")
-
-    elif cmd[1] == "list_drive_dest":
-        torlog.info("DIR: {}".format(cmd[2]))
-        SessionVars.update_var("DEST_DRIVE", cmd[2])
-        await handle_settings(await e.get_message(), edit=True, msg='Seleccione directorio destino', drive_name= cmd[2],
-                              submenu="list_drive", data_cb="start_copy")
-
     elif cmd[1] == "list_drive_main_menu":
         base_dir = get_val("BASE_DIR")
         SessionVars.update_var("DEF_RCLONE_DRIVE", cmd[2])
-        await handle_settings(await e.get_message(), edit=True, msg='Seleccione carpeta para subir', drive_name= cmd[2], rclone_dir= base_dir, submenu="list_drive", data_cb="reload_list_drive_main_menu")
+        await handle_settings(await e.get_message(), edit=True, msg='Seleccione carpeta para subir', drive_name= cmd[2], rclone_dir= base_dir, submenu="list_drive", data_cb="reload_list_drive_main_menu", is_main_m=True)     
 
     elif cmd[1] == "reload_list_drive_main_menu":
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
@@ -84,7 +55,34 @@ async def handle_setting_callback(e):
         else:
             rclone_route= rclone_drive
         SessionVars.update_var("BASE_DIR", cmd[2])
-        await handle_settings(await e.get_message(), edit=True, msg=f'Cambio al ruta predeterminada a {rclone_route}', drive_name= rclone_drive, rclone_dir= cmd[2], submenu="list_drive", data_cb="reload_list_drive_main_menu")     
+        await handle_settings(await e.get_message(), edit=True, msg=f'Cambio al ruta predeterminada a {rclone_route}', drive_name= rclone_drive, rclone_dir= cmd[2], submenu="list_drive", data_cb="reload_list_drive_main_menu", is_main_m=True) 
+   
+    # COPY MENU
+    #1 submenu rclonemenucopy
+    
+    #2
+    elif cmd[1] == "list_drive":
+        SessionVars.update_var("ORIGIN_DRIVE", cmd[2])
+        await handle_settings(await e.get_message(), edit=True, msg='Seleccione directorio origen', drive_name= cmd[2],submenu="list_drive", data_cb="rclone_menu_copy", is_main_m=False)
+
+    #3
+    elif cmd[1] == "rclone_menu_copy":
+        SessionVars.update_var("ORIGIN_DIR", cmd[2])
+        await handle_settings(await e.get_message(), edit=True, msg="Seleccione unidad destino", submenu="rclone_menu_copy", data_cb="list_drive_dest")                         
+
+    #4
+    elif cmd[1] == "list_drive_dest":
+        torlog.info("DIR: {}".format(cmd[2]))
+        SessionVars.update_var("DEST_DRIVE", cmd[2])
+        await handle_settings(await e.get_message(), edit=True, msg='Seleccione directorio destino', drive_name= cmd[2],
+                              submenu="list_drive", data_cb="start_copy", is_main_m=False)
+    #5
+    elif cmd[1] == "start_copy":
+        torlog.info("DIR: {}".format(cmd[2]))
+        SessionVars.update_var("DEST_DIR", cmd[2])
+        await rclone_copy_transfer(e, conf_path)                          
+
+    # close menu
     
     elif cmd[1] == "selfdest":
         await e.answer("Closed")
@@ -98,7 +96,7 @@ async def handle_settings(e, edit=False, msg="", drive_name="", rclone_dir='', d
     menu = []
 
     if submenu is None:
-        await get_sub_menu("☁️ Abrir Menu Rclone ☁️", "rclonemenu", session_id, menu)
+        await get_sub_menu("☁️ Abrir Menu Rclone ☁️", "rclone_main_menu", session_id, menu)
         menu.append(
             [KeyboardButtonCallback("Cerrar Menu", f"settings selfdest {session_id}".encode("UTF-8"))]
         )
@@ -112,9 +110,9 @@ async def handle_settings(e, edit=False, msg="", drive_name="", rclone_dir='', d
             rmess = await e.reply(header_m,
                                   parse_mode="html", buttons=menu, link_preview=False)
 
-    elif submenu == "rclonemenu":
+    elif submenu == "main_menu_drives":
 
-        rcval = await get_string_variable("RCLONE_CONFIG", menu, "rcloneconfig", session_id)
+        rcval = await get_string_variable("RCLONE_CONFIG", menu, "load_rclone_config", session_id)
 
         if rcval != "None":
             # create a all drives menu
@@ -151,7 +149,7 @@ async def handle_settings(e, edit=False, msg="", drive_name="", rclone_dir='', d
                                  parse_mode="html", buttons=menu, link_preview=False)
 
 
-    elif submenu == "rclonemenucopy":
+    elif submenu == "rclone_menu_copy":
 
         #path = get_val("RCLONE_CONFIG")
         path= os.path.join(os.getcwd(), "rclone.conf")
@@ -194,42 +192,6 @@ async def handle_settings(e, edit=False, msg="", drive_name="", rclone_dir='', d
             rmess = await e.reply(header,
                                   parse_mode="html", buttons=menu, link_preview=False)
 
-async def start_rename_menu(client, message):
-    header_m = "Que nombre quieres usar?\n\n"
-   
-    #LOGGER.info(message)
-    replied_message= message.reply_to_message
-
-    default= "📄"
-    rename= "📝"
-
-    if replied_message is not None :
-            if replied_message.text is None:
-
-                message_type = get_message_type(replied_message)
-
-                name= message_type.file_name
-                size= get_size(message_type.file_size)
-                #file_id= message_type.file_id
-
-                msg= f"Nombre: `{name}`\n\nTamano: `{size}`"
-
-                SessionVars.update_var("MESSAGE_TYPE", message_type)
-                    
-                keyboard = [[InlineKeyboardButton(f"{default} Por Defecto", callback_data= f'renaming default'),
-                            InlineKeyboardButton(f"{rename} Renombrar", callback_data='renaming rename')],
-                            [InlineKeyboardButton("Cerrar", callback_data= f"settings selfdest".encode("UTF-8"))]
-                            ]
-
-                reply_markup = InlineKeyboardMarkup(inline_keyboard= keyboard)
-
-                await message.reply_text(header_m + msg, reply_markup= reply_markup)
-            else:
-               await message.reply("Responda a un archivo de Telegram para subir a la nube")          
-    else:
-        await message.reply("Responda a un archivo de Telegram para subir a la nube") 
-
-                                                                        
 # an attempt to manager all the input
 async def general_input_manager(e, mmes, var_name, datatype, value, sub_menu):
     if value is not None and not "ignore" in value:

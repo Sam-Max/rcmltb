@@ -6,6 +6,9 @@ from telethon import TelegramClient, events
 from telethon import __version__ as telever
 from pyrogram import __version__ as pyrover
 from telethon.tl.types import KeyboardButtonCallback
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from bot.utils.get_file_id import get_message_type
+from bot.utils.get_size_p import get_size
 from .. import SessionVars, uptime
 from pyrogram.types import ForceReply
 from ..core.getCommand import get_command, get_command_p
@@ -17,7 +20,7 @@ from ..utils.admin_check import is_admin
 from .. import SessionVars, uptime
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler
-from .settings import handle_settings, handle_setting_callback, start_rename_menu
+from .settings import handle_settings, handle_setting_callback
 from bot.downloaders.telegram_download import down_load_media_pyro
 import asyncio as aio
 import re, logging, time, os, psutil, shutil, signal
@@ -108,7 +111,7 @@ def add_handlers(bot: TelegramClient):
             await down_load_media_pyro(client, message, message_type)
 
         if "rename" in list[1]: 
-            mess_age = await message.reply(
+            await message.reply(
                  text= "Envíe el nuevo nombre para el archivo ( 15s para responder)", 
                  reply_to_message_id= messageid, 
                  reply_markup= ForceReply()
@@ -140,11 +143,43 @@ def add_handlers(bot: TelegramClient):
 # *********** Handlers Below ***********
 
 async def handle_download_command(client, message):
-    await start_rename_menu(client, message)
+    header_m = "Que nombre quieres usar?\n\n"
+   
+    #LOGGER.info(message)
+    replied_message= message.reply_to_message
+
+    default= "📄"
+    rename= "📝"
+
+    if replied_message is not None :
+            if replied_message.text is None:
+
+                message_type = get_message_type(replied_message)
+
+                name= message_type.file_name
+                size= get_size(message_type.file_size)
+                #file_id= message_type.file_id
+
+                msg= f"Nombre: `{name}`\n\nTamano: `{size}`"
+
+                SessionVars.update_var("MESSAGE_TYPE", message_type)
+                    
+                keyboard = [[InlineKeyboardButton(f"{default} Por Defecto", callback_data= f'renaming default'),
+                            InlineKeyboardButton(f"{rename} Renombrar", callback_data='renaming rename')],
+                            [InlineKeyboardButton("Cerrar", callback_data= f"settings selfdest".encode("UTF-8"))]
+                            ]
+
+                reply_markup = InlineKeyboardMarkup(inline_keyboard= keyboard)
+
+                await message.reply_text(header_m + msg, reply_markup= reply_markup)
+            else:
+               await message.reply("Responda a un archivo de Telegram para subir a la nube")          
+    else:
+        await message.reply("Responda a un archivo de Telegram para subir a la nube") 
 
 async def handle_copy_command(e):
     if await is_admin(e.sender_id):
-            await handle_settings(e, msg= "Seleccione unidad origen", submenu= "rclonemenucopy", data_cb= "list_drive")
+            await handle_settings(e, msg= "Seleccione unidad origen", submenu= "rclone_menu_copy", data_cb= "list_drive")
     else:
        await e.delete()
 
