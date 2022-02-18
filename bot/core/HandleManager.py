@@ -114,7 +114,7 @@ def add_handlers(bot: TelegramClient):
             #     reply_markup= ForceReply()
             # )
 
-            await client.send_message(message.chat.id, "Envíe el nuevo nombre para el archivo(15 seg para responder)")
+            await client.send_message(message.chat.id, "Envíe el nuevo nombre para el archivo( 15 seg para responder)")
             reply_message = await client.listen.Message(filters.text, timeout = 15)
             
             await down_load_media_pyro(client, message, message_type, reply_message.text, True)

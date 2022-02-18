@@ -200,8 +200,11 @@ async def start_rename_menu(client, message):
     #LOGGER.info(message)
     replied_message= message.reply_to_message
 
+    default= "📄"
+    rename= "📝"
+
     if replied_message is not None :
-            if message.reply_to_message.text is None:
+            if replied_message.text is None:
 
                 message_type = get_message_type(replied_message)
 
@@ -213,8 +216,8 @@ async def start_rename_menu(client, message):
 
                 SessionVars.update_var("MESSAGE_TYPE", message_type)
                     
-                keyboard = [[InlineKeyboardButton("Por Defecto", callback_data= f'renaming default'),
-                            InlineKeyboardButton("Renombrar", callback_data='renaming rename')],
+                keyboard = [[InlineKeyboardButton(f"{default} Por Defecto", callback_data= f'renaming default'),
+                            InlineKeyboardButton(f"{rename} Renombrar", callback_data='renaming rename')],
                             [InlineKeyboardButton("Cerrar", callback_data= f"settings selfdest".encode("UTF-8"))]
                             ]
 
