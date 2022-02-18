@@ -5,6 +5,7 @@ from bot.core.getVars import get_val
 import logging
 from pyrogram import Client
 from bot.client import RcloneTgClient
+from convopyro import Conversation
 
 if __name__ == "__main__":
 
@@ -22,7 +23,8 @@ if __name__ == "__main__":
 
     # Pyro Client creation and linking
     pyroclient = Client("pyrosession", api_id=get_val("API_ID"), api_hash=get_val("API_HASH"),
-                        bot_token=get_val("BOT_TOKEN"), workers=10)
+                        bot_token=get_val("BOT_TOKEN"), workers=20)
+    Conversation(pyroclient)                    
     pyroclient.start()
     bot.pyro = pyroclient
     logging.info("Pryogram Client created.")
