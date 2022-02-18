@@ -30,7 +30,6 @@ async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, dat
 
     try:
         data = json.loads(stdout)
-        log.info(data)
         for i in data:
             path = i["Path"]
             path == path.strip()
@@ -44,7 +43,7 @@ async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, dat
                     folder1= ""
                     mime_type= ""
                     zip= ""
-                if mime_type == 'application/zip':  
+                if mime_type == 'application/zip' or mime_type == 'application/x-rar':  
                     zip= "🗄"  
                     folder1= ""
                 if " " in path:
