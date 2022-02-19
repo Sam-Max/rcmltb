@@ -1,13 +1,14 @@
 #Commands for bott 
-- subir - subir a la nube 
-- copiar - copiar de una nube a la otra
-- configuracion - configurar rclone 
-- info - info del bot 
-- exec - ejecutar comandos linux 
-- logs - obtener logs del servidor 
-- servidor - obtener info del servidor
-- test_velocidad- test velocidad 
-- limpiar- limpiar descargas
+start - mensaje bienvenida
+subir - subir a la nube 
+copiar - copiar de una nube a la otra
+configuracion - configurar rclone 
+info - info del bot 
+exec - ejecutar comandos linux 
+logs - obtener logs del servidor 
+servidor - obtener info del servidor
+test_velocidad- test velocidad 
+limpiar- limpiar descargas
 
 #Secrets for github
 
