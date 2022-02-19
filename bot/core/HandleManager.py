@@ -35,7 +35,8 @@ def add_handlers(bot: TelegramClient):
     #pyro handler
     download_handler = MessageHandler(
         handle_download_command,
-        filters=filters.command([get_command_p("LEECH")])
+        #filters=filters.command([get_command_p("LEECH")])
+        filters=filters.media & filters.incoming
     )
     bot.pyro.add_handler(download_handler)
 
@@ -149,18 +150,18 @@ def add_handlers(bot: TelegramClient):
 # *********** Handlers Below ***********
 
 async def handle_download_command(client, message):
-    header_m = "Que nombre quieres usar?\n\n"
+                header_m = "Que nombre quieres usar?\n\n"
    
     #LOGGER.info(message)
-    replied_message= message.reply_to_message
+    #replied_message= message.reply_to_message
 
-    default= "📄"
-    rename= "📝"
+                default= "📄"
+                rename= "📝"
 
-    if replied_message is not None :
-            if replied_message.text is None:
+    #if replied_message is not None :
+            #if replied_message.text is None:
 
-                message_type = get_message_type(replied_message)
+                message_type = get_message_type(message)
 
                 name= message_type.file_name
                 size= get_size(message_type.file_size)
@@ -178,10 +179,10 @@ async def handle_download_command(client, message):
                 reply_markup = InlineKeyboardMarkup(inline_keyboard= keyboard)
 
                 await message.reply_text(header_m + msg, reply_markup= reply_markup)
-            else:
-               await message.reply("Responda a un archivo de Telegram para subir a la nube")          
-    else:
-        await message.reply("Responda a un archivo de Telegram para subir a la nube") 
+            #else:
+               #await message.reply("Responda a un archivo de Telegram para subir a la nube")          
+   # else:
+        #await message.reply("Responda a un archivo de Telegram para subir a la nube") 
 
 async def handle_copy_command(e):
     if await is_admin(e.sender_id):
