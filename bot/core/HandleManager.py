@@ -117,12 +117,10 @@ def add_handlers(bot: TelegramClient):
                  #reply_markup= ForceReply()
              )
             reply_message = await client.listen.Message(filters.text, id='1', timeout= 30)
-            LOGGER.info(reply_message.text)
             if "/ignorar" in reply_message.text:
                 await question.delete()
                 await message.delete()
-                check= await client.listen.Cancel("1")
-                LOGGER.info(check)
+                await client.listen.Cancel("1")
             else:
                 await question.delete()
                 await down_load_media_pyro(client, message, message_type, reply_message.text, True)
@@ -187,7 +185,7 @@ async def handle_download_command(client, message):
 
 async def handle_copy_command(e):
     if await is_admin(e.sender_id):
-            await handle_settings(e, msg= "Seleccione unidad origen", submenu= "rclone_menu_copy", data_cb= "list_drive")
+            await handle_settings(e, msg= "Seleccione unidad origen", submenu= "rclone_menu_copy", data_cb= "list_drive_origin")
     else:
        await e.delete()
 

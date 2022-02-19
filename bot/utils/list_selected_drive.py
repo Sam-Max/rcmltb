@@ -9,10 +9,9 @@ yes = "✅"
 folder = "📁"
 
 async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, is_main_m= True):
-    prev="" 
-    if get_val("BASE_DIR") == "/":
-        prev= yes
-    menu.append([KeyboardButtonCallback(f"{prev} Seleccione esta Carpeta", f"settings {data_cb} / )".encode("UTF-8"))])
+    menu.append([KeyboardButtonCallback(f"{yes} Seleccione esta Carpeta", f"settings selfdest".encode("UTF-8"))])
+
+    logging.info(f"{drive_name}:{drive_base}")
 
     if is_main_m:
         cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only"]   
@@ -32,14 +31,13 @@ async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, dat
         data = json.loads(stdout)
         for i in data:
             path = i["Path"]
+            #logging.info(path)
             path == path.strip()
             mime_type= i['MimeType']
-            prev= ""   
             folder1= folder
             zip= ""
             if len(path) <= 20: 
                 if path == rclone_dir: #selected folder or zip
-                    prev= yes
                     folder1= ""
                     mime_type= ""
                     zip= ""
@@ -49,6 +47,6 @@ async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, dat
                 if " " in path:
                     continue    
                 menu.append(
-                    [KeyboardButtonCallback(f"{prev} {folder1} {zip} {path}", f"settings {data_cb} {path}".encode("UTF-8"))])
+                    [KeyboardButtonCallback(f"{folder1} {zip} {path}", f"settings {data_cb} {path}".encode("UTF-8"))])
     except Exception as e:
         log.info(e)

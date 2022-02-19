@@ -68,7 +68,9 @@ class RcloneUploader():
             path = await rename(path, new_name)
             
         if os.path.isdir(path):
-            new_dest_base = os.path.join(self.dest_base, os.path.basename(path))
+            #new_dest_base = os.path.join(self.dest_base, os.path.basename(path))
+            new_dest_base = self.dest_base
+            logging.info(new_dest_base)
             rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', str(path),
                                     f'{dest_drive}:{new_dest_base}', '-P']
 
@@ -98,6 +100,7 @@ class RcloneUploader():
 
         else:
             new_dest_base = self.dest_base
+            logging.info(new_dest_base)
             rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', str(path),
                                     f'{dest_drive}:{new_dest_base}', '-P']
             
