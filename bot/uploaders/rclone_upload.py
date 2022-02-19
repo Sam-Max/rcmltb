@@ -158,8 +158,8 @@ class RcloneUploader():
                             await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
                                 InlineKeyboardButton("Cancel", callback_data= "upcancel")]]))    
                             msg1= msg
-                        except Exception: 
-                            log.info("Exception ocurred at line 148 on rclone_upload")  
+                        except MessageNotModified as e: 
+                            log.info( e)  
                             pass                                
                         
             if data == "":

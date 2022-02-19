@@ -104,11 +104,7 @@ async def down_load_media_pyro(client, message, message_type, new_name= None, is
         ms = (end_t - start_t).seconds
         print(the_real_download_location)
         
-        try:
-            await mess_age.edit(text= f"Descargado en <u>{ms}</u> segundos")
-        except Exception:
-            logging.info("Exception ocurred at line 98 on telegram_download")
-            pass
+        await mess_age.edit(text= f"Descargado en <u>{ms}</u> segundos")
         
         rclone_up = RcloneUploader(the_real_download_location, mess_age, new_name, is_rename= is_rename)
         await rclone_up.execute()
