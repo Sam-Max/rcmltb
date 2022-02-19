@@ -36,7 +36,7 @@ def add_handlers(bot: TelegramClient):
     download_handler = MessageHandler(
         handle_download_command,
         #filters=filters.command([get_command_p("LEECH")])
-        filters=filters.media & filters.incoming
+        filters=filters.media
     )
     bot.pyro.add_handler(download_handler)
 
