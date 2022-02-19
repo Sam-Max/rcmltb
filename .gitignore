@@ -1,6 +1,5 @@
 # custom config
 ExecVars.py
-ConfigSample.py
 
 # you know these
 venv
@@ -21,4 +20,3 @@ torlog.txt
 sa_accounts/
 sa_files*
 rclone.conf
-bot/config/ConfigSample.py

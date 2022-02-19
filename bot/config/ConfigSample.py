@@ -23,6 +23,8 @@ class ExecConfig:
         # to determine if upload process is canceled        
         UP_CANCEL= False
 
+        RCLONE_DIR=""
+
         # For vps set path here or you can use runtime too
         #RCLONE_CONFIG= os.path.join(os.getcwd(), 'rclone.conf')
 
