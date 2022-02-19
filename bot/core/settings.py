@@ -33,7 +33,7 @@ async def handle_setting_callback(e):
     # MAIN MENU
     if cmd[1] == "rclone_main_menu":
         mmes = await e.get_message()
-        await handle_settings(mmes, edit= True, msg=f"\nBienvenido al Menu de Configuracion de Rclone\n\nRuta:`{rclone_drive}:{base_dir}`",
+        await handle_settings(mmes, edit= True, msg=f"\nBienvenido al Menu de Configuracion de Rclone\n\nRuta: `{rclone_drive}:{base_dir}`",
                               submenu="main_menu_drives", session_id=session_id)
    
     elif cmd[1] == "load_rclone_config":
@@ -143,7 +143,7 @@ async def handle_settings(e, drive_base="", edit=False, msg="", drive_name="", r
 
         if edit:
             rmess = await e.edit(header + msg,
-                                 parse_mode="html", buttons=menu, link_preview=False)
+                                 parse_mode="md", buttons=menu, link_preview=False)
 
 
     elif submenu == "rclone_menu_copy":
@@ -183,10 +183,10 @@ async def handle_settings(e, drive_base="", edit=False, msg="", drive_name="", r
         )
         if edit:
             rmess = await e.edit(msg,
-                                 parse_mode="html", buttons=menu, link_preview=False)
+                                 parse_mode="md", buttons=menu, link_preview=False)
         else:
             rmess = await e.reply(header,
-                                  parse_mode="html", buttons=menu, link_preview=False)
+                                  parse_mode="md", buttons=menu, link_preview=False)
 
 # an attempt to manager all the input
 async def general_input_manager(e, mmes, var_name, datatype, value, sub_menu):
