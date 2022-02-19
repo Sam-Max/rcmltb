@@ -8,6 +8,8 @@ import asyncio
 import os
 import time
 from datetime import datetime
+from bot.core.getVars import get_val
+from bot.utils.get_rclone_conf import get_config
 from ..uploaders.rclone_upload import RcloneUploader
 from telethon.tl import types
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
@@ -78,6 +80,14 @@ async def download_media_tele(e):
 async def down_load_media_pyro(client, message, message_type, new_name= None, is_rename= False):
         mess_age = await message.reply_text("...", quote=True)
         LOGGER.info("downloading with pyro client")
+        conf_path = await get_config()
+        if conf_path is None:
+            await mess_age.edit("No se encontró el archivo de configuración rclone.")
+            return
+        dest_drive = get_val("DEF_RCLONE_DRIVE")
+        if dest_drive == "":
+            await mess_age.edit("No ha seleccionado una unidad a donde subir")
+            return      
         start_t = datetime.now()
         path = os.path.join(os.getcwd(), "Downloads")
         path = path + "/"

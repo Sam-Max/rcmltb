@@ -5,6 +5,7 @@ from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot import SessionVars
 from bot.utils.rename_file import rename
 from ..core.getVars import get_val
+from bot.utils.get_rclone_conf import get_config
 import os
 import logging
 import subprocess
@@ -19,32 +20,23 @@ log = logging.getLogger(__name__)
 
 class RcloneUploader():
 
-    def __init__(self, path, user_msg, new_name, dest_drive=None, is_rename= False):
+    def __init__(self, path, user_msg, new_name, is_rename= False):
         super().__init__()
         self._path = path
         self._is_rename= is_rename
         self._user_msg = user_msg
         self._new_name= new_name
         self._rclone_pr = None
-        self._dest_drive = dest_drive
         self.dest_base= None
 
     async def execute(self):
         path = self._path
         new_name= self._new_name
         is_rename= self._is_rename
-       
-        if self._dest_drive is None:
-            dest_drive = get_val("DEF_RCLONE_DRIVE")
-        else:
-            dest_drive = self._dest_drive
 
-        conf_path = await self.get_config()
+        dest_drive = get_val("DEF_RCLONE_DRIVE")
 
-        if conf_path is None:
-            await self._user_msg.reply("No se encontró el archivo de configuración rclone.")
-            return 
-
+        conf_path = await get_config()
         conf = ConfigParser()
         conf.read(conf_path)
         general_drive_name = ""
@@ -185,14 +177,14 @@ class RcloneUploader():
                 await asyncio.sleep(2)
                 process.stdout.flush()    
 
-    async def get_config(self):
-        config = os.path.join(os.getcwd(), 'rclone.conf')
-        if config is not None:
-            if isinstance(config, str):
-                if os.path.exists(config):
-                    return config
+    # async def get_config(self):
+    #     config = os.path.join(os.getcwd(), 'rclone.conf')
+    #     if config is not None:
+    #         if isinstance(config, str):
+    #             if os.path.exists(config):
+    #                 return config
 
-        return None
+    #     return None
 
     # async def check_errors(self, rclone, usermsg):
     #     blank = 0
