@@ -103,8 +103,12 @@ async def down_load_media_pyro(client, message, message_type, new_name= None, is
         end_t = datetime.now()
         ms = (end_t - start_t).seconds
         print(the_real_download_location)
-        
-        await mess_age.edit(text= f"Descargado en <u>{ms}</u> segundos")
+
+        try:
+            await mess_age.edit(text= f"Descargado en <u>{ms}</u> segundos")
+        except Exception as e:
+            LOGGER.info(e)
+            pass
         
         rclone_up = RcloneUploader(the_real_download_location, mess_age, new_name, is_rename= is_rename)
         await rclone_up.execute()
