@@ -4,7 +4,7 @@ from bot.uploaders.rclone_copy_transfer import rclone_copy_transfer
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 from bot import SessionVars
-from bot.utils.get_rclone import get_rclone
+from bot.utils.load_rclone import load_rclone
 from bot.utils.list_selected_drive import list_selected_drive
 from .getVars import get_val
 from functools import partial
@@ -382,7 +382,7 @@ async def get_string_variable(var_name, menu, callback_name, session_id):
 
     if var_name == "RCLONE_CONFIG":
 
-        rfile= await get_rclone()
+        rfile= os.path.join(os.getcwd(), "rclone.conf")
 
         if os.path.exists(rfile):
            val = "Se cargo el archivo personalizado. (Click para cargar otro)"

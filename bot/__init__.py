@@ -5,6 +5,9 @@ __author__ = ""
 
 #
 import logging
+#import dotenv
+
+from bot.utils.load_rclone import load_rclone
 from .core.varholdern import VarHolder
 import time
 
@@ -15,4 +18,7 @@ logging.basicConfig(
 )
 
 uptime = time.time()
+
+#dotenv.load_dotenv("config.env")
 SessionVars = VarHolder()
+load_rclone()
