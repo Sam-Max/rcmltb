@@ -30,7 +30,7 @@ class RcloneUploader():
         self.dest_base= None
 
     async def execute(self):
-        path = self._path
+        old_path = self._path
         new_name= self._new_name
         is_rename= self._is_rename
 
@@ -52,12 +52,14 @@ class RcloneUploader():
                     log.info(f"{general_drive_name} Upload Detected.")
                 break
 
-        if not os.path.exists(path):
+        if not os.path.exists(old_path):
             await self._user_msg.reply("the path {path} not found")
             return 
 
         if is_rename:
-            path = await rename(path, new_name)
+            path = await rename(old_path, new_name)
+        else:
+            path= old_path    
             
         if os.path.isdir(path):
             #new_dest_base = os.path.join(self.dest_base, os.path.basename(path))
