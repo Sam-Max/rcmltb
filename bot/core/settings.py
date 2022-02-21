@@ -4,7 +4,6 @@ from bot.uploaders.rclone_copy_transfer import rclone_copy_transfer
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 from bot import SessionVars
-from bot.utils.load_rclone import load_rclone
 from bot.utils.list_selected_drive import list_selected_drive
 from .getVars import get_val
 from functools import partial
