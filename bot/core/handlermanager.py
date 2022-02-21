@@ -11,9 +11,8 @@ from bot.utils.get_file_id import get_message_type
 from bot.utils.get_size_p import get_size
 from .. import SessionVars, uptime
 from pyrogram.types import ForceReply
-from telethon.errors.rpcerrorlist import ButtonDataInvalidError
-from pyrogram.errors import MessageNotModified
-from bot.utils.list_selected_drive import buttons_list_drive, get_list_drive_results
+from telethon.errors.rpcerrorlist import MessageNotModifiedError
+from bot.utils.list_selected_drive import get_list_drive_results, list_drive
 from .get_commands import get_command, get_command_p
 from .get_vars import get_val
 from ..utils.speedtest import get_speed
@@ -196,34 +195,34 @@ async def handle_download_command(client, message):
 
 async def handle_copy_command(e):
     if await is_admin(e.sender_id):
-            await handle_settings(e, msg= "Seleccione unidad origen", submenu= "rclone_menu_copy", data_cb= "list_drive_origin")
+            await handle_settings(e, msg= "Seleccione unidad origen", submenu= "rclone_menu_copy", data_cb= "list_drive_origin_cb", is_main_m=False)
     else:
        await e.delete()
 
 async def next_page(callback_query):
     _, offset = callback_query.data.decode().split(" ")
-
-    logging.info(offset)
+    
+    logging.info(f"OFFSET: {offset}")
 
     try:
         offset = int(offset)
     except:
         offset = 0
 
+    if offset==0:
+        return await callback_query.answer("No more", alert=True)
+        
     data = SessionVars.get_var("DRIVE_RES_DATA")
     result, next_offset, total = await get_list_drive_results(data, offset=offset)
 
     btn= []
-    btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings selfdest".encode("UTF-8"))])
+    btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings selfdest")])
 
-    for i in result:
-        path = i["Path"]
-        path == path.strip()
-        buttons_list_drive(path, menu= btn, data_cb= "", )
+    list_drive(result, menu=btn, data_cb= "list_dir_main_menu")
         
     try:
         next_offset = int(next_offset)
-        logging.info(next_offset)
+        logging.info(f"NEXT_OFFSET: {next_offset}")
     except:
         next_offset = 0
 
@@ -237,24 +236,22 @@ async def next_page(callback_query):
     if next_offset == 0:
         btn.append([KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}"),
             KeyboardButtonCallback(f"📃 Pages {round(int(offset) / 10) + 1} / {round(total / 10)}",
-            data="pages")]
+            data="setting pages")]
         )
     elif off_set is None:
-        btn.append([KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data=""),
+        btn.append([KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
             KeyboardButtonCallback("NEXT ⏩", data=f"next {next_offset}")])
     else:
-        btn.append([KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}".encode("UTF-8")),
-             KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="dfdf"),
-             KeyboardButtonCallback("NEXT ⏩", data=f"next {next_offset}".encode("UTF-8"))
-            ]
-         )
+        btn.append([KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}"),
+             KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
+             KeyboardButtonCallback("NEXT ⏩", data=f"next {next_offset}")
+            ])
     try:
         mmes= await callback_query.get_message()
         await mmes.edit("dfdf", buttons=btn)
-    except MessageNotModified as e:
+    except MessageNotModifiedError as e:
         logging.info(e)
         pass
-
 
 async def speed_handler(e):
     if await is_admin(e.sender_id):

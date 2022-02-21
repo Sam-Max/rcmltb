@@ -31,45 +31,50 @@ async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, dat
     SessionVars.update_var("DRIVE_RES_DATA", data)
     result, next_offset, total= await get_list_drive_results(data)
     
-    for i in result:
-        path = i["Path"]
-        path == path.strip()
-        mime_type= i['MimeType']
-        buttons_list_drive(path,rclone_dir, menu, data_cb, mime_type)
+    list_drive(result, rclone_dir, menu, data_cb)
 
     if offset == 0:
         menu.append(
-            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="pages"),
+            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
              KeyboardButtonCallback("NEXT ⏩", data= f"next {next_offset}".encode("UTF-8"))
             ]) 
 
-def buttons_list_drive(path, rclone_dir="", menu=[], data_cb="", mime_type=""):
-     folder = "📁"
-     if len(path) <= 40: 
-            #selected folder or zip
-            zip= ""
-            if path == rclone_dir: 
-                folder= ""
-                mime_type= ""
-            if mime_type == 'application/zip' or mime_type == 'application/x-rar': 
-                zip= "🗄" 
-                folder= ""
-            #if " " in path:
-                #continue 
-            logging.info(path)
-            menu.append(
-              [KeyboardButtonCallback(f"{folder} {zip} {path}", f"settings {data_cb} {path}".encode("UTF-8"))]
-              )
-
+def list_drive(result, rclone_dir="", menu=[], data_cb=""):
+     folder = ""
+     file= ""
+     for i in result:
+        path = i["Path"]
+        path == path.strip()
+        mime_type= i['MimeType']
+        if len(path) <= 30: 
+                #selected folder or zip
+                if path == rclone_dir: 
+                    folder= ""
+                    mime_type= ""
+                if mime_type == 'inode/directory': 
+                    file= "" 
+                    folder= "📁"
+                else:
+                    file= "🗄" 
+                    folder= ""
+                if " " in path:
+                    continue 
+                logging.info(path)
+                menu.append(
+                [KeyboardButtonCallback(f"{folder} {file} {path}", f"settings {data_cb} {path}")]
+                )
 
 async def get_list_drive_results(data, max_results=10, offset=0):
     total = len(data)
-    logging.info(total)
+    #logging.info(total)
+    logging.info(f"OFFSET: {offset}")
     next_offset = offset + max_results
-    logging.info(next_offset)
+    logging.info(f"NEXT_OFFSET: {next_offset}")
+    #logging.info(next_offset)
 
     if next_offset > total:
         next_offset = ''
+        logging.info(f"NEXT_OFFSET: {next_offset}")
     
     result = await list_range(offset, max_results, data)
 
