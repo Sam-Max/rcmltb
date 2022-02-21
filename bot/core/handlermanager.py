@@ -11,8 +11,11 @@ from bot.utils.get_file_id import get_message_type
 from bot.utils.get_size_p import get_size
 from .. import SessionVars, uptime
 from pyrogram.types import ForceReply
-from ..core.getCommand import get_command, get_command_p
-from ..core.getVars import get_val
+from telethon.errors.rpcerrorlist import ButtonDataInvalidError
+from pyrogram.errors import MessageNotModified
+from bot.utils.list_selected_drive import buttons_list_drive, get_list_drive_results
+from .get_commands import get_command, get_command_p
+from .get_vars import get_val
 from ..utils.speedtest import get_speed
 from ..utils import human_format
 from ..utils.misc_utils import clear_stuff
@@ -53,6 +56,7 @@ def add_handlers(bot: TelegramClient):
         handle_copy_command,
         events.NewMessage(pattern=command_process(get_command("COPY")))
     )
+    
 
     bot.add_event_handler(
         handle_exec_message_f,
@@ -127,6 +131,12 @@ def add_handlers(bot: TelegramClient):
                 await down_load_media_pyro(client, message, message_type, reply_message.text, True)
 
     #telethon
+
+    bot.add_event_handler(
+        next_page,
+        events.CallbackQuery(pattern="next")
+        )
+
     bot.add_event_handler(
         handle_cancel,
         events.CallbackQuery(pattern="upcancel")
@@ -189,6 +199,62 @@ async def handle_copy_command(e):
             await handle_settings(e, msg= "Seleccione unidad origen", submenu= "rclone_menu_copy", data_cb= "list_drive_origin")
     else:
        await e.delete()
+
+async def next_page(callback_query):
+    _, offset = callback_query.data.decode().split(" ")
+
+    logging.info(offset)
+
+    try:
+        offset = int(offset)
+    except:
+        offset = 0
+
+    data = SessionVars.get_var("DRIVE_RES_DATA")
+    result, next_offset, total = await get_list_drive_results(data, offset=offset)
+
+    btn= []
+    btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings selfdest".encode("UTF-8"))])
+
+    for i in result:
+        path = i["Path"]
+        path == path.strip()
+        buttons_list_drive(path, menu= btn, data_cb= "", )
+        
+    try:
+        next_offset = int(next_offset)
+        logging.info(next_offset)
+    except:
+        next_offset = 0
+
+    if 0 < offset <= 10:
+        off_set = 0
+    elif offset == 0:
+        off_set = None
+    else:
+        off_set = offset - 10 
+
+    if next_offset == 0:
+        btn.append([KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}"),
+            KeyboardButtonCallback(f"📃 Pages {round(int(offset) / 10) + 1} / {round(total / 10)}",
+            data="pages")]
+        )
+    elif off_set is None:
+        btn.append([KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data=""),
+            KeyboardButtonCallback("NEXT ⏩", data=f"next {next_offset}")])
+    else:
+        btn.append([KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}".encode("UTF-8")),
+             KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="dfdf"),
+             KeyboardButtonCallback("NEXT ⏩", data=f"next {next_offset}".encode("UTF-8"))
+            ]
+         )
+    try:
+        mmes= await callback_query.get_message()
+        await mmes.edit("dfdf", buttons=btn)
+    except MessageNotModified as e:
+        logging.info(e)
+        pass
+
 
 async def speed_handler(e):
     if await is_admin(e.sender_id):

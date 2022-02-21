@@ -5,7 +5,7 @@ from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 from bot import SessionVars
 from bot.utils.list_selected_drive import list_selected_drive
-from .getVars import get_val
+from .get_vars import get_val
 from functools import partial
 import time, os, configparser, logging, traceback
 
@@ -21,7 +21,6 @@ header = ""
 
 
 async def handle_setting_callback(e):
-    session_id = None
     conf_path = await get_config()
     data = e.data.decode()
     cmd = data.split(" ")
@@ -30,12 +29,7 @@ async def handle_setting_callback(e):
     rclone_drive = get_val("DEF_RCLONE_DRIVE")
 
     # MAIN MENU
-    if cmd[1] == "rclone_main_menu":
-        mmes = await e.get_message()
-        await handle_settings(mmes, edit= True, msg=f"\nBienvenido al Menu de Configuracion de Rclone\n\nRuta: `{rclone_drive}:{base_dir}`",
-                              submenu="main_menu_drives", session_id=session_id)
-   
-    elif cmd[1] == "load_rclone_config":
+    if cmd[1] == "load_rclone_config":
         await e.answer("Envíe el archivo de configuración rclone.conf", alert=True)
         mmes = await e.get_message()
         await mmes.edit(f"{mmes.raw_text}\n/ignore para ir atras", buttons=None)
@@ -93,21 +87,6 @@ async def handle_settings(e, drive_base="", edit=False, msg="", drive_name="", r
     menu = []
 
     if submenu is None:
-        await get_sub_menu("☁️ Abrir Menu Rclone ☁️", "rclone_main_menu", session_id, menu)
-        menu.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"settings selfdest {session_id}".encode("UTF-8"))]
-        )
-
-        header_m = '<u>MENU CONFIGURACION</u>'
-
-        if edit:
-            rmess = await e.edit(header_m + msg,
-                                 parse_mode="html", buttons=menu, link_preview=False)
-        else:
-            rmess = await e.reply(header_m,
-                                  parse_mode="html", buttons=menu, link_preview=False)
-
-    elif submenu == "main_menu_drives":
         rcval = await get_string_variable("RCLONE_CONFIG", menu, "load_rclone_config", session_id)
 
         if rcval != "None":
@@ -140,9 +119,9 @@ async def handle_settings(e, drive_base="", edit=False, msg="", drive_name="", r
             [KeyboardButtonCallback("Cerrar Menu", f"settings selfdest {session_id}".encode("UTF-8"))]
         )
 
-        if edit:
-            rmess = await e.edit(header + msg,
-                                 parse_mode="md", buttons=menu, link_preview=False)
+        msg= "Seleccione la unidad en la que quiere guardar los archivos"
+
+        await e.reply(header + msg, parse_mode="md", buttons=menu, link_preview=False)
 
 
     elif submenu == "rclone_menu_copy":
@@ -390,7 +369,7 @@ async def get_string_variable(var_name, menu, callback_name, session_id):
 
     msg = str(val)
     menu.append(
-        [KeyboardButtonCallback(msg, f"settings {callback_name} {session_id}".encode("UTF-8"))]
+        [KeyboardButtonCallback(msg, f"settings {callback_name}".encode("UTF-8"))]
     )
 
     # Just in case

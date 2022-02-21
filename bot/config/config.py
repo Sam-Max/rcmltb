@@ -4,7 +4,7 @@ import os
 class ExecConfig:
 
         API_HASH = ""
-        API_ID = 0
+        API_ID = ""
         BOT_TOKEN = ""
 
         OWNER_ID = 0

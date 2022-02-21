@@ -8,7 +8,7 @@ import logging
 #import dotenv
 
 from bot.utils.load_rclone import load_rclone
-from .core.varholdern import VarHolder
+from .core.var_holder import VarHolder
 import time
 
 logging.basicConfig(

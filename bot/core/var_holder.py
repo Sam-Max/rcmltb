@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from ..config.ConfigSample import ExecConfig
+from ..config.config import ExecConfig
 import os
 import logging
 import time

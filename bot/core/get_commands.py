@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from ..config.DefaultCommands import Commands
-from ..core.getVars import get_val
+from ..config.commands import Commands
+from .get_vars import get_val
 import os, logging
 
 torlog = logging.getLogger(__name__)

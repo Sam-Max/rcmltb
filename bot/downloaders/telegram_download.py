@@ -8,7 +8,7 @@ import asyncio
 import os
 import time
 from datetime import datetime
-from bot.core.getVars import get_val
+from bot.core.get_vars import get_val
 from bot.utils.get_rclone_conf import get_config
 from ..uploaders.rclone_upload import RcloneUploader
 from telethon.tl import types

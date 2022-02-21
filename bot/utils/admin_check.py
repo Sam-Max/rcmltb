@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from ..core.getVars import get_val
+from ..core.get_vars import get_val
 
 
 async def is_admin(user_id):

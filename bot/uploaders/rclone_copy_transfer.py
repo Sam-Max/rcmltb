@@ -1,7 +1,7 @@
 from telethon import Button
 from bot import SessionVars
 from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
-from ..core.getVars import get_val
+from ..core.get_vars import get_val
 import subprocess
 import asyncio
 import time

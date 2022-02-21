@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from bot.core.HandleManager import add_handlers
-from bot.core.getVars import get_val
+from bot.core.handlermanager import add_handlers
+from bot.core.get_vars import get_val
 import logging
 from pyrogram import Client
 from bot.client import RcloneTgClient

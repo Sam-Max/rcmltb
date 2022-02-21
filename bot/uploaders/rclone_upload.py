@@ -4,7 +4,7 @@ from configparser import ConfigParser
 from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot import SessionVars
 from bot.utils.rename_file import rename
-from ..core.getVars import get_val
+from ..core.get_vars import get_val
 from bot.utils.get_rclone_conf import get_config
 import os
 import logging
