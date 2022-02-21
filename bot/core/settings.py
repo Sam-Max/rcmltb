@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from bot.uploaders.rclone_copy_transfer import rclone_copy_transfer
+from bot.uploaders.rclone_transfer import rclone_copy_transfer
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 from bot import SessionVars
