@@ -112,11 +112,11 @@ async def handle_settings(query, mmes="", drive_base="", edit=False, msg="", dri
                     if "team_drive" in list(conf[j]):
                         set_val("DEF_RCLONE_DRIVE", j)
                         menu.append(
-                            [KeyboardButtonCallback(f"{prev}{j} - TD", f"settings^list_drive_main_menu^{j}")]   
+                            [KeyboardButtonCallback(f"{prev}{j} - TD", f"setting^list_drive_main_menu^{j}")]   
                         )
                     else:
                         menu.append(
-                            [KeyboardButtonCallback(f"{prev}{j} - ND", f"settings^list_drive_main_menu^{j}")]
+                            [KeyboardButtonCallback(f"{prev}{j} - ND", f"setting^list_drive_main_menu^{j}")]
                         )
         await get_sub_menu("Ir Atras ⬅️", "mainmenu", session_id, menu)
 
@@ -162,7 +162,7 @@ async def handle_settings(query, mmes="", drive_base="", edit=False, msg="", dri
         await list_selected_drive(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, is_main_m= is_main_m)
 
         menu.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"settings selfdest {session_id}".encode("UTF-8"))]
+            [KeyboardButtonCallback("Cerrar Menu", f"settings^selfdest")]
 
         )
         if edit:

@@ -103,7 +103,7 @@ def add_handlers(bot: TelegramClient):
    
     # *********** Callback Handlers ***********  
 
-    @bot.pyro.on_callback_query(filters="renaming")
+    #@bot.pyro.on_callback_query(filters="renaming")
     async def handle_download_cb(client, query):
         data= query.data
         list = data.split(" ")
@@ -201,50 +201,39 @@ async def handle_copy_command(e):
 
 async def next_page(callback_query):
     _, offset = callback_query.data.decode().split(" ")
+    logging.info(f"NEXT_OFFSET: {offset}")
+    data = SessionVars.get_var("JSON_RESULT_DATA")
+    btn= []
+    offset = int(offset)
     
-    logging.info(f"OFFSET: {offset}")
-
-    try:
-        offset = int(offset)
-    except:
-        offset = 0
-
-    if offset==0:
-        return await callback_query.answer("Nada que mostrar", alert=True)
-        
-    data = SessionVars.get_var("DRIVE_RES_DATA")
     result, next_offset, total = await get_list_drive_results(data, offset=offset)
 
-    btn= []
     btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings selfdest")])
 
     list_drive(result, menu=btn, data_cb= "list_dir_main_menu")
         
-    try:
-        next_offset = int(next_offset)
-        logging.info(f"NEXT_OFFSET: {next_offset}")
-    except:
-        next_offset = 0
+    n_offset = int(next_offset)
+    off_set = offset - 10 
 
-    if 0 < offset <= 10:
-        off_set = 0
-    elif offset == 0:
-        off_set = None
-    else:
-        off_set = offset - 10 
+    logging.info(f"OFF_SET: {off_set}")
+    logging.info(f"OFFSET: {offset}")
+    logging.info(f"total: {total}")
 
-    if next_offset == 0:
-        btn.append([KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}"),
-            KeyboardButtonCallback(f"📃 Pages {round(int(offset) / 10) + 1} / {round(total / 10)}",
-            data="setting pages")]
-        )
-    elif off_set is None:
-        btn.append([KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
-            KeyboardButtonCallback("NEXT ⏩", data=f"next {next_offset}")])
+    if offset == 0:
+        btn.append(
+            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
+             KeyboardButtonCallback("NEXT ⏩", data= f"next {next_offset}".encode("UTF-8"))
+            ])
+
+    elif offset + 10 >= total:
+        btn.append(
+             [KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}"),
+              KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}",
+                                   data="setting pages")])
     else:
         btn.append([KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}"),
              KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
-             KeyboardButtonCallback("NEXT ⏩", data=f"next {next_offset}")
+             KeyboardButtonCallback("NEXT ⏩", data=f"next {n_offset}")
             ])
     try:
         mmes= await callback_query.get_message()

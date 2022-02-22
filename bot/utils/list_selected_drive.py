@@ -6,10 +6,8 @@ from bot import SessionVars
 
 botlog = logging.getLogger(__name__)
 
-#"--dirs-only"
-
 async def list_selected_drive(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, offset= 0, is_main_m= True):
-    menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings selfdest".encode("UTF-8"))])
+    menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings^selfdest")])
 
     #botlog.info(f"{drive_name}:{drive_base}")
 
@@ -18,7 +16,6 @@ async def list_selected_drive(query, drive_base, drive_name, conf_path, rclone_d
     else:
         cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
 
-    # piping only stdout
     process = await asyncio.create_subprocess_exec(
     *cmd,
     stdout=asyncio.subprocess.PIPE
@@ -29,17 +26,50 @@ async def list_selected_drive(query, drive_base, drive_name, conf_path, rclone_d
     data = json.loads(stdout)
     #logging.info(data)
     if data == []:
-         return await query.answer("Nada que mostrar", alert=True)
-    SessionVars.update_var("DRIVE_RES_DATA", data)
-    result, next_offset, total= await get_list_drive_results(data)
+         menu.append(
+            [KeyboardButtonCallback(f"🗓 Nada que mostrar", data="setting pages")])
+         return 
+    SessionVars.update_var("JSON_RESULT_DATA", data)
+    data, next_offset, total= await get_list_drive_results(data)
     
-    list_drive(result, rclone_dir, menu, data_cb)
+    list_drive(data, rclone_dir, menu, data_cb)
 
-    if offset == 0:
+    if offset == 0 and total <= 10:
+        menu.append(
+            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages")]) 
+            
+    else: 
         menu.append(
             [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
              KeyboardButtonCallback("NEXT ⏩", data= f"next {next_offset}".encode("UTF-8"))
             ]) 
+           
+async def get_list_drive_results(data, max_results=10, offset=0):
+    total = len(data)
+    logging.info(f"Total: {total}")
+
+    botlog.info(f"OFFSET: {offset}")
+
+    next_offset = offset + max_results
+    
+    #if next_offset >= total:
+        #next_offset = -2
+
+    #if next_offset < 0:
+        #next_offset = -1    
+
+    botlog.info(f"NEXT_OFFSET: {next_offset}")
+    
+    data = await list_range(offset, max_results, data)
+    return data, next_offset, total    
+
+async def list_range(offset, max_results, data):
+    # this handles both negative offsets and offsets larger than list length
+    start = offset % len(data)
+    end = (start + max_results) % len(data)
+    if end > start:
+        return data[start:end]
+    return data[start:] + data[:end]             
 
 def list_drive(result, rclone_dir="", menu=[], data_cb=""):
      folder = ""
@@ -61,34 +91,10 @@ def list_drive(result, rclone_dir="", menu=[], data_cb=""):
                     folder= ""
                 botlog.info(path)
                 menu.append(        
-                [KeyboardButtonCallback(f"{folder} {file} {path}", f"settings^{data_cb}^{path}")]
-                )
+                [KeyboardButtonCallback(f"{folder} {file} {path}", f"settings^{data_cb}^{path}")])
 
-async def get_list_drive_results(data, max_results=10, offset=0):
-    total = len(data)
-    #logging.info(total)
-    botlog.info(f"OFFSET: {offset}")
-    next_offset = offset + max_results
-    botlog.info(f"NEXT_OFFSET: {next_offset}")
 
-    if next_offset > total:
-        next_offset = ''
-    
-    result = await list_range(offset, max_results, data)
 
-    return result, next_offset, total
 
-async def list_range(offset, max_results, data):
-    # this handles both negative offsets and offsets larger than list length
-    start = offset % len(data)
-    #logging.info(start)
-    end = (start + max_results) % len(data)
-    #logging.info(start + max_results)
-    #logging.info(end)
-    if len(data) < max_results:
-        return data 
-    if end > start:
-        return data[start:end]
-    return data[start:] + data[:end] 
 
 
