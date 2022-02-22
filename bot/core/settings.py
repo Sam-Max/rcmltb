@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from bot.core.set_vars import set_val
 from bot.uploaders.rclone_transfer import rclone_copy_transfer
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
@@ -23,7 +24,8 @@ header = ""
 async def handle_setting_callback(callback_query):
     conf_path = await get_config()
     data = callback_query.data.decode()
-    cmd = data.split(" ")
+    cmd = data.split("^")
+    mmes = await callback_query.get_message()
     val = ""
     base_dir= get_val("BASE_DIR")
     rclone_drive = get_val("DEF_RCLONE_DRIVE")
@@ -34,7 +36,6 @@ async def handle_setting_callback(callback_query):
     # MAIN MENU
     if cmd[1] == "load_rclone_config":
         await callback_query.answer("Envíe el archivo de configuración rclone.conf", alert=True)
-        mmes = await callback_query.get_message()
         await mmes.edit(f"{mmes.raw_text}\n/ignore para ir atras", buttons=None)
         val = await get_value(callback_query, True)
 
@@ -44,7 +45,7 @@ async def handle_setting_callback(callback_query):
         SessionVars.update_var("BASE_DIR", "")
         base_dir = get_val("BASE_DIR")
         SessionVars.update_var("DEF_RCLONE_DRIVE", cmd[2])
-        await handle_settings(await callback_query.get_message(), edit=True, msg=f"Seleccione carpeta para subir\n\nRuta:`{cmd[2]}:{base_dir}`", drive_name= cmd[2], rclone_dir= base_dir, submenu="list_drive", data_cb="list_dir_main_menu", is_main_m=True)     
+        await handle_settings(callback_query, mmes, edit=True, msg=f"Seleccione carpeta para subir\n\nRuta:`{cmd[2]}:{base_dir}`", drive_name= cmd[2], rclone_dir= base_dir, submenu="list_drive", data_cb="list_dir_main_menu", is_main_m=True)     
 
     elif cmd[1] == "list_dir_main_menu":
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
@@ -52,7 +53,7 @@ async def handle_setting_callback(callback_query):
         dir = cmd[2] +"/"
         rclone_dir += dir
         SessionVars.update_var("BASE_DIR", rclone_dir)
-        await handle_settings(await callback_query.get_message(), edit=True, msg=f"Seleccione carpeta para subir\n\nRuta:`{rclone_drive}:{rclone_dir}`", drive_base=rclone_dir, drive_name= rclone_drive, rclone_dir= cmd[2], submenu="list_drive", data_cb="list_dir_main_menu", is_main_m=True)
+        await handle_settings(callback_query, mmes, edit=True, msg=f"Seleccione carpeta para subir\n\nRuta:`{rclone_drive}:{rclone_dir}`", drive_base=rclone_dir, drive_name= rclone_drive, rclone_dir= cmd[2], submenu="list_drive", data_cb="list_dir_main_menu", is_main_m=True)
 
     # COPY MENU
     #2
@@ -83,7 +84,7 @@ async def handle_setting_callback(callback_query):
         await callback_query.delete()
 
 
-async def handle_settings(callback_query, drive_base="", edit=False, msg="", drive_name="", rclone_dir='', data_cb="", submenu=None, session_id=None, is_main_m= True):
+async def handle_settings(query, mmes="", drive_base="", edit=False, msg="", drive_name="", rclone_dir='', data_cb="", submenu=None, session_id=None, is_main_m= True):
     # this function creates the menu
     # and now submenus too
 
@@ -109,22 +110,24 @@ async def handle_settings(callback_query, drive_base="", edit=False, msg="", dri
                         prev = yes
 
                     if "team_drive" in list(conf[j]):
+                        set_val("DEF_RCLONE_DRIVE", j)
                         menu.append(
-                            [KeyboardButtonCallback(f"{prev}{j} - TD", f"settings list_drive_main_menu {j} {session_id}")]   
+                            [KeyboardButtonCallback(f"{prev}{j} - TD", f"settings^list_drive_main_menu^{j}")]   
                         )
                     else:
                         menu.append(
-                            [KeyboardButtonCallback(f"{prev}{j} - ND", f"settings list_drive_main_menu {j} {session_id}")]
+                            [KeyboardButtonCallback(f"{prev}{j} - ND", f"settings^list_drive_main_menu^{j}")]
                         )
         await get_sub_menu("Ir Atras ⬅️", "mainmenu", session_id, menu)
 
         menu.append(
             [KeyboardButtonCallback("Cerrar Menu", f"settings selfdest {session_id}".encode("UTF-8"))]
         )
+        base_dir= get_val("BASE_DIR")
+        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        msg= f"Seleccione la unidad en la que quiere guardar los archivos\n\nRuta:`{rclone_drive}:{base_dir}`"
 
-        msg= "Seleccione la unidad en la que quiere guardar los archivos"
-
-        await callback_query.reply(header + msg, parse_mode="md", buttons=menu, link_preview=False)
+        await query.reply(header + msg, parse_mode="md", buttons=menu, link_preview=False)
 
 
     elif submenu == "rclone_menu_copy":
@@ -148,25 +151,25 @@ async def handle_settings(callback_query, drive_base="", edit=False, msg="", dri
         )
 
         if edit:
-            rmess = await callback_query.edit(header + msg,
+            rmess = await mmes.edit(header + msg,
                                  parse_mode="html", buttons=menu, link_preview=False)
         else:
-            rmess = await callback_query.reply(msg,
+            rmess = await mmes.reply(msg,
                                   parse_mode="html", buttons=menu, link_preview=False)
 
     elif submenu == "list_drive":
         conf_path = await get_config()
-        await list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, is_main_m= is_main_m)
+        await list_selected_drive(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, is_main_m= is_main_m)
 
         menu.append(
             [KeyboardButtonCallback("Cerrar Menu", f"settings selfdest {session_id}".encode("UTF-8"))]
 
         )
         if edit:
-            rmess = await callback_query.edit(msg,
+            rmess = await mmes.edit(msg,
                                  parse_mode="md", buttons=menu, link_preview=False)
         else:
-            rmess = await callback_query.reply(header,
+            rmess = await mmes.reply(header,
                                   parse_mode="md", buttons=menu, link_preview=False)
 
 # an attempt to manager all the input

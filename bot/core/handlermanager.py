@@ -210,7 +210,7 @@ async def next_page(callback_query):
         offset = 0
 
     if offset==0:
-        return await callback_query.answer("No more", alert=True)
+        return await callback_query.answer("Nada que mostrar", alert=True)
         
     data = SessionVars.get_var("DRIVE_RES_DATA")
     result, next_offset, total = await get_list_drive_results(data, offset=offset)

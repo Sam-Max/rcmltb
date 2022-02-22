@@ -4,14 +4,14 @@ import json
 import logging
 from bot import SessionVars
 
-log = logging.getLogger(__name__)
+botlog = logging.getLogger(__name__)
 
 #"--dirs-only"
 
-async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, offset= 0, is_main_m= True):
+async def list_selected_drive(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, offset= 0, is_main_m= True):
     menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings selfdest".encode("UTF-8"))])
 
-    logging.info(f"{drive_name}:{drive_base}")
+    #botlog.info(f"{drive_name}:{drive_base}")
 
     if is_main_m:
         cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only" ] 
@@ -28,6 +28,8 @@ async def list_selected_drive(drive_base, drive_name, conf_path, rclone_dir, dat
     stdout = stdout.decode().strip()
     data = json.loads(stdout)
     #logging.info(data)
+    if data == []:
+         return await query.answer("Nada que mostrar", alert=True)
     SessionVars.update_var("DRIVE_RES_DATA", data)
     result, next_offset, total= await get_list_drive_results(data)
     
@@ -57,24 +59,20 @@ def list_drive(result, rclone_dir="", menu=[], data_cb=""):
                 else:
                     file= "🗄" 
                     folder= ""
-                if " " in path:
-                    continue 
-                logging.info(path)
-                menu.append(
-                [KeyboardButtonCallback(f"{folder} {file} {path}", f"settings {data_cb} {path}")]
+                botlog.info(path)
+                menu.append(        
+                [KeyboardButtonCallback(f"{folder} {file} {path}", f"settings^{data_cb}^{path}")]
                 )
 
 async def get_list_drive_results(data, max_results=10, offset=0):
     total = len(data)
     #logging.info(total)
-    logging.info(f"OFFSET: {offset}")
+    botlog.info(f"OFFSET: {offset}")
     next_offset = offset + max_results
-    logging.info(f"NEXT_OFFSET: {next_offset}")
-    #logging.info(next_offset)
+    botlog.info(f"NEXT_OFFSET: {next_offset}")
 
     if next_offset > total:
         next_offset = ''
-        logging.info(f"NEXT_OFFSET: {next_offset}")
     
     result = await list_range(offset, max_results, data)
 
@@ -92,4 +90,5 @@ async def list_range(offset, max_results, data):
     if end > start:
         return data[start:end]
     return data[start:] + data[:end] 
+
 
