@@ -237,7 +237,9 @@ async def next_page(callback_query):
             ])
     try:
         mmes= await callback_query.get_message()
-        await mmes.edit("dfdf", buttons=btn)
+        d_rclone_drive= get_val("DEF_RCLONE_DRIVE")
+        base_dir= get_val("BASE_DIR")
+        await mmes.edit(f"Ruta:`{d_rclone_drive}:{base_dir}`", buttons=btn)
     except MessageNotModifiedError as e:
         logging.info(e)
         pass

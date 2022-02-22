@@ -59,18 +59,18 @@ async def handle_setting_callback(callback_query):
     #2
     elif cmd[1] == "list_drive_origin_cb":
         SessionVars.update_var("ORIGIN_DRIVE", cmd[2])
-        await handle_settings(await callback_query.get_message(), edit=True, msg='Seleccione directorio origen', drive_name= cmd[2],submenu="list_drive", data_cb="rclone_menu_copy_cb", is_main_m=False)
+        await handle_settings(callback_query, mmes, edit=True, msg='Seleccione directorio origen', drive_name= cmd[2],submenu="list_drive", data_cb="rclone_menu_copy_cb", is_main_m=False)
 
     #3
     elif cmd[1] == "rclone_menu_copy_cb":
         SessionVars.update_var("ORIGIN_DIR", cmd[2])
-        await handle_settings(await callback_query.get_message(), edit=True, msg="Seleccione unidad destino", submenu="rclone_menu_copy", data_cb="list_drive_dest_cb", is_main_m=False)                         
+        await handle_settings(callback_query, mmes, edit=True, msg="Seleccione unidad destino", submenu="rclone_menu_copy", data_cb="list_drive_dest_cb", is_main_m=False)                         
 
     #4
     elif cmd[1] == "list_drive_dest_cb":
         torlog.info("DIR: {}".format(cmd[2]))
         SessionVars.update_var("DEST_DRIVE", cmd[2])
-        await handle_settings(await callback_query.get_message(), edit=True, msg='Seleccione directorio destino', drive_name= cmd[2],
+        await handle_settings(callback_query, mmes, edit=True, msg='Seleccione directorio destino', drive_name= cmd[2],
                               submenu="list_drive", data_cb="start_copy_cb", is_main_m=True)
     #5
     elif cmd[1] == "start_copy_cb":
@@ -121,7 +121,7 @@ async def handle_settings(query, mmes="", drive_base="", edit=False, msg="", dri
         await get_sub_menu("Ir Atras ⬅️", "mainmenu", session_id, menu)
 
         menu.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"settings selfdest {session_id}".encode("UTF-8"))]
+            [KeyboardButtonCallback("Cerrar Menu", f"settings^selfdest")]
         )
         base_dir= get_val("BASE_DIR")
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
@@ -139,22 +139,22 @@ async def handle_settings(query, mmes="", drive_base="", edit=False, msg="", dri
         for j in conf.sections():
             if "team_drive" in list(conf[j]):
                 menu.append(
-                    [KeyboardButtonCallback(f"{j} - TD", f"settings {data_cb} {j} {session_id} ")]
+                    [KeyboardButtonCallback(f"{j} - TD", f"settings^{data_cb}^{j}")]
                 )
             else:
                 menu.append(
-                    [KeyboardButtonCallback(f"{j} - ND", f"settings {data_cb} {j} {session_id}")]
+                    [KeyboardButtonCallback(f"{j} - ND", f"settings^{data_cb}^{j}")]
                 )
 
         menu.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"settings selfdest {session_id}".encode("UTF-8"))]
+            [KeyboardButtonCallback("Cerrar Menu", f"settings^selfdest")]
         )
 
         if edit:
             rmess = await mmes.edit(header + msg,
                                  parse_mode="html", buttons=menu, link_preview=False)
         else:
-            rmess = await mmes.reply(msg,
+            rmess = await query.reply(msg,
                                   parse_mode="html", buttons=menu, link_preview=False)
 
     elif submenu == "list_drive":
@@ -169,7 +169,7 @@ async def handle_settings(query, mmes="", drive_base="", edit=False, msg="", dri
             rmess = await mmes.edit(msg,
                                  parse_mode="md", buttons=menu, link_preview=False)
         else:
-            rmess = await mmes.reply(header,
+            rmess = await query.reply(header,
                                   parse_mode="md", buttons=menu, link_preview=False)
 
 # an attempt to manager all the input
