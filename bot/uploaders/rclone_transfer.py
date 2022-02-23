@@ -81,8 +81,8 @@ async def rclone_process_update(rclone_pr, message):
                      try:
                         await user_message.edit(text=msg, buttons=keyboard)
                         msg1= msg
-                     except Exception: 
-                        log.info("Exception ocurred at line 82 on rclone_copy_transfer")  
+                     except MessageNotModified as e: 
+                        log.info(e)  
                         pass    
 
         if data == "":

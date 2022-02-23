@@ -14,10 +14,10 @@ from bot.core.handlers.handle_settings_main_menu import handle_settings_command
 from bot.core.handlers.handle_speedtest import speed_handler
 from bot.core.handlers.handle_start import start_handler
 from bot.core.handlers.handle_test_cm import handle_test_command
-from bot.core.handlers_cb.handle_nextpage_cb import next_page_menu
-from bot.core.handlers_cb.handle_nextpage_copy_cb import next_page_copy
-from bot.core.handlers_cb.settings_copy_menu_cb import handle_setting_copy_menu_callback
-from bot.core.handlers_cb.settings_main_m_cb import handle_setting_main_menu_callback
+from bot.core.handlers_callback.handle_nextpage_cb import next_page_menu
+from bot.core.handlers_callback.handle_nextpage_copy_cb import next_page_copy
+from bot.core.handlers_callback.handle_settings_copy_menu_cb import handle_setting_copy_menu_callback
+from bot.core.handlers_callback.handle_settings_main_m_cb import handle_setting_main_menu_callback
 from bot.downloaders.telegram_download import down_load_media_pyro
 from .get_commands import get_command, get_command_p
 from pyrogram import filters

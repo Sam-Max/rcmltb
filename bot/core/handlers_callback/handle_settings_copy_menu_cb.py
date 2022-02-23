@@ -29,7 +29,7 @@ async def handle_setting_copy_menu_callback(callback_query):
             query= callback_query, 
             mmes= mmes, 
             edit=True,
-            msg= f'Seleccione directorio origen\n\nRuta: {origin_drive}', 
+            msg= f'Seleccione directorio origen\n\nRuta: `{origin_drive}`', 
             drive_name= cmd[2],
             submenu="list_drive", 
             is_dest_drive=False, 
@@ -38,7 +38,7 @@ async def handle_setting_copy_menu_callback(callback_query):
            )
 
     elif cmd[1] == "list_dir_origin":
-        rclone_drive_p = get_val("ORIGIN_DRIVE")
+        origin_drive = get_val("ORIGIN_DRIVE")
         origin_dir= get_val("ORIGIN_DIR")
         rclone_dir= origin_dir + cmd[2] +"/"
         set_val("ORIGIN_DIR", rclone_dir)
@@ -46,12 +46,13 @@ async def handle_setting_copy_menu_callback(callback_query):
              callback_query,
              mmes, 
              edit=True, 
-             msg=f"Seleccione carpeta para subir\n\nRuta:`{rclone_drive_p}:{rclone_dir}`", 
+             msg=f"Seleccione carpeta para subir\n\nRuta:`{origin_drive}:{rclone_dir}`", 
              drive_base=origin_dir, 
-             drive_name= rclone_drive_p,
+             drive_name= origin_drive,
              rclone_dir= cmd[2], 
              data_cb="list_dir_origin",
-             submenu="list_drive"
+             submenu="list_drive",
+             is_second_menu= False
              )
 
     elif cmd[1] == "rclone_menu_copy":
@@ -70,14 +71,14 @@ async def handle_setting_copy_menu_callback(callback_query):
         await handle_settings_copy_menu(
             callback_query, 
             mmes, edit=True, 
-            msg=f'Seleccione directorio destino\n\nRuta: {dest_drive}', 
+            msg=f'Seleccione directorio destino\n\nRuta: `{dest_drive}`', 
             drive_name= cmd[2],
             submenu="list_drive", 
             is_second_menu=True
             )
 
     elif cmd[1] == "list_dir_dest":
-        rclone_drive_p = get_val("DEST_DRIVE")
+        dest_drive = get_val("DEST_DRIVE")
         dest_dir= get_val("DEST_DIR")
         rclone_dir= dest_dir + cmd[2] +"/"
         set_val("DEST_DIR", rclone_dir)
@@ -85,19 +86,16 @@ async def handle_setting_copy_menu_callback(callback_query):
              callback_query,
              mmes, 
              edit=True, 
-             msg=f"Seleccione carpeta para subir\n\nRuta:`{rclone_drive_p}:{rclone_dir}`", 
+             msg=f"Seleccione carpeta para subir\n\nRuta:`{dest_drive}:{rclone_dir}`", 
              drive_base=dest_dir, 
-             drive_name= rclone_drive_p,
+             drive_name= dest_drive,
              data_cb="list_dir_dest",
              rclone_dir= cmd[2], 
              submenu="list_drive", 
+             is_second_menu= True
              )        
  
-    elif cmd[1] == "start_copy_top_button":
-        await rclone_copy_transfer(callback_query, conf_path)
-
     elif cmd[1] == "start_copy":
-        set_val("DEST_DIR", cmd[2])
         await rclone_copy_transfer(callback_query, conf_path)                               
 
     # close menu

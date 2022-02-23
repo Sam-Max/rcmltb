@@ -21,7 +21,7 @@ async def list_selected_drive_copy(
     ):
     
     if is_second_menu:
-         menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^start_copy_top_button")])
+         menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^start_copy")])
     else:
          menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^rclone_menu_copy")])
     
@@ -29,9 +29,9 @@ async def list_selected_drive_copy(
     botlog.info(f"CONF_PATH: {conf_path}")
 
     if is_second_menu:
-         cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
+         cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only"] 
     else:
-         cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only" ] 
+         cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
 
     process = await asyncio.create_subprocess_exec(
     *cmd,
@@ -59,18 +59,16 @@ async def list_selected_drive_copy(
         result= data, 
         rclone_dir= rclone_dir,
         menu= menu, 
-        is_dest_drive= is_dest_drive, 
         callback=callback
     )
 
     if offset == 0 and total <= 10:
         menu.append(
             [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages")]) 
-            
     else: 
         menu.append(
             [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
-             KeyboardButtonCallback("NEXT ⏩", data= f"next_copy {next_offset} {is_dest_drive}".encode("UTF-8"))
+             KeyboardButtonCallback("NEXT ⏩", data= f"next_copy {next_offset} {is_second_menu}")
             ]) 
            
 async def get_list_drive_results_copy(data, max_results=10, offset=0):
@@ -105,7 +103,6 @@ def list_drive_copy(
     rclone_dir="",
     menu=[], 
     callback="", 
-    is_dest_drive=False
     ):
 
      folder = ""
@@ -128,12 +125,8 @@ def list_drive_copy(
                 else:
                     file= "🗄" 
                     folder= ""
-                    if is_dest_drive:
-                        menu.append(        
-                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"settings^start_copy_cb^{path}")])
-                    else:
-                        menu.append(        
-                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"settings^rclone_menu_copy_cb^{path}")])
+                    menu.append(        
+                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^rclone_menu_copy")])
                 botlog.info(path)
                 
 

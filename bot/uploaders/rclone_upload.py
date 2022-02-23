@@ -12,7 +12,6 @@ import subprocess
 import asyncio
 import re
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.raw.types import KeyboardButtonUrl
 from .progress_for_rclone import status
 
 log = logging.getLogger(__name__)
@@ -178,15 +177,6 @@ class RcloneUploader():
                     return True
                 await asyncio.sleep(2)
                 process.stdout.flush()    
-
-    # async def get_config(self):
-    #     config = os.path.join(os.getcwd(), 'rclone.conf')
-    #     if config is not None:
-    #         if isinstance(config, str):
-    #             if os.path.exists(config):
-    #                 return config
-
-    #     return None
 
     # async def check_errors(self, rclone, usermsg):
     #     blank = 0

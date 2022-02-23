@@ -1,6 +1,6 @@
 
-from bot.core import set_vars
+from bot.core.set_vars import set_val
 
 
 async def handle_cancel(callback_query):
-        set_vars("UP_CANCEL", True)
+        set_val("UP_CANCEL", True)
