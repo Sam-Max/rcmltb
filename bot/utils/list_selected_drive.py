@@ -8,14 +8,9 @@ from bot import SessionVars
 botlog = logging.getLogger(__name__)
 
 async def list_selected_drive(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, offset= 0, is_main_m= True):
-    menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings^selfdest")])
+    menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"mainmenu^selfdest")])
 
-    #botlog.info(f"{drive_name}:{drive_base}")
-
-    if is_main_m:
-        cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only" ] 
-    else:
-        cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
+    cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only" ] 
 
     process = await asyncio.create_subprocess_exec(
     *cmd,
@@ -91,9 +86,6 @@ def list_drive(result, rclone_dir="", menu=[], data_cb=""):
                 if mime_type == 'inode/directory': 
                     file= "" 
                     folder= "📁"
-                else:
-                    file= "🗄" 
-                    folder= ""
                 botlog.info(path)
                 menu.append(        
                 [KeyboardButtonCallback(f"{folder} {file} {path}", f"mainmenu^{data_cb}^{path}")])

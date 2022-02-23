@@ -4,15 +4,6 @@ from bot.core.get_vars import get_val
 from bot.core.handlers.settings_main_menu import general_input_manager, get_value, handle_settings_main_menu
 
 torlog = logging.getLogger(__name__)
-# logging.getLogger("telethon").setLevel(logging.DEBUG)
-
-TIMEOUT_SEC = 60
-
-no = "❌"
-yes = "✅"
-drive_icon= "☁️"
-header = ""
-
 
 async def handle_setting_main_menu_callback(callback_query):
     data = callback_query.data.decode()
@@ -46,3 +37,7 @@ async def handle_setting_main_menu_callback(callback_query):
         SessionVars.update_var("BASE_DIR", rclone_dir)
         await handle_settings_main_menu(callback_query, mmes, edit=True, msg=f"Seleccione carpeta para subir\n\nRuta:`{rclone_drive}:{rclone_dir}`", drive_base=rclone_dir, drive_name= rclone_drive, rclone_dir= cmd[2], submenu="list_drive", data_cb="list_dir_main_menu", is_main_m=True)
 
+    # close menu
+    elif cmd[1] == "selfdest":
+        await callback_query.answer("Closed")
+        await callback_query.delete()

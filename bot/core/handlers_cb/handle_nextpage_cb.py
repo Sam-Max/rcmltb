@@ -13,7 +13,7 @@ async def next_page_menu(callback_query):
     
     result, next_offset, total = await get_list_drive_results(data, offset=offset)
 
-    btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"mainmenu selfdest")])
+    btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"mainmenu^selfdest")])
 
     list_drive(result, menu=btn, data_cb= "list_dir_main_menu")
         

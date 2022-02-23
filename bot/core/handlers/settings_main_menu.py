@@ -11,7 +11,6 @@ from functools import partial
 import time, os, configparser, logging, traceback
 
 torlog = logging.getLogger(__name__)
-# logging.getLogger("telethon").setLevel(logging.DEBUG)
 
 TIMEOUT_SEC = 60
 
@@ -29,7 +28,6 @@ async def handle_settings_main_menu(query, mmes="", drive_base="", edit=False, m
 
         if rcval != "None":
             if "Se cargo el archivo personalizado." in rcval:
-
                 #path= get_val("RCLONE_CONFIG")
                 path= os.path.join(os.getcwd(), "rclone.conf")
                 conf = configparser.ConfigParser()
@@ -51,10 +49,10 @@ async def handle_settings_main_menu(query, mmes="", drive_base="", edit=False, m
                         menu.append(
                             [KeyboardButtonCallback(f"{prev}{j} - ND", f"mainmenu^list_drive_main_menu^{j}")]
                         )
-        await get_sub_menu("Ir Atras ⬅️", "mainmenu", session_id, menu)
+        #await get_sub_menu("Ir Atras ⬅️", "mainmenu", menu)
 
         menu.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"settings^selfdest")]
+            [KeyboardButtonCallback("Cerrar Menu", f"mainmenu^selfdest")]
         )
         base_dir= get_val("BASE_DIR")
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
@@ -66,10 +64,7 @@ async def handle_settings_main_menu(query, mmes="", drive_base="", edit=False, m
     elif submenu == "list_drive":
         conf_path = await get_config()
 
-        if is_main_m:
-            await list_selected_drive(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, is_main_m= is_main_m)
-        else:
-            await list_selected_drive_copy(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, is_main_m= is_main_m, is_dest_drive= is_dest_drive)    
+        await list_selected_drive(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, is_main_m= is_main_m)
 
         menu.append(
             [KeyboardButtonCallback("Cerrar Menu", f"mainmenu^selfdest")]
@@ -242,9 +237,9 @@ async def get_bool_variable(var_name, msg, menu, callback_name, session_id):
         )
 
 
-async def get_sub_menu(msg, sub_name, session_id, menu):
+async def get_sub_menu(msg, sub_name, menu):
     menu.append(
-        [KeyboardButtonCallback(msg, f"settings {sub_name} {session_id}".encode("UTF-8"))]
+        [KeyboardButtonCallback(msg, f"mainmenu {sub_name}".encode("UTF-8"))]
     )
 
 
