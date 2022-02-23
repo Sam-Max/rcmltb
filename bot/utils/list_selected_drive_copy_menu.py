@@ -7,9 +7,12 @@ from bot import SessionVars
 
 botlog = logging.getLogger(__name__)
 
-async def list_selected_drive(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, offset= 0, is_main_m= True):
-    menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings^selfdest")])
-
+async def list_selected_drive_copy(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, offset= 0, is_main_m= True, is_dest_drive=False):
+    if is_dest_drive:
+         menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings^start_copy_cb")])
+    else:
+         menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings^rclone_menu_copy_cb")])
+    
     #botlog.info(f"{drive_name}:{drive_base}")
 
     if is_main_m:
@@ -30,14 +33,15 @@ async def list_selected_drive(query, drive_base, drive_name, conf_path, rclone_d
     except JSONDecodeError as e:
         logging.info(e)
 
+    #logging.info(data)
     if data == []:
          menu.append(
             [KeyboardButtonCallback(f"🗓 Nada que mostrar", data="setting pages")])
          return 
     SessionVars.update_var("JSON_RESULT_DATA", data)
-    data, next_offset, total= await get_list_drive_results(data)
+    data, next_offset, total= await get_list_drive_results_copy(data)
     
-    list_drive(data, rclone_dir, menu, data_cb)
+    list_drive_copy(data, rclone_dir, menu, data_cb, is_dest_drive)
 
     if offset == 0 and total <= 10:
         menu.append(
@@ -46,10 +50,10 @@ async def list_selected_drive(query, drive_base, drive_name, conf_path, rclone_d
     else: 
         menu.append(
             [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
-             KeyboardButtonCallback("NEXT ⏩", data= f"next {next_offset}".encode("UTF-8"))
+             KeyboardButtonCallback("NEXT ⏩", data= f"next_copy {next_offset} {is_dest_drive}".encode("UTF-8"))
             ]) 
            
-async def get_list_drive_results(data, max_results=10, offset=0):
+async def get_list_drive_results_copy(data, max_results=10, offset=0):
     total = len(data)
     logging.info(f"Total: {total}")
 
@@ -76,7 +80,7 @@ async def list_range(offset, max_results, data):
         return data[start:end]
     return data[start:] + data[:end]             
 
-def list_drive(result, rclone_dir="", menu=[], data_cb=""):
+def list_drive_copy(result, rclone_dir="", menu=[], data_cb="", is_dest_drive=False):
      folder = ""
      file= ""
      for i in result:
@@ -91,12 +95,20 @@ def list_drive(result, rclone_dir="", menu=[], data_cb=""):
                 if mime_type == 'inode/directory': 
                     file= "" 
                     folder= "📁"
+                    menu.append(  
+                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"settings^list_dir_copy_menu^{path}")]
+                    )    
                 else:
                     file= "🗄" 
                     folder= ""
+                    if is_dest_drive:
+                        menu.append(        
+                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"settings^start_copy_cb^{path}")])
+                    else:
+                        menu.append(        
+                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"settings^rclone_menu_copy_cb^{path}")])
                 botlog.info(path)
-                menu.append(        
-                [KeyboardButtonCallback(f"{folder} {file} {path}", f"mainmenu^{data_cb}^{path}")])
+                
 
 
 
