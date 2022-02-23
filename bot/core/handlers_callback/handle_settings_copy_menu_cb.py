@@ -8,7 +8,6 @@ from bot.utils.get_rclone_conf import get_config
 torlog = logging.getLogger(__name__)
 
 
-rclone_dir_p= get_val("BASE_DIR_COPY")
 
 async def handle_setting_copy_menu_callback(callback_query):
     conf_path = await get_config()
@@ -56,11 +55,14 @@ async def handle_setting_copy_menu_callback(callback_query):
              )
 
     elif cmd[1] == "rclone_menu_copy":
+        origin_dir= get_val("ORIGIN_DIR")
+        rclone_dir= origin_dir + cmd[2] +"/"
+        set_val("ORIGIN_DIR", rclone_dir)
         await handle_settings_copy_menu(
              callback_query,
              mmes, 
              edit=True, 
-             msg="Seleccione unidad destino", 
+             msg=f"Seleccione unidad destino", 
              submenu="rclone_menu_copy", 
              data_cb="list_drive_dest"
              )                         
@@ -74,6 +76,7 @@ async def handle_setting_copy_menu_callback(callback_query):
             msg=f'Seleccione directorio destino\n\nRuta: `{dest_drive}`', 
             drive_name= cmd[2],
             submenu="list_drive", 
+            data_cb="list_dir_dest",
             is_second_menu=True
             )
 

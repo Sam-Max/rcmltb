@@ -126,7 +126,7 @@ def list_drive_copy(
                     file= "🗄" 
                     folder= ""
                     menu.append(        
-                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^rclone_menu_copy")])
+                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^rclone_menu_copy^{path}")])
                 botlog.info(path)
                 
 
