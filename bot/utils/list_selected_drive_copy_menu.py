@@ -7,10 +7,21 @@ from bot import SessionVars
 
 botlog = logging.getLogger(__name__)
 
-async def list_selected_drive_copy(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, offset= 0, is_second_menu= False, is_dest_drive=False):
+async def list_selected_drive_copy(
+    query, 
+    drive_base, 
+    drive_name, 
+    conf_path, 
+    rclone_dir, 
+    menu, 
+    callback= "",
+    offset= 0, 
+    is_second_menu= False, 
+    is_dest_drive=False
+    ):
     
     if is_second_menu:
-         menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^start_copy_")])
+         menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^start_copy_top_button")])
     else:
          menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^rclone_menu_copy")])
     
@@ -18,10 +29,9 @@ async def list_selected_drive_copy(query, drive_base, drive_name, conf_path, rcl
     botlog.info(f"CONF_PATH: {conf_path}")
 
     if is_second_menu:
-       cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
+         cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
     else:
-       cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only" ] 
-      
+         cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only" ] 
 
     process = await asyncio.create_subprocess_exec(
     *cmd,
@@ -45,7 +55,13 @@ async def list_selected_drive_copy(query, drive_base, drive_name, conf_path, rcl
     SessionVars.update_var("JSON_RESULT_DATA", data)
     data, next_offset, total= await get_list_drive_results_copy(data)
     
-    list_drive_copy(data, rclone_dir, menu, data_cb, is_dest_drive)
+    list_drive_copy(
+        result= data, 
+        rclone_dir= rclone_dir,
+        menu= menu, 
+        is_dest_drive= is_dest_drive, 
+        callback=callback
+    )
 
     if offset == 0 and total <= 10:
         menu.append(
@@ -84,7 +100,14 @@ async def list_range(offset, max_results, data):
         return data[start:end]
     return data[start:] + data[:end]             
 
-def list_drive_copy(result, rclone_dir="", menu=[], data_cb="", is_dest_drive=False):
+def list_drive_copy(
+    result, 
+    rclone_dir="",
+    menu=[], 
+    callback="", 
+    is_dest_drive=False
+    ):
+
      folder = ""
      file= ""
      for i in result:
@@ -100,7 +123,7 @@ def list_drive_copy(result, rclone_dir="", menu=[], data_cb="", is_dest_drive=Fa
                     file= "" 
                     folder= "📁"
                     menu.append(  
-                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^list_dir_copy_menu^{path}")]
+                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^{callback}^{path}")]
                     )    
                 else:
                     file= "🗄" 

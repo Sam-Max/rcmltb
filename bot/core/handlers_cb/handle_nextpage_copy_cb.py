@@ -19,7 +19,7 @@ async def next_page_copy(callback_query):
     else:
          btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^rclone_menu_copy_cb")])
     
-    list_drive_copy(result, menu=btn, data_cb= "list_dir_copy_menu")
+    list_drive_copy(result= result, callback="list_dir_origin", menu=btn)
         
     n_offset = int(next_offset)
     off_set = offset - 10 

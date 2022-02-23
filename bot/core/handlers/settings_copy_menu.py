@@ -21,7 +21,20 @@ drive_icon= "☁️"
 header = ""
 
 
-async def handle_settings_copy_menu(query, mmes="", drive_base="", edit=False, msg="", drive_name="", rclone_dir='', data_cb="", submenu=None, is_second_menu= False, is_dest_drive= False):
+async def handle_settings_copy_menu(
+    query, 
+    mmes="",
+    drive_base="", 
+    edit=False, 
+    msg="", 
+    drive_name="", 
+    rclone_dir='', 
+    data_cb="", 
+    submenu=None, 
+    is_second_menu= False, 
+    is_dest_drive= False
+    ):
+    
     menu = []
 
     if submenu == "rclone_menu_copy":
@@ -33,11 +46,11 @@ async def handle_settings_copy_menu(query, mmes="", drive_base="", edit=False, m
         for j in conf.sections():
             if "team_drive" in list(conf[j]):
                 menu.append(
-                    [KeyboardButtonCallback(f"{j} - TD", f"copymenu^list_drive_origin^{j}")]
+                    [KeyboardButtonCallback(f"{j} - TD", f"copymenu^{data_cb}^{j}")]
                 )
             else:
                 menu.append(
-                    [KeyboardButtonCallback(f"{j} - ND", f"copymenu^list_drive_origin^{j}")]
+                    [KeyboardButtonCallback(f"{j} - ND", f"copymenu^{data_cb}^{j}")]
                 )
 
         menu.append(
@@ -60,7 +73,8 @@ async def handle_settings_copy_menu(query, mmes="", drive_base="", edit=False, m
             drive_name, 
             conf_path, 
             rclone_dir, 
-            data_cb, menu, 
+            menu, 
+            callback=data_cb,
             is_second_menu= is_second_menu, 
             is_dest_drive= is_dest_drive
             )    
