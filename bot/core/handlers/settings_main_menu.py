@@ -8,6 +8,7 @@ from bot.utils.list_selected_drive import list_selected_drive
 from bot.utils.list_selected_drive_copy_menu import list_selected_drive_copy
 from ..get_vars import get_val
 from functools import partial
+import asyncio
 import time, os, configparser, logging, traceback
 
 torlog = logging.getLogger(__name__)
@@ -112,25 +113,25 @@ async def general_input_manager(callback_query, mmes, var_name, datatype, value,
 
                         except Exception:
                             torlog.error(traceback.format_exc())
-                            await handle_settings(mmes, True, f"<b><u>The conf file is invalid check logs.</b></u>",
+                            await handle_settings_main_menu(mmes, True, f"<b><u>The conf file is invalid check logs.</b></u>",
                                                   sub_menu)
                             return
 
                     else:
                         SessionVars.update_var(var_name, value)
 
-                    await handle_settings(mmes, True,
+                    await handle_settings_main_menu(mmes, True,
                                           f"<b><u>Recibido {var_name} valor '{value}'.</b></u>", sub_menu)
                 except ValueError:
-                    await handle_settings(mmes, True,
+                    await handle_settings_main_menu(mmes, True,
                                           f"<b><u>Value [{value}] not valid try again and enter {datatype}.</b></u>",
                                           sub_menu)
             else:
-                await handle_settings(mmes, True, f"<b><u>Confirm differed by user.</b></u>", sub_menu)
+                await handle_settings_main_menu(mmes, True, f"<b><u>Confirm differed by user.</b></u>", sub_menu)
         else:
-            await handle_settings(mmes, True, f"<b><u>Confirm timed out [waited 60s for input].</b></u>", sub_menu)
+            await handle_settings_main_menu(mmes, True, f"<b><u>Confirm timed out [waited 60s for input].</b></u>", sub_menu)
     else:
-        await handle_settings(mmes, True, f"<b><u>Entry Timed out [waited 60s for input]. OR else ignored.</b></u>",
+        await handle_settings_main_menu(mmes, True, f"<b><u>Entry Timed out [waited 60s for input]. OR else ignored.</b></u>",
                               sub_menu)
 
 
@@ -150,7 +151,7 @@ async def get_value(callback_query, file=False):
         if (time.time() - start) >= TIMEOUT_SEC:
             break
 
-        await aio.sleep(1)
+        await asyncio.sleep(1)
 
     val = lis[1]
 
@@ -173,7 +174,7 @@ async def get_confirm(callback_query):
     while not lis[0]:
         if (time.time() - start) >= TIMEOUT_SEC:
             break
-        await aio.sleep(1)
+        await asyncio.sleep(1)
 
     val = lis[1]
 
@@ -229,17 +230,17 @@ async def get_bool_variable(var_name, msg, menu, callback_name, session_id):
 
     if val:
         menu.append(
-            [KeyboardButtonCallback(yes + msg, f"settings {callback_name} false {session_id}".encode("UTF-8"))]
+            [KeyboardButtonCallback(yes + msg, f"copymenu^{callback_name}^false^{session_id}")]
         )
     else:
         menu.append(
-            [KeyboardButtonCallback(no + msg, f"settings {callback_name} true {session_id}".encode("UTF-8"))]
+            [KeyboardButtonCallback(no + msg, f"copymenu^{callback_name}^true^{session_id}")]
         )
 
 
 async def get_sub_menu(msg, sub_name, menu):
     menu.append(
-        [KeyboardButtonCallback(msg, f"mainmenu {sub_name}".encode("UTF-8"))]
+        [KeyboardButtonCallback(msg, f"mainmenu^{sub_name}")]
     )
 
 
@@ -260,7 +261,7 @@ async def get_string_variable(var_name, menu, callback_name, session_id):
            val = "Haga clic aquí para cargar la configuración de RCLONE."
     msg = str(val)
     menu.append(
-        [KeyboardButtonCallback(msg, f"settings {callback_name}".encode("UTF-8"))]
+        [KeyboardButtonCallback(msg, f"mainmenu^{callback_name}")]
     )
 
     return val
@@ -270,7 +271,7 @@ async def get_int_variable(var_name, menu, callback_name, session_id):
     val = get_val(var_name)
     msg = var_name + " " + str(val)
     menu.append(
-        [KeyboardButtonCallback(msg, f"settings {callback_name} {session_id}".encode("UTF-8"))]
+        [KeyboardButtonCallback(msg, f"mainmenu^{callback_name}")]
     )
 
 async def get_config():

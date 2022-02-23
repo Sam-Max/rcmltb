@@ -18,7 +18,7 @@ async def handle_setting_main_menu_callback(callback_query):
 
     if cmd[1] == "load_rclone_config":
         await callback_query.answer("Envíe el archivo de configuración rclone.conf", alert=True)
-        await mmes.edit(f"{mmes.raw_text}\n/ignore para ir atras", buttons=None)
+        await mmes.edit(f"Envie el archivo rclone.conf\n\n/ignore para ir atras", buttons=None)
         val = await get_value(callback_query, True)
 
         await general_input_manager(callback_query, mmes, "RCLONE_CONFIG", "str", val, "rclonemenu")
