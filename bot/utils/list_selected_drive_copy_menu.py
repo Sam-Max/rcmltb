@@ -7,18 +7,21 @@ from bot import SessionVars
 
 botlog = logging.getLogger(__name__)
 
-async def list_selected_drive_copy(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, offset= 0, is_main_m= True, is_dest_drive=False):
-    if is_dest_drive:
-         menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings^start_copy_cb")])
+async def list_selected_drive_copy(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, offset= 0, is_second_menu= False, is_dest_drive=False):
+    
+    if is_second_menu:
+         menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^start_copy_")])
     else:
-         menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings^rclone_menu_copy_cb")])
+         menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^rclone_menu_copy")])
     
     #botlog.info(f"{drive_name}:{drive_base}")
+    botlog.info(f"CONF_PATH: {conf_path}")
 
-    if is_main_m:
-        cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only" ] 
+    if is_second_menu:
+       cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
     else:
-        cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
+       cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only" ] 
+      
 
     process = await asyncio.create_subprocess_exec(
     *cmd,
@@ -32,6 +35,7 @@ async def list_selected_drive_copy(query, drive_base, drive_name, conf_path, rcl
         data = json.loads(stdout)
     except JSONDecodeError as e:
         logging.info(e)
+        return
 
     #logging.info(data)
     if data == []:
@@ -96,7 +100,7 @@ def list_drive_copy(result, rclone_dir="", menu=[], data_cb="", is_dest_drive=Fa
                     file= "" 
                     folder= "📁"
                     menu.append(  
-                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"settings^list_dir_copy_menu^{path}")]
+                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^list_dir_copy_menu^{path}")]
                     )    
                 else:
                     file= "🗄" 

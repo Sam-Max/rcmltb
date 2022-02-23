@@ -12,7 +12,6 @@ from functools import partial
 import time, os, configparser, logging, traceback
 
 torlog = logging.getLogger(__name__)
-# logging.getLogger("telethon").setLevel(logging.DEBUG)
 
 TIMEOUT_SEC = 60
 
@@ -22,50 +21,10 @@ drive_icon= "☁️"
 header = ""
 
 
-async def handle_settings_copy_menu(query, mmes="", drive_base="", edit=False, msg="", drive_name="", rclone_dir='', data_cb="", submenu=None, session_id=None, is_main_m= True, is_dest_drive= False):
+async def handle_settings_copy_menu(query, mmes="", drive_base="", edit=False, msg="", drive_name="", rclone_dir='', data_cb="", submenu=None, is_second_menu= False, is_dest_drive= False):
     menu = []
 
-    if submenu is None:
-        rcval = await get_string_variable("RCLONE_CONFIG", menu, "load_rclone_config", session_id)
-
-        if rcval != "None":
-            # create a all drives menu
-            if "Se cargo el archivo personalizado." in rcval:
-
-                #path= get_val("RCLONE_CONFIG")
-                path= os.path.join(os.getcwd(), "rclone.conf")
-                conf = configparser.ConfigParser()
-                conf.read(path)
-
-                def_drive = get_val("DEF_RCLONE_DRIVE")
-
-                for j in conf.sections():
-                    prev = ""
-                    if j == def_drive:
-                        prev = yes
-
-                    if "team_drive" in list(conf[j]):
-                        set_val("DEF_RCLONE_DRIVE", j)
-                        menu.append(
-                            [KeyboardButtonCallback(f"{prev}{j} - TD", f"setting^list_drive_main_menu^{j}")]   
-                        )
-                    else:
-                        menu.append(
-                            [KeyboardButtonCallback(f"{prev}{j} - ND", f"setting^list_drive_main_menu^{j}")]
-                        )
-        await get_sub_menu("Ir Atras ⬅️", "mainmenu", session_id, menu)
-
-        menu.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"settings^selfdest")]
-        )
-        base_dir= get_val("BASE_DIR")
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
-        msg= f"Seleccione la unidad en la que quiere guardar los archivos\n\nRuta:`{rclone_drive}:{base_dir}`"
-
-        await query.reply(header + msg, parse_mode="md", buttons=menu, link_preview=False)
-
-
-    elif submenu == "rclone_menu_copy":
+    if submenu == "rclone_menu_copy":
         #path = get_val("RCLONE_CONFIG")
         path= os.path.join(os.getcwd(), "rclone.conf")
         conf = configparser.ConfigParser()
@@ -74,15 +33,15 @@ async def handle_settings_copy_menu(query, mmes="", drive_base="", edit=False, m
         for j in conf.sections():
             if "team_drive" in list(conf[j]):
                 menu.append(
-                    [KeyboardButtonCallback(f"{j} - TD", f"settings^{data_cb}^{j}")]
+                    [KeyboardButtonCallback(f"{j} - TD", f"copymenu^list_drive_origin^{j}")]
                 )
             else:
                 menu.append(
-                    [KeyboardButtonCallback(f"{j} - ND", f"settings^{data_cb}^{j}")]
+                    [KeyboardButtonCallback(f"{j} - ND", f"copymenu^list_drive_origin^{j}")]
                 )
 
         menu.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"settings^selfdest")]
+            [KeyboardButtonCallback("Cerrar Menu", f"copymenu^selfdest")]
         )
 
         if edit:
@@ -95,15 +54,19 @@ async def handle_settings_copy_menu(query, mmes="", drive_base="", edit=False, m
     elif submenu == "list_drive":
         conf_path = await get_config()
 
-        if is_main_m:
-            logging.info("bbbbbbbbbbbbbbbbbbbbbb")
-            await list_selected_drive(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, is_main_m= is_main_m)
-        else:
-            logging.info("ssssssssssssssssssssss")
-            await list_selected_drive_copy(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, is_main_m= is_main_m, is_dest_drive= is_dest_drive)    
+        await list_selected_drive_copy(
+            query, 
+            drive_base, 
+            drive_name, 
+            conf_path, 
+            rclone_dir, 
+            data_cb, menu, 
+            is_second_menu= is_second_menu, 
+            is_dest_drive= is_dest_drive
+            )    
 
         menu.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"settings^selfdest")]
+            [KeyboardButtonCallback("Cerrar Menu", f"copymenu^selfdest")]
 
         )
         if edit:
@@ -113,7 +76,8 @@ async def handle_settings_copy_menu(query, mmes="", drive_base="", edit=False, m
             rmess = await query.reply(header,
                                   parse_mode="md", buttons=menu, link_preview=False)
 
-# an attempt to manager all the input
+######################################################################                                  
+
 async def general_input_manager(callback_query, mmes, var_name, datatype, value, sub_menu):
     if value is not None and not "ignore" in value:
         await confirm_buttons(mmes, value)
@@ -170,15 +134,11 @@ async def general_input_manager(callback_query, mmes, var_name, datatype, value,
 
 
 async def get_value(callback_query, file=False):
-    # todo replace with conver. - or maybe not Fix Dont switch to conversion
-    # this function gets the new value to be set from the user in current context
     lis = [False, None]
 
-    # func tools works as expected ;);)
     cbak = partial(val_input_callback, o_sender=callback_query.sender_id, lis=lis, file=file)
 
     callback_query.client.add_event_handler(
-        # lambda callback_query: test_callback(callback_query,lis),
         cbak,
         events.NewMessage()
     )
@@ -199,13 +159,10 @@ async def get_value(callback_query, file=False):
 
 
 async def get_confirm(callback_query):
-    # abstract for getting the confirm in a context
-
     lis = [False, None]
     cbak = partial(get_confirm_callback, o_sender=callback_query.sender_id, lis=lis)
 
     callback_query.client.add_event_handler(
-        # lambda callback_query: test_callback(callback_query,lis),
         cbak,
         events.CallbackQuery(pattern="confirmsetting")
     )
@@ -225,7 +182,6 @@ async def get_confirm(callback_query):
 
 
 async def val_input_callback(callback_query, o_sender, lis, file):
-    # get the input value
     if o_sender != callback_query.sender_id:
         return
     if not file:
@@ -250,8 +206,6 @@ async def val_input_callback(callback_query, o_sender, lis, file):
 
 
 async def get_confirm_callback(callback_query, o_sender, lis):
-    # handle the confirm callback
-
     if o_sender != callback_query.sender_id:
         return
     lis[0] = True
@@ -264,19 +218,15 @@ async def get_confirm_callback(callback_query, o_sender, lis):
 
 
 async def confirm_buttons(callback_query, val):
-    # add the confirm buttons at the bottom of the message
     await callback_query.edit(f"Confirmar lo enviado :- <u>{val}</u>", buttons=[KeyboardButtonCallback("Yes", "confirmsetting true"),
                                                                 KeyboardButtonCallback("No", "confirmsetting false")],
                  parse_mode="html")
 
 
 async def get_bool_variable(var_name, msg, menu, callback_name, session_id):
-    # handle the vars having bool values
-
     val = get_val(var_name)
 
     if val:
-        # setting the value in callback so calls will be reduced ;)
         menu.append(
             [KeyboardButtonCallback(yes + msg, f"settings {callback_name} false {session_id}".encode("UTF-8"))]
         )
@@ -306,9 +256,7 @@ async def get_string_variable(var_name, menu, callback_name, session_id):
 
 
     if var_name == "RCLONE_CONFIG":
-
         rfile= os.path.join(os.getcwd(), "rclone.conf")
-
         if os.path.exists(rfile):
            val = "Se cargo el archivo personalizado. (Click para cargar otro)"
         else:
@@ -318,21 +266,15 @@ async def get_string_variable(var_name, menu, callback_name, session_id):
     menu.append(
         [KeyboardButtonCallback(msg, f"settings {callback_name}".encode("UTF-8"))]
     )
-
-    # Just in case
     return val
 
 
 async def get_int_variable(var_name, menu, callback_name, session_id):
-    # handle the vars having string value
-
     val = get_val(var_name)
     msg = var_name + " " + str(val)
     menu.append(
         [KeyboardButtonCallback(msg, f"settings {callback_name} {session_id}".encode("UTF-8"))]
     )
-
-    # todo handle the list value
 
 
 async def get_config():

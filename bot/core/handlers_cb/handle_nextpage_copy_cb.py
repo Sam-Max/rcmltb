@@ -15,9 +15,9 @@ async def next_page_copy(callback_query):
     result, next_offset, total = await get_list_drive_results_copy(data, offset=offset)
 
     if is_dest_drive:
-         btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings^start_copy_cb")])
+         btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^start_copy_cb")])
     else:
-         btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"settings^rclone_menu_copy_cb")])
+         btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^rclone_menu_copy_cb")])
     
     list_drive_copy(result, menu=btn, data_cb= "list_dir_copy_menu")
         
