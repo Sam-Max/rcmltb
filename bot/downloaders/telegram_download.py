@@ -83,7 +83,7 @@ async def down_load_media_pyro(client, message, message_type, new_name= None, is
             return
         dest_drive = get_val("DEF_RCLONE_DRIVE")
         if dest_drive == "":
-            await mess_age.edit("No ha seleccionado una unidad a donde subir")
+            await mess_age.edit("No ha seleccionado una nube para subir")
             return      
         start_t = datetime.now()
         path = os.path.join(os.getcwd(), "Downloads")

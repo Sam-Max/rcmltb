@@ -27,7 +27,7 @@ async def handle_download_command(client, message):
                             [InlineKeyboardButton("Cerrar", callback_data= f"settings selfdest".encode("UTF-8"))]
                             ]
 
-                reply_markup = InlineKeyboardMarkup(inline_keyboard= keyboard)
+                reply_markup = InlineKeyboardMarkup(keyboard)
 
                 await message.reply_text(header_m + msg, reply_markup= reply_markup)
             else:
