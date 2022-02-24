@@ -19,20 +19,44 @@ logging.getLogger("pyrogram").setLevel(logging.WARNING)
 LOGGER = logging.getLogger(__name__)
 
 
-class Timer:
-    def __init__(self, time_between=2):
-        self.start_time = time.time()
-        self.time_between = time_between
+async def down_load_media_pyro(client, message, message_type, new_name= None, is_rename= False):
+        mess_age = await message.reply_text("...", quote=True)
+        LOGGER.info("downloading with pyro client")
+        conf_path = await get_config()
+        if conf_path is None:
+            await mess_age.edit("No se encontró el archivo de configuración rclone.")
+            return
+        dest_drive = get_val("DEF_RCLONE_DRIVE")
+        if dest_drive == "":
+            await mess_age.edit("No ha seleccionado una nube para subir")
+            return      
+        start_t = datetime.now()
+        path = os.path.join(os.getcwd(), "Downloads")
+        path = path + "/"
+        c_time = time.time()
+        the_real_download_location = await client.download_media(
+            message=message_type,
+            file_name=path,
+            progress=progress_for_pyrogram,
+            progress_args=(
+               "Descargando...", mess_age, c_time
+            )
+        )
+        end_t = datetime.now()
+        ms = (end_t - start_t).seconds
+        print(the_real_download_location)
 
-    def can_send(self):
-        if time.time() > (self.start_time + self.time_between):
-            self.start_time = time.time()
-            return True
-        return False
+        try:
+            await mess_age.edit(text= f"Descargado en <u>{ms}</u> segundos")
+        except Exception as e:
+            LOGGER.info(e)
+            pass
+        
+        rclone_up = RcloneUploader(the_real_download_location, mess_age, new_name, is_rename= is_rename)
+        await rclone_up.execute()
 
 
-# TELETHON
-async def download_media_tele(e):
+async def download_media_telethon(e):
     type_of = ""
     message = None
     timer = Timer()
@@ -72,43 +96,18 @@ async def download_media_tele(e):
     else:
         await e.reply('Send a media file')
 
+class Timer:
+    def __init__(self, time_between=2):
+        self.start_time = time.time()
+        self.time_between = time_between
 
-# PYROGRAM
-async def down_load_media_pyro(client, message, message_type, new_name= None, is_rename= False):
-        mess_age = await message.reply_text("...", quote=True)
-        LOGGER.info("downloading with pyro client")
-        conf_path = await get_config()
-        if conf_path is None:
-            await mess_age.edit("No se encontró el archivo de configuración rclone.")
-            return
-        dest_drive = get_val("DEF_RCLONE_DRIVE")
-        if dest_drive == "":
-            await mess_age.edit("No ha seleccionado una nube para subir")
-            return      
-        start_t = datetime.now()
-        path = os.path.join(os.getcwd(), "Downloads")
-        path = path + "/"
-        c_time = time.time()
-        the_real_download_location = await client.download_media(
-            message=message_type,
-            file_name=path,
-            progress=progress_for_pyrogram,
-            progress_args=(
-               "Descargando...", mess_age, c_time
-            )
-        )
-        end_t = datetime.now()
-        ms = (end_t - start_t).seconds
-        print(the_real_download_location)
+    def can_send(self):
+        if time.time() > (self.start_time + self.time_between):
+            self.start_time = time.time()
+            return True
+        return False
 
-        try:
-            await mess_age.edit(text= f"Descargado en <u>{ms}</u> segundos")
-        except Exception as e:
-            LOGGER.info(e)
-            pass
-        
-        rclone_up = RcloneUploader(the_real_download_location, mess_age, new_name, is_rename= is_rename)
-        await rclone_up.execute()
+
 
 
 
