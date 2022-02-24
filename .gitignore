@@ -22,4 +22,3 @@ sa_files*
 rclone.conf
 bot/utils/generate_s_pyro.py
 bot/config/ConfigSample.py
-config.env
