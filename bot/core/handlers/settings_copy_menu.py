@@ -1,16 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from bot.core.set_vars import set_val
-from bot.uploaders.rclone_transfer import rclone_copy_transfer
 from telethon.tl.types import KeyboardButtonCallback
-from telethon import events
-import asyncio 
-from bot import SessionVars
-from bot.utils.list_selected_drive import list_selected_drive
 from bot.utils.list_selected_drive_copy_menu import list_selected_drive_copy
-from ..get_vars import get_val
-from functools import partial
-import time, os, configparser, logging, traceback
+import os, configparser, logging
 
 torlog = logging.getLogger(__name__)
 
@@ -29,7 +21,6 @@ async def handle_settings_copy_menu(
     data_cb="", 
     submenu=None, 
     is_second_menu= False, 
-    is_dest_drive= False
     ):
     
     menu = []
@@ -73,7 +64,6 @@ async def handle_settings_copy_menu(
             menu, 
             callback=data_cb,
             is_second_menu= is_second_menu, 
-            is_dest_drive= is_dest_drive
             )    
 
         menu.append(

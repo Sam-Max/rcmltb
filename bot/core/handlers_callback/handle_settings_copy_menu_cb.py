@@ -31,7 +31,6 @@ async def handle_setting_copy_menu_callback(callback_query):
             msg= f'Seleccione directorio origen\n\nRuta: `{origin_drive}`', 
             drive_name= cmd[2],
             submenu="list_drive", 
-            is_dest_drive=False, 
             data_cb="list_dir_origin",
             is_second_menu=False
            )
@@ -55,21 +54,33 @@ async def handle_setting_copy_menu_callback(callback_query):
              )
 
     elif cmd[1] == "rclone_menu_copy":
-        origin_dir= get_val("ORIGIN_DIR")
-        rclone_dir= origin_dir + cmd[2] +"/"
-        set_val("ORIGIN_DIR", rclone_dir)
-        await handle_settings_copy_menu(
-             callback_query,
-             mmes, 
-             edit=True, 
-             msg=f"Seleccione unidad destino", 
-             submenu="rclone_menu_copy", 
-             data_cb="list_drive_dest"
-             )                         
+        #"True" when click on a file, "False" for folder or top bottom  
+        if cmd[3] == "True": 
+            origin_dir= get_val("ORIGIN_DIR")
+            rclone_dir= origin_dir + cmd[2] +"/"
+            set_val("ORIGIN_DIR", rclone_dir)
+            await handle_settings_copy_menu(
+                callback_query,
+                mmes, 
+                edit=True, 
+                msg=f"Seleccione unidad destino", 
+                submenu="rclone_menu_copy", 
+                data_cb="list_drive_dest"
+                )
+        else:
+            await handle_settings_copy_menu(
+                callback_query,
+                mmes, 
+                edit=True, 
+                msg=f"Seleccione unidad destino", 
+                submenu="rclone_menu_copy", 
+                data_cb="list_drive_dest"
+                )                               
   
     elif cmd[1] == "list_drive_dest":
         set_val("DEST_DRIVE", cmd[2])
         dest_drive= get_val("DEST_DRIVE")
+        set_val("DEST_DIR", "/")
         await handle_settings_copy_menu(
             callback_query, 
             mmes, edit=True, 
