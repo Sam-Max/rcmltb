@@ -96,13 +96,18 @@ def add_handlers(bot: TelegramClient):
    
     # *********** Callback Handlerss ***********  
 
-    #@bot.pyro.on_callback_query(filters="renaming")
+    @bot.pyro.on_callback_query(filters="renaming")
     async def handle_download_cb(client, query):
         data= query.data
         list = data.split(" ")
         message= query.message
         #messageid= query.message.message_id
-        message_type= get_val("MESSAGE_TYPE")
+
+        #temporary solution to fix bug when using telethon callback that fires this callback
+        try:
+           message_type= get_val("MESSAGE_TYPE")
+        except:
+           return
 
         if "default" in list[1]:
             await down_load_media_pyro(client, message, message_type)
