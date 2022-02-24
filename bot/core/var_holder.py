@@ -24,6 +24,7 @@ class VarHolder:
 
         if variable in self._var_dict.keys():
             return self._var_dict[variable]
+
         val = None
 
         # Get the variable from the constants supplied
@@ -58,7 +59,8 @@ class VarHolder:
             torlog.error(
                 "The variable was not found in either the constants, environment or database. Variable is :- {}".format(
                     variable))
-
+            raise Exception("The variable was not found in either the constants, environment or database")
+            
         if isinstance(val, str):
             val = val.strip()
 
