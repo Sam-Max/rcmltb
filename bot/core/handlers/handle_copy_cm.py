@@ -1,4 +1,3 @@
-
 from bot.core.handlers.settings_copy_menu import handle_settings_copy_menu
 from bot.utils.admin_check import is_admin
 

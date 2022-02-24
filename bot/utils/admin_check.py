@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from ..core.get_vars import get_val
 
 

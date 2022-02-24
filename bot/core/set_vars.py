@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from bot import SessionVars
 
 def set_val(name, variable):

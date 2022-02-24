@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from telethon import TelegramClient, events
 from bot.core.get_vars import get_val
 from bot.core.handlers.handle_aboutme import about_me

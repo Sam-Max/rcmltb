@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from configparser import ConfigParser
 from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot import SessionVars

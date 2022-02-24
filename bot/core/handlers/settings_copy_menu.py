@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from telethon.tl.types import KeyboardButtonCallback
 from bot.utils.list_selected_drive_copy_menu import list_selected_drive_copy
 import os, configparser, logging

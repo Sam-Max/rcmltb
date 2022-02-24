@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# the logging things
 import logging
 from pyrogram import types
 from bot import SessionVars

@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 from bot.core.get_vars import get_val
 import logging
 from pyrogram import Client
 from bot.client import RcloneTgClient
 from convopyro import Conversation
-
 from bot.core.handlermanager import add_handlers
 
 if __name__ == "__main__":

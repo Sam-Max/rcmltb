@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from bot.core.set_vars import set_val
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
