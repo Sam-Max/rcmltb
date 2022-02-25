@@ -6,7 +6,7 @@
     - Menu to list clouds from rclone.conf and selection of folders from cloud to upload.
     - Progress when downloading and uploading.
 
-# Variables
+## Variables
 
     - API_ID
     - API_HASH
@@ -14,7 +14,7 @@
     - BOT_TOKEN
     - RCLONE_CONFIG
 
-# Commands for bot(set through @BotFather) 
+## Commands for bot(set through @BotFather) 
 - start - mensaje bienvenida
 - subir - subir a la nube 
 - copiar - copiar de una nube a la otra
@@ -26,7 +26,7 @@
 - test_velocidad- test velocidad 
 - limpiar- limpiar descargas
 
-# Secrets for github
+## Secrets for github
 
     HEROKU_API_KEY
     HEROKU_APP_NAME
@@ -35,14 +35,14 @@
     
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=)    
 
-# Deploy to heroku
+## Deploy to heroku
 - Fork the repo.
 - Create app in heroku
 - Go to settings of app / config vars / add all variables
 - connect to github and deploy
 - turn on dynos
 
-# Deploy Manual Run the following commands. 
+## Deploy Manual. 
 - sudo apt update 
 - sudo apt install -y python3.8 
 - sudo apt install -y python3-venv 
