@@ -55,18 +55,10 @@ async def list_selected_drive(
 async def get_list_drive_results(data, max_results=10, offset=0):
     total = len(data)
     next_offset = offset + max_results
-    
-    #if next_offset >= total:
-        #next_offset = -2
-
-    #if next_offset < 0:
-        #next_offset = -1    
-
     data = await list_range(offset, max_results, data)
     return data, next_offset, total    
 
 async def list_range(offset, max_results, data):
-    # this handles both negative offsets and offsets larger than list length
     start = offset % len(data)
     end = (start + max_results) % len(data)
     
