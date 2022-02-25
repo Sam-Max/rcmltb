@@ -14,7 +14,7 @@
     - BOT_TOKEN
     - RCLONE_CONFIG
 
-# Commands for bot 
+# Commands for bot(set through @BotFather) 
 - start - mensaje bienvenida
 - subir - subir a la nube 
 - copiar - copiar de una nube a la otra
@@ -35,6 +35,12 @@
     
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=)    
 
+# Deploy to heroku
+- Fork the repo.
+- Create app in heroku
+- Go to settings of app / config vars / add all variables
+- connect to github and deploy
+- turn on dynos
 
 # Deploy Manual Run the following commands. 
 - sudo apt update 
