@@ -19,7 +19,17 @@ drive_icon= "☁️"
 header = ""
 
 
-async def handle_settings_main_menu(query, mmes="", drive_base="", edit=False, msg="", drive_name="", rclone_dir='', data_cb="", submenu=None, session_id=None, is_main_m= True, is_dest_drive= False):
+async def handle_settings_main_menu(
+    query, mmes="", 
+    drive_base="", 
+    edit=False, 
+    msg="", 
+    drive_name="", 
+    data_cb="", 
+    submenu=None, 
+    session_id=None, 
+    is_dest_drive= False
+    ):
     menu = []
 
     if submenu is None:
@@ -63,7 +73,14 @@ async def handle_settings_main_menu(query, mmes="", drive_base="", edit=False, m
     elif submenu == "list_drive":
         conf_path = await get_config()
 
-        await list_selected_drive(query, drive_base, drive_name, conf_path, rclone_dir, data_cb, menu, is_main_m= is_main_m)
+        await list_selected_drive(
+            query, 
+            drive_base, 
+            drive_name, 
+            conf_path, 
+            data_cb, 
+            menu, 
+            )
 
         menu.append(
             [KeyboardButtonCallback("Cerrar Menu", f"mainmenu^selfdest")]
