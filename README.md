@@ -1,4 +1,20 @@
-#Commands for bot 
+# An rclone bot to upload and transfer to many cloud servers, made by @SpiderSam
+
+    - Upload telegram files to cloud.
+    - Transfer from cloud to cloud.
+    - Renaming of files before uploading.
+    - Menu to list clouds from rclone.conf and selection of folders from cloud to upload.
+    - Progress when downloading and uploading.
+
+# Variables
+
+    - API_ID
+    - API_HASH
+    - OWNER_ID
+    - BOT_TOKEN
+    - RCLONE_CONFIG
+
+# Commands for bot 
 - start - mensaje bienvenida
 - subir - subir a la nube 
 - copiar - copiar de una nube a la otra
@@ -10,7 +26,7 @@
 - test_velocidad- test velocidad 
 - limpiar- limpiar descargas
 
-#Secrets for github
+# Secrets for github
 
     HEROKU_API_KEY
     HEROKU_APP_NAME
@@ -20,7 +36,7 @@
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=)    
 
 
-#Deploy Manual Run the following commands. 
+# Deploy Manual Run the following commands. 
 - sudo apt update 
 - sudo apt install -y python3.8 
 - sudo apt install -y python3-venv 
