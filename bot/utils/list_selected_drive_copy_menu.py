@@ -23,9 +23,6 @@ async def list_selected_drive_copy(
     else:
          menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^rclone_menu_copy^jhjh^False")])
     
-    #botlog.info(f"{drive_name}:{drive_base}")
-    botlog.info(f"CONF_PATH: {conf_path}")
-
     if is_second_menu:
          cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only"] 
     else:
@@ -70,24 +67,11 @@ async def list_selected_drive_copy(
            
 async def get_list_drive_results_copy(data, max_results=10, offset=0):
     total = len(data)
-
-    logging.info(f"Total: {total}")
-    botlog.info(f"OFFSET: {offset}")
-
     next_offset = offset + max_results
-
-    #if next_offset >= total:
-        #next_offset = -2
-
-    #if next_offset < 0:
-        #next_offset = -1    
-
-    botlog.info(f"NEXT_OFFSET: {next_offset}")
     data = await list_range(offset, max_results, data)
     return data, next_offset, total    
 
 async def list_range(offset, max_results, data):
-    # this handles both negative offsets and offsets larger than list length
     start = offset % len(data)
     end = (start + max_results) % len(data)
 
@@ -104,7 +88,6 @@ def list_drive_copy(
     menu=[], 
     callback="", 
     ):
-
      folder = ""
      file= ""
      for i in result:
@@ -112,19 +95,19 @@ def list_drive_copy(
         path == path.strip()
         mime_type= i['MimeType']
         if len(path) <= 30: 
-                if mime_type == 'inode/directory': 
-                    file= "" 
-                    folder= "📁"
-                    menu.append(  
-                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^{callback}^{path}")]
-                    )    
-                else:
-                    file= "🗄" 
-                    folder= ""
-                    menu.append(        
-                    [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^rclone_menu_copy^{path}^True")])
-                botlog.info(path)
-                
+            if mime_type == 'inode/directory': 
+                file= "" 
+                folder= "📁"
+                menu.append(  
+                [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^{callback}^{path}")]
+                )    
+            else:
+                file= "🗄" 
+                folder= ""
+                menu.append(        
+                [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^rclone_menu_copy^{path}^True")])
+            botlog.info(path)
+        
 
 
 

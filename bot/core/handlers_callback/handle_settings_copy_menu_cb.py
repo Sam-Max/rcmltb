@@ -1,3 +1,4 @@
+import os
 from bot.core.get_vars import get_val
 from bot.core.handlers.settings_copy_menu import handle_settings_copy_menu
 from bot.core.set_vars import set_val
@@ -38,7 +39,7 @@ async def handle_setting_copy_menu_callback(callback_query):
     elif cmd[1] == "list_dir_origin":
         origin_drive = get_val("ORIGIN_DRIVE")
         origin_dir= get_val("ORIGIN_DIR")
-        rclone_dir= origin_dir + cmd[2] +"/"
+        rclone_dir= origin_dir + cmd[2] + "/"
         set_val("ORIGIN_DIR", rclone_dir)
         await handle_settings_copy_menu(
              callback_query,
