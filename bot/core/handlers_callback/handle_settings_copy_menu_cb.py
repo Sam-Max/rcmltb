@@ -44,10 +44,9 @@ async def handle_setting_copy_menu_callback(callback_query):
              callback_query,
              mmes, 
              edit=True, 
-             msg=f"Seleccione carpeta para subir\n\nRuta:`{origin_drive}:{rclone_dir}`", 
-             drive_base=origin_dir, 
+             msg=f"Seleccione directorio origen\n\nRuta:`{origin_drive}:{rclone_dir}`", 
+             drive_base=rclone_dir, 
              drive_name= origin_drive,
-             rclone_dir= cmd[2], 
              data_cb="list_dir_origin",
              submenu="list_drive",
              is_second_menu= False
@@ -100,11 +99,10 @@ async def handle_setting_copy_menu_callback(callback_query):
              callback_query,
              mmes, 
              edit=True, 
-             msg=f"Seleccione carpeta para subir\n\nRuta:`{dest_drive}:{rclone_dir}`", 
-             drive_base=dest_dir, 
+             msg=f"Seleccione directorio destino\n\nRuta:`{dest_drive}:{rclone_dir}`", 
+             drive_base=rclone_dir, 
              drive_name= dest_drive,
              data_cb="list_dir_dest",
-             rclone_dir= cmd[2], 
              submenu="list_drive", 
              is_second_menu= True
              )        
