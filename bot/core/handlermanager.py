@@ -107,7 +107,7 @@ def add_handlers(bot: TelegramClient):
 
     bot.add_event_handler(
         next_page_copy,
-        events.CallbackQuery(pattern="next_copy")
+        events.CallbackQuery(pattern="n_copy")
         )
     
     bot.add_event_handler(
@@ -137,9 +137,9 @@ def add_handlers(bot: TelegramClient):
 async def booted(client):
     id = get_val("OWNER_ID")
     try:
-        await client.send_message(id, "El bot se ha iniciado y está listo para usar")
+        await client.send_message(int(id), "El bot se ha iniciado y está listo para usar")
     except Exception as e:
-        torlog.info(f"Not found the entity {id}")
+        torlog.info(f"No se ha encontrado el id de usuario: {id}")
 
 
 def command_process(command):
