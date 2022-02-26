@@ -36,7 +36,7 @@ async def list_selected_drive(
 
     if data == []:
          menu.append(
-            [KeyboardButtonCallback(f"🗓 Nada que mostrar", data="mainmenu^pages")])
+            [KeyboardButtonCallback(f"❌Nada que mostrar❌", data="mainmenu^pages")])
          return     
 
     set_val("JSON_RESULT_DATA", data)
