@@ -2,27 +2,28 @@
 
 class ExecConfig:
 
+        # Mandatory
+
         API_HASH = ""
-        API_ID = ""
+
+        API_ID = 0
+        
         BOT_TOKEN = ""
 
         OWNER_ID = 0
 
-        COMPLETED_STR = "▰"
+        RCLONE_CONFIG = ""
 
-        REMAINING_STR = "▱"
-
+        #######
+        
         BASE_DIR= "/"
+
         ORIGIN_DIR= "/"
+        
         DEST_DIR= "/"
 
         UP_CANCEL= False
 
-        # ---For vps set path here--
-        # RCLONE_CONFIG= os.path.join(os.getcwd(), 'rclone.conf')
-
-        RCLONE_CONFIG = ""
-        
         DEF_RCLONE_DRIVE = ""
 
         EDIT_SLEEP_SECS = 10

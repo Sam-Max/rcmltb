@@ -1,5 +1,5 @@
 # custom config
-ExecVars.py
+config.py
 
 # you know these
 venv
@@ -20,5 +20,3 @@ torlog.txt
 sa_accounts/
 sa_files*
 rclone.conf
-bot/utils/generate_s_pyro.py
-bot/config/ConfigSample.py

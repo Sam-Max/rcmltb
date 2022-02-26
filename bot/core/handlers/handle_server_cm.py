@@ -117,8 +117,8 @@ async def handle_server_command(message):
 
 def progress_bar(percentage):
     # percentage is on the scale of 0-1
-    comp = get_val("COMPLETED_STR")
-    ncomp = get_val("REMAINING_STR")
+    comp = "▰"
+    ncomp = "▱"
     pr = ""
 
     if isinstance(percentage, str):

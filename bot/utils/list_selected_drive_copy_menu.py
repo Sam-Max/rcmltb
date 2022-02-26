@@ -45,7 +45,7 @@ async def list_selected_drive_copy(
     #logging.info(data)
     if data == []:
          menu.append(
-            [KeyboardButtonCallback(f"🗓 Nada que mostrar", data="copymenu^pages")])
+            [KeyboardButtonCallback("❌Nada que mostrar❌", data="copymenu^pages")])
          return 
 
     if is_second_menu:
