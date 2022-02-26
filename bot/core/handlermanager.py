@@ -28,7 +28,7 @@ torlog = logging.getLogger(__name__)
 
 def add_handlers(bot: TelegramClient):
 
-    #pyrogram handlerss
+    #pyrogram handlers
     download_handlers = MessageHandler(
         handle_download_command,
         filters=filters.command([get_command_p("LEECH")])

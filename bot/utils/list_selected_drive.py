@@ -37,8 +37,9 @@ async def list_selected_drive(
     if data == []:
          menu.append(
             [KeyboardButtonCallback(f"🗓 Nada que mostrar", data="setting pages")])
-         return 
-    SessionVars.update_var("JSON_RESULT_DATA", data)
+         return     
+
+    set_val("JSON_RESULT_DATA", data)
     data, next_offset, total= await get_list_drive_results(data)
     
     list_drive(data, menu, data_cb)
