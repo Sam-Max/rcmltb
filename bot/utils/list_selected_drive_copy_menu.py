@@ -48,7 +48,15 @@ async def list_selected_drive_copy(
          menu.append(
             [KeyboardButtonCallback(f"🗓 Nada que mostrar", data="setting pages")])
          return 
-    SessionVars.update_var("JSON_RESULT_DATA", data)
+
+    if is_second_menu:
+        #Sort the JSON data based on key value
+        data.sort(key=lambda x: x["Name"]) 
+    else:
+        data.sort(key=lambda x: x["Size"])        
+
+    set_val("JSON_RESULT_DATA", data)
+
     data, next_offset, total= await get_list_drive_results_copy(data)
     
     list_drive_copy(
