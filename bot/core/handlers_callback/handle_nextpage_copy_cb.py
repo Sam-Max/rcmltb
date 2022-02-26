@@ -43,6 +43,11 @@ async def next_page_copy(callback_query):
              KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
              KeyboardButtonCallback("NEXT ⏩", data=f"n_copy {n_offset} {is_second_menu}")
             ])
+
+    btn.append(
+            [KeyboardButtonCallback("Cerrar Menu", f"mainmenu^selfdest")]
+        )
+                
     try:
         mmes= await callback_query.get_message()
         if is_second_menu == "True":

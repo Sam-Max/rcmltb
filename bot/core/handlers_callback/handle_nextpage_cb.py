@@ -46,6 +46,11 @@ async def next_page_menu(callback_query):
              KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
              KeyboardButtonCallback("NEXT ⏩", data=f"next {n_offset}")
             ])
+
+    btn.append(
+            [KeyboardButtonCallback("Cerrar Menu", f"mainmenu^selfdest")]
+        )
+
     try:
         mmes= await callback_query.get_message()
         d_rclone_drive= get_val("DEF_RCLONE_DRIVE")
