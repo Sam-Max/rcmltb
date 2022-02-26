@@ -4,6 +4,7 @@ import json
 import logging
 from json.decoder import JSONDecodeError
 from bot import SessionVars
+from bot.core.set_vars import set_val
 
 botlog = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ async def list_selected_drive(
     else: 
         menu.append(
             [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
-             KeyboardButtonCallback("NEXT ⏩", data= f"next {next_offset}".encode("UTF-8"))
+             KeyboardButtonCallback("NEXT ⏩", data= f"next {next_offset}")
             ]) 
            
 async def get_list_drive_results(data, max_results=10, offset=0):
@@ -72,19 +73,21 @@ async def list_range(offset, max_results, data):
 def list_drive(result, menu=[], data_cb=""):
      folder = ""
      file= ""
+     index= 0
      for i in result:
         path = i["Path"]
         path == path.strip()
+        index= index + 1
+        set_val(f"{index}", path)
         mime_type= i['MimeType']
-        if len(path) <= 30: 
-                if mime_type == 'inode/directory': 
-                    file= "" 
-                    folder= "📁"
-                #botlog.info(path)
-                menu.append(        
-                [KeyboardButtonCallback(f"{folder} {file} {path}", f"mainmenu^{data_cb}^{path}")
-                ]
-                )
+        #if len(path) <= 30: 
+        if mime_type == 'inode/directory': 
+            file= "" 
+            folder= "📁"
+        #logging.info("path: {}".format(path))
+        menu.append(        
+        [KeyboardButtonCallback(f"{folder} {file} {path}", f"mainmenu^{data_cb}^{index}")]
+        )
 
 
 

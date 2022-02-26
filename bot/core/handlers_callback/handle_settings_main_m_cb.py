@@ -40,8 +40,9 @@ async def handle_setting_main_menu_callback(callback_query):
     elif cmd[1] == "list_dir_main_menu":
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
-        dir = cmd[2] +"/"
-        rclone_dir += dir
+        path = get_val(cmd[2])
+        logging.info("path: {}".format(path))
+        rclone_dir +=  path +"/"
         set_val("BASE_DIR", rclone_dir)
         await handle_settings_main_menu(
             callback_query, mmes, 
