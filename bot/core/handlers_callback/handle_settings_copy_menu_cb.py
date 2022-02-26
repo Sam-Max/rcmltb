@@ -39,7 +39,9 @@ async def handle_setting_copy_menu_callback(callback_query):
     elif cmd[1] == "list_dir_origin":
         origin_drive = get_val("ORIGIN_DRIVE")
         origin_dir= get_val("ORIGIN_DIR")
-        rclone_dir= origin_dir + cmd[2] + "/"
+        path = get_val(cmd[2])
+        logging.info("path: {}".format(path))
+        rclone_dir= origin_dir + path + "/"
         set_val("ORIGIN_DIR", rclone_dir)
         await handle_settings_copy_menu(
              callback_query,
@@ -83,7 +85,8 @@ async def handle_setting_copy_menu_callback(callback_query):
         set_val("DEST_DIR", "/")
         await handle_settings_copy_menu(
             callback_query, 
-            mmes, edit=True, 
+            mmes, 
+            edit=True, 
             msg=f'Seleccione directorio destino\n\nRuta: `{dest_drive}`', 
             drive_name= cmd[2],
             submenu="list_drive", 
@@ -94,7 +97,8 @@ async def handle_setting_copy_menu_callback(callback_query):
     elif cmd[1] == "list_dir_dest":
         dest_drive = get_val("DEST_DRIVE")
         dest_dir= get_val("DEST_DIR")
-        rclone_dir= dest_dir + cmd[2] +"/"
+        path= get_val(cmd[2])
+        rclone_dir= dest_dir + path +"/"
         set_val("DEST_DIR", rclone_dir)
         await handle_settings_copy_menu(
              callback_query,

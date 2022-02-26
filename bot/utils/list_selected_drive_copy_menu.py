@@ -4,6 +4,7 @@ import json
 import logging
 from json.decoder import JSONDecodeError
 from bot import SessionVars
+from bot.core.set_vars import set_val
 
 botlog = logging.getLogger(__name__)
 
@@ -90,24 +91,26 @@ def list_drive_copy(
     ):
      folder = ""
      file= ""
+     index= 0
      for i in result:
         path = i["Path"]
         path == path.strip()
+        index= index + 1
+        set_val(f"{index}", path)
         mime_type= i['MimeType']
-        if len(path) <= 30: 
-            if mime_type == 'inode/directory': 
-                file= "" 
-                folder= "📁"
-                menu.append(  
-                [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^{callback}^{path}")]
-                )    
-            else:
-                file= "🗄" 
-                folder= ""
-                menu.append(        
-                [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^rclone_menu_copy^{path}^True")])
-            botlog.info(path)
-        
+        #if len(path) <= 30: 
+        if mime_type == 'inode/directory': 
+            file= "" 
+            folder= "📁"
+            menu.append(  
+            [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^{callback}^{index}")]
+            )    
+        else:
+            file= "🗄" 
+            folder= ""
+            menu.append(        
+            [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^rclone_menu_copy^{index}^True")])
+        #logging.info("path: {}".format(path))        
 
 
 
