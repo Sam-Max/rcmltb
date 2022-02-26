@@ -3,7 +3,6 @@ import asyncio
 import json
 import logging
 from json.decoder import JSONDecodeError
-from bot import SessionVars
 from bot.core.set_vars import set_val
 
 botlog = logging.getLogger(__name__)
@@ -46,7 +45,7 @@ async def list_selected_drive_copy(
     #logging.info(data)
     if data == []:
          menu.append(
-            [KeyboardButtonCallback(f"🗓 Nada que mostrar", data="setting pages")])
+            [KeyboardButtonCallback(f"🗓 Nada que mostrar", data="copymenu^pages")])
          return 
 
     if is_second_menu:
@@ -67,10 +66,10 @@ async def list_selected_drive_copy(
 
     if offset == 0 and total <= 10:
         menu.append(
-            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages")]) 
+            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="copymenu^pages")]) 
     else: 
         menu.append(
-            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
+            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="copymenu^pages"),
              KeyboardButtonCallback("NEXT ⏩", data= f"n_copy {next_offset} {is_second_menu}")
             ]) 
            

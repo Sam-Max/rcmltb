@@ -36,7 +36,7 @@ async def list_selected_drive(
 
     if data == []:
          menu.append(
-            [KeyboardButtonCallback(f"🗓 Nada que mostrar", data="setting pages")])
+            [KeyboardButtonCallback(f"🗓 Nada que mostrar", data="mainmenu^pages")])
          return     
 
     set_val("JSON_RESULT_DATA", data)
@@ -46,11 +46,11 @@ async def list_selected_drive(
 
     if offset == 0 and total <= 10:
         menu.append(
-            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages")]) 
+            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="mainmenu^pages")]) 
             
     else: 
         menu.append(
-            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
+            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="mainmenu^pages"),
              KeyboardButtonCallback("NEXT ⏩", data= f"next {next_offset}")
             ]) 
            
