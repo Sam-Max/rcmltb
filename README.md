@@ -1,10 +1,12 @@
 # An rclone bot to upload and transfer to many cloud servers, made by @SpiderSam
 
+Contact: [Telegram](https://t.me/)
+
     - Upload telegram files to cloud.
     - Transfer from cloud to cloud.
-    - Renaming of files before uploading.
-    - Menu to list clouds from rclone.conf and selection of folders from cloud to upload.
-    - Progress when downloading and uploading.
+    - Renaming of files.
+    - Menu to list clouds from rclone.conf and selection of folders and files.
+    - Progress bar when downloading and uploading.
 
 ## Variables
 
@@ -15,16 +17,11 @@
     - RCLONE_CONFIG
 
 ## Commands for bot(set through @BotFather) 
-- start - mensaje bienvenida
-- subir - subir a la nube 
-- copiar - copiar de una nube a la otra
-- configuracion - configurar rclone 
-- info - info del bot 
-- exec - ejecutar comandos linux 
-- logs - obtener logs del servidor 
-- servidor - obtener info del servidor
-- test_velocidad- test velocidad 
-- limpiar- limpiar descargas
+- subir - upload to cloud 
+- copiar - copy from cloud to cloud
+- conf - config rclone and set upload folder 
+- logs - get logs from server
+- limpiar- clean downloads
 
 ## Secrets for github
 
@@ -33,8 +30,6 @@
     HEROKU_EMAIL
     
     
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=)    
-
 ## Deploy to heroku
 - Fork the repo.
 - Create app in heroku
