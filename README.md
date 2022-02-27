@@ -1,6 +1,6 @@
-# An rclone bot to upload and transfer to many cloud servers, made by @SpiderSam
+# An rclone bot to upload and transfer to many cloud servers, made by @SamMax009
 
-Contact: [Telegram](https://t.me/)
+Contact: [Telegram](https://t.me/SamMax009)
 
     - Upload telegram files to cloud.
     - Transfer from cloud to cloud.
@@ -17,11 +17,11 @@ Contact: [Telegram](https://t.me/)
     - RCLONE_CONFIG
 
 ## Commands for bot(set through @BotFather) 
-- subir - upload to cloud 
-- copiar - copy from cloud to cloud
+- upload - upload to selected cloud 
+- copy - copy from cloud to cloud
 - conf - config rclone and set upload folder 
 - logs - get logs from server
-- limpiar- clean downloads
+- clean- clean downloads
 
 ## Secrets for github
 
@@ -56,5 +56,5 @@ Contact: [Telegram](https://t.me/)
 
 3- [TorToolkit-Telegram](https://github.com/yash-dk/TorToolkit-Telegram)
 
-4- [EvamariaTG] https://github.com/EvamariaTG/EvaMaria
+4- [EvamariaTG] (https://github.com/EvamariaTG/EvaMaria)
 
