@@ -59,7 +59,8 @@ async def handle_setting_copy_menu_callback(callback_query):
         #"True" when click on a file, "False" for folder or top bottom  
         if cmd[3] == "True": 
             origin_dir= get_val("ORIGIN_DIR")
-            rclone_dir= origin_dir + cmd[2] +"/"
+            path= get_val(cmd[2])
+            rclone_dir= origin_dir + path +"/"
             set_val("ORIGIN_DIR", rclone_dir)
             await handle_settings_copy_menu(
                 callback_query,
