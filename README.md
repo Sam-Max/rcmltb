@@ -48,3 +48,13 @@ Contact: [Telegram](https://t.me/)
 - chmod 777 start.sh 
 - ./start.sh
 
+## Repositories used to develop this bot and credits:
+
+1- Telethon and Pyrogram.
+
+2- [Conversation-Pyrogram](https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip)
+
+3- [TorToolkit-Telegram](https://github.com/yash-dk/TorToolkit-Telegram)
+
+4- [EvamariaTG] https://github.com/EvamariaTG/EvaMaria
+
