@@ -50,7 +50,6 @@ async def handle_settings_main_menu(
                         prev = yes
 
                     if "team_drive" in list(conf[j]):
-                        set_val("DEF_RCLONE_DRIVE", j)
                         menu.append(
                             [KeyboardButtonCallback(f"{prev}{j} - TD", f"mainmenu^list_drive_main_menu^{j}")]   
                         )
