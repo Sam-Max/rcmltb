@@ -6,5 +6,6 @@ urllib3==1.26.5
 Pyrogram
 speedtest-cli
 python-dotenv
+requests
 https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip
 
