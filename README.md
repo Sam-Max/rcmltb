@@ -12,7 +12,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 ## Commands for bot(set through @BotFather) 
 - upload - upload to selected cloud 
 - copy - copy from cloud to cloud
-- confg - config rclone and set upload folder 
+- config - configurate rclone and set upload folder 
 - logs - get logs from server
 - clean- clean downloads
 - restart - restart bot
