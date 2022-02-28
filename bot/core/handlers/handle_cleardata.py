@@ -10,7 +10,7 @@ async def cleardata_handler(e):
             data = e.data.decode("UTF-8").split(" ")
             if data[1] == "yes":
                 await e.answer("Clearing data.")
-                await e.edit("Datos Limpiados {}".format(datetime.now().strftime("%d-%B-%Y, %H:%M:%S")))
+                await e.edit("Data Cleaned {}".format(datetime.now().strftime("%d-%B-%Y, %H:%M:%S")))
                 await clear_stuff("./Downloads")
             else:
                 await e.answer("Aborting.")
@@ -18,8 +18,8 @@ async def cleardata_handler(e):
         else:
             buttons = [[KeyboardButtonCallback("Yes", data= "cleardata yes"),
                         KeyboardButtonCallback("No", data= "cleardata no")]]
-            await e.reply("¿Estás seguro de que quieres borrar los datos?\n"
-                          "Esto eliminará todos sus datos, incluidos los archivos descargados, y afectará las transferencias en curso..\n",
+            await e.reply("¿Are you sure you want to delete the data?\n"
+                          "This will afect currents transfers..\n",
                           buttons= buttons)
     else:
         await e.answer("⚠️ WARN ⚠️ Dont Touch Admin Settings.", alert=True)

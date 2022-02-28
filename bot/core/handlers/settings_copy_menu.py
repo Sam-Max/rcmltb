@@ -39,7 +39,7 @@ async def handle_settings_copy_menu(
                 )
 
         menu.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"copymenu^selfdest")]
+            [KeyboardButtonCallback("Close Menu", f"copymenu^selfdest")]
         )
 
         if edit:
@@ -63,7 +63,7 @@ async def handle_settings_copy_menu(
             )    
 
         menu.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"copymenu^selfdest")]
+            [KeyboardButtonCallback("Close Menu", f"copymenu^selfdest")]
 
         )
         if edit:

@@ -152,9 +152,9 @@ async def booted(client):
         osremove(".restartmsg")
 
     try:
-        await client.send_message(int(id), "El bot se ha iniciado y está listo para usar")
+        await client.send_message(int(id), "The bot is ready to use")
     except Exception as e:
-        torlog.info(f"No se ha encontrado el id de usuario: {id}")
+        torlog.info(f"User id not found: {id}")
 
 
 def command_process(command):

@@ -12,7 +12,7 @@ async def about_me(message):
     msg = (
         f"<b>Telethon Version</b>: {telethonver}\n"
         f"<b>Pyrogram Version</b>: {pyrogramver}\n"
-        "<b>Upload Engine:-</b> <code>RCLONE</code> \n"
+        "<b>Upload Engine:-</b> <code>Rclone</code> \n"
         "\n"
     )
 

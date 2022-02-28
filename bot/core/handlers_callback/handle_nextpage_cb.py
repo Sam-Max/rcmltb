@@ -15,7 +15,7 @@ async def next_page_menu(callback_query):
     result, next_offset, total = await get_list_drive_results(data, offset=offset)
 
     btn.append(
-        [KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"mainmenu^selfdest")]
+        [KeyboardButtonCallback(f" ✅ Select this folder", f"mainmenu^selfdest")]
         )
 
     list_drive(result, menu=btn, data_cb= "list_dir_main_menu")
@@ -48,14 +48,14 @@ async def next_page_menu(callback_query):
             ])
 
     btn.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"mainmenu^selfdest")]
+            [KeyboardButtonCallback("Close Menu", f"mainmenu^selfdest")]
         )
 
     try:
         mmes= await callback_query.get_message()
         d_rclone_drive= get_val("DEF_RCLONE_DRIVE")
         base_dir= get_val("BASE_DIR")
-        await mmes.edit(f"Ruta:`{d_rclone_drive}:{base_dir}`", buttons=btn)
+        await mmes.edit(f"Route:`{d_rclone_drive}:{base_dir}`", buttons=btn)
     except MessageNotModifiedError as e:
         botlog.info(e)
         pass

@@ -3,13 +3,6 @@ from bot.utils.admin_check import is_admin
 import asyncio as aio
 import os
 
-async def handle_settings_cb(e):
-    if await is_admin(e.sender_id):
-        await handle_setting_callback(e)
-    else:
-        await e.answer("⚠️ WARN ⚠️ Dont Touch Admin Settings.", alert=True)
-
-
 async def handle_exec_message_f(e):
     if get_val("REST11"):
         return

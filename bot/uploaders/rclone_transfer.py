@@ -24,7 +24,7 @@ async def rclone_copy_transfer(e, conf_path):
     rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
                        f'{dest_drive}:{dest_dir}', '-P']
 
-    message = await e.edit("Preparando para transferir...")
+    message = await e.edit("Preparing to copy...")
 
     rclone_pr = subprocess.Popen(
         rclone_copy_cmd,
@@ -36,10 +36,10 @@ async def rclone_copy_transfer(e, conf_path):
 
     if rcres:
         rclone_pr.kill()
-        await message.edit("Transferencia cancelada")
+        await message.edit("Copy cancelled")
         return
 
-    await message.edit("Transferencia exitosa ✅")
+    await message.edit("Successfully ✅")
 
 
 async def rclone_process_update(rclone_pr, message):
@@ -73,7 +73,7 @@ async def rclone_process_update(rclone_pr, message):
                     percent = 0
                 prg = status(percent)
 
-                msg = 'Transfiriendo...\n{} \n{} \nVelocidad:- {} \nETA:- {}\n'.format(nstr[0], prg, nstr[2],
+                msg = 'Copying...\n{} \n{} \nSpeed:- {} \nETA:- {}\n'.format(nstr[0], prg, nstr[2],
                                                                                     nstr[3].replace("ETA", ""))
 
                 keyboard = [[Button.inline("Cancel", "upcancel")]]
@@ -96,8 +96,8 @@ async def rclone_process_update(rclone_pr, message):
 
         if sleeps:
             sleeps = False
-            if get_val("UP_CANCEL"):
-                SessionVars.update_var("UP_CANCEL", False)
+            if get_val("UPLOAD_CANCEL"):
+                SessionVars.update_var("UPLOAD_CANCEL", False)
                 return True
             await asyncio.sleep(2)
             process.stdout.flush()

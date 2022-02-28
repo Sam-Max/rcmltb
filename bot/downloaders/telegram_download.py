@@ -28,7 +28,7 @@ async def down_load_media_pyro(client, message, message_type, new_name= None, is
             return
         dest_drive = get_val("DEF_RCLONE_DRIVE")
         if dest_drive == "":
-            await mess_age.edit("No ha seleccionado una nube para subir")
+            await mess_age.edit("Select a cloud first please")
             return      
         start_t = datetime.now()
         path = os.path.join(os.getcwd(), "Downloads")
@@ -39,7 +39,7 @@ async def down_load_media_pyro(client, message, message_type, new_name= None, is
             file_name=path,
             progress=progress_for_pyrogram,
             progress_args=(
-               "Descargando...", mess_age, c_time
+               "Downloading...", mess_age, c_time
             )
         )
         end_t = datetime.now()
@@ -47,7 +47,7 @@ async def down_load_media_pyro(client, message, message_type, new_name= None, is
         print(the_real_download_location)
 
         try:
-            await mess_age.edit(text= f"Descargado en <u>{ms}</u> segundos")
+            await mess_age.edit(text= f"Downloaded in <u>{ms}</u> seconds")
         except Exception as e:
             LOGGER.info(e)
             pass

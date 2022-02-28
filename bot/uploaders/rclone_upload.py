@@ -85,12 +85,10 @@ class RcloneUploader():
         
             if rcres:
                 rclone_pr.kill()
-                log.info("subida cancelada")
-                await self._user_msg.edit("Subida cancelada")
+                await self._user_msg.edit("Upload cancelled")
                 return 
             
-            log.info("subida exitosa")
-            await self._user_msg.edit("Subida exitosa ✅")
+            await self._user_msg.edit("Successfully uploaded ✅")
 
         else:
             new_dest_base = self.dest_base
@@ -116,12 +114,11 @@ class RcloneUploader():
         
             if rcres:
                 rclone_pr.kill()
-                log.info("subida cancelada")
-                await self._user_msg.edit("Subida cancelada")
+                await self._user_msg.edit("Upload cancelled")
                 return 
             
             log.info("subida exitosa")
-            await self._user_msg.edit("Subida exitosa ✅")
+            await self._user_msg.edit("Successfully uploaded ✅")
 
 
     async def rclone_process_update(self):
@@ -154,7 +151,7 @@ class RcloneUploader():
                         percent = 0
                     prg = status(percent)
 
-                    msg = "<b>Subiendo...\n{} \n{} \nVelocidad:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
+                    msg = "<b>Uploading...\n{} \n{} \nSpeed:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
                     
                     if msg1 != msg:
                         try:
@@ -174,8 +171,8 @@ class RcloneUploader():
 
             if sleeps:               
                 sleeps= False
-                if get_val("UP_CANCEL"):
-                    SessionVars.update_var("UP_CANCEL", False)
+                if get_val("UPLOAD_CANCEL"):
+                    SessionVars.update_var("UPLOAD_CANCEL", False)
                     return True
                 await asyncio.sleep(2)
                 process.stdout.flush()    

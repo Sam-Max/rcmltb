@@ -15,9 +15,9 @@ async def next_page_copy(callback_query):
     result, next_offset, total = await get_list_drive_results_copy(data, offset=offset)
 
     if is_second_menu == "True":
-        btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^start_copy")])
+        btn.append([KeyboardButtonCallback(f" ✅ Select this folder", f"copymenu^start_copy")])
     else:
-        btn.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"copymenu^rclone_menu_copy^_^False")])
+        btn.append([KeyboardButtonCallback(f" ✅ Select this folder", f"copymenu^rclone_menu_copy^_^False")])
     
     if is_second_menu == "True":
         list_drive_copy(result= result, callback="list_dir_dest", menu=btn)
@@ -45,7 +45,7 @@ async def next_page_copy(callback_query):
             ])
 
     btn.append(
-            [KeyboardButtonCallback("Cerrar Menu", f"mainmenu^selfdest")]
+            [KeyboardButtonCallback("Close Menu", f"mainmenu^selfdest")]
         )
                 
     try:

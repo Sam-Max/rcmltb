@@ -17,7 +17,7 @@ async def list_selected_drive(
     menu, 
     offset= 0, 
     ):
-    menu.append([KeyboardButtonCallback(f" ✅ Seleccione esta Carpeta", f"mainmenu^selfdest")])
+    menu.append([KeyboardButtonCallback(f" ✅ Select this folder", f"mainmenu^selfdest")])
 
     cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only" ] 
 
@@ -36,7 +36,7 @@ async def list_selected_drive(
 
     if data == []:
          menu.append(
-            [KeyboardButtonCallback("❌Nada que mostrar❌", data="mainmenu^pages")])
+            [KeyboardButtonCallback("❌Nothing to show❌", data="mainmenu^pages")])
          return     
 
     set_val("JSON_RESULT_DATA", data)

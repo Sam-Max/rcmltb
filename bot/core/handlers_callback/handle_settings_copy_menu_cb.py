@@ -29,7 +29,7 @@ async def handle_setting_copy_menu_callback(callback_query):
             query= callback_query, 
             mmes= mmes, 
             edit=True,
-            msg= f'Seleccione directorio origen\n\nRuta: `{origin_drive}`', 
+            msg= f'Select file/folder which you want to copy\n\nPath: `{origin_drive}`', 
             drive_name= cmd[2],
             submenu="list_drive", 
             data_cb="list_dir_origin",
@@ -47,7 +47,7 @@ async def handle_setting_copy_menu_callback(callback_query):
              callback_query,
              mmes, 
              edit=True, 
-             msg=f"Seleccione directorio origen\n\nRuta:`{origin_drive}:{rclone_dir}`", 
+             msg=f"Select file/folder which you want to copy\n\nPath:`{origin_drive}:{rclone_dir}`", 
              drive_base=rclone_dir, 
              drive_name= origin_drive,
              data_cb="list_dir_origin",
@@ -66,7 +66,7 @@ async def handle_setting_copy_menu_callback(callback_query):
                 callback_query,
                 mmes, 
                 edit=True, 
-                msg=f"Seleccione unidad destino", 
+                msg=f"Select destination cloud", 
                 submenu="rclone_menu_copy", 
                 data_cb="list_drive_dest"
                 )
@@ -75,7 +75,7 @@ async def handle_setting_copy_menu_callback(callback_query):
                 callback_query,
                 mmes, 
                 edit=True, 
-                msg=f"Seleccione unidad destino", 
+                msg=f"Select destination cloud", 
                 submenu="rclone_menu_copy", 
                 data_cb="list_drive_dest"
                 )                               
@@ -88,7 +88,7 @@ async def handle_setting_copy_menu_callback(callback_query):
             callback_query, 
             mmes, 
             edit=True, 
-            msg=f'Seleccione directorio destino\n\nRuta: `{dest_drive}`', 
+            msg=f'Select folder where to copy\n\nPath: `{dest_drive}`', 
             drive_name= cmd[2],
             submenu="list_drive", 
             data_cb="list_dir_dest",
@@ -105,7 +105,7 @@ async def handle_setting_copy_menu_callback(callback_query):
              callback_query,
              mmes, 
              edit=True, 
-             msg=f"Seleccione directorio destino\n\nRuta:`{dest_drive}:{rclone_dir}`", 
+             msg=f"Select folder where to copy\n\nPath:`{dest_drive}:{rclone_dir}`", 
              drive_base=rclone_dir, 
              drive_name= dest_drive,
              data_cb="list_dir_dest",

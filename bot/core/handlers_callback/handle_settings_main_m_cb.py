@@ -17,8 +17,8 @@ async def handle_setting_main_menu_callback(callback_query):
         await callback_query.answer()
 
     if cmd[1] == "load_rclone_config":
-        await callback_query.answer("Envíe el archivo de configuración rclone.conf", alert=True)
-        await mmes.edit(f"Envie el archivo rclone.conf\n\n/ignore para ir atras", buttons=None)
+        await callback_query.answer("Send rclone.conf file", alert=True)
+        await mmes.edit(f"Send rclone.conf file\n\n/ignore to go back", buttons=None)
         val = await get_value(callback_query, True)
 
         await general_input_manager(callback_query, mmes, "RCLONE_CONFIG", "str", val, "rclonemenu")
@@ -31,7 +31,7 @@ async def handle_setting_main_menu_callback(callback_query):
             callback_query, 
             mmes, 
             edit=True,
-            msg=f"Seleccione carpeta para subir\n\nRuta:`{cmd[2]}:{base_dir}`", 
+            msg=f"Select folder where to upload files\n\nPath:`{cmd[2]}:{base_dir}`", 
             drive_name= cmd[2], 
             submenu="list_drive", 
             data_cb="list_dir_main_menu", 
@@ -47,7 +47,7 @@ async def handle_setting_main_menu_callback(callback_query):
         await handle_settings_main_menu(
             callback_query, mmes, 
             edit=True, 
-            msg=f"Seleccione carpeta para subir\n\nRuta:`{rclone_drive}:{rclone_dir}`", 
+            msg=f"Select folder where to upload files\n\nPath:`{rclone_drive}:{rclone_dir}`", 
             drive_base=rclone_dir, 
             drive_name= rclone_drive, 
             submenu="list_drive", 
