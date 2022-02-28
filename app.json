@@ -1,5 +1,5 @@
 {
-    "name": "RcloneBot",
+    "name": "RcloneTGBot",
     "description": "A Telegram Rclone bot based on Pyrogram",
     "keywords": [
       "telegram",
