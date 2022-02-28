@@ -20,3 +20,4 @@ torlog.txt
 sa_accounts/
 sa_files*
 rclone.conf
+config.env
