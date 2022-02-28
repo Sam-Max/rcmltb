@@ -7,6 +7,7 @@ from bot.core.handlers.handle_copy_cm import handle_copy_command
 from bot.core.handlers.handle_download_cm import handle_download_command
 from bot.core.handlers.handle_exec_cm import handle_exec_message_f
 from bot.core.handlers.handle_getlogs import get_logs_f
+from bot.core.handlers.handle_restart import restart
 from bot.core.handlers.handle_server_cm import handle_server_command
 from bot.core.handlers.handle_settings_main_menu import handle_settings_command
 from bot.core.handlers.handle_speedtest import speed_handler
@@ -21,6 +22,7 @@ from .get_commands import get_command, get_command_p
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 import re, logging
+from os import path as ospath, remove as osremove
 from bot import __version__
 
 torlog = logging.getLogger(__name__)
@@ -53,6 +55,12 @@ def add_handlers(bot: TelegramClient):
         handle_exec_message_f,
         events.NewMessage(pattern=command_process(get_command("EXEC")))
     )
+
+    bot.add_event_handler(
+        restart,
+        events.NewMessage(pattern=command_process(get_command("RESTART")))
+    )
+
 
     bot.add_event_handler(
         about_me,
@@ -136,6 +144,13 @@ def add_handlers(bot: TelegramClient):
 
 async def booted(client):
     id = get_val("OWNER_ID")
+
+    if ospath.isfile(".restartmsg"):
+        with open(".restartmsg") as f:
+            user_id, msg_id = map(int, f)
+        await client.edit_message(user_id, msg_id, "Restarted successfully!")
+        osremove(".restartmsg")
+
     try:
         await client.send_message(int(id), "El bot se ha iniciado y está listo para usar")
     except Exception as e:

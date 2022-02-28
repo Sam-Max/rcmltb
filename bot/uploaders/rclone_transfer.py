@@ -7,6 +7,7 @@ import asyncio
 import time
 import re
 import logging
+from bot import rcprocess
 from .progress_for_rclone import status
 
 log = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ async def rclone_copy_transfer(e, conf_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
-
+    rcprocess.append(rclone_pr)
     rcres = await rclone_process_update(rclone_pr, message)
 
     if rcres:

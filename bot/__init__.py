@@ -2,7 +2,7 @@ __version__ = "1.0"
 __author__ = "Sam009-max"
 
 import logging
-#import dotenv
+from dotenv import load_dotenv
 
 from bot.utils.load_rclone import load_rclone
 from .core.var_holder import VarHolder
@@ -15,7 +15,8 @@ logging.basicConfig(
 )
 
 uptime = time.time()
+rcprocess= []
 
-#dotenv.load_dotenv("config.env")
+load_dotenv('config.env', override=True)
 SessionVars = VarHolder()
 load_rclone()

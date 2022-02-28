@@ -9,6 +9,7 @@ import logging
 import subprocess
 import asyncio
 import re
+from bot import rcprocess
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from .progress_for_rclone import status
 
@@ -65,15 +66,17 @@ class RcloneUploader():
             rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', str(path),
                                     f'{dest_drive}:{new_dest_base}', '-P']
 
+            
+            log.info(f'{dest_drive}:{new_dest_base}')
+            log.info("Uploading...")
+
             rclone_pr = subprocess.Popen(
                 rclone_copy_cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
 
-            log.info(f'{dest_drive}:{new_dest_base}')
-            log.info("Uploading...")
-
+            rcprocess.append(rclone_pr)
             self._rclone_pr = rclone_pr
             rcres= await self.rclone_process_update()
 
@@ -103,9 +106,10 @@ class RcloneUploader():
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
+
+            rcprocess.append(rclone_pr)
             self._rclone_pr = rclone_pr
             rcres= await self.rclone_process_update()
-
 
             # if(await self.check_errors(rclone_pr, self._user_msg)):
             #     return
