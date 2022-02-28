@@ -17,5 +17,7 @@ jobs:
           docker_heroku_process_type: worker
           stack: "container"
           region: "us"
+          env:
+        HD_CONFIG_FILE_URL: ${{secrets.CONFIG_FILE_URL}}
         
 
