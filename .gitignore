@@ -21,3 +21,5 @@ sa_accounts/
 sa_files*
 rclone.conf
 config.env
+app.json
+Procfile
