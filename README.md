@@ -17,16 +17,18 @@ Contact: [Telegram](https://t.me/SamMax009)
 - clean- clean downloads
 - restart - restart bot
 
-## Deploy Manual. 
+## Steps: 
+
 1. Setting up config file
 - cr config_sample.env config.env
-- Fill up mandatory variables:
-    - API_ID
-    - API_HASH
-    - OWNER_ID
-    - BOT_TOKEN
-    - RCLONE_CONFIG
-2. Deploy manual
+- **Fill up mandatory variables:**
+    - `API_ID`
+    - `API_HASH`
+    - `OWNER_ID`
+    - `BOT_TOKEN`
+    - `RCLONE_CONFIG`
+
+2. Deploy vps
 - sudo apt update 
 - sudo apt install -y python3.8 
 - sudo apt install -y python3-venv 
