@@ -1,4 +1,4 @@
-from ..config.commands import Commands
+from ..utils.commands import Commands
 from .get_vars import get_val
 import os, logging
 

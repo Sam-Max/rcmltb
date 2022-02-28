@@ -9,9 +9,9 @@ def load_rclone():
     else:
         logging.info(f'rclone_config:1')           
         rclone_config.strip()
-        str_1_encoded = bytes(rclone_config,'UTF-8')
+        str_encoded = bytes(rclone_config,'UTF-8')
 
         with open(path, "wb") as rfile:
-            rfile.write(str_1_encoded)
+            rfile.write(str_encoded)
 
     return path
