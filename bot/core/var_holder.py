@@ -38,7 +38,7 @@ class VarHolder:
             "OWNER_ID",
         ]
 
-        BOOLS = []
+        BOOLS = ["UPLOAD_CANCEL"]
 
         if variable in INTS:
             val = int(envval) if envval is not None else val
