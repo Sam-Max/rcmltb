@@ -15,7 +15,6 @@ logging.basicConfig(
 )
 
 uptime = time.time()
-rcprocess= []
 
 load_dotenv('config.env', override=True)
 SessionVars = VarHolder()

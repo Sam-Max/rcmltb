@@ -10,7 +10,7 @@ async def cleardata_handler(e):
             data = e.data.decode("UTF-8").split(" ")
             if data[1] == "yes":
                 await e.answer("Clearing data.")
-                await e.edit("Data Cleaned {}".format(datetime.now().strftime("%d-%B-%Y, %H:%M:%S")))
+                await e.edit("Data Cleaned")
                 await clear_stuff("./Downloads")
             else:
                 await e.answer("Aborting.")

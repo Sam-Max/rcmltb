@@ -9,7 +9,6 @@ import logging
 import subprocess
 import asyncio
 import re
-from bot import rcprocess
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from .progress_for_rclone import status
 
@@ -76,7 +75,6 @@ class RcloneUploader():
                 stderr=subprocess.PIPE
             )
 
-            rcprocess.append(rclone_pr)
             self._rclone_pr = rclone_pr
             rcres= await self.rclone_process_update()
 
@@ -105,7 +103,6 @@ class RcloneUploader():
                 stderr=subprocess.PIPE
             )
 
-            rcprocess.append(rclone_pr)
             self._rclone_pr = rclone_pr
             rcres= await self.rclone_process_update()
 
