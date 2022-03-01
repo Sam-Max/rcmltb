@@ -1,3 +1,9 @@
+
+#**************************************************
+# Based on:
+# Source: https://github.com/EvamariaTG/EvaMaria/blob/master/utils.py
+#**************************************************/
+
 from pyrogram.types import Message
 
 def get_message_type(msg: Message):
