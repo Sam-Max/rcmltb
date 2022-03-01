@@ -2,7 +2,7 @@ import logging
 from bot.core.get_vars import get_val
 from telethon.tl.types import KeyboardButtonCallback
 from telethon.errors.rpcerrorlist import MessageNotModifiedError
-from bot.utils.list_selected_drive import get_list_drive_results, list_drive
+from bot.utils.list_selected_drive_main_menu import get_list_drive_results, list_drive
 
 botlog = logging.getLogger(__name__)
 

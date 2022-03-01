@@ -1,6 +1,6 @@
 from telethon import TelegramClient, events
 from bot.core.get_vars import get_val
-from bot.core.handlers.handle_aboutme import about_me
+from bot.core.handlers.handle_about_me import about_me
 from bot.core.handlers.handle_cancel import handle_cancel
 from bot.core.handlers.handle_cleardata import cleardata_handler
 from bot.core.handlers.handle_copy_cm import handle_copy_command
@@ -17,7 +17,7 @@ from bot.core.handlers_callback.handle_download_cb import handle_download_cb
 from bot.core.handlers_callback.handle_nextpage_cb import next_page_menu
 from bot.core.handlers_callback.handle_nextpage_copy_cb import next_page_copy
 from bot.core.handlers_callback.handle_settings_copy_menu_cb import handle_setting_copy_menu_callback
-from bot.core.handlers_callback.handle_settings_main_m_cb import handle_setting_main_menu_callback
+from bot.core.handlers_callback.handle_settings_main_menu_cb import handle_setting_main_menu_callback
 from .get_commands import get_command, get_command_p
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler

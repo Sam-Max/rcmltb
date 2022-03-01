@@ -1,5 +1,5 @@
 from bot.core.set_vars import set_val
-from bot.utils.get_file_id import get_message_type
+from bot.utils.get_message_type import get_message_type
 from bot.utils.get_size_p import get_size
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 

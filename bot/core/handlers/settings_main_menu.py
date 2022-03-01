@@ -2,8 +2,7 @@ from bot.core.set_vars import set_val
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 from bot import SessionVars
-from bot.utils.list_selected_drive import list_selected_drive
-from bot.utils.list_selected_drive_copy_menu import list_selected_drive_copy
+from bot.utils.list_selected_drive_main_menu import list_selected_drive
 from ..get_vars import get_val
 from functools import partial
 import asyncio
