@@ -14,8 +14,8 @@ Contact: [Telegram](https://t.me/SamMax009)
 - copy - copy from cloud to cloud
 - config - configurate rclone and set upload folder 
 - logs - get logs from server
-- clean- clean downloads
-- update - update bot
+- cleardata- clear downloads
+
 
 ## Steps: 
 

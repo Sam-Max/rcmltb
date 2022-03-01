@@ -1,4 +1,3 @@
-from datetime import datetime
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 from bot.utils.admin_check import is_admin
@@ -10,7 +9,7 @@ async def cleardata_handler(e):
             data = e.data.decode("UTF-8").split(" ")
             if data[1] == "yes":
                 await e.answer("Clearing data.")
-                await e.edit("Data Cleaned")
+                await e.edit("Data Cleared")
                 await clear_stuff("./Downloads")
             else:
                 await e.answer("Aborting.")
@@ -18,8 +17,8 @@ async def cleardata_handler(e):
         else:
             buttons = [[KeyboardButtonCallback("Yes", data= "cleardata yes"),
                         KeyboardButtonCallback("No", data= "cleardata no")]]
-            await e.reply("¿Are you sure you want to delete the data?\n"
-                          "This will afect currents transfers..\n",
+            await e.reply("¿Are you sure you want to delete?\n"
+                          "!This will affect currents transfers!\n",
                           buttons= buttons)
     else:
         await e.answer("⚠️ WARN ⚠️ Dont Touch Admin Settings.", alert=True)

@@ -9,5 +9,5 @@ class Commands:
     START = "start"
     SPEEDTEST = "speed_test"
     TEST= "test"
-    CRLDATA = "clean"
+    CRLDATA = "cleardata"
     UPDATE= "update"
