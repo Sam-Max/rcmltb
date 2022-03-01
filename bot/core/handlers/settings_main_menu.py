@@ -64,7 +64,7 @@ async def handle_settings_main_menu(
         )
         base_dir= get_val("BASE_DIR")
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
-        msg= f"Select cloud where to upload files\n\nPath:`{rclone_drive}:{base_dir}`"
+        msg= f"Select cloud where you want to upload file\n\nPath:`{rclone_drive}:{base_dir}`"
 
         await query.reply(header + msg, parse_mode="md", buttons=menu, link_preview=False)
 

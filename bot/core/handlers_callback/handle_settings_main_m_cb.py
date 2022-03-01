@@ -31,7 +31,7 @@ async def handle_setting_main_menu_callback(callback_query):
             callback_query, 
             mmes, 
             edit=True,
-            msg=f"Select folder where to upload files\n\nPath:`{cmd[2]}:{base_dir}`", 
+            msg=f"Select folder where you want to store files\n\nPath:`{cmd[2]}:{base_dir}`", 
             drive_name= cmd[2], 
             submenu="list_drive", 
             data_cb="list_dir_main_menu", 
@@ -47,7 +47,7 @@ async def handle_setting_main_menu_callback(callback_query):
         await handle_settings_main_menu(
             callback_query, mmes, 
             edit=True, 
-            msg=f"Select folder where to upload files\n\nPath:`{rclone_drive}:{rclone_dir}`", 
+            msg=f"Select folder where you want to store files\n\nPath:`{rclone_drive}:{rclone_dir}`", 
             drive_base=rclone_dir, 
             drive_name= rclone_drive, 
             submenu="list_drive", 

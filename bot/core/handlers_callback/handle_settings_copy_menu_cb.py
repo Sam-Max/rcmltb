@@ -66,7 +66,7 @@ async def handle_setting_copy_menu_callback(callback_query):
                 callback_query,
                 mmes, 
                 edit=True, 
-                msg=f"Select destination cloud", 
+                msg=f"Select cloud where to copy files", 
                 submenu="rclone_menu_copy", 
                 data_cb="list_drive_dest"
                 )
@@ -75,7 +75,7 @@ async def handle_setting_copy_menu_callback(callback_query):
                 callback_query,
                 mmes, 
                 edit=True, 
-                msg=f"Select destination cloud", 
+                msg=f"Select cloud where to copy files", 
                 submenu="rclone_menu_copy", 
                 data_cb="list_drive_dest"
                 )                               
@@ -88,7 +88,7 @@ async def handle_setting_copy_menu_callback(callback_query):
             callback_query, 
             mmes, 
             edit=True, 
-            msg=f'Select folder where to copy\n\nPath: `{dest_drive}`', 
+            msg=f'Select folder where to copy files\n\nPath: `{dest_drive}`', 
             drive_name= cmd[2],
             submenu="list_drive", 
             data_cb="list_dir_dest",
