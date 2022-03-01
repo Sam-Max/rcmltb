@@ -107,7 +107,7 @@ class RcloneUploader():
                 await self._user_msg.edit("Upload cancelled")
                 return 
             
-            log.info("subida exitosa")
+            log.info("Successfully uploaded")
             await self._user_msg.edit("Successfully uploaded ✅")
 
 

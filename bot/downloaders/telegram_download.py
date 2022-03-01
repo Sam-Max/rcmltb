@@ -18,10 +18,10 @@ LOGGER = logging.getLogger(__name__)
 
 async def down_load_media_pyro(client, message, message_type, new_name= None, is_rename= False):
         mess_age = await message.reply_text("...", quote=True)
-        LOGGER.info("downloading with pyro client")
+        LOGGER.info("downloading...")
         conf_path = await get_config()
         if conf_path is None:
-            await mess_age.edit("No se encontró el archivo de configuración rclone.")
+            await mess_age.edit("Rclone config file not found.")
             return
         dest_drive = get_val("DEF_RCLONE_DRIVE")
         if dest_drive == "":
