@@ -25,7 +25,7 @@ async def handle_download_command(client, message):
 
                 reply_markup = InlineKeyboardMarkup(keyboard)
 
-                await message.reply_text(header_m + msg, reply_markup= reply_markup)
+                await message.reply(header_m + msg, reply_markup= reply_markup)
             else:
                await message.reply("Reply to a Telegram file")          
     else:
