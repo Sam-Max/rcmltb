@@ -7,7 +7,7 @@ default= "📄"
 rename= "📝"
 
 async def handle_download_command(client, message):
-    header_m = "Which name you want to use?\n\n"
+    header_m = "**Which name you want to use?**\n\n"
     replied_message= message.reply_to_message
     if replied_message is not None :
             if replied_message.text is None:
