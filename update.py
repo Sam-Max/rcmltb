@@ -1,5 +1,10 @@
-import logging
+#**************************************************
+# Based on:
+# Repository:  https://github.com/anasty17/mirror-leech-telegram-bot/
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/update.py
+#**************************************************/
 
+import logging
 from os import path as ospath, environ
 from subprocess import run as srun
 from requests import get as rget
