@@ -33,10 +33,10 @@ async def handle_settings_main_menu(
     menu = []
 
     if submenu is None:
-        rcval = await get_string_variable("RCLONE_CONFIG", menu, "load_rclone_config", session_id)
+        rcval = await get_string_variable("RCLONE_CONFIG", menu, "load_rclone_config")
 
         if rcval != "None":
-            if "Se cargo el archivo personalizado." in rcval:
+            if "rclone config file loaded" in rcval:
                 #path= get_val("RCLONE_CONFIG")
                 path= os.path.join(os.getcwd(), "rclone.conf")
                 conf = configparser.ConfigParser()
@@ -258,21 +258,13 @@ async def get_sub_menu(msg, sub_name, menu):
     )
 
 
-async def get_string_variable(var_name, menu, callback_name, session_id):
-    # val = SessionVars.get_var(var_name)
-
-    # if var_name == "RCLONE_CONFIG":
-    #     if val is not None:
-    #         val = "Se cargo el archivo personalizado. (Click para cargar otro)"
-    #     else:
-    #         val = "Haga clic aquí para cargar la configuración de RCLONE."
-
+async def get_string_variable(var_name, menu, callback_name):
     if var_name == "RCLONE_CONFIG":
         rfile= os.path.join(os.getcwd(), "rclone.conf")
         if os.path.exists(rfile):
-           val = "Se cargo el archivo personalizado. (Click para cargar otro)"
+           val = "rclone config file loaded (Click to load another)"
         else:
-           val = "Haga clic aquí para cargar la configuración de RCLONE."
+           val = "Click here to load a rclone config file."
     msg = str(val)
     menu.append(
         [KeyboardButtonCallback(msg, f"mainmenu^{callback_name}")]
