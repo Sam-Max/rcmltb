@@ -42,14 +42,12 @@ async def list_selected_drive_copy(
         logging.info(e)
         return
 
-    #logging.info(data)
     if data == []:
          menu.append(
             [KeyboardButtonCallback("❌Nothing to show❌", data="copymenu^pages")])
          return 
 
     if is_second_menu:
-        #Sort the JSON data based on key value
         data.sort(key=lambda x: x["Name"]) 
     else:
         data.sort(key=lambda x: x["Size"])        
@@ -105,7 +103,6 @@ def list_drive_copy(
         index= index + 1
         set_val(f"{index}", path)
         mime_type= i['MimeType']
-        #if len(path) <= 30: 
         if mime_type == 'inode/directory': 
             file= "" 
             folder= "📁"
@@ -117,7 +114,6 @@ def list_drive_copy(
             folder= ""
             menu.append(        
             [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^rclone_menu_copy^{index}^True")])
-        #logging.info("path: {}".format(path))        
 
 
 

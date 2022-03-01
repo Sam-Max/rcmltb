@@ -23,7 +23,6 @@ async def handle_settings_copy_menu(
     menu = []
 
     if submenu == "rclone_menu_copy":
-        #path = get_val("RCLONE_CONFIG")
         path= os.path.join(os.getcwd(), "rclone.conf")
         conf = configparser.ConfigParser()
         conf.read(path)

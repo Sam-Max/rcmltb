@@ -1,14 +1,11 @@
 import logging
-from pyrogram import types
-from bot import SessionVars
-import asyncio
 import os
 import time
 from datetime import datetime
 from bot.core.get_vars import get_val
+from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot.utils.get_rclone_conf import get_config
 from ..uploaders.rclone_upload import RcloneUploader
-from telethon.tl import types
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
 
 logging.basicConfig(
@@ -48,64 +45,13 @@ async def down_load_media_pyro(client, message, message_type, new_name= None, is
 
         try:
             await mess_age.edit(text= f"Downloaded in <u>{ms}</u> seconds")
-        except Exception as e:
-            LOGGER.info(e)
+        except MessageNotModified as e:
             pass
         
         rclone_up = RcloneUploader(the_real_download_location, mess_age, new_name, is_rename= is_rename)
         await rclone_up.execute()
 
 
-async def download_media_telethon(e):
-    type_of = ""
-    message = None
-    timer = Timer()
-
-    async def progress_bar(current, total):
-        if timer.can_send():
-            await message.edit("{} {}%".format(type_of, current * 100 / total))
-
-    if e.message.media is not None:
-        file_name = "unknown"
-        attributes = e.message.media.document.attributes
-        for attr in attributes:
-            if isinstance(attr, types.DocumentAttributeFilename):
-                file_name = attr.file_name
-                LOGGER.info(file_name)
-        file_path = os.path.join(os.getcwd(), "Downloads")
-        file_path = file_path + "/"
-        message = await e.reply('Downloading...')
-        LOGGER.info("[%s] Download started at %s" % (file_name, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-        try:
-            await e.client.download_media(e.message, file_path, progress_callback=progress_bar)
-            print("Successfully downloaded")
-
-            update_msg = await message.reply("Starting the rclone upload.")
-
-            rclone_up = RcloneUploader(file_path, update_msg, SessionVars.get("DEF_RCLONE_DRIVE"))
-
-            await rclone_up.execute()
-
-        except asyncio.TimeoutError:
-            await message.edit('Error!')
-            message = await message.reply('ERROR: Timeout reached downloading this file')
-        except Exception as e:
-            await message.edit('Error!')
-            message = await message.reply(
-                'ERROR: Exception %s raised downloading this file: %s' % (e.__class__.__name__, str(e)))
-    else:
-        await e.reply('Send a media file')
-
-class Timer:
-    def __init__(self, time_between=2):
-        self.start_time = time.time()
-        self.time_between = time_between
-
-    def can_send(self):
-        if time.time() > (self.start_time + self.time_between):
-            self.start_time = time.time()
-            return True
-        return False
 
 
 

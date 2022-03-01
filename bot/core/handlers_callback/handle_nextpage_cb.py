@@ -56,6 +56,5 @@ async def next_page_menu(callback_query):
         d_rclone_drive= get_val("DEF_RCLONE_DRIVE")
         base_dir= get_val("BASE_DIR")
         await mmes.edit(f"Route:`{d_rclone_drive}:{base_dir}`", buttons=btn)
-    except MessageNotModifiedError as e:
-        botlog.info(e)
+    except MessageNotModifiedError:
         pass

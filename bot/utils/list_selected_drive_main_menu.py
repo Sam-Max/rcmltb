@@ -81,11 +81,9 @@ def list_drive(result, menu=[], data_cb=""):
         index= index + 1
         set_val(f"{index}", path)
         mime_type= i['MimeType']
-        #if len(path) <= 30: 
         if mime_type == 'inode/directory': 
             file= "" 
             folder= "📁"
-        #logging.info("path: {}".format(path))
         menu.append(        
         [KeyboardButtonCallback(f"{folder} {file} {path}", f"mainmenu^{data_cb}^{index}")]
         )

@@ -15,9 +15,7 @@ async def handle_download_cb(client, query):
 
         if "rename" in list[1]: 
             question= await message.reply(
-                 text= "Send the new name /ignore to cancel", 
-                 #reply_to_message_id= messageid, 
-                 #reply_markup= ForceReply()
+                 text= "Send the new name /ignore to cancel"
              )
             reply_message = await client.listen.Message(filters.text, id='1', timeout= 30)
 

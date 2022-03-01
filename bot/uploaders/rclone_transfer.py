@@ -44,10 +44,8 @@ async def rclone_process_update(rclone_pr, message):
     process = rclone_pr
     user_message = message
     sleeps = False
-    #start = time.time()
     msg = ""
     msg1 = ""
-    #edit_time = get_val("EDIT_SLEEP_SECS")
 
     while True:
         data = process.stdout.readline().decode().strip()
@@ -56,9 +54,6 @@ async def rclone_process_update(rclone_pr, message):
         if mat is not None:
             if len(mat) > 0:
                 sleeps = True
-                #log.info(time.time() - start)
-                #if time.time() - start > edit_time:
-                    #start = time.time()
                 nstr = mat[0].replace("Transferred:", "")
                 nstr = nstr.strip()
                 nstr = nstr.split(",")
@@ -79,8 +74,7 @@ async def rclone_process_update(rclone_pr, message):
                      try:
                         await user_message.edit(text=msg, buttons=keyboard)
                         msg1= msg
-                     except MessageNotModified as e: 
-                        log.info(e)  
+                     except MessageNotModified: 
                         pass    
 
         if data == "":

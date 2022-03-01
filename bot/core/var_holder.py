@@ -24,12 +24,6 @@ class VarHolder:
 
         val = None
 
-        # Get the variable from the constants supplied
-        #try:
-            #val = getattr(ExecConfig, variable)
-        #except AttributeError:
-            #pass
-
         # Get the variable form the env [overlap]
         envval = os.environ.get(variable)
 

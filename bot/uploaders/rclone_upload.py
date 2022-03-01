@@ -59,7 +59,6 @@ class RcloneUploader():
             path= old_path    
             
         if os.path.isdir(path):
-            #new_dest_base = os.path.join(self.dest_base, os.path.basename(path))
             new_dest_base = self.dest_base
             logging.info(new_dest_base)
             rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', str(path),
@@ -78,9 +77,6 @@ class RcloneUploader():
             self._rclone_pr = rclone_pr
             rcres= await self.rclone_process_update()
 
-            # if(await self.check_errors(rclone_pr, self._user_msg)):
-            #     return
-        
             if rcres:
                 rclone_pr.kill()
                 await self._user_msg.edit("Upload cancelled")
@@ -106,9 +102,6 @@ class RcloneUploader():
             self._rclone_pr = rclone_pr
             rcres= await self.rclone_process_update()
 
-            # if(await self.check_errors(rclone_pr, self._user_msg)):
-            #     return
-        
             if rcres:
                 rclone_pr.kill()
                 await self._user_msg.edit("Upload cancelled")
@@ -123,10 +116,8 @@ class RcloneUploader():
         process = self._rclone_pr
         user_message = self._user_msg
         sleeps = False
-        #start = time.time()
         msg = ""
         msg1 = ""
-        #edit_time = get_val("EDIT_SLEEP_SECS")
         
         while True:
             data = process.stdout.readline().decode()
@@ -136,8 +127,6 @@ class RcloneUploader():
             if mat is not None:
                 if len(mat) > 0:
                     sleeps = True
-                    #if time.time() - start > edit_time:
-                        #start = time.time()
                     nstr = mat[0].replace("Transferred:","")
                     nstr = nstr.strip()
                     nstr = nstr.split(",")
@@ -155,8 +144,7 @@ class RcloneUploader():
                             await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
                                 InlineKeyboardButton("Cancel", callback_data= "upcancel")]]))    
                             msg1= msg
-                        except MessageNotModified as e: 
-                            log.info( e)  
+                        except MessageNotModified: 
                             pass                                
                         
             if data == "":
@@ -173,22 +161,5 @@ class RcloneUploader():
                     return True
                 await asyncio.sleep(2)
                 process.stdout.flush()    
-
-    # async def check_errors(self, rclone, usermsg):
-    #     blank = 0
-    #     while True:
-    #         data = rclone.stderr.readline().decode()
-    #         data = data.strip()
-    #         if data == "":
-    #             blank += 1
-    #             if blank == 5:
-    #                 break
-    #         else:
-    #             mat= data
-    #             if mat is not None:
-    #                 if len(mat) > 0:
-    #                     log.info(f'Error:-{mat}')
-    #                     await usermsg.edit(mat)
-    #                     return True            
 
    

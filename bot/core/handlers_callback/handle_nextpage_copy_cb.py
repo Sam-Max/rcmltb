@@ -58,6 +58,5 @@ async def next_page_copy(callback_query):
             origin_drive= get_val("ORIGIN_DRIVE")
             origin_dir= get_val("ORIGIN_DIR")
             await mmes.edit(f"Ruta:`{origin_drive}:{origin_dir}`", buttons=btn)
-    except MessageNotModifiedError as e:
-        log.info(e)
+    except MessageNotModifiedError:
         pass

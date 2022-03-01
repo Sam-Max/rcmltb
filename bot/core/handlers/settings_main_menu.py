@@ -36,7 +36,6 @@ async def handle_settings_main_menu(
 
         if rcval != "None":
             if "Rclone config file loaded" in rcval:
-                #path= get_val("RCLONE_CONFIG")
                 path= os.path.join(os.getcwd(), "rclone.conf")
                 conf = configparser.ConfigParser()
                 conf.read(path)
@@ -56,8 +55,6 @@ async def handle_settings_main_menu(
                         menu.append(
                             [KeyboardButtonCallback(f"{prev}{j} - ND", f"mainmenu^list_drive_main_menu^{j}")]
                         )
-        #await get_sub_menu("Ir Atras ⬅️", "mainmenu", menu)
-
         menu.append(
             [KeyboardButtonCallback("Close Menu", f"mainmenu^selfdest")]
         )
@@ -113,7 +110,6 @@ async def general_input_manager(callback_query, mmes, var_name, datatype, value,
                             raise ValueError("Invalid value from bool")
 
                     if var_name == "RCLONE_CONFIG":
-                        # adjust the special case
                         try:
                             conf = configparser.ConfigParser()
                             conf.read(value)
