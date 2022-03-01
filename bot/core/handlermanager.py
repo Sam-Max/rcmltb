@@ -7,7 +7,7 @@ from bot.core.handlers.handle_copy_cm import handle_copy_command
 from bot.core.handlers.handle_download_cm import handle_download_command
 from bot.core.handlers.handle_exec_cm import handle_exec_message_f
 from bot.core.handlers.handle_getlogs import get_logs_f
-from bot.core.handlers.handle_update import restart, update
+from bot.core.handlers.handle_update import update
 from bot.core.handlers.handle_server_cm import handle_server_command
 from bot.core.handlers.handle_settings_main_menu import handle_settings_command
 from bot.core.handlers.handle_speedtest import speed_handler
