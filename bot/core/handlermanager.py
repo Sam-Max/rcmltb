@@ -7,7 +7,7 @@ from bot.core.handlers.handle_copy_cm import handle_copy_command
 from bot.core.handlers.handle_download_cm import handle_download_command
 from bot.core.handlers.handle_exec_cm import handle_exec_message_f
 from bot.core.handlers.handle_getlogs import get_logs_f
-from bot.core.handlers.handle_restart import restart
+from bot.core.handlers.handle_update import restart, update
 from bot.core.handlers.handle_server_cm import handle_server_command
 from bot.core.handlers.handle_settings_main_menu import handle_settings_command
 from bot.core.handlers.handle_speedtest import speed_handler
@@ -57,8 +57,8 @@ def add_handlers(bot: TelegramClient):
     )
 
     bot.add_event_handler(
-        restart,
-        events.NewMessage(pattern=command_process(get_command("RESTART")))
+        update,
+        events.NewMessage(pattern=command_process(get_command("UPDATE")))
     )
 
 
@@ -145,11 +145,11 @@ def add_handlers(bot: TelegramClient):
 async def booted(client):
     id = get_val("OWNER_ID")
 
-    if ospath.isfile(".restartmsg"):
-        with open(".restartmsg") as f:
+    if ospath.isfile(".updatemsg"):
+        with open(".updatemsg") as f:
             user_id, msg_id = map(int, f)
-        await client.edit_message(user_id, msg_id, "Restarted successfully!")
-        osremove(".restartmsg")
+        await client.edit_message(user_id, msg_id, "Updated successfully!")
+        osremove(".updatemsg")
 
     try:
         await client.send_message(int(id), "The bot is ready to use")

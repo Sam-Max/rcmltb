@@ -10,4 +10,4 @@ class Commands:
     SPEEDTEST = "speed_test"
     TEST= "test"
     CRLDATA = "clean"
-    RESTART= "restart"
+    UPDATE= "update"
