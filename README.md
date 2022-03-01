@@ -15,7 +15,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 - config - configurate rclone and set upload folder 
 - logs - get logs from server
 - clean- clean downloads
-- restart - restart bot
+- update - update bot
 
 ## Steps: 
 
