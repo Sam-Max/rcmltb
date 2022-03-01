@@ -3,19 +3,16 @@ import logging
 from os import path as ospath, environ
 from subprocess import run as srun
 from requests import get as rget
-from dotenv import load_dotenv
 
 if ospath.exists('botlog.txt'):
-    with open('log.txt', 'r+') as f:
+    with open('botlog.txt', 'r+') as f:
         f.truncate(0)
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
-                    level=logging.INFO)
-
 CONFIG_FILE_URL = environ.get('CONFIG_FILE_URL')
+logging.info("CONFIG_FILE_URL {}".format(CONFIG_FILE_URL))
 try:
     if len(CONFIG_FILE_URL) == 0:
+        logging.info("TypeError")
         raise TypeError
     try:
         res = rget(CONFIG_FILE_URL)
@@ -29,8 +26,8 @@ try:
 except TypeError:
     pass
 
-load_dotenv('config.env', override=True)
-
+#load_dotenv('config.env', override=True)
+    
 UPSTREAM_REPO = environ.get('UPSTREAM_REPO')
 UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH')
 try:
