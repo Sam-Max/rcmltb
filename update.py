@@ -31,8 +31,6 @@ try:
 except TypeError:
     pass
 
-#load_dotenv('config.env', override=True)
-    
 UPSTREAM_REPO = environ.get('UPSTREAM_REPO')
 UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH')
 try:
@@ -51,7 +49,7 @@ if UPSTREAM_REPO is not None:
         srun(["rm", "-rf", ".git"])
 
     srun([f"git init -q \
-            && git config --global user.email sammax@gmail.com \
+            && git config --global user.email sam.agd@outlook.com \
             && git config --global user.name rctb \
             && git add . \
             && git commit -sm update -q \
