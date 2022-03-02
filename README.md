@@ -5,7 +5,7 @@ Contact: [Telegram](https://t.me/SamMax009)
     - Upload telegram files to cloud.
     - Transfer from cloud to cloud.
     - Renaming of files.
-    - Menu to list clouds from rclone.conf and selection of folders and files.
+    - Menu to list clouds from rclone.conf and selection of folders, subfolders, and files.
     - Progress bar when downloading and uploading.
 
 
