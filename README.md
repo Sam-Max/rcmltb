@@ -22,11 +22,11 @@ Contact: [Telegram](https://t.me/SamMax009)
 1. **Setting up config file:**
 - cr config_sample.env config.env
 - Fill up mandatory variables:
-    - `API_ID`
-    - `API_HASH`
-    - `OWNER_ID`
-    - `BOT_TOKEN`
-    - `RCLONE_CONFIG`
+    - `API_ID`: get this from https://my.telegram.org. Don't put this in quotes.
+    - `API_HASH`: get this from https://my.telegram.org
+    - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot.
+    - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather) 
+    - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program.
 
 2. **Deploy vps**
 - sudo apt update 
@@ -48,7 +48,9 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 2- [Conversation-Pyrogram](https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip)
 
-4- Telethon and Pyrogram.
+3- [Rclone](https://github.com/rclone/rclone)
+
+4- Telethon and Pyrogram API libraries.
 
 
 
