@@ -1,6 +1,6 @@
 import logging
 from bot.core.get_vars import get_val
-from bot.core.handlers.settings_main_menu import general_input_manager, get_value, handle_settings_main_menu
+from bot.core.settings_main_menu import general_input_manager, get_value, settings_main_menu
 from bot.core.set_vars import set_val
 
 torlog = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ async def handle_setting_main_menu_callback(callback_query):
         set_val("BASE_DIR", "")
         base_dir = get_val("BASE_DIR")
         set_val("DEF_RCLONE_DRIVE", cmd[2])
-        await handle_settings_main_menu(
+        await settings_main_menu(
             callback_query, 
             mmes, 
             edit=True,
@@ -44,7 +44,7 @@ async def handle_setting_main_menu_callback(callback_query):
         logging.info("path: {}".format(path))
         rclone_dir +=  path +"/"
         set_val("BASE_DIR", rclone_dir)
-        await handle_settings_main_menu(
+        await settings_main_menu(
             callback_query, mmes, 
             edit=True, 
             msg=f"Select folder where you want to store files\n\nPath:`{rclone_drive}:{rclone_dir}`", 

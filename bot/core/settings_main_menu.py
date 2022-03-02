@@ -3,7 +3,7 @@ from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 from bot import SessionVars
 from bot.utils.list_selected_drive_main_menu import list_selected_drive
-from ..get_vars import get_val
+from .get_vars import get_val
 from functools import partial
 import asyncio
 import time, os, configparser, logging, traceback
@@ -18,7 +18,7 @@ drive_icon= "☁️"
 header = ""
 
 
-async def handle_settings_main_menu(
+async def settings_main_menu(
     query, mmes="", 
     drive_base="", 
     edit=False, 

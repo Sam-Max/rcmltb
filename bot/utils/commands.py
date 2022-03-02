@@ -1,7 +1,7 @@
 class Commands:
     LEECH = "upload"
     COPY = "copy"
-    SETTINGS= "config"
+    CONFIG= "config"
     EXEC = "exec"
     ABOUT = "info"
     GETLOGS = "logs"

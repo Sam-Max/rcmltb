@@ -1,7 +1,7 @@
 import os
 from bot.core.get_vars import get_val
-from bot.core.handlers.settings_copy_menu import handle_settings_copy_menu
 from bot.core.set_vars import set_val
+from bot.core.settings_copy_menu import settings_copy_menu
 from bot.uploaders.rclone_transfer import rclone_copy_transfer
 import logging
 from bot.utils.get_rclone_conf import get_config
@@ -25,7 +25,7 @@ async def handle_setting_copy_menu_callback(callback_query):
         set_val("ORIGIN_DRIVE", cmd[2])
         origin_drive= get_val("ORIGIN_DRIVE")
         set_val("ORIGIN_DIR", "/")
-        await handle_settings_copy_menu(
+        await settings_copy_menu(
             query= callback_query, 
             mmes= mmes, 
             edit=True,
@@ -43,7 +43,7 @@ async def handle_setting_copy_menu_callback(callback_query):
         logging.info("path: {}".format(path))
         rclone_dir= origin_dir + path + "/"
         set_val("ORIGIN_DIR", rclone_dir)
-        await handle_settings_copy_menu(
+        await settings_copy_menu(
              callback_query,
              mmes, 
              edit=True, 
@@ -62,7 +62,7 @@ async def handle_setting_copy_menu_callback(callback_query):
             path= get_val(cmd[2])
             rclone_dir= origin_dir + path +"/"
             set_val("ORIGIN_DIR", rclone_dir)
-            await handle_settings_copy_menu(
+            await settings_copy_menu(
                 callback_query,
                 mmes, 
                 edit=True, 
@@ -71,7 +71,7 @@ async def handle_setting_copy_menu_callback(callback_query):
                 data_cb="list_drive_dest"
                 )
         else:
-            await handle_settings_copy_menu(
+            await settings_copy_menu(
                 callback_query,
                 mmes, 
                 edit=True, 
@@ -84,7 +84,7 @@ async def handle_setting_copy_menu_callback(callback_query):
         set_val("DEST_DRIVE", cmd[2])
         dest_drive= get_val("DEST_DRIVE")
         set_val("DEST_DIR", "/")
-        await handle_settings_copy_menu(
+        await settings_copy_menu(
             callback_query, 
             mmes, 
             edit=True, 
@@ -101,7 +101,7 @@ async def handle_setting_copy_menu_callback(callback_query):
         path= get_val(cmd[2])
         rclone_dir= dest_dir + path +"/"
         set_val("DEST_DIR", rclone_dir)
-        await handle_settings_copy_menu(
+        await settings_copy_menu(
              callback_query,
              mmes, 
              edit=True, 

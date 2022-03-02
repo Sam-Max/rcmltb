@@ -9,7 +9,7 @@ from bot.core.handlers.handle_exec_cm import handle_exec_message_f
 from bot.core.handlers.handle_getlogs import get_logs_f
 from bot.core.handlers.handle_update import update
 from bot.core.handlers.handle_server_cm import handle_server_command
-from bot.core.handlers.handle_settings_main_menu import handle_settings_command
+from bot.core.handlers.handle_config_cm import handle_config_command
 from bot.core.handlers.handle_speedtest import speed_handler
 from bot.core.handlers.handle_start import start_handler
 from bot.core.handlers.handle_test_cm import handle_test_command
@@ -92,8 +92,8 @@ def add_handlers(bot: TelegramClient):
     )
 
     bot.add_event_handler(
-        handle_settings_command,
-        events.NewMessage(pattern=command_process(get_command("SETTINGS")))
+        handle_config_command,
+        events.NewMessage(pattern=command_process(get_command("CONFIG")))
     )
 
     bot.loop.run_until_complete(booted(bot))

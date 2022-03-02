@@ -8,7 +8,7 @@ TIMEOUT_SEC = 60
 
 header = ""
 
-async def handle_settings_copy_menu(
+async def settings_copy_menu(
     query, 
     mmes="",
     drive_base="", 
