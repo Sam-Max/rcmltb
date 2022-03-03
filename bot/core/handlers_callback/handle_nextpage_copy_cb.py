@@ -35,19 +35,27 @@ async def next_page_copy(callback_query):
     if offset == 0:
         btn.append(
             [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
-             KeyboardButtonCallback("NEXT ⏩", data= f"n_copy {next_offset} {is_second_menu}".encode("UTF-8"))
+             KeyboardButtonCallback("NEXT ⏩", data= f"n_copy {n_offset} {is_second_menu}".encode("UTF-8"))
             ])
 
-    elif offset + 10 >= total:
+    elif offset >= total:
         btn.append(
              [KeyboardButtonCallback("⏪ BACK", data=f"n_copy {off_set} {is_second_menu}"),
               KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}",
                                    data="setting pages")])
+
+    elif offset + 10 > total:
+        btn.append(
+             [KeyboardButtonCallback("⏪ BACK", data=f"n_copy {off_set} {is_second_menu}"),
+              KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}",
+                                   data="setting pages")])                               
+
     else:
         btn.append([KeyboardButtonCallback("⏪ BACK", data=f"n_copy {off_set} {is_second_menu}"),
              KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
              KeyboardButtonCallback("NEXT ⏩", data=f"n_copy {n_offset} {is_second_menu}")
             ])
+
 
     btn.append(
             [KeyboardButtonCallback("Close Menu", f"mainmenu^selfdest")]

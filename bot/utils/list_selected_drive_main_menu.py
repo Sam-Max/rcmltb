@@ -3,7 +3,6 @@ import asyncio
 import json
 import logging
 from json.decoder import JSONDecodeError
-from bot import SessionVars
 from bot.core.set_vars import set_val
 
 botlog = logging.getLogger(__name__)
@@ -39,6 +38,8 @@ async def list_selected_drive(
             [KeyboardButtonCallback("❌Nothing to show❌", data="mainmenu^pages")])
          return     
 
+    data.sort(key=lambda x: x["Name"])  
+
     set_val("JSON_RESULT_DATA", data)
     data, next_offset, total= await get_list_drive_results(data)
     
@@ -61,15 +62,16 @@ async def get_list_drive_results(data, max_results=10, offset=0):
     return data, next_offset, total    
 
 async def list_range(offset, max_results, data):
-    start = offset % len(data)
-    end = (start + max_results) % len(data)
+    start = offset
+    end = max_results + start
     
-    if len(data) <= 10:
-        return data
+    if end > len(data):
+        return data[offset:]    
 
-    if end > start:
-        return data[start:end]
-    return data[start:] + data[:end]             
+    if offset >= len(data):
+        return []    
+    
+    return data[start:end]             
 
 def list_drive(result, menu=[], data_cb=""):
      folder = ""

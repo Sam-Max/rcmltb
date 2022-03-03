@@ -82,10 +82,10 @@ async def settings_main_menu(
 
         )
         if edit:
-            rmess = await mmes.edit(msg,
+            await mmes.edit(msg,
                                  parse_mode="md", buttons=menu, link_preview=False)
         else:
-            rmess = await query.reply(header,
+            await query.reply(header,
                                   parse_mode="md", buttons=menu, link_preview=False)
 
 #####################################                                  

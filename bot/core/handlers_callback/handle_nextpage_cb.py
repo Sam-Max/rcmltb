@@ -34,13 +34,13 @@ async def next_page_menu(callback_query):
              KeyboardButtonCallback("NEXT ⏩", data= f"next {n_offset}".encode("UTF-8"))
             ])
 
-    elif n_offset == total:
+    elif offset >= total:
         btn.append(
              [KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}"),
               KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}",
                                    data="setting pages")])
 
-    elif n_offset + 10 >= total:
+    elif offset + 10 > total:
         btn.append(
              [KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}"),
               KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}",

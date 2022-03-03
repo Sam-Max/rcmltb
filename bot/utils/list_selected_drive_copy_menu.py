@@ -78,16 +78,16 @@ async def get_list_drive_results_copy(data, max_results=10, offset=0):
     return data, next_offset, total    
 
 async def list_range(offset, max_results, data):
-    start = offset % len(data)
-    end = (start + max_results) % len(data)
-
-    if len(data) <= 10:
-        return data
-   
-    if end > start:
-        return data[start:end]
+    start = offset
+    end = max_results + start
     
-    return data[start:] + data[:end]             
+    if end > len(data):
+        return data[offset:]    
+
+    if offset >= len(data):
+        return []    
+    
+    return data[start:end]          
 
 def list_drive_copy(
     result, 
