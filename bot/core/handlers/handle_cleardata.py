@@ -18,7 +18,7 @@ async def cleardata_handler(e):
             buttons = [[KeyboardButtonCallback("Yes", data= "cleardata yes"),
                         KeyboardButtonCallback("No", data= "cleardata no")]]
             await e.reply("¿Are you sure you want to delete?\n"
-                          "!This will affect currents transfers!\n",
+                          "This will affect currents transfers!\n",
                           buttons= buttons)
     else:
         await e.answer("⚠️ WARN ⚠️ Dont Touch Admin Settings.", alert=True)
