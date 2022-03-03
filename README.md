@@ -2,7 +2,7 @@
 
 Contact: [Telegram](https://t.me/SamMax009)
 
-    - Upload telegram files to cloud.
+    - Mirror telegram files to cloud.
     - Transfer from cloud to cloud.
     - Renaming of files.
     - Menu to list clouds from rclone.conf and selection of folders, subfolders, and files.
@@ -10,7 +10,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 
 ## Commands for bot(set through @BotFather) 
-- upload - upload to selected cloud 
+- mirror - mirror to selected cloud 
 - copy - copy from cloud to cloud
 - config - configurate rclone and set upload folder 
 - logs - get logs from server
