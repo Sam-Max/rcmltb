@@ -33,7 +33,7 @@ def add_handlers(bot: TelegramClient):
     #pyrogram handlers
     download_handlers = MessageHandler(
         handle_download_command,
-        filters=filters.command([get_command_p("LEECH")])
+        filters=filters.command([get_command_p("MIRROR")])
     )
     bot.pyro.add_handler(download_handlers)
 
