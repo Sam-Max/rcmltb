@@ -12,7 +12,6 @@ async def handle_setting_leech_menu_callback(client, callback_query):
     data = callback_query.data
     cmd = data.split("^")
     mmes = callback_query.message
-    val = ""
     base_dir= get_val("BASE_DIR")
     rclone_drive = get_val("DEF_RCLONE_DRIVE")
 
@@ -52,13 +51,12 @@ async def handle_setting_leech_menu_callback(client, callback_query):
             )
 
     elif cmd[1] == "start_leech":
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
         path = get_val(cmd[2])
         logging.info("path: {}".format(path))
-        rclone_dir +=  path +"/"
+        rclone_dir +=  path + "/"
         dest_dir = os.path.join(os.getcwd(), "Downloads", path)
-        await rclone_downloader(client, mmes, sender, origin_dir= rclone_dir, dest_dir= dest_dir )
+        await rclone_downloader(client, mmes, sender, rclone_dir, dest_dir )
 
 
     # close menu
