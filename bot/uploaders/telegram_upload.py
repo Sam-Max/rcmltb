@@ -25,13 +25,15 @@ async def upload_media_pyro(client, message, sender, file):
                         path = str(file).split(".")[0] + ".mp4"
                         os.rename(file, path) 
                         file = str(file).split(".")[0] + ".mp4"
+                    caption= str(file).split("/")[-1]   
+                    logging.info(caption) 
                     data = video_metadata(file)
                     duration = data["duration"]
                     thumb_path = await screenshot(file, duration, sender)
                     await client.send_video(
                         chat_id=sender,
                         video=file,
-                        caption= str(file),
+                        caption= caption,
                         thumb= thumb_path,
                         supports_streaming=True,
                         progress=progress_for_pyrogram,
