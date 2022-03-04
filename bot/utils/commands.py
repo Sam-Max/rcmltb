@@ -1,5 +1,6 @@
 class Commands:
     MIRROR = "mirror"
+    LEECH= "leech"
     COPY = "copy"
     CONFIG= "config"
     EXEC = "exec"

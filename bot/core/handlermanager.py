@@ -38,6 +38,13 @@ def add_handlers(bot: TelegramClient):
     bot.pyro.add_handler(download_handlers)
 
 
+    leech_handlers = MessageHandler(
+        handle_leech_command,
+        filters=filters.command([get_command_p("LEECH")])
+    )
+    bot.pyro.add_handler(leech_handlers)
+
+
     test_handlers = MessageHandler(
         handle_test_command,
         filters=filters.command([get_command_p("TEST")])
@@ -107,6 +114,12 @@ def add_handlers(bot: TelegramClient):
         filters= filters.regex("renaming"))
         )
 
+    bot.pyro.add_handler(
+         CallbackQueryHandler(
+            handle_setting_leech_menu_callback, 
+            filters= filters.regex("leechmenu"))
+        )        
+
     bot.add_event_handler(
         next_page_menu,
         events.CallbackQuery(pattern="next")
@@ -116,6 +129,12 @@ def add_handlers(bot: TelegramClient):
         next_page_copy,
         events.CallbackQuery(pattern="n_copy")
         )
+
+    bot.pyro.add_handler(
+         CallbackQueryHandler(
+            next_page_leech, 
+            filters= filters.regex("n_leech"))
+        )      
     
     bot.add_event_handler(
         handle_cancel,
