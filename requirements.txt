@@ -7,5 +7,6 @@ Pyrogram
 speedtest-cli
 python-dotenv
 requests
+ethon==1.3.6
 https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip
 
