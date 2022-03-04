@@ -7,6 +7,7 @@ from bot.core.handlers.handle_copy_cm import handle_copy_command
 from bot.core.handlers.handle_download_cm import handle_download_command
 from bot.core.handlers.handle_exec_cm import handle_exec_message_f
 from bot.core.handlers.handle_getlogs import get_logs_f
+from bot.core.handlers.handle_leech_cm import handle_leech_command
 from bot.core.handlers.handle_update import update
 from bot.core.handlers.handle_server_cm import handle_server_command
 from bot.core.handlers.handle_config_cm import handle_config_command
@@ -15,8 +16,10 @@ from bot.core.handlers.handle_start import start_handler
 from bot.core.handlers.handle_test_cm import handle_test_command
 from bot.core.handlers_callback.handle_download_cb import handle_download_cb
 from bot.core.handlers_callback.handle_nextpage_main_menu_cb import next_page_menu
+from bot.core.handlers_callback.handle_nextpage_leech_menu_cb import next_page_leech
 from bot.core.handlers_callback.handle_nextpage_copy_menu_cb import next_page_copy
 from bot.core.handlers_callback.handle_settings_copy_menu_cb import handle_setting_copy_menu_callback
+from bot.core.handlers_callback.handle_settings_leech_menu_cb import handle_setting_leech_menu_callback
 from bot.core.handlers_callback.handle_settings_main_menu_cb import handle_setting_main_menu_callback
 from .get_commands import get_command, get_command_p
 from pyrogram import filters
@@ -48,7 +51,8 @@ def add_handlers(bot: TelegramClient):
     test_handlers = MessageHandler(
         handle_test_command,
         filters=filters.command([get_command_p("TEST")])
-    )
+        )
+    
     bot.pyro.add_handler(test_handlers)
 
    # telethon handlerss
@@ -134,7 +138,7 @@ def add_handlers(bot: TelegramClient):
          CallbackQueryHandler(
             next_page_leech, 
             filters= filters.regex("n_leech"))
-        )      
+        )         
     
     bot.add_event_handler(
         handle_cancel,

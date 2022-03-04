@@ -2,7 +2,6 @@ import logging
 import os
 from bot.core.get_vars import get_val
 from bot.core.settings_leech_menu import settings_leech_menu
-from bot.core.settings_main_menu import general_input_manager, get_value, settings_main_menu
 from bot.core.set_vars import set_val
 from bot.uploaders.rclone_leech import rclone_downloader
 
