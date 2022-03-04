@@ -5,6 +5,7 @@ import logging
 import os
 import time
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
+from bot.utils.g_vid_res import get_video_resolution
 from bot.utils.screenshot import screenshot
 from ethon.pyfunc import video_metadata
 
@@ -30,10 +31,14 @@ async def upload_media_pyro(client, message, sender, file):
                     data = video_metadata(file)
                     duration = data["duration"]
                     thumb_path = await screenshot(file, duration, sender)
+                    width, height = get_video_resolution(thumb_path)
                     await client.send_video(
                         chat_id=sender,
                         video=file,
-                        caption= caption,
+                        width=width,
+                        height=height,
+                        caption= f'`{caption}`',
+                        parse_mode= "md" ,
                         thumb= thumb_path,
                         supports_streaming=True,
                         progress=progress_for_pyrogram,
