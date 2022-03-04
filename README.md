@@ -12,7 +12,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 ## Commands for bot(set through @BotFather) 
 - mirror - mirror to selected cloud 
 - copy - copy from cloud to cloud
-- config - configurate rclone and set upload folder 
+- config - config rclone and set folder where to mirror 
 - logs - get logs from server
 - cleardata- clear downloads
 
