@@ -5,7 +5,7 @@ from datetime import datetime
 from bot.core.get_vars import get_val
 from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot.utils.get_rclone_conf import get_config
-from ..uploaders.rclone_upload import rclone_uploader
+from ..uploaders.rclone_mirror import rclone_uploader
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
 
 logging.basicConfig(
