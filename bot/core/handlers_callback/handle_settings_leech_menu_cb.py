@@ -62,4 +62,4 @@ async def handle_setting_leech_menu_callback(client, callback_query):
     # close menu
     elif cmd[1] == "selfdest":
         await callback_query.answer("Closed")
-        await callback_query.delete()
+        await mmes.delete()
