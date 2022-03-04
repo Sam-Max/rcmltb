@@ -2,10 +2,8 @@ from configparser import ConfigParser
 from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot import SessionVars
 from bot.uploaders.telegram_upload import upload_media_pyro
-from bot.utils.rename_file import rename
 from ..core.get_vars import get_val
 from bot.utils.get_rclone_conf import get_config
-import os
 import logging
 import subprocess
 import asyncio
@@ -52,7 +50,7 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir):
             await user_msg.edit("Download cancelled")
             return 
         
-        usermsg = await user_msg.reply('Preparing to Upload...')
+        usermsg = await user_msg.edit('Preparing to Upload...')
         await upload_media_pyro(client, usermsg, sender, dest_dir)
 
 async def rclone_process_update(rclonepr, usermsg):
