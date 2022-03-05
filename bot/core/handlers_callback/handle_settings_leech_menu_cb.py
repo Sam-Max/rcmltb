@@ -47,7 +47,7 @@ async def handle_setting_leech_menu_callback(client, callback_query):
             drive_base=rclone_dir, 
             drive_name= rclone_drive, 
             submenu="list_drive", 
-            data_cb="list_dir_main_menu", 
+            data_cb="list_dir_leech_menu", 
             )
 
     elif cmd[1] == "start_leech":
