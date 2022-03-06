@@ -88,7 +88,6 @@ def list_drive_leech(
         set_val(f"{index}", path)
         set_val("PATH", path) 
         mime_type= i['MimeType']
-        size= i['Size']
         if mime_type == 'inode/directory': 
             file= "" 
             folder= "📁"
