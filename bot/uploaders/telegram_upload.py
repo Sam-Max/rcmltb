@@ -43,7 +43,7 @@ async def upload_media_pyro(client, message, sender, file):
                         supports_streaming=True,
                         progress=progress_for_pyrogram,
                         progress_args=(
-                            '**Uploading:**\n',
+                            '**Uploading:**',
                             message,
                             c_time
                         )
@@ -54,7 +54,7 @@ async def upload_media_pyro(client, message, sender, file):
                     document= str(file), 
                     progress=progress_for_pyrogram,
                     progress_args=(
-                        '**Uploading:**\n',
+                        '**Uploading:**',
                         message,
                         c_time
                     )

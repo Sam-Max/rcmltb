@@ -40,7 +40,7 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, fold
         log.info(f"{origin_drive}:{origin_dir}: {dest_dir}")
 
         rclone_copy_cmd = [
-            'rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}', str(dest_dir), '-P']
+            'rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}', dest_dir, '-P']
 
         rclone_pr = subprocess.Popen(
             rclone_copy_cmd,
@@ -82,7 +82,7 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, fold
              await client.send_message(sender, "Nothing else to upload!")    
         else:
             message= await client.send_message(sender, "Processing...")
-            file = os.path.join(os.getcwd(), dest_dir, origin_dir)
+            file = os.path.join(os.getcwd(), "Downloads", origin_dir)
             await upload_media_pyro(client, message, sender, file)
 
 async def rclone_process_update(rclonepr, usermsg):
