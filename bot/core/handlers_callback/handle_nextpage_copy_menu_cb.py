@@ -66,10 +66,10 @@ async def next_page_copy(callback_query):
         if is_second_menu == "True":
              dest_drive= get_val("DEST_DRIVE")
              dest_dir= get_val("DEST_DIR")
-             await mmes.edit(f"Ruta:`{dest_drive}:{dest_dir}`", buttons=btn)
+             await mmes.edit(f"Path:`{dest_drive}:{dest_dir}`", buttons=btn)
         else:
             origin_drive= get_val("ORIGIN_DRIVE")
             origin_dir= get_val("ORIGIN_DIR")
-            await mmes.edit(f"Ruta:`{origin_drive}:{origin_dir}`", buttons=btn)
+            await mmes.edit(f"Path:`{origin_drive}:{origin_dir}`", buttons=btn)
     except MessageNotModifiedError:
         pass
