@@ -16,7 +16,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 - copy - copy from cloud to cloud
 - config - config rclone and set folder where to mirror 
 - logs - get logs from server
-- speed_test - test speed of server
+- speedtest - test speed of server
 - cleardata- clear downloads
 
 
