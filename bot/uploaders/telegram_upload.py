@@ -41,6 +41,7 @@ async def upload_media_pyro(client, message, sender, file):
                         parse_mode= "md" ,
                         thumb= thumb_path,
                         supports_streaming=True,
+                        duration= duration,
                         progress=progress_for_pyrogram,
                         progress_args=(
                             '**Uploading:**',
