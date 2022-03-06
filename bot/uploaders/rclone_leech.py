@@ -1,5 +1,7 @@
 from configparser import ConfigParser
 import os
+import time
+from pyrogram.errors import FloodWait
 from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot import SessionVars
 from bot.uploaders.telegram_upload import upload_media_pyro
@@ -15,7 +17,9 @@ from .progress_for_rclone import status
 log = logging.getLogger(__name__)
 
 
-async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, path):
+async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, folder= False):
+
+        await user_msg.edit("Preparing for download...")
 
         origin_drive = get_val("DEF_RCLONE_DRIVE")
         conf_path = await get_config()
@@ -32,11 +36,11 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, path
                     log.info(f"{drive_name} Download Detected.")
                 break
 
-        rclone_copy_cmd = [
-            'rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}', str(dest_dir), '-P'
-            ]
-
         log.info("Downloading...")
+        log.info(f"{origin_drive}:{origin_dir}: {dest_dir}")
+
+        rclone_copy_cmd = [
+            'rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}', str(dest_dir), '-P']
 
         rclone_pr = subprocess.Popen(
             rclone_copy_cmd,
@@ -50,12 +54,36 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, path
             rclone_pr.kill()
             await user_msg.edit("Download cancelled")
             return 
-        
-        await user_msg.edit('Preparing to Upload...')
 
-        file = os.path.join(os.getcwd(), "Downloads", path)
+        await user_msg.delete()     
 
-        await upload_media_pyro(client, user_msg, sender, file)
+        if folder:
+             files = [f for f in os.listdir(dest_dir)
+                     if os.path.isfile(os.path.join(dest_dir, f))]
+             logging.info("Files: {} ".format(files))   
+             for i, filename in enumerate(files):
+                 timer = 60
+                 if i < 25:
+                    timer = 5
+                 if i < 50 and i > 25:
+                    timer = 10
+                 if i < 100 and i > 50:
+                    timer = 15
+                 message= await client.send_message(sender, "Processing!")
+                 file = os.path.join(dest_dir, filename)
+                 try:
+                    await upload_media_pyro(client, message, sender, file)
+                 except FloodWait as fw:
+                    await asyncio.sleep(fw.seconds + 5)
+                    await upload_media_pyro(client, message, sender, file)
+                 protection = await client.send_message(sender, f"Sleeping for `{timer}` seconds...")
+                 time.sleep(timer)
+                 await protection.delete()
+             await client.send_message(sender, "Nothing else to upload!")    
+        else:
+            message= await client.send_message(sender, "Processing...")
+            file = os.path.join(os.getcwd(), dest_dir, origin_dir)
+            await upload_media_pyro(client, message, sender, file)
 
 async def rclone_process_update(rclonepr, usermsg):
         blank=0    
@@ -106,4 +134,4 @@ async def rclone_process_update(rclonepr, usermsg):
                     SessionVars.update_var("UPLOAD_CANCEL", False)
                     return True
                 await asyncio.sleep(2)
-                process.stdout.flush()    
+                process.stdout.flush() 

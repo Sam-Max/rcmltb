@@ -16,6 +16,8 @@ async def list_selected_drive_leech(
     offset= 0, 
     ):
 
+    menu.append([InlineKeyboardButton(f" ✅ Select this folder", callback_data= f"leechmenu^start_leech_folder")])
+    
     cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}" ] 
 
     process = await asyncio.create_subprocess_exec(
@@ -33,7 +35,7 @@ async def list_selected_drive_leech(
 
     if data == []:
          menu.append(
-            [InlineKeyboardButton("❌Nothing to show❌", callback_data="mainmenu^pages")])
+            [InlineKeyboardButton("❌Nothing to show❌", callback_data="leechmenu^pages")])
          return     
 
     data.sort(key=lambda x: x["Size"])  
@@ -84,15 +86,17 @@ def list_drive_leech(
         path == path.strip()
         index= index + 1
         set_val(f"{index}", path)
+        set_val("PATH", path) 
         mime_type= i['MimeType']
+        size= i['Size']
         if mime_type == 'inode/directory': 
             file= "" 
             folder= "📁"
             menu.append(  
             [InlineKeyboardButton(f"{folder} {file} {path}", f"leechmenu^{data_cb}^{index}")]
-            )    
+            )
         else:
             file= "🗄" 
             folder= ""
             menu.append(        
-            [InlineKeyboardButton(f"{folder} {file} {path}", f"leechmenu^start_leech^{index}^True")])
+            [InlineKeyboardButton(f"{folder} {file} {path}", f"leechmenu^start_leech^{index}")])

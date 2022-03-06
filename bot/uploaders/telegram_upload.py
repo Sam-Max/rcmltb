@@ -18,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 async def upload_media_pyro(client, message, sender, file):
-        LOGGER.info("Leeching...")
+        LOGGER.info("Uploading...")
         c_time = time.time()
         try:
             if str(file).split(".")[-1] in ['mkv', 'mp4', 'webm']:
@@ -59,8 +59,8 @@ async def upload_media_pyro(client, message, sender, file):
                         c_time
                     )
                 )
-            await message.delete()           
+            await message.delete()    
         except Exception as e:
             LOGGER.info(e)
             await client.send_message(sender, f'Failed to save')
-            return 
+            return

@@ -51,13 +51,15 @@ async def handle_setting_leech_menu_callback(client, callback_query):
             )
 
     elif cmd[1] == "start_leech":
-        origin_dir= get_val("BASE_DIR")
         path = get_val(cmd[2])
-        logging.info("path: {}".format(path))
-        origin_dir += path + "/"
+        origin_dir = path
         dest_dir = os.path.join(os.getcwd(), "Downloads")
-        await rclone_downloader(client, mmes, sender, origin_dir, dest_dir, path)
+        await rclone_downloader(client, mmes, sender, origin_dir, dest_dir)
 
+    elif cmd[1] == "start_leech_folder":
+        origin_dir= get_val("BASE_DIR")
+        dest_dir = os.path.join(os.getcwd(), "Downloads", origin_dir)
+        await rclone_downloader(client, mmes, sender, origin_dir, dest_dir, folder= True)
 
     # close menu
     elif cmd[1] == "selfdest":
