@@ -2,8 +2,8 @@
 
 Contact: [Telegram](https://t.me/SamMax009)
 
-    - Mirror telegram files to cloud.
-    - Leech cloud files to Telegram.
+    - Mirror Telegram files to cloud.
+    - Leech cloud files and folders to Telegram.
     - Transfer from cloud to cloud.
     - Renaming of files.
     - Menu to list clouds from rclone.conf and selection of folders, subfolders, and files.
@@ -12,7 +12,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 ## Commands for bot(set through @BotFather) 
 - mirror - mirror to selected cloud 
-- leech - leech files from cloud to telegram
+- leech - leech from cloud to telegram
 - copy - copy from cloud to cloud
 - config - config rclone and set folder where to mirror 
 - logs - get logs from server
