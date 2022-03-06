@@ -8,7 +8,7 @@ class Commands:
     GETLOGS = "logs"
     SERVER = "server"
     START = "start"
-    SPEEDTEST = "speed_test"
+    SPEEDTEST = "speedtest"
     TEST= "test"
     CRLDATA = "cleardata"
     UPDATE= "update"
