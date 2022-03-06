@@ -58,6 +58,6 @@ async def next_page_leech(client, callback_query):
         mmes= callback_query.message
         def_rc_drive= get_val("DEF_RCLONE_DRIVE")
         base_dir= get_val("BASE_DIR")
-        await mmes.edit(f"Ruta:`{def_rc_drive}:{base_dir}`", reply_markup= InlineKeyboardMarkup(btn))
+        await mmes.edit(f"Select folder or file to leech\n\nRuta:`{def_rc_drive}:{base_dir}`", reply_markup= InlineKeyboardMarkup(btn))
     except MessageNotModifiedError:
         pass

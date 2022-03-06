@@ -42,10 +42,10 @@ async def settings_copy_menu(
         )
 
         if edit:
-            rmess = await mmes.edit(header + msg,
+            await mmes.edit(header + msg,
                                  parse_mode="html", buttons=menu, link_preview=False)
         else:
-            rmess = await query.reply(msg,
+           await query.reply(msg,
                                   parse_mode="html", buttons=menu, link_preview=False)
 
     elif submenu == "list_drive":
