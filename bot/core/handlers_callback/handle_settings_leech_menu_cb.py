@@ -52,7 +52,8 @@ async def handle_setting_leech_menu_callback(client, callback_query):
 
     elif cmd[1] == "start_leech":
         path = get_val(cmd[2])
-        origin_dir = path
+        origin_dir= get_val("BASE_DIR")
+        origin_dir += path
         dest_dir = os.path.join(os.getcwd(), "Downloads", "/")
         await rclone_downloader(client, mmes, sender, origin_dir, dest_dir)
 

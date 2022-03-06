@@ -37,7 +37,7 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, fold
                 break
 
         log.info("Downloading...")
-        log.info(f"{origin_drive}:{origin_dir}: {dest_dir}")
+        log.info(f"{origin_drive}:{origin_dir}:{dest_dir}")
 
         rclone_copy_cmd = [
             'rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}', dest_dir, '-P']
