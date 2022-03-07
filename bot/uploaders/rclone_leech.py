@@ -62,8 +62,7 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, fold
                 log.info("Files: {}".format(filenames))
                 log.info("Directories: {}".format(dirnames))
                 if len(filenames) == 0:
-                     await client.send_message(sender, "No files to upload!")
-                     return 
+                     continue 
                 for i, file in enumerate(filenames):
                     timer = 60
                     if i < 25:
