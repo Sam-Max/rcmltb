@@ -49,11 +49,11 @@ async def upload_media_pyro(client, message, sender, file):
                         )
                     )
             # elif str(file).split(".")[-1] in ['jpg', 'jpeg', 'png', 'webp']:
-            #         await edit.edit("Uploading photo.")
-            #         await bot.send_file(sender, file, caption=caption)  
-            # elif str(file).split(".")[-1] in ['docx', 'doc', 'png', 'webp']:
-            #         await edit.edit("Uploading document.")
-            #         await bot.send_file(sender, file, caption=caption)        
+            #          await edit.edit("Uploading photo.")
+            #          await bot.send_file(sender, file, caption=caption)  
+            # elif str(file).split(".")[-1] in ['docx', 'doc', 'xls', 'xlsx', 'ppt', 'pptx']:
+            #          await edit.edit("Uploading office file")
+            #          await bot.send_file(sender, file, caption=caption)        
             else:
                 await client.send_document(
                     chat_id= sender,
@@ -68,5 +68,6 @@ async def upload_media_pyro(client, message, sender, file):
             await message.delete()    
         except Exception as e:
             LOGGER.info(e)
-            await client.send_message(sender, f'Failed to save')
+            file_name= str(file).split(".")[0]
+            await client.send_message(sender, f"Failed to save: {file_name}")
             return
