@@ -58,28 +58,28 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, fold
         await user_msg.delete()     
 
         if folder:
-             files = [f for f in os.listdir(dest_dir)
-                     if os.path.isfile(os.path.join(dest_dir, f))]
-             logging.info("Files: {} ".format(files))   
-             for i, filename in enumerate(files):
-                 timer = 60
-                 if i < 25:
-                    timer = 5
-                 if i < 50 and i > 25:
-                    timer = 10
-                 if i < 100 and i > 50:
-                    timer = 15
-                 message= await client.send_message(sender, "Processing!")
-                 file = os.path.join(dest_dir, filename)
-                 try:
-                    await upload_media_pyro(client, message, sender, file)
-                 except FloodWait as fw:
-                    await asyncio.sleep(fw.seconds + 5)
-                    await upload_media_pyro(client, message, sender, file)
-                 protection = await client.send_message(sender, f"Sleeping for `{timer}` seconds...")
-                 time.sleep(timer)
-                 await protection.delete()
-             await client.send_message(sender, "Nothing else to upload!")    
+            for root, dirnames, filenames in os.walk(dest_dir):
+                log.info("Files: {}".format(filenames))
+                log.info("Directories: {}".format(dirnames))
+                for i, file in enumerate(filenames):
+                    timer = 60
+                    if i < 25:
+                        timer = 5
+                    if i < 50 and i > 25:
+                        timer = 10
+                    if i < 100 and i > 50:
+                        timer = 15
+                    message= await client.send_message(sender, "Processing!")
+                    file = os.path.join(root, file)
+                    try:
+                        await upload_media_pyro(client, message, sender, file)
+                    except FloodWait as fw:
+                        await asyncio.sleep(fw.seconds + 5)
+                        await upload_media_pyro(client, message, sender, file)
+                    protection = await client.send_message(sender, f"Sleeping for `{timer}` seconds...")
+                    time.sleep(timer)
+                    await protection.delete()  
+            await client.send_message(sender, "Nothing else to upload!")  
         else:
             message= await client.send_message(sender, "Processing...")
             file = os.path.join(dest_dir, path)
