@@ -22,9 +22,7 @@ async def upload_media_pyro(client, message, sender, file):
                         path = str(file).split(".")[0] + ".mp4"
                         os.rename(file, path) 
                         file = str(file).split(".")[0] + ".mp4"
-                        log.info("File-UMP: {}".format(file))
                     caption= str(file).split("/")[-1]  
-                    log.info("Caption-UMP: {}".format(caption))  
                     duration= get_m_info(file)[0]
                     thumb_path = await screenshot(file, duration, sender)
                     width, height = get_video_resolution(thumb_path)
@@ -62,5 +60,5 @@ async def upload_media_pyro(client, message, sender, file):
             await message.delete()    
         except Exception as e:
             log.info(e)
-            await client.send_message(sender, f"Failed to save: {file} - cause: {e.__cause__}")
+            await client.send_message(sender, f"Failed to save: {file} - cause: {e}")
             return
