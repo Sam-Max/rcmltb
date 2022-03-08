@@ -1,8 +1,6 @@
-#**************************************************
-# Taken from:
-# Repository:  https://github.com/anasty17/mirror-leech-telegram-bot/
-# Source: mirror-leech-telegram-bot/bot/helper/ext_utils/fs_utils.py
-#**************************************************
+# Adapted from:
+# Repository: github.com/anasty17/mirror-leech-telegram-bot/
+# mirror-leech-telegram-bot/bot/helper/ext_utils/fs_utils.py
 
 from json import loads as jsnloads
 import logging

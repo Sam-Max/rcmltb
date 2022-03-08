@@ -6,25 +6,26 @@ import os
 import time
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
 from bot.utils.g_vid_res import get_video_resolution
+from bot.utils.get_media_info import get_m_info
 from bot.utils.screenshot import screenshot
-from ethon.pyfunc import video_metadata
 
 log= logging.getLogger(__name__)
+
+VIDEO_SUFFIXES = ["mkv", "mp4", "mov", "wmv", "3gp", "mpg", "webm", "avi", "flv", "m4v", "gif"]
 
 async def upload_media_pyro(client, message, sender, file):
         log.info("Uploading...")
         c_time = time.time()
         try:
-            if str(file).split(".")[-1] in ['mkv', 'mp4', 'webm']:
-                    if str(file).split(".")[-1] in ['webm', 'mkv']:
+            if str(file).split(".")[-1] in VIDEO_SUFFIXES:
+                    if not str(file).split(".")[-1] in ['mp4', 'mkv']:
                         path = str(file).split(".")[0] + ".mp4"
                         os.rename(file, path) 
                         file = str(file).split(".")[0] + ".mp4"
                         log.info("File-UMP: {}".format(file))
                     caption= str(file).split("/")[-1]  
                     log.info("Caption-UMP: {}".format(caption))  
-                    data = video_metadata(file)
-                    duration = data["duration"]
+                    duration= get_m_info(file)[0]
                     thumb_path = await screenshot(file, duration, sender)
                     width, height = get_video_resolution(thumb_path)
                     await client.send_video(
@@ -46,10 +47,7 @@ async def upload_media_pyro(client, message, sender, file):
                     )
             # elif str(file).split(".")[-1] in ['jpg', 'jpeg', 'png', 'webp']:
             #         await edit.edit("Uploading photo.")
-            #         await bot.send_file(sender, file, caption=caption)  
-            # elif str(file).split(".")[-1] in ['docx', 'doc', 'png', 'webp']:
-            #         await edit.edit("Uploading document.")
-            #         await bot.send_file(sender, file, caption=caption)        
+            #         await bot.send_file(sender, file, caption=caption)       
             else:
                 await client.send_document(
                     chat_id= sender,
@@ -64,5 +62,5 @@ async def upload_media_pyro(client, message, sender, file):
             await message.delete()    
         except Exception as e:
             log.info(e)
-            await client.send_message(sender, f"Failed to save: {file} - cause: {e}")
+            await client.send_message(sender, f"Failed to save: {file} - cause: {e.__cause__}")
             return

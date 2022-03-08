@@ -63,7 +63,8 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, fold
                 log.info("Directories: {}".format(dirnames))
                 if len(filenames) == 0:
                      continue 
-                for i, file in enumerate(filenames):
+                sorted_fn= sorted(filenames)
+                for i, file in enumerate(sorted_fn):    
                     timer = 60
                     if i < 25:
                         timer = 5
