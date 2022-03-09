@@ -1,6 +1,6 @@
 import logging
 from bot.core.get_vars import get_val
-from bot.core.settings_main_menu import general_input_manager, get_value, settings_main_menu
+from bot.core.settings_main_menu import settings_main_menu
 from bot.core.set_vars import set_val
 
 torlog = logging.getLogger(__name__)
@@ -9,19 +9,11 @@ async def handle_setting_main_menu_callback(callback_query):
     data = callback_query.data.decode()
     cmd = data.split("^")
     mmes = await callback_query.get_message()
-    val = ""
     base_dir= get_val("BASE_DIR")
     rclone_drive = get_val("DEF_RCLONE_DRIVE")
 
     if callback_query.data == "pages":
         await callback_query.answer()
-
-    if cmd[1] == "load_rclone_config":
-        await callback_query.answer("Send rclone.conf file", alert=True)
-        await mmes.edit(f"Send rclone.conf file\n\n/ignore to go back", buttons=None)
-        val = await get_value(callback_query, True)
-
-        await general_input_manager(callback_query, mmes, "RCLONE_CONFIG", "str", val, "rclonemenu")
 
     elif cmd[1] == "list_drive_main_menu":
         set_val("BASE_DIR", "")

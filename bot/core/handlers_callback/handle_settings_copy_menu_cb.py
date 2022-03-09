@@ -1,4 +1,3 @@
-import os
 from bot.core.get_vars import get_val
 from bot.core.set_vars import set_val
 from bot.core.settings_copy_menu import settings_copy_menu

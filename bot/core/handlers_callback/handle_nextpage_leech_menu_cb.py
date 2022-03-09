@@ -8,8 +8,9 @@ from pyrogram.types import InlineKeyboardButton
 from bot.core.get_vars import get_val
 from telethon.errors.rpcerrorlist import MessageNotModifiedError
 from pyrogram.types import InlineKeyboardMarkup
-from bot.utils.list_selected_drive_copy_menu import get_list_drive_results_copy, list_drive_copy
-from bot.utils.list_selected_drive_leech_menu import list_drive_leech
+
+from bot.core.settings_leech_menu import get_list_drive_results_leech, list_drive_leech
+
 
 async def next_page_leech(client, callback_query):
     _, offset= callback_query.data.split(" ")
@@ -18,7 +19,7 @@ async def next_page_leech(client, callback_query):
     btn= []
     offset = int(offset)
     
-    result, next_offset, total = await get_list_drive_results_copy(data, offset=offset)
+    result, next_offset, total = await get_list_drive_results_leech(data, offset=offset)
 
     list_drive_leech(result= result, data_cb="list_dir_leech_menu", menu=btn)
         
