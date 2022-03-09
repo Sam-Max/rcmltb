@@ -21,6 +21,10 @@ async def next_page_leech(client, callback_query):
     
     result, next_offset, total = await get_list_drive_results_leech(data, offset=offset)
 
+    btn.append(
+        [InlineKeyboardButton(f" ✅ Select this folder", callback_data= f"leechmenu^start_leech_folder")]
+        )
+
     list_drive_leech(result= result, data_cb="list_dir_leech_menu", menu=btn)
         
     n_offset = int(next_offset)
