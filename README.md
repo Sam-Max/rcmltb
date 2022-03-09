@@ -18,6 +18,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 - logs - get logs from server
 - speedtest - test speed of server
 - cleardata- clear downloads
+- restart - restart and update bot
 
 
 ## Steps: 
