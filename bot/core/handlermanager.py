@@ -8,7 +8,7 @@ from bot.core.handlers.handle_download_cm import handle_download_command
 from bot.core.handlers.handle_exec_cm import handle_exec_message_f
 from bot.core.handlers.handle_getlogs import get_logs_f
 from bot.core.handlers.handle_leech_cm import handle_leech_command
-from bot.core.handlers.handle_update import update
+from bot.core.handlers.handle_restart_cm import handle_restart
 from bot.core.handlers.handle_server_cm import handle_server_command
 from bot.core.handlers.handle_config_cm import handle_config_command
 from bot.core.handlers.handle_speedtest import speed_handler
@@ -67,8 +67,8 @@ def add_handlers(bot: TelegramClient):
     )
 
     bot.add_event_handler(
-        update,
-        events.NewMessage(pattern=command_process(get_command("UPDATE")))
+        handle_restart,
+        events.NewMessage(pattern=command_process(get_command("RESTART")))
     )
 
 
@@ -170,7 +170,7 @@ async def booted(client):
     if ospath.isfile(".updatemsg"):
         with open(".updatemsg") as f:
             user_id, msg_id = map(int, f)
-        await client.edit_message(user_id, msg_id, "Updated successfully!")
+        await client.edit_message(user_id, msg_id, "Restarted successfully!")
         osremove(".updatemsg")
 
     try:
