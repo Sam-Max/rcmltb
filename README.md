@@ -20,11 +20,21 @@ Contact: [Telegram](https://t.me/SamMax009)
 - cleardata- clear downloads
 - restart - restart and update bot
 
+## Deploying on Heroku
+<p><a href="https://github.com/Sam009-max/RcloneTgBot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
 
-## Steps: 
 
-1. **Setting up config file:**
-- cr config_sample.env config.env
+## Deploy on VPS: 
+
+1. **Create Repository from Template**
+
+ - Create a new private repository, using the "Use This Template" github button from repository.
+ 
+ 
+2. **Setting up config file**
+
+- cp config_sample.env config.env 
+
 - Fill up mandatory variables:
     - `API_ID`: get this from https://my.telegram.org. Don't put this in quotes.
     - `API_HASH`: get this from https://my.telegram.org
@@ -32,19 +42,57 @@ Contact: [Telegram](https://t.me/SamMax009)
     - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather) 
     - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program.
 
-2. **Deploy vps**
+3. **Deploying on VPS Using Docker**
+
+    - Clone repo:
+
+        Get token from Github settings and copy it.
+
+        Paste token to your repository url and clone repo: git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot
+
+    - Install Docker by following the official Docker docs or by commands below.
+
+        sudo apt install snapd
+        sudo snap install docker
+
+    - Start Docker daemon (skip if already running), if installed by snap then use 2nd command:
+    
+        sudo dockerd
+        sudo snap start docker
+
+     Note: If not started or not starting, run the command below then try to start.
+
+        sudo apt install docker.io
+
+    - Build Docker image:
+
+        sudo docker build . -t rclonetg-bot 
+
+    - Run the image:
+
+        sudo docker run rclonetg-bot 
+
+    - To stop the image:
+
+        sudo docker ps
+
+        sudo docker stop id
+
+4. **Deploying on VPS without Docker**
+
+- git clone https://github.com/Sam-Max/Rclone-Tg-Bot.git 
 - sudo apt update 
 - sudo apt install -y python3.8 
 - sudo apt install -y python3-venv 
 - python3 -m venv venv 
 - source venv/bin/activate 
+- cd Rclone-Tg-Bot
 - pip install -r requirements.txt 
+- apt -qq install -y git wget curl python3 python3-pip locales ffmpeg
 - curl https://rclone.org/install.sh | bash
 - chmod 777 start.sh 
 - ./start.sh
 
-## Deploying on Heroku
-<p><a href="https://github.com/Sam009-max/RcloneTgBot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
 
 ## Repositories used to develop this bot and credits:
 
@@ -54,7 +102,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 3- [Rclone](https://github.com/rclone/rclone)
 
-4- Telethon and Pyrogram API libraries.
+4- [Telethon]() and [Pyrogram]() API libraries.
 
 
 
