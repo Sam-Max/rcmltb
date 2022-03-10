@@ -48,7 +48,7 @@ Contact: [Telegram](https://t.me/SamMax009)
     - Get token from [Github settings](https://github.com/settings/tokens).
     - Paste token to your repository url and clone repo: `git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot`
 
-- Install Docker by following the official Docker docs or by commands below.
+- Install Docker.
 
         sudo apt install snapd
         sudo snap install docker
