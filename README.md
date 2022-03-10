@@ -44,18 +44,18 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 3. **Deploying on VPS Using Docker**
 
-    - Clone repo:
+- Clone repo:
 
         Get token from Github settings and copy it.
 
         Paste token to your repository url and clone repo: git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot
 
-    - Install Docker by following the official Docker docs or by commands below.
+- Install Docker by following the official Docker docs or by commands below.
 
         sudo apt install snapd
         sudo snap install docker
 
-    - Start Docker daemon (skip if already running), if installed by snap then use 2nd command:
+- Start Docker daemon (skip if already running), if installed by snap then use 2nd command:
     
         sudo dockerd
         sudo snap start docker
@@ -64,15 +64,15 @@ Contact: [Telegram](https://t.me/SamMax009)
 
         sudo apt install docker.io
 
-    - Build Docker image:
+- Build Docker image:
 
         sudo docker build . -t rclonetg-bot 
 
-    - Run the image:
+- Run the image:
 
         sudo docker run rclonetg-bot 
 
-    - To stop the image:
+- To stop the image:
 
         sudo docker ps
 
