@@ -46,9 +46,9 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 - Clone repo:
 
-        Get token from Github settings and copy it.
+        - Get token from Github settings and copy it.
 
-        Paste token to your repository url and clone repo: git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot
+        - Paste token to your repository url and clone repo: git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot
 
 - Install Docker by following the official Docker docs or by commands below.
 
