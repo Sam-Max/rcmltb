@@ -47,9 +47,12 @@ async def upload_media_pyro(client, message, sender, file):
             #         await edit.edit("Uploading photo.")
             #         await bot.send_file(sender, file, caption=caption)       
             else:
+                caption= str(file).split("/")[-1]  
                 await client.send_document(
                     chat_id= sender,
                     document= file, 
+                    caption= f'`{caption}`',
+                    parse_mode= "md",
                     progress=progress_for_pyrogram,
                     progress_args=(
                         '**Uploading:**',
