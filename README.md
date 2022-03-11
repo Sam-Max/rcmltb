@@ -50,8 +50,8 @@ Contact: [Telegram](https://t.me/SamMax009)
         - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program.
 
    - Non mandatory variables:
-        - `UPSTREAM_REPO`: add link with format: https://username:{githubtoken}@github.com/{username}/{reponame}, so you can update your app from private repository on each restart.
-        - `UPSTREAM_BRANCH`: Upstream branch for update. Empty means master.
+        - `UPSTREAM_REPO`: add repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart.
+        - `UPSTREAM_BRANCH`: Upstream branch for update. 
 
 3. **Deploying on VPS Using Docker**
 
@@ -84,7 +84,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 4. **Deploying on VPS without Docker**
 
-- git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot
+- git clone *https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot*
 - sudo apt update 
 - sudo apt install -y python3.8 
 - sudo apt install -y python3-venv 
