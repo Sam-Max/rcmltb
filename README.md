@@ -26,27 +26,34 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 ## Deploy on VPS: 
 
-1. **Create Repository from Template**
+1. **Installing requirements**
 
- - Create a new private repository, using the "Use This Template" github button from repository.
+ - Clone repo:
+    - Create a new private repo on your github from this repository.
+
+    - Get a token from [Github settings](https://github.com/settings/tokens).
+
+    - Clone repo: `git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot`
  
  
 2. **Setting up config file**
 
 - cp config_sample.env config.env 
 
-- Fill up mandatory variables:
-    - `API_ID`: get this from https://my.telegram.org. Don't put this in quotes.
-    - `API_HASH`: get this from https://my.telegram.org
-    - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot.
-    - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather) 
-    - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program.
+- Fill up variables:
+
+   - Mandatory variables:
+        - `API_ID`: get this from https://my.telegram.org. Don't put this in quotes.
+        - `API_HASH`: get this from https://my.telegram.org
+        - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot.
+        - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather) 
+        - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program.
+
+   - Non mandatory variables:
+        - `UPSTREAM_REPO`: add https://username:{githubtoken}@github.com/{username}/{reponame} format, so you can update your app from private repository on each restart.
+        - `UPSTREAM_BRANCH`: Upstream branch for update. Empty means master.
 
 3. **Deploying on VPS Using Docker**
-
-- Clone repo:
-    - Get token from [Github settings](https://github.com/settings/tokens).
-    - Paste token to your repository url and clone repo: `git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot`
 
 - Install Docker.
 
@@ -78,13 +85,12 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 4. **Deploying on VPS without Docker**
 
-- git clone https://github.com/Sam-Max/Rclone-Tg-Bot.git 
+- git clone `git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot`
 - sudo apt update 
 - sudo apt install -y python3.8 
 - sudo apt install -y python3-venv 
 - python3 -m venv venv 
 - source venv/bin/activate 
-- cd Rclone-Tg-Bot
 - pip install -r requirements.txt 
 - apt -qq install -y git wget curl python3 python3-pip locales ffmpeg
 - curl https://rclone.org/install.sh | bash
@@ -100,7 +106,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 3- [Rclone](https://github.com/rclone/rclone)
 
-4- [Telethon]() and [Pyrogram]() API libraries.
+4- [Telethon]() and [Pyrogram]() libraries.
 
 
 
