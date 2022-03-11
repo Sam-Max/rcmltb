@@ -115,6 +115,7 @@ async def handle_setting_copy_menu_callback(callback_query):
     elif cmd[1] == "start_copy":
         origin_dir = get_val("ORIGIN_DIR")
         origin_dir= origin_dir.split("/")[-2] + "/"
+        rclone_dir= get_val("DEST_DIR")
         set_val("DEST_DIR", rclone_dir + origin_dir)
         await rclone_copy_transfer(callback_query, conf_path)                               
 
