@@ -32,7 +32,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 
         git clone https://github.com/Sam-Max/Rclone-Tg-Bot rclonetgbot/ && cd rclonetgbot
 
- - Install Docker.
+ - Install Docker(skip this if deploying without docker).
 
         sudo apt install snapd
         sudo snap install docker
@@ -51,7 +51,7 @@ Contact: [Telegram](https://t.me/SamMax009)
         - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program.
 
    - Non mandatory variables:
-        - `UPSTREAM_REPO`: add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
+        - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
         - `UPSTREAM_BRANCH`: Upstream branch for update. 
 
 3. **Deploying on VPS Using Docker**
@@ -79,8 +79,6 @@ Contact: [Telegram](https://t.me/SamMax009)
         sudo docker stop id
 
 4. **Deploying on VPS without Docker**
-
-- git clone https://github.com/Sam-Max/Rclone-Tg-Bot rclonetgbot/ && cd rclonetgbot
 - sudo apt update 
 - sudo apt install -y python3.8 
 - sudo apt install -y python3-venv 
