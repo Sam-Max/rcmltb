@@ -84,7 +84,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 4. **Deploying on VPS without Docker**
 
-- `git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot`
+- git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot
 - sudo apt update 
 - sudo apt install -y python3.8 
 - sudo apt install -y python3-venv 
