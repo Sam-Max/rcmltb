@@ -62,6 +62,6 @@ async def next_page_menu(callback_query):
         mmes= await callback_query.get_message()
         d_rclone_drive= get_val("DEF_RCLONE_DRIVE")
         base_dir= get_val("BASE_DIR")
-        await mmes.edit(f"Path:`{d_rclone_drive}:{base_dir}`", buttons=btn)
+        await mmes.edit(f"Select folder where you want to store files\n\nPath:`{d_rclone_drive}:{base_dir}`", buttons=btn)
     except MessageNotModifiedError:
         pass
