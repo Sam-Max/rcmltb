@@ -36,7 +36,7 @@ async def rclone_copy_transfer(e, conf_path):
         await message.edit("Copy cancelled")
         return
 
-    await message.edit("Successfully ✅")
+    await message.edit("Copied Successfully ✅")
 
 
 async def rclone_process_update(rclone_pr, message):
