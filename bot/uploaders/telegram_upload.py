@@ -63,5 +63,6 @@ async def upload_media_pyro(client, message, sender, file):
             await message.delete()    
         except Exception as e:
             log.info(e)
+            await message.delete()   
             await client.send_message(sender, f"Failed to save: {file} - cause: {e}")
             return
