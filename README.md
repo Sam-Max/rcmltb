@@ -78,6 +78,14 @@ Contact: [Telegram](https://t.me/SamMax009)
         sudo docker ps
         sudo docker stop id
 
+- To clear the container:
+
+        sudo docker container prune
+
+- To delete the images:
+
+        sudo docker image prune -a
+
 4. **Deploying on VPS without Docker**
 - sudo apt update 
 - sudo apt install -y python3.8 
