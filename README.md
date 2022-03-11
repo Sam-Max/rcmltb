@@ -29,13 +29,14 @@ Contact: [Telegram](https://t.me/SamMax009)
 1. **Installing requirements**
 
  - Clone repo:
-    - Create a new private repo on your github from this repository.
 
-    - Get a token from [Github settings](https://github.com/settings/tokens).
+        git clone https://github.com/Sam-Max/Rclone-Tg-Bot rclonetgbot/ && cd rclonetgbot
 
-    - Clone repo with format: `git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot`
- 
- 
+ - Install Docker.
+
+        sudo apt install snapd
+        sudo snap install docker
+
 2. **Setting up config file**
 
 - cp config_sample.env config.env 
@@ -54,11 +55,6 @@ Contact: [Telegram](https://t.me/SamMax009)
         - `UPSTREAM_BRANCH`: Upstream branch for update. 
 
 3. **Deploying on VPS Using Docker**
-
-- Install Docker.
-
-        sudo apt install snapd
-        sudo snap install docker
 
 - Start Docker daemon (skip if already running), if installed by snap then use 2nd command:
     
@@ -84,14 +80,14 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 4. **Deploying on VPS without Docker**
 
-- git clone *https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot*
+- git clone https://github.com/Sam-Max/Rclone-Tg-Bot rclonetgbot/ && cd rclonetgbot
 - sudo apt update 
 - sudo apt install -y python3.8 
 - sudo apt install -y python3-venv 
 - python3 -m venv venv 
 - source venv/bin/activate 
 - pip install -r requirements.txt 
-- apt -qq install -y git wget curl python3 python3-pip locales ffmpeg
+- sudo apt -qq install -y git wget curl python3 python3-pip locales ffmpeg
 - curl https://rclone.org/install.sh | bash
 - chmod 777 start.sh 
 - ./start.sh
