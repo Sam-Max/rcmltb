@@ -1,8 +1,11 @@
+import logging
 from os import execl as osexecl
 import os
 import signal
 from subprocess import run as srun
 from sys import executable
+
+log = logging.getLogger(__name__)
 
 async def handle_restart(e):
     update_message= await e.reply("Restarting...")
@@ -13,7 +16,7 @@ async def handle_restart(e):
             pid = fields[0]
             os.kill(int(pid), signal.SIGKILL)
     except:
-        print("Error Encountered")
+        log.info("Error")
 
     srun(["python3", "update.py"])
 
