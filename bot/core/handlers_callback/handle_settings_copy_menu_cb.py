@@ -1,7 +1,7 @@
 from bot.core.get_vars import get_val
 from bot.core.set_vars import set_val
 from bot.core.settings_copy_menu import settings_copy_menu
-from bot.uploaders.rclone_transfer import rclone_copy_transfer
+from bot.uploaders.rclone_copy import rclone_copy_transfer
 import logging
 from bot.utils.get_rclone_conf import get_config
 
@@ -55,11 +55,11 @@ async def handle_setting_copy_menu_callback(callback_query):
              )
 
     elif cmd[1] == "rclone_menu_copy":
-        #"True" when click on a file, "False" for folder or top bottom  
+        ####---True if click on a file, False if click on folder---####
         if cmd[3] == "True": 
             origin_dir= get_val("ORIGIN_DIR")
             path= get_val(cmd[2])
-            rclone_dir= origin_dir + path +"/"
+            rclone_dir= origin_dir + path + "/"
             set_val("ORIGIN_DIR", rclone_dir)
             await settings_copy_menu(
                 callback_query,
@@ -97,8 +97,10 @@ async def handle_setting_copy_menu_callback(callback_query):
     elif cmd[1] == "list_dir_dest":
         dest_drive = get_val("DEST_DRIVE")
         dest_dir= get_val("DEST_DIR")
+        origin_dir = get_val("ORIGIN_DIR")
+        logging.info(origin_dir)
         path= get_val(cmd[2])
-        rclone_dir= dest_dir + path +"/"
+        rclone_dir= dest_dir + path + "/"  
         set_val("DEST_DIR", rclone_dir)
         await settings_copy_menu(
              callback_query,

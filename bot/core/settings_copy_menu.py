@@ -90,7 +90,7 @@ async def list_selected_drive_copy(
     if is_second_menu:
          menu.append([KeyboardButtonCallback(f" ✅ Select this folder", f"copymenu^start_copy")])
     else:
-         menu.append([KeyboardButtonCallback(f" ✅ Select this folder", f"copymenu^rclone_menu_copy^jhjh^False")])
+         menu.append([KeyboardButtonCallback(f" ✅ Select this folder", f"copymenu^rclone_menu_copy^_^False")])
     
     if is_second_menu:
          cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only"] 
