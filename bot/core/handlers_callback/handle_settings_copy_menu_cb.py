@@ -97,9 +97,8 @@ async def handle_setting_copy_menu_callback(callback_query):
     elif cmd[1] == "list_dir_dest":
         dest_drive = get_val("DEST_DRIVE")
         dest_dir= get_val("DEST_DIR")
-        origin_dir = get_val("ORIGIN_DIR")
         path= get_val(cmd[2])
-        rclone_dir= dest_dir + path + origin_dir
+        rclone_dir= dest_dir + path + "/"
         set_val("DEST_DIR", rclone_dir)
         await settings_copy_menu(
              callback_query,
@@ -114,6 +113,9 @@ async def handle_setting_copy_menu_callback(callback_query):
              )        
  
     elif cmd[1] == "start_copy":
+        origin_dir = get_val("ORIGIN_DIR")
+        origin_dir= origin_dir.split("/")[-2] + "/"
+        set_val("DEST_DIR", rclone_dir + origin_dir)
         await rclone_copy_transfer(callback_query, conf_path)                               
 
     # close menu
