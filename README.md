@@ -33,7 +33,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 
     - Get a token from [Github settings](https://github.com/settings/tokens).
 
-    - Clone repo: `git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot`
+    - Clone repo with format: `git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot`
  
  
 2. **Setting up config file**
@@ -50,7 +50,7 @@ Contact: [Telegram](https://t.me/SamMax009)
         - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program.
 
    - Non mandatory variables:
-        - `UPSTREAM_REPO`: add https://username:{githubtoken}@github.com/{username}/{reponame} format, so you can update your app from private repository on each restart.
+        - `UPSTREAM_REPO`: add link with format: https://username:{githubtoken}@github.com/{username}/{reponame}, so you can update your app from private repository on each restart.
         - `UPSTREAM_BRANCH`: Upstream branch for update. Empty means master.
 
 3. **Deploying on VPS Using Docker**
@@ -80,12 +80,11 @@ Contact: [Telegram](https://t.me/SamMax009)
 - To stop the image:
 
         sudo docker ps
-
         sudo docker stop id
 
 4. **Deploying on VPS without Docker**
 
-- git clone `git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot`
+- `git clone https://{githubtoken}@github.com/{username}/{reponame} rclonetgbot/ && cd rclonetgbot`
 - sudo apt update 
 - sudo apt install -y python3.8 
 - sudo apt install -y python3-venv 
