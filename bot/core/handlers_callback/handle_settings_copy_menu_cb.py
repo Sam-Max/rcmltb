@@ -46,7 +46,7 @@ async def handle_setting_copy_menu_callback(callback_query):
              callback_query,
              mmes, 
              edit=True, 
-             msg=f"Select file/folder which you want to copy\n\nPath:`{origin_drive}:{rclone_dir}`", 
+             msg=f"Select file or folder which you want to copy\n\nPath:`{origin_drive}:{rclone_dir}`", 
              drive_base=rclone_dir, 
              drive_name= origin_drive,
              data_cb="list_dir_origin",
