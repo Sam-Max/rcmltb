@@ -28,7 +28,7 @@ async def handle_setting_copy_menu_callback(callback_query):
             query= callback_query, 
             mmes= mmes, 
             edit=True,
-            msg= f'Select file/folder which you want to copy\n\nPath: `{origin_drive}`', 
+            msg= f'Select file or folder which you want to copy\n\nPath: `{origin_drive}`', 
             drive_name= cmd[2],
             submenu="list_drive", 
             data_cb="list_dir_origin",
@@ -55,7 +55,7 @@ async def handle_setting_copy_menu_callback(callback_query):
              )
 
     elif cmd[1] == "rclone_menu_copy":
-        ####---True if click on a file, False if click on folder---####
+        #True if click on a file, False if folder
         if cmd[3] == "True": 
             origin_dir= get_val("ORIGIN_DIR")
             path= get_val(cmd[2])
