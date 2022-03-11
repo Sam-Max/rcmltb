@@ -37,7 +37,7 @@ Contact: [Telegram](https://t.me/SamMax009)
         sudo apt install snapd
         sudo snap install docker
 
-2. **Setting up config file**
+2. **Set up config file**
 
 - cp config_sample.env config.env 
 
@@ -51,7 +51,7 @@ Contact: [Telegram](https://t.me/SamMax009)
         - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program.
 
    - Non mandatory variables:
-        - `UPSTREAM_REPO`: add repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart.
+        - `UPSTREAM_REPO`: add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
         - `UPSTREAM_BRANCH`: Upstream branch for update. 
 
 3. **Deploying on VPS Using Docker**
@@ -101,7 +101,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 3- [Rclone](https://github.com/rclone/rclone)
 
-4- [Telethon]() and [Pyrogram]() libraries.
+4- [Telethon]() and [Pyrogram]()
 
 
 
