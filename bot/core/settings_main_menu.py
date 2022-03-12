@@ -6,7 +6,6 @@ from telethon.tl.types import KeyboardButtonCallback
 import asyncio
 import json
 import logging
-from json.decoder import JSONDecodeError
 from bot.core.set_vars import set_val
 
 torlog = logging.getLogger(__name__)
@@ -15,16 +14,17 @@ yes = "✅"
 header = ""
 
 async def settings_main_menu(
-    query, mmes="", 
+    query, 
+    mmes="", 
     drive_base="", 
     edit=False, 
     msg="", 
     drive_name="", 
     data_cb="", 
     submenu=None, 
-    session_id=None, 
-    is_dest_drive= False
+    data_back_cb= ""
     ):
+   
     menu = []
 
     if submenu is None:
@@ -54,7 +54,10 @@ async def settings_main_menu(
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
         msg= f"Select cloud where you want to upload file\n\nPath:`{rclone_drive}:{base_dir}`"
 
-        await query.reply(header + msg, parse_mode="md", buttons=menu, link_preview=False)
+        if edit:
+            await mmes.edit(msg, parse_mode="md", buttons=menu)
+        else:
+            await query.reply(header + msg, parse_mode="md", buttons=menu)
 
 
     elif submenu == "list_drive":
@@ -71,14 +74,18 @@ async def settings_main_menu(
 
         menu.append(
             [KeyboardButtonCallback("Close Menu", f"mainmenu^selfdest")]
-
         )
+
+        menu.append(
+            [KeyboardButtonCallback("Back", f"mainmenu^{data_back_cb}")]
+        )
+
         if edit:
             await mmes.edit(msg,
-                                 parse_mode="md", buttons=menu, link_preview=False)
+                                 parse_mode="md", buttons=menu)
         else:
             await query.reply(header,
-                                  parse_mode="md", buttons=menu, link_preview=False)
+                                  parse_mode="md", buttons=menu)
 
 async def list_selected_drive(
     query, 
@@ -103,8 +110,9 @@ async def list_selected_drive(
 
     try:
         data = json.loads(stdout)
-    except JSONDecodeError as e:
+    except Exception as e:
         logging.info(e)
+        return
 
     if data == []:
          menu.append(

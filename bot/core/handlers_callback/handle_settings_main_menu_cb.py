@@ -27,24 +27,55 @@ async def handle_setting_main_menu_callback(callback_query):
             drive_name= cmd[2], 
             submenu="list_drive", 
             data_cb="list_dir_main_menu", 
+            data_back_cb= "main_menu"
             )     
 
     elif cmd[1] == "list_dir_main_menu":
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
         path = get_val(cmd[2])
-        logging.info("path: {}".format(path))
-        rclone_dir +=  path +"/"
+        rclone_dir += path + "/"
+        logging.info("path: {}".format(rclone_dir))
         set_val("BASE_DIR", rclone_dir)
         await settings_main_menu(
-            callback_query, mmes, 
+            callback_query, 
+            mmes, 
             edit=True, 
             msg=f"Select folder where you want to store files\n\nPath:`{rclone_drive}:{rclone_dir}`", 
             drive_base=rclone_dir, 
             drive_name= rclone_drive, 
             submenu="list_drive", 
             data_cb="list_dir_main_menu", 
+            data_back_cb= "back"
             )
+
+    elif cmd[1] == "back":
+        data_b_cb= "back"
+        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_dir= get_val("BASE_DIR")
+        dir_list= rclone_dir.split("/")
+        dir_list = dir_list[: len(dir_list) - 2]
+        listToStr = '/'.join([elem for elem in dir_list])
+        rclone_dir= listToStr
+        set_val("BASE_DIR", rclone_dir )
+        
+        if rclone_dir == "":
+            data_b_cb= "main_menu"
+
+        await settings_main_menu(
+                    callback_query,
+                    mmes, 
+                    edit=True, 
+                    msg=f"Select folder where you want to store files\n\nPath:`{rclone_drive}:{rclone_dir}`", 
+                    drive_base=rclone_dir, 
+                    drive_name= rclone_drive, 
+                    submenu="list_drive", 
+                    data_cb="list_dir_main_menu", 
+                    data_back_cb= data_b_cb
+                    ) 
+
+    elif cmd[1]== "main_menu":
+         await settings_main_menu(callback_query, mmes= mmes, edit=True)                
 
     # close menu
     elif cmd[1] == "selfdest":
