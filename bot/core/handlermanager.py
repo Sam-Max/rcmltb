@@ -1,6 +1,5 @@
 from telethon import TelegramClient, events
 from bot.core.get_vars import get_val
-from bot.core.handlers.handle_about_me import about_me
 from bot.core.handlers.handle_cancel import handle_cancel
 from bot.core.handlers.handle_cleardata import cleardata_handler
 from bot.core.handlers.handle_copy_cm import handle_copy_command
