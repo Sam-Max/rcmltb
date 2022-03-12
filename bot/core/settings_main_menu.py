@@ -69,7 +69,8 @@ async def settings_main_menu(
             drive_name, 
             conf_path, 
             data_cb, 
-            menu, 
+            menu,
+            data_back_cb 
             )
 
         menu.append(
@@ -94,7 +95,8 @@ async def list_selected_drive(
     conf_path, 
     data_cb, 
     menu, 
-    offset= 0, 
+    data_back_cb="",
+    offset= 0
     ):
     menu.append([KeyboardButtonCallback(f" ✅ Select this folder", f"mainmenu^selfdest")])
 
@@ -133,7 +135,7 @@ async def list_selected_drive(
     else: 
         menu.append(
             [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="mainmenu^pages"),
-             KeyboardButtonCallback("NEXT ⏩", data= f"next {next_offset}")
+             KeyboardButtonCallback("NEXT ⏩", data= f"next {next_offset} {data_back_cb}")
             ]) 
            
 async def get_list_drive_results_main(data, max_results=10, offset=0):

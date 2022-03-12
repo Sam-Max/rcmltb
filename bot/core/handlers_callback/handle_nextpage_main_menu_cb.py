@@ -1,8 +1,3 @@
-#**************************************************
-# Based on:
-# Source: https://github.com/EvamariaTG/EvaMaria/blob/master/plugins/pm_filter.py
-#**************************************************/
-
 import logging 
 from bot.core.get_vars import get_val
 from telethon.tl.types import KeyboardButtonCallback
@@ -14,7 +9,7 @@ from bot.core.settings_main_menu import get_list_drive_results_main, list_drive_
 botlog = logging.getLogger(__name__)
 
 async def next_page_menu(callback_query):
-    _, offset = callback_query.data.decode().split(" ")
+    _, offset, data_back_cb = callback_query.data.decode().split(" ")
     data = get_val("JSON_RESULT_DATA")
     btn= []
     offset = int(offset)
@@ -33,30 +28,34 @@ async def next_page_menu(callback_query):
     if offset == 0:
         btn.append(
             [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
-             KeyboardButtonCallback("NEXT ⏩", data= f"next {n_offset}".encode("UTF-8"))
+             KeyboardButtonCallback("NEXT ⏩", data= f"next {n_offset} {data_back_cb}")
             ])
 
     elif offset >= total:
         btn.append(
-             [KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}"),
+             [KeyboardButtonCallback("⏪ BACK", data=f"next {off_set} {data_back_cb}"),
               KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}",
                                    data="setting pages")])
 
     elif offset + 10 > total:
         btn.append(
-             [KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}"),
+             [KeyboardButtonCallback("⏪ BACK", data=f"next {off_set} {data_back_cb}"),
               KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}",
                                    data="setting pages")])                               
 
     else:
-        btn.append([KeyboardButtonCallback("⏪ BACK", data=f"next {off_set}"),
+        btn.append([KeyboardButtonCallback("⏪ BACK", data=f"next {off_set} {data_back_cb}"),
              KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="setting pages"),
-             KeyboardButtonCallback("NEXT ⏩", data=f"next {n_offset}")
+             KeyboardButtonCallback("NEXT ⏩", data=f"next {n_offset} {data_back_cb}")
             ])
 
     btn.append(
             [KeyboardButtonCallback("Close Menu", f"mainmenu^selfdest")]
         )
+
+    btn.append(
+            [KeyboardButtonCallback("Back", f"mainmenu^{data_back_cb}")]
+        )    
 
     try:
         mmes= await callback_query.get_message()

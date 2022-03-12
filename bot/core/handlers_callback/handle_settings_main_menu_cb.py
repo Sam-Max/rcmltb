@@ -27,7 +27,7 @@ async def handle_setting_main_menu_callback(callback_query):
             drive_name= cmd[2], 
             submenu="list_drive", 
             data_cb="list_dir_main_menu", 
-            data_back_cb= "main_menu"
+            data_back_cb= "configmenu"
             )     
 
     elif cmd[1] == "list_dir_main_menu":
@@ -60,7 +60,7 @@ async def handle_setting_main_menu_callback(callback_query):
         set_val("BASE_DIR", rclone_dir )
         
         if rclone_dir == "":
-            data_b_cb= "main_menu"
+            data_b_cb= "configmenu"
 
         await settings_main_menu(
                     callback_query,
@@ -74,7 +74,7 @@ async def handle_setting_main_menu_callback(callback_query):
                     data_back_cb= data_b_cb
                     ) 
 
-    elif cmd[1]== "main_menu":
+    elif cmd[1]== "configmenu":
          await settings_main_menu(callback_query, mmes= mmes, edit=True)                
 
     # close menu
