@@ -73,11 +73,6 @@ def add_handlers(bot: TelegramClient):
 
 
     bot.add_event_handler(
-        about_me,
-        events.NewMessage(pattern=command_process(get_command("ABOUT")))
-    )
-
-    bot.add_event_handler(
         get_logs_f,
         events.NewMessage(pattern=command_process(get_command("GETLOGS")))
     )

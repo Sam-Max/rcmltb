@@ -1,3 +1,8 @@
+#**************************************************
+# Adapted from:
+# Source: https://github.com/EvamariaTG/EvaMaria/blob/master/plugins/pm_filter.py
+#**************************************************/
+
 import logging 
 from bot.core.get_vars import get_val
 from telethon.tl.types import KeyboardButtonCallback

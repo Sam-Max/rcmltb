@@ -1,3 +1,6 @@
+#Adapted from:
+#https://github.com/Shubham0Rajput/Rclone-Telegram-Bot/blob/master/bot.py
+
 def status(val):
     if val < 10:
         progress = "[▫️▫️▫️▫️▫️▫️▫️▫️▫️▫️]"

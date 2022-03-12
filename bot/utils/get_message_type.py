@@ -1,8 +1,4 @@
-
-#**************************************************
-# Based on:
-# Source: https://github.com/EvamariaTG/EvaMaria/blob/master/utils.py
-#**************************************************/
+#https://github.com/EvamariaTG/EvaMaria/blob/master/utils.py
 
 from pyrogram.types import Message
 

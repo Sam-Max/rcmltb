@@ -77,7 +77,6 @@ async def handle_setting_main_menu_callback(callback_query):
     elif cmd[1]== "configmenu":
          await settings_main_menu(callback_query, mmes= mmes, edit=True)                
 
-    # close menu
     elif cmd[1] == "selfdest":
         await callback_query.answer("Closed")
         await callback_query.delete()

@@ -119,7 +119,6 @@ async def handle_setting_copy_menu_callback(callback_query):
         set_val("DEST_DIR", rclone_dir + origin_dir)
         await rclone_copy_transfer(callback_query, conf_path)                               
 
-    # close menu
     elif cmd[1] == "selfdest":
         await callback_query.answer("Closed")
         await callback_query.delete()

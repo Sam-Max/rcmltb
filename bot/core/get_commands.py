@@ -1,3 +1,6 @@
+# Adapted from:
+# https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/core/getCommand.py
+
 from ..utils.commands import Commands
 from .get_vars import get_val
 import os, logging

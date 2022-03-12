@@ -1,5 +1,5 @@
 #**************************************************
-# Based on:
+# Adapted from:
 # Source: https://github.com/EvamariaTG/EvaMaria/blob/master/plugins/pm_filter.py
 #**************************************************/
 

@@ -1,6 +1,7 @@
+#https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/core/HandleManager.py
+
 import shutil
 import psutil
-from bot.core.get_vars import get_val
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 import time

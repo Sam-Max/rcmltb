@@ -1,3 +1,6 @@
+# Adapted from:
+# Repository: github.com/anasty17/mirror-leech-telegram-bot
+
 import logging
 from os import execl as osexecl
 import os

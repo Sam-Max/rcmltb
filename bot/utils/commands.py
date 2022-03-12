@@ -4,7 +4,6 @@ class Commands:
     COPY = "copy"
     CONFIG= "config"
     EXEC = "exec"
-    ABOUT = "info"
     GETLOGS = "logs"
     SERVER = "server"
     START = "start"

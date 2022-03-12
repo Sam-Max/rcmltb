@@ -62,7 +62,6 @@ async def handle_setting_leech_menu_callback(client, callback_query):
         dest_dir = os.path.join(os.getcwd(), "Downloads", origin_dir)
         await rclone_downloader(client, mmes, sender, origin_dir, dest_dir, folder= True)
 
-    # close menu
     elif cmd[1] == "selfdest":
         await callback_query.answer("Closed")
         await mmes.delete()

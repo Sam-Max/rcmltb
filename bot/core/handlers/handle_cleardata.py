@@ -21,4 +21,4 @@ async def cleardata_handler(e):
                           "This will affect currents transfers!\n",
                           buttons= buttons)
     else:
-        await e.answer("⚠️ WARN ⚠️ Dont Touch Admin Settings.", alert=True)
+        await e.answer("You are not allowed...", alert=True)

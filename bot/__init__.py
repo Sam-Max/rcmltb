@@ -1,5 +1,5 @@
 __version__ = "1.0"
-__author__ = "Sam009-max"
+__author__ = "Sam-Max"
 
 import logging
 from dotenv import load_dotenv
