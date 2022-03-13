@@ -54,7 +54,7 @@ Contact: [Telegram](https://t.me/SamMax009)
    - Non mandatory variables:
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
         - `UPSTREAM_BRANCH`: Upstream branch for update. 
-        - `TG_UP_LIMIT`: Telegram Upload limit in bytes (you can set max `2097151000` which is ~2GB).
+        - `TG_UP_LIMIT`: Telegram upload limit in bytes (max `2097151000` which is ~2GB), to automatically slice the file bigger that this size into small parts to upload to Telegram.
 
 3. **Deploying on VPS Using Docker**
 
