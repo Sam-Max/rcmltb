@@ -32,6 +32,7 @@ class VarHolder:
         INTS = [
             "API_ID",
             "OWNER_ID",
+            "TG_SPLIT_SIZE",
         ]
 
         BOOLS = ["UPLOAD_CANCEL"]

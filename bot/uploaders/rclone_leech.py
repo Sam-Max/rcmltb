@@ -1,10 +1,13 @@
 from configparser import ConfigParser
+from os import walk
 import os
 import time
 from pyrogram.errors import FloodWait
 from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot import SessionVars
 from bot.uploaders.telegram_upload import upload_media_pyro
+from bot.utils.misc_utils import clear_stuff
+from bot.utils.zip_utils import split_in_zip
 from ..core.get_vars import get_val
 from bot.utils.get_rclone_conf import get_config
 import logging
@@ -58,9 +61,7 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, fold
         await user_msg.delete()     
 
         if folder:
-            for root, dirnames, filenames in os.walk(dest_dir):
-                log.info("Files: {}".format(filenames))
-                log.info("Directories: {}".format(dirnames))
+            for dirpath, _, filenames in walk(dest_dir):
                 if len(filenames) == 0:
                      continue 
                 sorted_fn= sorted(filenames)
@@ -72,21 +73,52 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, fold
                         timer = 10
                     if i < 100 and i > 50:
                         timer = 15
-                    message= await client.send_message(sender, "Processing!")
-                    file = os.path.join(root, file)
-                    try:
-                        await upload_media_pyro(client, message, sender, file)
-                    except FloodWait as fw:
-                        await asyncio.sleep(fw.seconds + 5)
-                        await upload_media_pyro(client, message, sender, file)
-                    protection = await client.send_message(sender, f"Sleeping for `{timer}` seconds...")
-                    time.sleep(timer)
-                    await protection.delete()  
+                    f_path = os.path.join(dirpath, file)
+                    f_size = os.path.getsize(f_path)
+                    if int(f_size) > get_val("TG_SPLIT_SIZE"):
+                        split_dir= await split_in_zip(f_path, size=get_val("TG_SPLIT_SIZE")) 
+                        os.remove(f_path) 
+                        dir_list= os.listdir(split_dir)
+                        dir_list.sort() 
+                        for file in dir_list :
+                            timer = 5
+                            message= await client.send_message(sender, f"File larger than SPLIT_SIZE, Splitting...")
+                            f_path = os.path.join(split_dir, file)
+                            await upload_media_pyro(client, message, sender, f_path)
+                            protection = await client.send_message(sender, f"Sleeping for `{timer}` seconds...")
+                            time.sleep(timer)
+                            await protection.delete()
+                    else:
+                        message= await client.send_message(sender, "Processing!")
+                        try:
+                            await upload_media_pyro(client, message, sender, f_path)
+                        except FloodWait as fw:
+                            await asyncio.sleep(fw.seconds + 5)
+                            await upload_media_pyro(client, message, sender, f_path)
+                        protection = await client.send_message(sender, f"Sleeping for `{timer}` seconds...")
+                        time.sleep(timer)
+                        await protection.delete()  
+            await clear_stuff("./Downloads")
             await client.send_message(sender, "Nothing else to upload!")  
         else:
-            message= await client.send_message(sender, "Processing...")
-            file = os.path.join(dest_dir, path)
-            await upload_media_pyro(client, message, sender, file)
+            f_path = os.path.join(dest_dir, path)
+            f_size = os.path.getsize(f_path)
+            if int(f_size) > get_val("TG_SPLIT_SIZE"):
+                split_dir= await split_in_zip(f_path, size=get_val("TG_SPLIT_SIZE")) 
+                os.remove(f_path) 
+                dir_list= os.listdir(split_dir)
+                dir_list.sort() 
+                for file in dir_list :
+                    timer = 5
+                    message= await client.send_message(sender, f"File larger than SPLIT_SIZE, Splitting...")
+                    f_path = os.path.join(split_dir, file)
+                    await upload_media_pyro(client, message, sender, f_path)
+                    time.sleep(timer)
+                await clear_stuff("./Downloads")    
+                await client.send_message(sender, "Nothing else to upload!")
+            else:
+                message= await client.send_message(sender, "Processing...")           
+                await upload_media_pyro(client, message, sender, f_path)
 
 async def rclone_process_update(rclonepr, usermsg):
         blank=0    
