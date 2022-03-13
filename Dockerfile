@@ -8,7 +8,7 @@ ENV TZ=America/Los_Angeles
 
 RUN apt-get -qq update --fix-missing 
 
-RUN apt-get -qq install -y git wget curl busybox python3 python3-pip locales ffmpeg p7zip-full
+RUN apt-get -qq install -y git wget curl busybox python3 python3-pip locales ffmpeg p7zip-full p7zip-rar
 
 RUN curl https://rclone.org/install.sh | bash
 
