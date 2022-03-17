@@ -13,6 +13,7 @@ UN_FINISHED_PROGRESS_STR = "□"
 async def progress_for_pyrogram(
         current,
         total,
+        file_name,
         ud_type,
         message,
         start
@@ -43,7 +44,8 @@ async def progress_for_pyrogram(
         )
         try:
             await message.edit(
-                "{}\n{}".format(
+               "{}\n{}\n{}".format(
+                    file_name,
                     ud_type,
                     tmp
                 )
