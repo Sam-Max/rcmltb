@@ -7,6 +7,7 @@ import json
 import logging
 from json.decoder import JSONDecodeError
 from bot.core.set_vars import set_val
+from bot.utils.get_size_p import get_size
 
 torlog = logging.getLogger(__name__)
 
@@ -164,23 +165,21 @@ def list_drive_copy(
     callback="", 
     ):
      folder = ""
-     file= ""
      index= 0
      for i in result:
         path = i["Path"]
         path == path.strip()
         index= index + 1
         set_val(f"{index}", path)
+        size= i['Size']
+        size= get_size(size)
         mime_type= i['MimeType']
         if mime_type == 'inode/directory': 
-            file= "" 
             folder= "📁"
             menu.append(  
-            [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^{callback}^{index}")]
+            [KeyboardButtonCallback(f"{folder} {path}", f"copymenu^{callback}^{index}")]
         )    
         else:
-            file= "🗄" 
-            folder= ""
             menu.append(        
-            [KeyboardButtonCallback(f"{folder} {file} {path}", f"copymenu^rclone_menu_copy^{index}^True")]
+            [KeyboardButtonCallback(f"[{size}] {path}", f"copymenu^rclone_menu_copy^{index}^True")]
         )
