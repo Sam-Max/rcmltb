@@ -38,6 +38,7 @@ async def upload_media_pyro(client, message, sender, file):
                         duration= duration,
                         progress=progress_for_pyrogram,
                         progress_args=(
+                            "Name: `{}`".format(caption),
                             '**Uploading:**',
                             message,
                             c_time
@@ -55,6 +56,7 @@ async def upload_media_pyro(client, message, sender, file):
                     parse_mode= "md",
                     progress=progress_for_pyrogram,
                     progress_args=(
+                        "Name: `{}`".format(caption),
                         '**Uploading:**',
                         message,
                         c_time
