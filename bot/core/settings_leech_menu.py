@@ -2,7 +2,6 @@ from bot.utils.get_rclone_conf import get_config
 import os, configparser, logging
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.types import InlineKeyboardButton
-from pyrogram.types import InlineKeyboardButton
 import asyncio
 import json
 import logging
@@ -158,7 +157,6 @@ def list_drive_leech(
             [InlineKeyboardButton(f"{folder} {path}", f"leechmenu^{data_cb}^{index}")]
         )
         else:
-            folder= ""
             menu.append(        
             [InlineKeyboardButton(f"[{size}] {path}", f"leechmenu^start_leech^{index}")]
         )
