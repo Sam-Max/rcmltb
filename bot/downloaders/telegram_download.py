@@ -16,7 +16,7 @@ logging.getLogger("pyrogram").setLevel(logging.WARNING)
 LOGGER = logging.getLogger(__name__)
 
 
-async def down_load_media_pyro(client, message, message_type, new_name= None, is_rename= False):
+async def down_load_media_pyro(client, message, media, new_name= None, is_rename= False):
         mess_age = await message.reply_text("...", quote=True)
         
         LOGGER.info("downloading...")
@@ -37,11 +37,11 @@ async def down_load_media_pyro(client, message, message_type, new_name= None, is
         c_time = time.time()
         
         download_location = await client.download_media(
-            message=message_type,
+            message=media,
             file_name=path,
             progress=progress_for_pyrogram,
             progress_args=(
-               "Name: `{}`".format(message_type.file_name),
+               "Name: `{}`".format(media.file_name),
                "Downloading...",
                 mess_age, 
                 c_time

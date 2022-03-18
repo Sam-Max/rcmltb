@@ -7,11 +7,10 @@ async def handle_download_cb(client, query):
         data= query.data
         list = data.split(" ")
         message= query.message
-
-        message_type= get_val("MESSAGE_TYPE")
+        media= get_val("MEDIA")
 
         if "default" in list[1]:
-            await down_load_media_pyro(client, message, message_type)
+            await down_load_media_pyro(client, message, media)
 
         if "rename" in list[1]: 
             question= await message.reply(
@@ -24,4 +23,4 @@ async def handle_download_cb(client, query):
                 await client.listen.Cancel("1")
             else:
                 await question.delete()
-                await down_load_media_pyro(client, message, message_type, reply_message.text, True)
+                await down_load_media_pyro(client, message, media, reply_message.text, True)
