@@ -44,7 +44,7 @@ async def settings_leech_menu(
                 )
 
         menu.append(
-            [InlineKeyboardButton("✖️ Close Menu", f"leechmenu^selfdest")]
+            [InlineKeyboardButton("Close Menu", f"leechmenu^selfdest")]
         )
 
         
@@ -67,7 +67,7 @@ async def settings_leech_menu(
             )    
 
         menu.append(
-            [InlineKeyboardButton("✖️ Close Menu", f"leechmenu^selfdest")]
+            [InlineKeyboardButton("Close Menu", f"leechmenu^selfdest")]
         )
 
         menu.append(
