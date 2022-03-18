@@ -1,4 +1,4 @@
-# An rclone telegram bot to upload and transfer to many clouds
+# An rclone telegram bot for transfer to and from many clouds
 
 Contact: [Telegram](https://t.me/SamMax009)
 
