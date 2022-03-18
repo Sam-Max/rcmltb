@@ -47,12 +47,10 @@ async def settings_leech_menu(
             [InlineKeyboardButton("Close Menu", f"leechmenu^selfdest")]
         )
 
-        
-
         if edit:
             await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
         else:
-            await message.reply(msg, reply_markup= InlineKeyboardMarkup(menu))
+           await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(menu))
 
     elif submenu == "list_drive":
         conf_path = await get_config()
