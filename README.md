@@ -14,7 +14,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 - mirror - mirror to selected cloud 
 - leech - leech from cloud to telegram
 - copy - copy from cloud to cloud
-- config - config rclone and set folder where to mirror 
+- config - set cloud and folder for mirror
 - logs - get logs from server
 - server - get server info
 - speedtest - test speed of server
