@@ -101,7 +101,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 - ./start.sh
 
 
-## Repositories used to develop this bot and credits:
+## Repositories used to develop this bot:
 
 1- [TorToolkit-Telegram](https://github.com/yash-dk/TorToolkit-Telegram) 
 
