@@ -78,7 +78,7 @@ async def settings_main_menu(
         )
 
         menu.append(
-            [KeyboardButtonCallback("Back", f"mainmenu^{data_back_cb}")]
+            [KeyboardButtonCallback("⬅️ Back", f"mainmenu^{data_back_cb}")]
         )
 
         if edit:

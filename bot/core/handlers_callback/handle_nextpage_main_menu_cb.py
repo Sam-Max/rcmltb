@@ -59,7 +59,7 @@ async def next_page_menu(callback_query):
         )
 
     btn.append(
-            [KeyboardButtonCallback("Back", f"mainmenu^{data_back_cb}")]
+            [KeyboardButtonCallback("⬅️ Back", f"mainmenu^{data_back_cb}")]
         )    
 
     try:
