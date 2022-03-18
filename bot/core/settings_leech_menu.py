@@ -2,6 +2,7 @@ from bot.utils.get_rclone_conf import get_config
 import os, configparser, logging
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.types import InlineKeyboardButton
+from pyrogram.types import InlineKeyboardButton
 import asyncio
 import json
 import logging
@@ -22,6 +23,7 @@ async def settings_leech_menu(
     drive_name="", 
     data_cb="", 
     submenu=None, 
+    data_back_cb=""
     ):
     
     menu = []
@@ -46,7 +48,7 @@ async def settings_leech_menu(
         )
 
         if edit:
-            await message.edit(header + msg, reply_markup= InlineKeyboardMarkup(menu))
+            await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
         else:
             await message.reply(msg, reply_markup= InlineKeyboardMarkup(menu))
 
@@ -59,12 +61,17 @@ async def settings_leech_menu(
             conf_path, 
             menu, 
             data_cb,
+            data_back_cb
             )    
 
         menu.append(
             [InlineKeyboardButton("Close Menu", f"leechmenu^selfdest")]
-
         )
+
+        menu.append(
+            [InlineKeyboardButton("Back", f"leechmenu^{data_back_cb}")]
+        )
+
         if edit:
             await message.edit(msg, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu))
         else:
@@ -76,6 +83,7 @@ async def list_selected_drive_leech(
     conf_path, 
     menu, 
     data_cb,
+    data_back_cb="",
     offset= 0, 
     ):
 
@@ -115,8 +123,8 @@ async def list_selected_drive_leech(
     else: 
         menu.append(
             [InlineKeyboardButton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", callback_data="leechmenu^pages"),
-             InlineKeyboardButton("NEXT ⏩", callback_data= f"n_leech {next_offset}")
-            ]) 
+             InlineKeyboardButton("NEXT ⏩", callback_data= f"n_leech {next_offset} {data_back_cb}")
+            ])
            
 async def get_list_drive_results_leech(data, max_results=10, offset=0):
     total = len(data)

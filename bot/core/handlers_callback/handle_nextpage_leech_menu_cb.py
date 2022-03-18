@@ -13,7 +13,7 @@ from bot.core.settings_leech_menu import get_list_drive_results_leech, list_driv
 
 
 async def next_page_leech(client, callback_query):
-    _, offset= callback_query.data.split(" ")
+    _, offset, data_back_cb= callback_query.data.split(" ")
     log.info(f"NEXT_OFFSET: {offset}")
     data = get_val("JSON_RESULT_DATA")
     btn= []
@@ -33,31 +33,35 @@ async def next_page_leech(client, callback_query):
     if offset == 0:
         btn.append(
             [InlineKeyboardButton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", callback_data="setting pages"),
-             InlineKeyboardButton("NEXT ⏩", callback_data= f"n_leech {n_offset}".encode("UTF-8"))
+             InlineKeyboardButton("NEXT ⏩", callback_data= f"n_leech {n_offset} {data_back_cb}")
             ])
 
     elif offset >= total:
         btn.append(
-             [InlineKeyboardButton("⏪ BACK", callback_data=f"n_leech {off_set}"),
+             [InlineKeyboardButton("⏪ BACK", callback_data=f"n_leech {off_set} {data_back_cb}"),
               InlineKeyboardButton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}",
                                    callback_data="setting pages")])
 
     elif offset + 10 > total:
         btn.append(
-             [InlineKeyboardButton("⏪ BACK", callback_data=f"n_leech {off_set}"),
+             [InlineKeyboardButton("⏪ BACK", callback_data=f"n_leech {off_set} {data_back_cb}"),
               InlineKeyboardButton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}",
                                    callback_data="setting pages")])                               
 
     else:
-        btn.append([InlineKeyboardButton("⏪ BACK", callback_data=f"n_leech {off_set}"),
+        btn.append([InlineKeyboardButton("⏪ BACK", callback_data=f"n_leech {off_set} {data_back_cb}"),
              InlineKeyboardButton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", callback_data="setting pages"),
-             InlineKeyboardButton("NEXT ⏩", callback_data=f"n_leech {n_offset}")
+             InlineKeyboardButton("NEXT ⏩", callback_data=f"n_leech {n_offset} {data_back_cb}")
             ])
 
 
     btn.append(
-            [InlineKeyboardButton("Close Menu", f"mainmenu^selfdest")]
+            [InlineKeyboardButton("Close Menu", f"leechmenu^selfdest")]
         )
+
+    btn.append(
+            [InlineKeyboardButton("Back", f"leechmenu^{data_back_cb}")]
+        )    
                 
     try:
         mmes= callback_query.message
