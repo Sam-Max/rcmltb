@@ -20,7 +20,7 @@ from .progress_for_rclone import status
 log = logging.getLogger(__name__)
 
 
-async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, folder= False, path= ""):
+async def rclone_downloader(client, user_msg, chat_id, origin_dir, dest_dir, folder= False, path= ""):
 
         await user_msg.edit("Preparing for download...")
 
@@ -82,24 +82,24 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, fold
                         dir_list.sort() 
                         for file in dir_list :
                             timer = 5
-                            message= await client.send_message(sender, f"File larger than SPLIT_SIZE, Splitting...")
+                            message= await client.send_message(chat_id, f"File larger than SPLIT_SIZE, Splitting...")
                             f_path = os.path.join(split_dir, file)
-                            await upload_media_pyro(client, message, sender, f_path)
-                            protection = await client.send_message(sender, f"Sleeping for `{timer}` seconds...")
+                            await upload_media_pyro(client, message, chat_id, f_path)
+                            protection = await client.send_message(chat_id, f"Sleeping for `{timer}` seconds...")
                             time.sleep(timer)
                             await protection.delete()
                     else:
-                        message= await client.send_message(sender, "Processing!")
+                        message= await client.send_message(chat_id, "Processing!")
                         try:
-                            await upload_media_pyro(client, message, sender, f_path)
+                            await upload_media_pyro(client, message, chat_id, f_path)
                         except FloodWait as fw:
                             await asyncio.sleep(fw.seconds + 5)
-                            await upload_media_pyro(client, message, sender, f_path)
-                        protection = await client.send_message(sender, f"Sleeping for `{timer}` seconds...")
+                            await upload_media_pyro(client, message, chat_id, f_path)
+                        protection = await client.send_message(chat_id, f"Sleeping for `{timer}` seconds...")
                         time.sleep(timer)
                         await protection.delete()  
             await clear_stuff("./Downloads")
-            await client.send_message(sender, "Nothing else to upload!")  
+            await client.send_message(chat_id, "Nothing else to upload!")  
         else:
             f_path = os.path.join(dest_dir, path)
             f_size = os.path.getsize(f_path)
@@ -110,15 +110,15 @@ async def rclone_downloader(client, user_msg, sender, origin_dir, dest_dir, fold
                 dir_list.sort() 
                 for file in dir_list :
                     timer = 5
-                    message= await client.send_message(sender, f"File larger than SPLIT_SIZE, Splitting...")
+                    message= await client.send_message(chat_id, f"File larger than SPLIT_SIZE, Splitting...")
                     f_path = os.path.join(split_dir, file)
-                    await upload_media_pyro(client, message, sender, f_path)
+                    await upload_media_pyro(client, message, chat_id, f_path)
                     time.sleep(timer)
                 await clear_stuff("./Downloads")    
-                await client.send_message(sender, "Nothing else to upload!")
+                await client.send_message(chat_id, "Nothing else to upload!")
             else:
-                message= await client.send_message(sender, "Processing...")           
-                await upload_media_pyro(client, message, sender, f_path)
+                message= await client.send_message(chat_id, "Processing...")           
+                await upload_media_pyro(client, message, chat_id, f_path)
 
 async def rclone_process_update(rclonepr, usermsg):
         blank=0    

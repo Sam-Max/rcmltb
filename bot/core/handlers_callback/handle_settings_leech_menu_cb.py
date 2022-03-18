@@ -8,7 +8,7 @@ from bot.uploaders.rclone_leech import rclone_downloader
 torlog = logging.getLogger(__name__)
 
 async def handle_setting_leech_menu_callback(client, callback_query):
-    sender= callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
     data = callback_query.data
     cmd = data.split("^")
     mmes = callback_query.message
@@ -57,12 +57,12 @@ async def handle_setting_leech_menu_callback(client, callback_query):
         origin_dir= get_val("BASE_DIR")
         origin_dir += path
         dest_dir = os.path.join(os.getcwd(), "Downloads")
-        await rclone_downloader(client, mmes, sender, origin_dir, dest_dir, path= path)
+        await rclone_downloader(client, mmes, chat_id, origin_dir, dest_dir, path= path)
 
     elif cmd[1] == "start_leech_folder":
         origin_dir= get_val("BASE_DIR")
         dest_dir = os.path.join(os.getcwd(), "Downloads", origin_dir)
-        await rclone_downloader(client, mmes, sender, origin_dir, dest_dir, folder= True)
+        await rclone_downloader(client, mmes, chat_id, origin_dir, dest_dir, folder= True)
 
     elif cmd[1] == "back":
         data_b_cb= "back"
