@@ -108,7 +108,7 @@ async def list_selected_drive_copy(
 
     try:
         data = json.loads(stdout)
-    except JSONDecodeError as e:
+    except Exception as e:
         logging.info(e)
         return
 

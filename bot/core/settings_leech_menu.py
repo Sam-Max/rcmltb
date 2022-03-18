@@ -103,8 +103,9 @@ async def list_selected_drive_leech(
 
     try:
         data = json.loads(stdout)
-    except JSONDecodeError as e:
+    except Exception as e:
         logging.info(e)
+        return
 
     if data == []:
          menu.append(
