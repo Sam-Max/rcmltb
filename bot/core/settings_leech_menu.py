@@ -44,8 +44,10 @@ async def settings_leech_menu(
                 )
 
         menu.append(
-            [InlineKeyboardButton("Close Menu", f"leechmenu^selfdest")]
+            [InlineKeyboardButton("✖️ Close Menu", f"leechmenu^selfdest")]
         )
+
+        
 
         if edit:
             await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
@@ -65,11 +67,11 @@ async def settings_leech_menu(
             )    
 
         menu.append(
-            [InlineKeyboardButton("Close Menu", f"leechmenu^selfdest")]
+            [InlineKeyboardButton("✖️ Close Menu", f"leechmenu^selfdest")]
         )
 
         menu.append(
-            [InlineKeyboardButton("Back", f"leechmenu^{data_back_cb}")]
+            [InlineKeyboardButton("⬅️ Back", f"leechmenu^{data_back_cb}")]
         )
 
         if edit:
