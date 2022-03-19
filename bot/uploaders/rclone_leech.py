@@ -3,7 +3,6 @@ from os import walk
 import os
 import time
 from pyrogram.errors import FloodWait
-from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot import SessionVars
 from bot.uploaders.telegram_upload import upload_media_pyro
 from bot.utils.get_size_p import get_size

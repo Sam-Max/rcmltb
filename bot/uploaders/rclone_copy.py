@@ -1,7 +1,6 @@
 import time
 from telethon import Button
 from bot import SessionVars
-from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from ..core.get_vars import get_val
 import subprocess
 import asyncio
@@ -58,7 +57,6 @@ async def rclone_process_update(rclone_pr, message):
                 nstr = mat[0].replace("Transferred:", "")
                 nstr = nstr.strip()
                 nstr = nstr.split(",")
-                log.info(nstr[1])
                 percent = nstr[1].strip("% ")
                 try:
                     percent = int(percent)
