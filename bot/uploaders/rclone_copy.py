@@ -64,7 +64,7 @@ async def rclone_process_update(rclone_pr, message):
                     percent = 0
                 prg = status(percent)
 
-                msg = 'Copying...\n{} \n{} \nSpeed:- {} \nETA:- {}\n'.format(nstr[0], prg, nstr[2], nstr[3].replace("ETA", ""))
+                msg = '**Copying...\n{} \n{} \nSpeed:- {} \nETA:- {}\n**'.format(nstr[0], prg, nstr[2], nstr[3].replace("ETA", ""))
                 
                 if time.time() - start > edit_time:
                     start = time.time()
