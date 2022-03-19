@@ -1,3 +1,5 @@
+#https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/functions/zip7_utils.py
+
 import logging
 import asyncio,shlex,os,logging,time
 from typing import Union,List,Tuple
@@ -5,7 +7,6 @@ from typing import Union,List,Tuple
 log= logging.getLogger(__name__)
 
 async def cli_call(cmd: Union[str,List[str]]) -> Tuple[str,str]:
-    log.info("Got cmd:- "+str(cmd))
     if isinstance(cmd,str):
         cmd = shlex.split(cmd)
     elif isinstance(cmd,(list,tuple)):
@@ -13,8 +14,6 @@ async def cli_call(cmd: Union[str,List[str]]) -> Tuple[str,str]:
     else:
         return None,None
 
-    log.info("Exc cmd:- "+str(cmd))
-    
     process = await asyncio.create_subprocess_exec(
         *cmd,
         stderr=asyncio.subprocess.PIPE,

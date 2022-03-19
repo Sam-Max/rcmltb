@@ -39,7 +39,6 @@ async def handle_setting_copy_menu_callback(callback_query):
         origin_drive = get_val("ORIGIN_DRIVE")
         origin_dir= get_val("ORIGIN_DIR")
         path = get_val(cmd[2])
-        logging.info("path: {}".format(path))
         rclone_dir= origin_dir + path + "/"
         set_val("ORIGIN_DIR", rclone_dir)
         await settings_copy_menu(

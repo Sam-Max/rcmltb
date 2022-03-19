@@ -35,7 +35,6 @@ async def handle_setting_main_menu_callback(callback_query):
         rclone_dir= get_val("BASE_DIR")
         path = get_val(cmd[2])
         rclone_dir += path + "/"
-        logging.info("path: {}".format(rclone_dir))
         set_val("BASE_DIR", rclone_dir)
         await settings_main_menu(
             callback_query, 

@@ -14,7 +14,6 @@ from bot.core.settings_leech_menu import get_list_drive_results_leech, list_driv
 
 async def next_page_leech(client, callback_query):
     _, offset, data_back_cb= callback_query.data.split(" ")
-    log.info(f"NEXT_OFFSET: {offset}")
     data = get_val("JSON_RESULT_DATA")
     btn= []
     offset = int(offset)

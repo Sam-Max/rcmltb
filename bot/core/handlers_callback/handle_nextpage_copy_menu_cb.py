@@ -12,7 +12,6 @@ from bot.core.settings_copy_menu import get_list_drive_results_copy, list_drive_
 
 async def next_page_copy(callback_query):
     _, offset, is_second_menu = callback_query.data.decode().split(" ")
-    log.info(f"NEXT_OFFSET: {offset}")
     data = get_val("JSON_RESULT_DATA")
     btn= []
     offset = int(offset)
