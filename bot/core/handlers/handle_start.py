@@ -3,10 +3,7 @@ from bot.utils.admin_check import is_admin
 
 async def start_handler(e):
     if await is_admin(e.sender_id):
-        msg = ''' 
-        **Hello, ¡Welcome to Rclone Bot!**\n
-        **I can help you transfer files from one cloud to another. 
-        I can also mirror files from telegram to cloud and leech from cloud to telegram**\n
+        msg = '''**Hello, ¡Welcome to Rclone-Tg-Bot!\n\nI can help you transfer files from one cloud to another.\ni can also mirror files from telegram to cloud and leech files and folders from cloud to telegram**\n\nMade by: https://github.com/Sam-Max
         '''
         await e.reply(msg)
     else:
