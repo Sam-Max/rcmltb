@@ -1,3 +1,4 @@
+import time
 from telethon import Button
 from bot import SessionVars
 from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
@@ -44,8 +45,8 @@ async def rclone_process_update(rclone_pr, message):
     process = rclone_pr
     user_message = message
     sleeps = False
-    msg = ""
-    msg1 = ""
+    start = time.time()
+    edit_time= 10
 
     while True:
         data = process.stdout.readline().decode().strip()
@@ -65,17 +66,11 @@ async def rclone_process_update(rclone_pr, message):
                     percent = 0
                 prg = status(percent)
 
-                msg = 'Copying...\n{} \n{} \nSpeed:- {} \nETA:- {}\n'.format(nstr[0], prg, nstr[2],
-                                                                                    nstr[3].replace("ETA", ""))
-
-                keyboard = [[Button.inline("Cancel", "upcancel")]]
-
-                if msg1 != msg:
-                     try:
-                        await user_message.edit(text=msg, buttons=keyboard)
-                        msg1= msg
-                     except MessageNotModified: 
-                        pass    
+                msg = 'Copying...\n{} \n{} \nSpeed:- {} \nETA:- {}\n'.format(nstr[0], prg, nstr[2], nstr[3].replace("ETA", ""))
+                
+                if time.time() - start > edit_time:
+                    start = time.time()
+                    await user_message.edit(text=msg, buttons= [[Button.inline("Cancel", "upcancel")]])
 
         if data == "":
             blank += 1

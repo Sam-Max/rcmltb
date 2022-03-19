@@ -141,13 +141,13 @@ async def rclone_process_update(rclonepr, usermsg):
         process = rclonepr
         user_message = usermsg
         sleeps = False
-        msg = ""
-        msg1 = ""
+        start = time.time()
+        edit_time= 10
         
         while True:
             data = process.stdout.readline().decode()
             data = data.strip()
-            mat = re.findall("Transferred:.*ETA.*",data)
+            mat = re.findall("Transferred:.*ETA.*", data)
            
             if mat is not None:
                 if len(mat) > 0:
@@ -164,13 +164,10 @@ async def rclone_process_update(rclonepr, usermsg):
 
                     msg = "<b>Downloading...\n{} \n{} \nSpeed:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
                     
-                    if msg1 != msg:
-                        try:
-                            await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
+                    if time.time() - start > edit_time:
+                        start = time.time()
+                        await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
                                 InlineKeyboardButton("Cancel", callback_data= "upcancel")]]))    
-                            msg1= msg
-                        except MessageNotModified: 
-                            pass                                
                         
             if data == "":
                 blank += 1

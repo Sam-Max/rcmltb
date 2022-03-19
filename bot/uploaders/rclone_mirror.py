@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+import time
 from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot import SessionVars
 from bot.utils.rename_file import rename
@@ -72,8 +73,8 @@ async def rclone_process_update(rclone_pr, user_msg):
         process = rclone_pr
         user_message = user_msg
         sleeps = False
-        msg = ""
-        msg1 = ""
+        start = time.time()
+        edit_time= 10
         
         while True:
             data = process.stdout.readline().decode()
@@ -95,13 +96,10 @@ async def rclone_process_update(rclone_pr, user_msg):
 
                     msg = "<b>Uploading...\n{} \n{} \nSpeed:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
                     
-                    if msg1 != msg:
-                        try:
-                            await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
+                    if time.time() - start > edit_time:
+                         start = time.time()
+                         await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
                                 InlineKeyboardButton("Cancel", callback_data= "upcancel")]]))    
-                            msg1= msg
-                        except MessageNotModified: 
-                            pass                                
                         
             if data == "":
                 blank += 1
