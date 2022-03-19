@@ -165,7 +165,7 @@ async def booted(client):
         await client.edit_message(chat_id, msg_id, "Restarted successfully!")
         osremove(".updatemsg")
 
-    await client.send_message(chat_id, "The bot is ready to use")
+    await client.send_message(get_val("OWNER_ID"), "The bot is ready to use")
 
 
 def command_process(command):
