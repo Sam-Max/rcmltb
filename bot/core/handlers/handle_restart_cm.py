@@ -13,7 +13,10 @@ log = logging.getLogger(__name__)
 async def handle_restart(e):
     update_message= await e.reply("Restarting...")
 
-    srun(["python3", "update.py"])
+    try:
+        chat_id = getattr(update_message.peer_id, "chat_id")
+    except AttributeError:
+        chat_id= update_message.peer_id.user_id
 
     try:
         for line in os.popen("ps ax | grep " + "rclone" + " | grep -v grep"):
@@ -25,7 +28,9 @@ async def handle_restart(e):
 
     with open(".updatemsg", "w") as f:
         f.truncate(0)
-        f.write(f"{update_message.peer_id.user_id}\n{update_message.id}\n")
+        f.write(f"{chat_id}\n{update_message.id}\n")
+
+    srun(["python3", "update.py"])
 
     osexecl(executable, executable, "-m", "bot")
 

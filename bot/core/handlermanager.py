@@ -159,18 +159,13 @@ def add_handlers(bot: TelegramClient):
     )
 
 async def booted(client):
-    id = get_val("OWNER_ID")
-
     if ospath.isfile(".updatemsg"):
         with open(".updatemsg") as f:
-            user_id, msg_id = map(int, f)
-        await client.edit_message(user_id, msg_id, "Restarted successfully!")
+            chat_id, msg_id = map(int, f)
+        await client.edit_message(chat_id, msg_id, "Restarted successfully!")
         osremove(".updatemsg")
 
-    try:
-        await client.send_message(int(id), "The bot is ready to use")
-    except Exception as e:
-        torlog.info(f"User id not found: {id}")
+    await client.send_message(chat_id, "The bot is ready to use")
 
 
 def command_process(command):
