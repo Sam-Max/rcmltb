@@ -58,8 +58,6 @@ async def rclone_downloader(client, user_msg, chat_id, origin_dir, dest_dir, fol
             await user_msg.edit("Download cancelled")
             return 
 
-        await user_msg.delete()    
-
         tg_split_size= get_size(get_val("TG_SPLIT_SIZE")) 
 
         if folder:
@@ -78,62 +76,54 @@ async def rclone_downloader(client, user_msg, chat_id, origin_dir, dest_dir, fol
                     f_path = os.path.join(dirpath, file)
                     f_size = os.path.getsize(f_path)
                     if int(f_size) > get_val("TG_SPLIT_SIZE"):
+                        message= await client.send_message(chat_id, f"File larger than {tg_split_size}, Splitting...")     
                         split_dir= await split_in_zip(f_path, size=get_val("TG_SPLIT_SIZE")) 
                         os.remove(f_path) 
                         dir_list= os.listdir(split_dir)
                         dir_list.sort() 
                         for file in dir_list :
-                            message= await client.send_message(chat_id, f"File larger than {tg_split_size}, Splitting...")
                             f_path = os.path.join(split_dir, file)
                             try:
                                 await upload_media_pyro(client, message, chat_id, f_path)
                             except FloodWait as fw:
                                 await asyncio.sleep(fw.seconds + 5)
                                 await upload_media_pyro(client, message, chat_id, f_path)     
-                            protection = await client.send_message(chat_id, f"Sleeping for `{timer}` seconds...")
                             time.sleep(timer)
-                            await protection.delete()
                     else:
-                        message= await client.send_message(chat_id, "Processing!")
                         try:
-                            await upload_media_pyro(client, message, chat_id, f_path)
+                            await upload_media_pyro(client, user_msg, chat_id, f_path)
                         except FloodWait as fw:
                             await asyncio.sleep(fw.seconds + 5)
-                            await upload_media_pyro(client, message, chat_id, f_path)
-                        protection = await client.send_message(chat_id, f"Sleeping for `{timer}` seconds...")
+                            await upload_media_pyro(client, user_msg, chat_id, f_path)
                         time.sleep(timer)
-                        await protection.delete()  
             await clear_stuff("./Downloads")
             await client.send_message(chat_id, "Nothing else to upload!")  
         else:
             f_path = os.path.join(dest_dir, path)
             f_size = os.path.getsize(f_path)
             if int(f_size) > get_val("TG_SPLIT_SIZE"):
+                message= await client.send_message(chat_id, f"File larger than {tg_split_size}, Splitting...")     
                 split_dir= await split_in_zip(f_path, size=get_val("TG_SPLIT_SIZE")) 
                 os.remove(f_path) 
                 dir_list= os.listdir(split_dir)
                 dir_list.sort() 
                 for file in dir_list :
                     timer = 5
-                    message= await client.send_message(chat_id, f"File larger than {tg_split_size}, Splitting...")
                     f_path = os.path.join(split_dir, file)
                     try:
                         await upload_media_pyro(client, message, chat_id, f_path)
                     except FloodWait as fw:
                         await asyncio.sleep(fw.seconds + 5)
                         await upload_media_pyro(client, message, chat_id, f_path)
-                    protection = await client.send_message(chat_id, f"Sleeping for `{timer}` seconds...")    
                     time.sleep(timer)
-                    await protection.delete()
                 await clear_stuff("./Downloads")    
                 await client.send_message(chat_id, "Nothing else to upload!")
             else:
-                message= await client.send_message(chat_id, "Processing...")  
                 try:    
-                    await upload_media_pyro(client, message, chat_id, f_path)
+                    await upload_media_pyro(client, user_msg, chat_id, f_path)
                 except FloodWait as fw:
                     await asyncio.sleep(fw.seconds + 5)
-                    await upload_media_pyro(client, message, chat_id, f_path)   
+                    await upload_media_pyro(client, user_msg, chat_id, f_path)   
 
 async def rclone_process_update(rclonepr, usermsg):
         blank=0    
