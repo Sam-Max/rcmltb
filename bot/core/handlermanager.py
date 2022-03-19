@@ -161,8 +161,8 @@ def add_handlers(bot: TelegramClient):
 async def booted(client):
     if ospath.isfile(".updatemsg"):
         with open(".updatemsg") as f:
-            chat_id, msg_id = map(int, f)
-        await client.edit_message(chat_id, msg_id, "Restarted successfully!")
+            user_id, msg_id = map(int, f)
+        await client.edit_message(user_id, msg_id, "Restarted successfully!")
         osremove(".updatemsg")
 
     await client.send_message(get_val("OWNER_ID"), "The bot is ready to use")
