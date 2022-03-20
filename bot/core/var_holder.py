@@ -3,6 +3,8 @@
 import os
 import logging
 import time
+from bot.core.Constants import Constants
+
 
 torlog = logging.getLogger(__name__)
 
@@ -25,6 +27,11 @@ class VarHolder:
             return self._var_dict[variable]
 
         val = None
+
+        #Get the variable from the constants supplied
+        try:
+            val = getattr(Constants, variable)
+        except AttributeError:pass
 
         # Get the variable form the env [overlap]
         envval = os.environ.get(variable)
