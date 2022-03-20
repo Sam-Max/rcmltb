@@ -47,4 +47,4 @@ async def handle_exec_message_f(e):
         else:
             await message.reply(OUTPUT)
     else:
-        await message.reply("Only for owner")
+        await message.delete()

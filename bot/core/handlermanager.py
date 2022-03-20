@@ -35,14 +35,14 @@ def add_handlers(bot: TelegramClient):
     #pyrogram handlers
     download_handlers = MessageHandler(
         handle_download_command,
-        filters=filters.command([get_command_pyro("MIRROR")])
+        filters=filters.command([get_command_pyro("MIRROR")]) 
     )
     bot.pyro.add_handler(download_handlers)
 
 
     leech_handlers = MessageHandler(
         handle_leech_command,
-        filters=filters.command([get_command_pyro("LEECH")])
+        filters=filters.command([get_command_pyro("LEECH")]) 
     )
     bot.pyro.add_handler(leech_handlers)
 
@@ -57,27 +57,33 @@ def add_handlers(bot: TelegramClient):
    # telethon handlers
     bot.add_event_handler(
         handle_copy_command,
-        events.NewMessage(pattern=command_process(get_command_tele("COPY")))
+        events.NewMessage(pattern=command_process(get_command_tele("COPY")),
+        chats=get_val("ALD_USR"))
     )
     
     bot.add_event_handler(
         handle_exec_message_f,
-        events.NewMessage(pattern=command_process(get_command_tele("EXEC")))
+        events.NewMessage(pattern=command_process(get_command_tele("EXEC")),
+        chats=get_val("ALD_USR"))
     )
+    
 
     bot.add_event_handler(
         handle_restart,
-        events.NewMessage(pattern=command_process(get_command_tele("RESTART")))
+        events.NewMessage(pattern=command_process(get_command_tele("RESTART")),
+        chats=get_val("ALD_USR"))
     )
 
     bot.add_event_handler(
         get_logs_f,
-        events.NewMessage(pattern=command_process(get_command_tele("GETLOGS")))
+        events.NewMessage(pattern=command_process(get_command_tele("GETLOGS")),
+        chats=get_val("ALD_USR"))
     )
 
     bot.add_event_handler(
         handle_server_command,
-        events.NewMessage(pattern=command_process(get_command_tele("SERVER")))
+        events.NewMessage(pattern=command_process(get_command_tele("SERVER")),
+        chats=get_val("ALD_USR"))
     )
 
     bot.add_event_handler(
@@ -87,17 +93,20 @@ def add_handlers(bot: TelegramClient):
 
     bot.add_event_handler(
         speed_handler,
-        events.NewMessage(pattern=command_process(get_command_tele("SPEEDTEST")))
+        events.NewMessage(pattern=command_process(get_command_tele("SPEEDTEST")),
+        chats=get_val("ALD_USR"))
     )
 
     bot.add_event_handler(
         cleardata_handler,
-        events.NewMessage(pattern=command_process(get_command_tele("CRLDATA")))
+        events.NewMessage(pattern=command_process(get_command_tele("CRLDATA")),
+        chats=get_val("ALD_USR"))
     )
 
     bot.add_event_handler(
         handle_config_command,
-        events.NewMessage(pattern=command_process(get_command_tele("CONFIG")))
+        events.NewMessage(pattern=command_process(get_command_tele("CONFIG")),
+        chats=get_val("ALD_USR"))
     )
 
     bot.loop.run_until_complete(booted(bot))

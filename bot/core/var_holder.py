@@ -2,24 +2,15 @@
 
 import os
 import logging
-import time
 from bot.consts.ExecVars import Constants
 
 
-torlog = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class VarHolder:
     def __init__(self):
         self._var_dict = dict()
-
-        # check var configs
-        herstr = ""
-        sam1 = [68, 89, 78, 79]
-        for i in sam1:
-            herstr += chr(i)
-        if os.environ.get(herstr, False):
-            os.environ["TIME_STAT"] = str(time.time())
 
     def get_var(self, variable):
 
@@ -43,8 +34,19 @@ class VarHolder:
         ]
 
         BOOLS = ["UPLOAD_CANCEL"]
-
-        if variable in INTS:
+        
+        if variable == "ALD_USR":
+            if envval is not None:
+                ald_user = envval.split(" ")
+                ald_user2 = []
+                if len(ald_user) > 0:
+                    for i in range(0, len(ald_user)):
+                        try:
+                            ald_user2.append(int(ald_user[i]))
+                        except ValueError:
+                            log.error(f"Invalid allow user {ald_user[i]} must be a integer.")
+                val = ald_user2
+        elif variable in INTS:
             val = int(envval) if envval is not None else val
         elif variable in BOOLS:
             if envval is not None:
@@ -57,10 +59,10 @@ class VarHolder:
             val = envval if envval is not None else val
 
         if val is None:
-            torlog.error(
-                "The variable was not found in either the constants, environment or database. Variable is :- {}".format(
+            log.error(
+                "The variable was not found in either the constants or environment Variable is :- {}".format(
                     variable))
-            raise Exception("The variable was not found in either the constants, environment or database")
+            raise Exception("The variable was not found in either the constants or environment")
             
         if isinstance(val, str):
             val = val.strip()
