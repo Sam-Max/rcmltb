@@ -46,6 +46,7 @@ Contact: [Telegram](https://t.me/SamMax009)
         - `API_ID`: get this from https://my.telegram.org. Don't put this in quotes.
         - `API_HASH`: get this from https://my.telegram.org
         - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot.
+        - `ALD_USR`: list of IDs of allowed groups and users who can use this bot separated by spaces.
         - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather) 
         - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program.
 
