@@ -20,7 +20,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 - restart - restart and update bot
 
 ## Deploying on Heroku
-<p><a href="https://github.com/Sam009-max/RcloneTgBot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
+<p><a href="https://github.com/Sam-Max/Rclone-Tg-Bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
 
 
 ## Deploy on VPS: 
@@ -93,7 +93,7 @@ Contact: [Telegram](https://t.me/SamMax009)
 - python3 -m venv venv 
 - source venv/bin/activate 
 - pip install -r requirements.txt 
-- sudo apt -qq install -y git wget curl python3 python3-pip locales ffmpeg
+- sudo apt -qq install -y git wget curl python3 python3-pip locales ffmpeg p7zip-full
 - curl https://rclone.org/install.sh | bash
 - chmod 777 start.sh 
 - ./start.sh
