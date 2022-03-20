@@ -3,7 +3,7 @@
 import os
 import logging
 import time
-from bot.core.Constants import Constants
+from bot.consts.ExecVars import Constants
 
 
 torlog = logging.getLogger(__name__)

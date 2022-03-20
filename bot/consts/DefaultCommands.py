@@ -1,0 +1,13 @@
+class Commands:
+    MIRROR = "mirror"
+    LEECH= "leech"
+    COPY = "copy"
+    CONFIG= "config"
+    EXEC = "exec"
+    GETLOGS = "logs"
+    SERVER = "server"
+    START = "start"
+    SPEEDTEST = "speedtest"
+    TEST= "test"
+    CRLDATA = "cleardata"
+    RESTART= "restart"

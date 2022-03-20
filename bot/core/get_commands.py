@@ -1,7 +1,7 @@
 # Adapted from:
 # https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/core/getCommand.py
 
-from ..utils.commands import Commands
+from ..consts.DefaultCommands import Commands
 import logging
 
 torlog = logging.getLogger(__name__)
