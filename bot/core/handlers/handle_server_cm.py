@@ -1,7 +1,9 @@
+#Modified from:
 #https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/core/HandleManager.py
 
 import shutil
 import psutil
+from psutil import net_io_counters
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 import time
@@ -17,7 +19,6 @@ async def handle_server_command(message):
         callbk = False
 
     try:
-        # Memory
         mem = psutil.virtual_memory()
         memavailable = human_format.human_readable_bytes(mem.available)
         memtotal = human_format.human_readable_bytes(mem.total)
@@ -30,7 +31,6 @@ async def handle_server_command(message):
         memfree = "N/A"
 
     try:
-        # Frequencies
         cpufreq = psutil.cpu_freq()
         freqcurrent = cpufreq.current
         freqmax = cpufreq.max
@@ -39,7 +39,6 @@ async def handle_server_command(message):
         freqmax = "N/A"
 
     try:
-        # Cores
         cores = psutil.cpu_count(logical=False)
         lcores = psutil.cpu_count()
     except:
@@ -52,7 +51,6 @@ async def handle_server_command(message):
         cpupercent = "N/A"
 
     try:
-        # Storage
         usage = shutil.disk_usage("/")
         totaldsk = human_format.human_readable_bytes(usage.total)
         useddsk = human_format.human_readable_bytes(usage.used)
@@ -63,12 +61,11 @@ async def handle_server_command(message):
         freedsk = "N/A"
 
     try:
-        upb, dlb = 0, 0
-        dlb = human_format.human_readable_bytes(dlb)
-        upb = human_format.human_readable_bytes(upb)
+        recv = human_format.human_readable_bytes(net_io_counters().bytes_recv)
+        sent = human_format.human_readable_bytes(net_io_counters().bytes_sent)
     except:
-        dlb = "N/A"
-        upb = "N/A"
+        recv = "N/A"
+        sent = "N/A"
 
     diff = time.time() - uptime
     diff = human_format.human_readable_timedelta(diff)
@@ -93,8 +90,8 @@ async def handle_server_command(message):
             f"Free: {memfree}\n"
             "\n"
             "<b>TRANSFER INFO:</b>\n"
-            f"Download: {dlb}\n"
-            f"Upload: {upb}\n"
+            f"Download: {recv}\n"
+            f"Upload: {sent}\n"
         )
         await message.edit(msg, parse_mode="html", buttons=None)
     else:
@@ -110,8 +107,8 @@ async def handle_server_command(message):
             f"Total: {totaldsk} Free: {freedsk}\n\n"
             f"Memory used:- {progress_bar(mempercent)} - {mempercent}%\n"
             f"Total: {memtotal} Free: {memfree}\n\n"
-            f"Transfer Download:- {dlb}\n"
-            f"Transfer Upload:- {upb}\n"
+            f"Download:- {recv}\n"
+            f"Upload:- {sent}\n"
         )
         await message.reply(msg, parse_mode="html",
                             buttons=[[KeyboardButtonCallback("Get detailed stats.", "fullserver")]])
