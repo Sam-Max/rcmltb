@@ -1,4 +1,5 @@
 from telethon import TelegramClient, events
+from bot.core.get_commands import get_command_pyro, get_command_tele
 from bot.core.get_vars import get_val
 from bot.core.handlers.handle_cancel import handle_cancel
 from bot.core.handlers.handle_cleardata import cleardata_handler
@@ -20,7 +21,6 @@ from bot.core.handlers_callback.handle_nextpage_copy_menu_cb import next_page_co
 from bot.core.handlers_callback.handle_settings_copy_menu_cb import handle_setting_copy_menu_callback
 from bot.core.handlers_callback.handle_settings_leech_menu_cb import handle_setting_leech_menu_callback
 from bot.core.handlers_callback.handle_settings_main_menu_cb import handle_setting_main_menu_callback
-from .get_commands import get_command, get_command_p
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 import re, logging
@@ -35,70 +35,69 @@ def add_handlers(bot: TelegramClient):
     #pyrogram handlers
     download_handlers = MessageHandler(
         handle_download_command,
-        filters=filters.command([get_command_p("MIRROR")])
+        filters=filters.command([get_command_pyro("MIRROR")])
     )
     bot.pyro.add_handler(download_handlers)
 
 
     leech_handlers = MessageHandler(
         handle_leech_command,
-        filters=filters.command([get_command_p("LEECH")])
+        filters=filters.command([get_command_pyro("LEECH")])
     )
     bot.pyro.add_handler(leech_handlers)
 
 
     test_handlers = MessageHandler(
         handle_test_command,
-        filters=filters.command([get_command_p("TEST")])
+        filters=filters.command([get_command_pyro("TEST")])
         )
     
     bot.pyro.add_handler(test_handlers)
 
-   # telethon handlerss
+   # telethon handlers
     bot.add_event_handler(
         handle_copy_command,
-        events.NewMessage(pattern=command_process(get_command("COPY")))
+        events.NewMessage(pattern=command_process(get_command_tele("COPY")))
     )
     
     bot.add_event_handler(
         handle_exec_message_f,
-        events.NewMessage(pattern=command_process(get_command("EXEC")))
+        events.NewMessage(pattern=command_process(get_command_tele("EXEC")))
     )
 
     bot.add_event_handler(
         handle_restart,
-        events.NewMessage(pattern=command_process(get_command("RESTART")))
+        events.NewMessage(pattern=command_process(get_command_tele("RESTART")))
     )
-
 
     bot.add_event_handler(
         get_logs_f,
-        events.NewMessage(pattern=command_process(get_command("GETLOGS")))
+        events.NewMessage(pattern=command_process(get_command_tele("GETLOGS")))
     )
 
     bot.add_event_handler(
         handle_server_command,
-        events.NewMessage(pattern=command_process(get_command("SERVER")))
+        events.NewMessage(pattern=command_process(get_command_tele("SERVER")))
     )
 
     bot.add_event_handler(
         start_handler,
-        events.NewMessage(pattern=command_process(get_command("START")))
+        events.NewMessage(pattern=command_process(get_command_tele("START")))
     )
 
     bot.add_event_handler(
         speed_handler,
-        events.NewMessage(pattern=command_process(get_command("SPEEDTEST")))
+        events.NewMessage(pattern=command_process(get_command_tele("SPEEDTEST")))
     )
 
     bot.add_event_handler(
         cleardata_handler,
-        events.NewMessage(pattern=command_process(get_command("CRLDATA")))
+        events.NewMessage(pattern=command_process(get_command_tele("CRLDATA")))
     )
 
     bot.add_event_handler(
         handle_config_command,
-        events.NewMessage(pattern=command_process(get_command("CONFIG")))
+        events.NewMessage(pattern=command_process(get_command_tele("CONFIG")))
     )
 
     bot.loop.run_until_complete(booted(bot))
