@@ -1,4 +1,3 @@
-from tkinter import E
 from bot.utils.admin_check import is_admin
 
 
