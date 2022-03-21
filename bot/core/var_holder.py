@@ -35,17 +35,21 @@ class VarHolder:
 
         BOOLS = ["UPLOAD_CANCEL"]
         
-        if variable == "ALD_USR":
+        if variable == "ALLOWED_CHATS":
             if envval is not None:
-                ald_user = envval.split(" ")
-                ald_user2 = []
-                if len(ald_user) > 0:
-                    for i in range(0, len(ald_user)):
-                        try:
-                            ald_user2.append(int(ald_user[i]))
-                        except ValueError:
-                            log.error(f"Invalid allow user {ald_user[i]} must be a integer.")
-                val = ald_user2
+                achats= envval.split(" ")
+                achats_second= []
+                for chat in achats:
+                    achats_second.append(int(chat))
+                val = achats_second
+        elif variable == "ALLOWED_USERS":
+            if envval is not None:
+                ausers = envval.split(" ")
+                ausers_second= []
+                logging.info(ausers)
+                for user in ausers:
+                    ausers_second.append(int(user))
+                val = ausers_second
         elif variable in INTS:
             val = int(envval) if envval is not None else val
         elif variable in BOOLS:

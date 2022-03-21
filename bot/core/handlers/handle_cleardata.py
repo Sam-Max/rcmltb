@@ -21,4 +21,4 @@ async def cleardata_handler(e):
                           "This will affect currents transfers!\n",
                           buttons= buttons)
     else:
-        await e.delete()
+        await e.reply("You are not owner!!")

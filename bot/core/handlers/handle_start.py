@@ -1,7 +1,17 @@
-from bot.utils.admin_check import is_admin
 
 
-async def start_handler(e):
-    msg = '''**Hello, ¡Welcome to Rclone-Tg-Bot!\n\nI can help you transfer files from one cloud to another.\nI can also mirror files from telegram to cloud and leech files and folders from cloud to telegram (you can use me inside chats too)**\n\nMade by: https://github.com/Sam-Max
-        '''
-    await e.reply(msg)
+from bot.core.get_vars import get_val
+
+
+async def start_handler(message):
+    user_id= message.sender_id
+    chat_id= message.chat_id
+    if user_id in get_val("ALLOWED_USERS") or chat_id in get_val("ALLOWED_CHATS") or user_id == get_val("OWNER_ID"):
+        msg = '''**Hello, ¡Welcome to Rclone-Tg-Bot!\n\n
+I can help you transfer files from one cloud to another.\n
+Can also mirror files from telegram to cloud and leech from cloud to telegram**\n\n
+Made by: https://github.com/Sam-Max
+'''
+        await message.reply(msg)
+    else:
+        await message.reply('Not Authorized user, deploy your own version\n\nhttps://github.com/Sam-Max')

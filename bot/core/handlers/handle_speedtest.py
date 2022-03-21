@@ -6,4 +6,4 @@ async def speed_handler(e):
     if await is_admin(e.sender_id):
         await get_speed(e)
     else:
-        await e.delete()    
+        await e.reply("You are not owner!!")  

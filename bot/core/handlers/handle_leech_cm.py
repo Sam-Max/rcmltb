@@ -1,10 +1,12 @@
 
+from bot.core.get_vars import get_val
 from bot.core.settings_leech_menu import settings_leech_menu
-from bot.utils.admin_check import is_admin
 
 
 async def handle_leech_command(client, message):
-    if await is_admin(message.from_user.id):
+    user_id= message.from_user.id
+    chat_id = message.chat.id
+    if user_id in get_val("ALLOWED_USERS") or chat_id in get_val("ALLOWED_CHATS") or user_id == get_val("OWNER_ID"):
         await settings_leech_menu(
                 client= client, 
                 message= message,
@@ -12,4 +14,4 @@ async def handle_leech_command(client, message):
                 data_cb="list_drive_leech_menu"
             ) 
     else:
-       await message.reply_text("You are not allowed!!") 
+        await message.reply('Not Authorized user')

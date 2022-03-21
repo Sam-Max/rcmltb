@@ -57,33 +57,28 @@ def add_handlers(bot: TelegramClient):
    # telethon handlers
     bot.add_event_handler(
         handle_copy_command,
-        events.NewMessage(pattern=command_process(get_command_tele("COPY")),
-        chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command_tele("COPY")))
     )
     
     bot.add_event_handler(
         handle_exec_message_f,
-        events.NewMessage(pattern=command_process(get_command_tele("EXEC")),
-        chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command_tele("EXEC")))
     )
     
 
     bot.add_event_handler(
         handle_restart,
-        events.NewMessage(pattern=command_process(get_command_tele("RESTART")),
-        chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command_tele("RESTART")))
     )
 
     bot.add_event_handler(
         get_logs_f,
-        events.NewMessage(pattern=command_process(get_command_tele("GETLOGS")),
-        chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command_tele("GETLOGS")))
     )
 
     bot.add_event_handler(
         handle_server_command,
-        events.NewMessage(pattern=command_process(get_command_tele("SERVER")),
-        chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command_tele("SERVER")))
     )
 
     bot.add_event_handler(
@@ -93,20 +88,17 @@ def add_handlers(bot: TelegramClient):
 
     bot.add_event_handler(
         speed_handler,
-        events.NewMessage(pattern=command_process(get_command_tele("SPEEDTEST")),
-        chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command_tele("SPEEDTEST")))
     )
 
     bot.add_event_handler(
         cleardata_handler,
-        events.NewMessage(pattern=command_process(get_command_tele("CRLDATA")),
-        chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command_tele("CRLDATA")))
     )
 
     bot.add_event_handler(
         handle_config_command,
-        events.NewMessage(pattern=command_process(get_command_tele("CONFIG")),
-        chats=get_val("ALD_USR"))
+        events.NewMessage(pattern=command_process(get_command_tele("CONFIG")))
     )
 
     bot.loop.run_until_complete(booted(bot))
