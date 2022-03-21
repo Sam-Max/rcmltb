@@ -14,4 +14,4 @@ async def handle_leech_command(client, message):
                 data_cb="list_drive_leech_menu"
             ) 
     else:
-        await message.reply('Not Authorized user')
+        await message.reply('Not Authorized user', quote= True)

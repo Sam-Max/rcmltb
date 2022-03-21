@@ -26,5 +26,5 @@ async def handle_download_command(client, message):
         else:
             await message.reply_text("Reply to a telegram file", quote= True) 
     else:
-        await message.reply('Not Authorized user')
+        await message.reply('Not Authorized user', quote= True)
    
