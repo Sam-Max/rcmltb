@@ -14,4 +14,4 @@ Made by: https://github.com/Sam-Max
 '''
         await message.reply(msg)
     else:
-        await message.reply('Not Authorized user, deploy your own version\n\nhttps://github.com/Sam-Max')
+        await message.reply('Not Authorized user, deploy your own version\n\nhttps://github.com/Sam-Max/Rclone-Tg-Bot')

@@ -7,4 +7,4 @@ async def handle_config_command(e):
     if await is_admin(e.sender_id):
         await settings_main_menu(e)
     else:
-        await e.reply("You are not owner!!")   
+        await e.reply('Not Authorized user') 

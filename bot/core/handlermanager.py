@@ -65,7 +65,6 @@ def add_handlers(bot: TelegramClient):
         events.NewMessage(pattern=command_process(get_command_tele("EXEC")))
     )
     
-
     bot.add_event_handler(
         handle_restart,
         events.NewMessage(pattern=command_process(get_command_tele("RESTART")))

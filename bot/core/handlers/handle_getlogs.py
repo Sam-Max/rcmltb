@@ -1,3 +1,4 @@
+from tkinter import E
 from bot.utils.admin_check import is_admin
 
 
@@ -9,4 +10,4 @@ async def get_logs_f(e):
             reply_to=e.message.id
         )
     else:
-        await e.reply("You are not owner!!")
+        await e.reply('Not Authorized user')  

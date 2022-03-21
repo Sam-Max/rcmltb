@@ -47,4 +47,4 @@ async def handle_exec_message_f(e):
         else:
             await message.reply(OUTPUT)
     else:
-        await message.reply("You are not owner!!")
+        await message.reply('Not Authorized')  

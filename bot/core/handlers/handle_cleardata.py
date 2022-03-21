@@ -21,4 +21,4 @@ async def cleardata_handler(e):
                           "This will affect currents transfers!\n",
                           buttons= buttons)
     else:
-        await e.reply("You are not owner!!")
+        await e.reply('Not Authorized user')
