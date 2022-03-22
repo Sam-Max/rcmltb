@@ -1,4 +1,4 @@
-# An Rclone Telegram bot to transfer to and from many clouds!!
+# An Rclone Telegram bot to transfer to and from many clouds
 
     - Mirror from Telegram to cloud.
     - Leech files and folders from cloud to Telegram.
