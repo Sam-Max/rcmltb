@@ -16,7 +16,7 @@ logging.getLogger("pyrogram").setLevel(logging.WARNING)
 LOGGER = logging.getLogger(__name__)
 
 
-async def down_load_media_pyro(client, message, media, new_name= None, is_rename= False):
+async def down_load_media_pyro(client, message, media, tag, new_name= None, is_rename= False):
         mess_age = await message.reply_text("...", quote=True)
         
         LOGGER.info("downloading...")
@@ -56,7 +56,7 @@ async def down_load_media_pyro(client, message, media, new_name= None, is_rename
             LOGGER.info(e)
             pass
 
-        await rclone_uploader(download_location, mess_age, new_name, is_rename)
+        await rclone_uploader(download_location, mess_age, new_name, tag, is_rename)
         
 
 

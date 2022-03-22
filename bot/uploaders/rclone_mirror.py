@@ -1,6 +1,8 @@
 from configparser import ConfigParser
+from html import escape
 import time
 from bot import SessionVars
+from bot.utils.drive_utils import get_glink
 from bot.utils.rename_file import rename
 from ..core.get_vars import get_val
 from bot.utils.get_rclone_conf import get_config
@@ -14,7 +16,7 @@ from .progress_for_rclone import status
 
 log = logging.getLogger(__name__)
 
-async def rclone_uploader(path, user_msg, new_name, is_rename= False):
+async def rclone_uploader(path, user_msg, new_name, tag, is_rename= False):
 
     rclone_pr = None
     dest_base= None
@@ -29,6 +31,7 @@ async def rclone_uploader(path, user_msg, new_name, is_rename= False):
     for i in conf.sections():
         if dest_drive == str(i):
             if conf[i]["type"] == "drive":
+                is_gdrive = True
                 dest_base = get_val("BASE_DIR")
                 log.info("Google Drive Upload Detected.")
             else:
@@ -65,7 +68,21 @@ async def rclone_uploader(path, user_msg, new_name, is_rename= False):
         return 
     
     log.info("Successfully uploaded")
-    await user_msg.edit("Successfully uploaded ✅")
+    
+    name= path.split("/")[-1]
+    msg= "Successfully uploaded ✅\n\n"
+    msg += f'<b>Name: </b><code>{escape(name)}</code><b>'
+
+    if is_gdrive:
+        gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path, False)
+        link = f"https://drive.google.com/file/d/{gid[0]}/view"
+
+        button= []
+        button.append([InlineKeyboardButton(text = "Drive Link", url = link)])
+
+        await user_msg.edit(f"{msg}\n\n<b>cc: </b>{tag}", reply_markup= InlineKeyboardMarkup(button))
+    else:
+        await user_msg.edit(f"{msg}\n\n<b>cc: </b>{tag}")
 
 async def rclone_process_update(rclone_pr, user_msg):
         blank=0    
