@@ -3,7 +3,7 @@ from os import walk
 import os
 import time
 from pyrogram.errors import FloodWait
-from bot import SessionVars
+from bot.uploaders.progress_for_rclone import rclone_process_update_pyro
 from bot.uploaders.telegram_upload import upload_media_pyro
 from bot.utils.get_size_p import get_size
 from bot.utils.misc_utils import clear_stuff
@@ -13,9 +13,6 @@ from bot.utils.get_rclone_conf import get_config
 import logging
 import subprocess
 import asyncio
-import re
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from .progress_for_rclone import status
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +48,7 @@ async def rclone_downloader(client, user_msg, chat_id, origin_dir, dest_dir, fol
             stderr=subprocess.PIPE
         )
 
-        rcres= await rclone_process_update(rclone_pr, user_msg)
+        rcres= await rclone_process_update_pyro(rclone_pr, user_msg)
 
         if rcres:
             rclone_pr.kill()
@@ -125,50 +122,3 @@ async def rclone_downloader(client, user_msg, chat_id, origin_dir, dest_dir, fol
                     await asyncio.sleep(fw.seconds + 5)
                     await upload_media_pyro(client, user_msg, chat_id, f_path)   
 
-async def rclone_process_update(rclonepr, usermsg):
-        blank=0    
-        process = rclonepr
-        user_message = usermsg
-        sleeps = False
-        start = time.time()
-        edit_time= 10
-        
-        while True:
-            data = process.stdout.readline().decode()
-            data = data.strip()
-            mat = re.findall("Transferred:.*ETA.*", data)
-           
-            if mat is not None:
-                if len(mat) > 0:
-                    sleeps = True
-                    nstr = mat[0].replace("Transferred:","")
-                    nstr = nstr.strip()
-                    nstr = nstr.split(",")
-                    percent = nstr[1].strip("% ")
-                    try:
-                        percent = int(percent)
-                    except:
-                        percent = 0
-                    prg = status(percent)
-
-                    msg = "<b>Downloading...\n{} \n{} \nSpeed:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
-                    
-                    if time.time() - start > edit_time:
-                        start = time.time()
-                        await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
-                                InlineKeyboardButton("Cancel", callback_data= "upcancel")]]))    
-                        
-            if data == "":
-                blank += 1
-                if blank == 20:
-                    break
-            else:
-                blank = 0
-
-            if sleeps:               
-                sleeps= False
-                if get_val("UPLOAD_CANCEL"):
-                    SessionVars.update_var("UPLOAD_CANCEL", False)
-                    return True
-                await asyncio.sleep(2)
-                process.stdout.flush() 

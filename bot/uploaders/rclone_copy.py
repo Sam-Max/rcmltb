@@ -1,12 +1,7 @@
-import time
-from telethon import Button
-from bot import SessionVars
 from ..core.get_vars import get_val
 import subprocess
-import asyncio
-import re
 import logging
-from .progress_for_rclone import status
+from .progress_for_rclone import rclone_process_update_tele
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +24,7 @@ async def rclone_copy_transfer(e, conf_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
-    rcres = await rclone_process_update(rclone_pr, message)
+    rcres = await rclone_process_update_tele(rclone_pr, message)
 
     if rcres:
         rclone_pr.kill()
@@ -39,49 +34,3 @@ async def rclone_copy_transfer(e, conf_path):
     await message.edit("Copied Successfully ✅")
 
 
-async def rclone_process_update(rclone_pr, message):
-    blank = 0
-    process = rclone_pr
-    user_message = message
-    sleeps = False
-    start = time.time()
-    edit_time= 10
-
-    while True:
-        data = process.stdout.readline().decode().strip()
-        mat = re.findall("Transferred:.*ETA.*", data)
-
-        if mat is not None:
-            if len(mat) > 0:
-                sleeps = True
-                nstr = mat[0].replace("Transferred:", "")
-                nstr = nstr.strip()
-                nstr = nstr.split(",")
-                percent = nstr[1].strip("% ")
-                try:
-                    percent = int(percent)
-                except:
-                    percent = 0
-                prg = status(percent)
-
-                msg = '**Copying...\n{} \n{} \nSpeed:- {} \nETA:- {}\n**'.format(nstr[0], prg, nstr[2], nstr[3].replace("ETA", ""))
-                
-                if time.time() - start > edit_time:
-                    start = time.time()
-                    await user_message.edit(text=msg, buttons= [[Button.inline("Cancel", "upcancel")]])
-
-        if data == "":
-            blank += 1
-            if blank == 20:
-                log.info("blank reached 20")
-                break
-        else:
-            blank = 0
-
-        if sleeps:
-            sleeps = False
-            if get_val("UPLOAD_CANCEL"):
-                SessionVars.update_var("UPLOAD_CANCEL", False)
-                return True
-            await asyncio.sleep(2)
-            process.stdout.flush()

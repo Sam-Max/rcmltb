@@ -1,5 +1,105 @@
-#Adapted from:
-#https://github.com/Shubham0Rajput/Rclone-Telegram-Bot/blob/master/bot.py
+import time
+from bot import SessionVars
+from ..core.get_vars import get_val
+import asyncio
+import re
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telethon import Button
+from .progress_for_rclone import status
+
+async def rclone_process_update_pyro(rclone_pr, user_msg):
+        blank=0    
+        process = rclone_pr
+        user_message = user_msg
+        sleeps = False
+        start = time.time()
+        edit_time= 10
+        
+        while True:
+            data = process.stdout.readline().decode()
+            data = data.strip()
+            mat = re.findall("Transferred:.*ETA.*",data)
+           
+            if mat is not None:
+                if len(mat) > 0:
+                    sleeps = True
+                    nstr = mat[0].replace("Transferred:","")
+                    nstr = nstr.strip()
+                    nstr = nstr.split(",")
+                    percent = nstr[1].strip("% ")
+                    try:
+                        percent = int(percent)
+                    except:
+                        percent = 0
+                    prg = status(percent)
+
+                    msg = "<b>Uploading...\n{} \n{} \nSpeed:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
+                    
+                    if time.time() - start > edit_time:
+                         start = time.time()
+                         await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
+                                InlineKeyboardButton("Cancel", callback_data= "upcancel")]]))    
+                        
+            if data == "":
+                blank += 1
+                if blank == 20:
+                    break
+            else:
+                blank = 0
+
+            if sleeps:               
+                sleeps= False
+                if get_val("UPLOAD_CANCEL"):
+                    SessionVars.update_var("UPLOAD_CANCEL", False)
+                    return True
+                await asyncio.sleep(2)
+                process.stdout.flush()
+
+async def rclone_process_update_tele(rclone_pr, message):
+    blank = 0
+    process = rclone_pr
+    user_message = message
+    sleeps = False
+    start = time.time()
+    edit_time= 10
+
+    while True:
+        data = process.stdout.readline().decode().strip()
+        mat = re.findall("Transferred:.*ETA.*", data)
+
+        if mat is not None:
+            if len(mat) > 0:
+                sleeps = True
+                nstr = mat[0].replace("Transferred:", "")
+                nstr = nstr.strip()
+                nstr = nstr.split(",")
+                percent = nstr[1].strip("% ")
+                try:
+                    percent = int(percent)
+                except:
+                    percent = 0
+                prg = status(percent)
+
+                msg = '**Copying...\n{} \n{} \nSpeed:- {} \nETA:- {}\n**'.format(nstr[0], prg, nstr[2], nstr[3].replace("ETA", ""))
+                
+                if time.time() - start > edit_time:
+                    start = time.time()
+                    await user_message.edit(text=msg, buttons= [[Button.inline("Cancel", "upcancel")]])
+
+        if data == "":
+            blank += 1
+            if blank == 20:
+                break
+        else:
+            blank = 0
+
+        if sleeps:
+            sleeps = False
+            if get_val("UPLOAD_CANCEL"):
+                SessionVars.update_var("UPLOAD_CANCEL", False)
+                return True
+            await asyncio.sleep(2)
+            process.stdout.flush()   
 
 def status(val):
     if val < 10:
