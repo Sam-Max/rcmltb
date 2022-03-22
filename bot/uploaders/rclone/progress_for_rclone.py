@@ -4,9 +4,7 @@ import asyncio
 import re
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telethon import Button
-
 from bot.core.get_vars import get_val
-from .progress_for_rclone import status
 
 async def rclone_process_update_pyro(rclone_pr, user_msg):
         blank=0    
