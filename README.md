@@ -1,7 +1,5 @@
 # An rclone telegram bot for transfer to and from many clouds
 
-Contact: [Telegram](https://t.me/SamMax009)
-
     - Mirror from Telegram to cloud.
     - Leech files and folders from cloud to Telegram.
     - Copy from cloud to cloud.
@@ -12,12 +10,12 @@ Contact: [Telegram](https://t.me/SamMax009)
 - mirror - mirror to selected cloud 
 - leech - leech from cloud to telegram
 - copy - copy from cloud to cloud
-- config - set cloud and folder for mirror
+- config - select cloud and folder for mirror
 - logs - get logs from server
 - server - get server info
 - speedtest - test speed of server
 - cleardata- clear downloads
-- restart - restart and update bot
+- restart - restart bot
 
 ## Deploying on Heroku
 <p><a href="https://github.com/Sam-Max/Rclone-Tg-Bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
