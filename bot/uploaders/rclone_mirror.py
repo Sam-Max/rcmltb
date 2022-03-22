@@ -35,6 +35,7 @@ async def rclone_uploader(path, user_msg, new_name, tag, is_rename= False):
                 dest_base = get_val("BASE_DIR")
                 log.info("Google Drive Upload Detected.")
             else:
+                is_gdrive = False
                 gen_drive_name = conf[i]["type"]
                 dest_base = get_val("BASE_DIR")
                 log.info(f"{gen_drive_name} Upload Detected.")
