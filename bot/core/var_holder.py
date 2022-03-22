@@ -4,7 +4,6 @@ import os
 import logging
 from bot.consts.ExecVars import Constants
 
-
 log = logging.getLogger(__name__)
 
 

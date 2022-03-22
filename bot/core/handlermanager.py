@@ -1,3 +1,6 @@
+import re, logging
+from os import path as ospath, remove as osremove
+from bot import __version__
 from telethon import TelegramClient, events
 from bot.core.get_commands import get_command_pyro, get_command_tele
 from bot.core.get_vars import get_val
@@ -15,17 +18,14 @@ from bot.core.handlers.handle_speedtest import speed_handler
 from bot.core.handlers.handle_start import start_handler
 from bot.core.handlers.handle_test_cm import handle_test_command
 from bot.core.handlers_callback.handle_download_cb import handle_download_cb
-from bot.core.handlers_callback.handle_nextpage_main_menu_cb import next_page_menu
-from bot.core.handlers_callback.handle_nextpage_leech_menu_cb import next_page_leech
-from bot.core.handlers_callback.handle_nextpage_copy_menu_cb import next_page_copy
-from bot.core.handlers_callback.handle_settings_copy_menu_cb import handle_setting_copy_menu_callback
-from bot.core.handlers_callback.handle_settings_leech_menu_cb import handle_setting_leech_menu_callback
-from bot.core.handlers_callback.handle_settings_main_menu_cb import handle_setting_main_menu_callback
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-import re, logging
-from os import path as ospath, remove as osremove
-from bot import __version__
+from bot.core.handlers_callback.menus.handle_settings_copy_menu_cb import handle_setting_copy_menu_callback
+from bot.core.handlers_callback.menus.handle_settings_leech_menu_cb import handle_setting_leech_menu_callback
+from bot.core.handlers_callback.menus.handle_settings_main_menu_cb import handle_setting_main_menu_callback
+from bot.core.handlers_callback.nextpage.handle_nextpage_copy_menu_cb import next_page_copy
+from bot.core.handlers_callback.nextpage.handle_nextpage_leech_menu_cb import next_page_leech
+from bot.core.handlers_callback.nextpage.handle_nextpage_main_menu_cb import next_page_menu
 
 torlog = logging.getLogger(__name__)
 
@@ -111,12 +111,6 @@ def add_handlers(bot: TelegramClient):
         filters= filters.regex("renaming"))
         )
 
-    bot.pyro.add_handler(
-         CallbackQueryHandler(
-            handle_setting_leech_menu_callback, 
-            filters= filters.regex("leechmenu"))
-        )        
-
     bot.add_event_handler(
         next_page_menu,
         events.CallbackQuery(pattern="next")
@@ -128,9 +122,9 @@ def add_handlers(bot: TelegramClient):
         )
 
     bot.pyro.add_handler(
-         CallbackQueryHandler(
-            next_page_leech, 
-            filters= filters.regex("n_leech"))
+        CallbackQueryHandler(
+        next_page_leech, 
+        filters= filters.regex("n_leech"))
         )         
     
     bot.add_event_handler(
@@ -146,6 +140,12 @@ def add_handlers(bot: TelegramClient):
         cleardata_handler,
         events.CallbackQuery(pattern="cleardata")
     )
+
+    bot.pyro.add_handler(
+        CallbackQueryHandler(
+        handle_setting_leech_menu_callback, 
+        filters= filters.regex("leechmenu"))
+        )
 
     bot.add_event_handler(
         handle_setting_main_menu_callback,
