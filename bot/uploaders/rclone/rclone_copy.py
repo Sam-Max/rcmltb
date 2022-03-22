@@ -1,6 +1,7 @@
-from ..core.get_vars import get_val
 import subprocess
 import logging
+
+from bot.core.get_vars import get_val
 from .progress_for_rclone import rclone_process_update_tele
 
 log = logging.getLogger(__name__)

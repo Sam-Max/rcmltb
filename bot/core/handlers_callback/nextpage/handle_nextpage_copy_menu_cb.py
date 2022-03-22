@@ -3,7 +3,6 @@
 # Source: https://github.com/EvamariaTG/EvaMaria/blob/master/plugins/pm_filter.py
 #**************************************************/
 
-import logging as log
 from bot.core.get_vars import get_val
 from telethon.tl.types import KeyboardButtonCallback
 from telethon.errors.rpcerrorlist import MessageNotModifiedError

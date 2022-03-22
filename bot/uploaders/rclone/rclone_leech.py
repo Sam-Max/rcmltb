@@ -3,12 +3,12 @@ from os import walk
 import os
 import time
 from pyrogram.errors import FloodWait
-from bot.uploaders.progress_for_rclone import rclone_process_update_pyro
-from bot.uploaders.telegram_upload import upload_media_pyro
+from bot.core.get_vars import get_val
+from bot.uploaders.rclone.progress_for_rclone import rclone_process_update_pyro
+from bot.uploaders.telegram.telegram_upload import upload_media_pyro
 from bot.utils.get_size_p import get_size
 from bot.utils.misc_utils import clear_stuff
 from bot.utils.zip_utils import split_in_zip
-from ..core.get_vars import get_val
 from bot.utils.get_rclone_conf import get_config
 import logging
 import subprocess

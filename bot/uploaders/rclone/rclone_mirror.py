@@ -1,9 +1,9 @@
 from configparser import ConfigParser
 from html import escape
-from bot.uploaders.progress_for_rclone import rclone_process_update_pyro
+from bot.core.get_vars import get_val
+from bot.uploaders.rclone.progress_for_rclone import rclone_process_update_pyro
 from bot.utils.drive_utils import get_glink
 from bot.utils.rename_file import rename
-from ..core.get_vars import get_val
 from bot.utils.get_rclone_conf import get_config
 import os
 import logging

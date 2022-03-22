@@ -3,9 +3,9 @@ import os
 from bot.core.get_vars import get_val
 from bot.core.settings_leech_menu import settings_leech_menu
 from bot.core.set_vars import set_val
-from bot.uploaders.rclone_leech import rclone_downloader
+from bot.uploaders.rclone.rclone_leech import rclone_downloader
 
-torlog = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 async def handle_setting_leech_menu_callback(client, callback_query):
     chat_id = callback_query.message.chat.id

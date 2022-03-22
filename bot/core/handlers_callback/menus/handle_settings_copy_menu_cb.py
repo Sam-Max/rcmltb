@@ -1,12 +1,11 @@
 from bot.core.get_vars import get_val
 from bot.core.set_vars import set_val
 from bot.core.settings_copy_menu import settings_copy_menu
-from bot.uploaders.rclone_copy import rclone_copy_transfer
 import logging
+from bot.uploaders.rclone.rclone_copy import rclone_copy_transfer
 from bot.utils.get_rclone_conf import get_config
 
-torlog = logging.getLogger(__name__)
-
+log = logging.getLogger(__name__)
 
 
 async def handle_setting_copy_menu_callback(callback_query):

@@ -3,7 +3,7 @@ from bot.core.get_vars import get_val
 from bot.core.settings_main_menu import settings_main_menu
 from bot.core.set_vars import set_val
 
-torlog = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 async def handle_setting_main_menu_callback(callback_query):
     data = callback_query.data.decode()

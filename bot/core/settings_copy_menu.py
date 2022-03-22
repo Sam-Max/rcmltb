@@ -5,7 +5,6 @@ from telethon.tl.types import KeyboardButtonCallback
 import asyncio
 import json
 import logging
-from json.decoder import JSONDecodeError
 from bot.core.set_vars import set_val
 from bot.utils.get_size_p import get_size
 

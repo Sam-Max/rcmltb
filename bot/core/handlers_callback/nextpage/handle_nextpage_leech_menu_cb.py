@@ -3,12 +3,10 @@
 # Source: https://github.com/EvamariaTG/EvaMaria/blob/master/plugins/pm_filter.py
 #**************************************************/
 
-import logging as log
 from pyrogram.types import InlineKeyboardButton
 from bot.core.get_vars import get_val
 from telethon.errors.rpcerrorlist import MessageNotModifiedError
 from pyrogram.types import InlineKeyboardMarkup
-
 from bot.core.settings_leech_menu import get_list_drive_results_leech, list_drive_leech
 
 
