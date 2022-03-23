@@ -48,7 +48,8 @@ async def rclone_downloader(client, user_msg, chat_id, origin_dir, dest_dir, fol
             stderr=subprocess.PIPE
         )
 
-        rcres= await rclone_process_update_pyro(rclone_pr, user_msg)
+        status_message= "Downloading"
+        rcres= await rclone_process_update_pyro(rclone_pr, user_msg, status_message)
 
         if rcres:
             rclone_pr.kill()

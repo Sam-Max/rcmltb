@@ -6,7 +6,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telethon import Button
 from bot.core.get_vars import get_val
 
-async def rclone_process_update_pyro(rclone_pr, user_msg):
+async def rclone_process_update_pyro(rclone_pr, user_msg, status_message):
         blank=0    
         process = rclone_pr
         user_message = user_msg
@@ -32,9 +32,9 @@ async def rclone_process_update_pyro(rclone_pr, user_msg):
                         percent = int(percent)
                     except:
                         percent = 0
-                    prg = status(percent)
+                    prg = progress(percent)
 
-                    msg = "<b>Uploading...\n{} \n{} \nSpeed:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
+                    msg = "<b>{}...\n{} \n{} \nSpeed:- {} \nETA:- {}</b>".format(status_message, nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
                     
                     if time.time() - start > edit_time:
                          if msg1 != msg:
@@ -83,7 +83,7 @@ async def rclone_process_update_tele(rclone_pr, message):
                     percent = int(percent)
                 except:
                     percent = 0
-                prg = status(percent)
+                prg = progress(percent)
 
                 msg = '**Copying...\n{} \n{} \nSpeed:- {} \nETA:- {}\n**'.format(nstr[0], prg, nstr[2], nstr[3].replace("ETA", ""))
                 
@@ -108,7 +108,7 @@ async def rclone_process_update_tele(rclone_pr, message):
             await asyncio.sleep(2)
             process.stdout.flush()   
 
-def status(val):
+def progress(val):
     if val < 10:
         progress = "[▫️▫️▫️▫️▫️▫️▫️▫️▫️▫️]"
 

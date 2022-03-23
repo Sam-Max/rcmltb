@@ -57,7 +57,8 @@ async def rclone_uploader(path, user_msg, new_name, tag, is_rename= False):
         stderr=subprocess.PIPE
     )
 
-    rcres= await rclone_process_update_pyro(rclone_pr, user_msg)
+    status_message= "Uploading"
+    rcres= await rclone_process_update_pyro(rclone_pr, user_msg, status_message)
 
     if rcres:
         rclone_pr.kill()
