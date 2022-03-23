@@ -38,8 +38,8 @@ async def down_load_media_pyro(client, message, media, tag, new_name= None, is_r
             file_name=path,
             progress=progress_for_pyrogram,
             progress_args=(
-               "Name: `{}`".format(media.file_name),
-               "Downloading...",
+               "**Name**: `{}`".format(media.file_name),
+               "**Status:** Downloading...",
                 mess_age, 
                 c_time
             )
