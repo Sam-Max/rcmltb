@@ -12,7 +12,9 @@ async def rclone_process_update_pyro(rclone_pr, user_msg):
         user_message = user_msg
         sleeps = False
         start = time.time()
-        edit_time= 10
+        edit_time= get_val("EDIT_SLEEP_SECS")
+        msg = ""
+        msg1 = ""
         
         while True:
             data = process.stdout.readline().decode()
@@ -35,9 +37,11 @@ async def rclone_process_update_pyro(rclone_pr, user_msg):
                     msg = "<b>Uploading...\n{} \n{} \nSpeed:- {} \nETA:- {}</b>".format(nstr[0],prg,nstr[2],nstr[3].replace("ETA",""))
                     
                     if time.time() - start > edit_time:
-                         start = time.time()
-                         await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
-                                InlineKeyboardButton("Cancel", callback_data= "upcancel")]]))    
+                         if msg1 != msg:
+                            start = time.time()
+                            await user_message.edit(text= msg, reply_markup=InlineKeyboardMarkup([[
+                                    InlineKeyboardButton("Cancel", callback_data= "upcancel")]]))  
+                            msg1= msg  
                         
             if data == "":
                 blank += 1
@@ -60,7 +64,9 @@ async def rclone_process_update_tele(rclone_pr, message):
     user_message = message
     sleeps = False
     start = time.time()
-    edit_time= 10
+    edit_time= get_val("EDIT_SLEEP_SECS")
+    msg = ""
+    msg1 = ""
 
     while True:
         data = process.stdout.readline().decode().strip()
@@ -82,8 +88,10 @@ async def rclone_process_update_tele(rclone_pr, message):
                 msg = '**Copying...\n{} \n{} \nSpeed:- {} \nETA:- {}\n**'.format(nstr[0], prg, nstr[2], nstr[3].replace("ETA", ""))
                 
                 if time.time() - start > edit_time:
-                    start = time.time()
-                    await user_message.edit(text=msg, buttons= [[Button.inline("Cancel", "upcancel")]])
+                    if msg1 != msg:
+                        start = time.time()
+                        await user_message.edit(text=msg, buttons= [[Button.inline("Cancel", "upcancel")]])
+                        msg1= msg
 
         if data == "":
             blank += 1

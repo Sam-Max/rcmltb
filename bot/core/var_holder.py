@@ -30,6 +30,7 @@ class VarHolder:
             "API_ID",
             "OWNER_ID",
             "TG_SPLIT_SIZE",
+            "EDIT_SLEEP_SECS"
         ]
 
         BOOLS = ["UPLOAD_CANCEL"]
