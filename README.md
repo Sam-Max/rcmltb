@@ -13,16 +13,17 @@ Contact: [Telegram](https://t.me/SamMax009)
 
 ## Commands for bot(set through @BotFather)
 
-        mirror - mirror to selected cloud 
-        leech - leech from cloud to telegram
-        copy - copy from cloud to cloud
-        config - select cloud and folder for mirror
-        logs - get logs from server
-        server - get server info
-        speedtest - test speed of server
-        cleardata- clear downloads
-        restart - restart bot
-
+```
+mirror - mirror to selected cloud 
+leech - leech from cloud to telegram
+copy - copy from cloud to cloud
+config - select cloud and folder for mirror
+logs - get logs from server
+server - get server info
+speedtest - test speed of server
+cleardata- clear downloads
+restart - restart bot
+```
 
 ## Deploying on Heroku
 <p><a href="https://github.com/Sam-Max/Rclone-Tg-Bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
