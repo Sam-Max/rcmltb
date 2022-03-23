@@ -1,9 +1,7 @@
 import logging
 import os
 import time
-from datetime import datetime
 from bot.core.get_vars import get_val
-from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
 from bot.uploaders.rclone.rclone_mirror import rclone_uploader
 from bot.utils.get_rclone_conf import get_config
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
@@ -17,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 async def down_load_media_pyro(client, message, media, tag, new_name= None, is_rename= False):
-        mess_age = await message.reply_text("...", quote=True)
+        mess_age = await message.reply_text("Preparing for download...", quote=True)
         
         LOGGER.info("downloading...")
         conf_path = await get_config()
@@ -31,7 +29,6 @@ async def down_load_media_pyro(client, message, media, tag, new_name= None, is_r
             await mess_age.edit("Select a cloud first please")
             return      
         
-        start_t = datetime.now()
         path = os.path.join(os.getcwd(), "Downloads")
         path = path + "/"
         c_time = time.time()
@@ -47,14 +44,6 @@ async def down_load_media_pyro(client, message, media, tag, new_name= None, is_r
                 c_time
             )
         )
-        end_t = datetime.now()
-        ms = (end_t - start_t).seconds
-
-        try:
-            await mess_age.edit(text= f"Downloaded in <u>{ms}</u> seconds")
-        except MessageNotModified as e:
-            LOGGER.info(e)
-            pass
 
         await rclone_uploader(download_location, mess_age, new_name, tag, is_rename)
         
