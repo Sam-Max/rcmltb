@@ -20,6 +20,7 @@ async def settings_copy_menu(
     msg="", 
     drive_name="", 
     data_cb="", 
+    data_back_cb="",
     submenu=None, 
     is_second_menu= False, 
     ):
@@ -61,14 +62,19 @@ async def settings_copy_menu(
             drive_name, 
             conf_path, 
             menu, 
-            callback=data_cb,
-            is_second_menu= is_second_menu, 
+            data_cb,
+            data_back_cb,
+            is_second_menu, 
             )    
 
         menu.append(
-            [KeyboardButtonCallback("Close Menu", f"copymenu^selfdest")]
-
+            [KeyboardButtonCallback("⬅️ Back", f"copymenu^{data_back_cb}")]
         )
+
+        menu.append(
+            [KeyboardButtonCallback("Close Menu", f"copymenu^selfdest")]
+        )
+
         if edit:
             await mmes.edit(msg,
                                  parse_mode="md", buttons=menu, link_preview=False)
@@ -82,9 +88,10 @@ async def list_selected_drive_copy(
     drive_name, 
     conf_path, 
     menu, 
-    callback= "",
-    offset= 0, 
+    callback,
+    data_back_cb,
     is_second_menu= False, 
+    offset= 0, 
     ):
     
     if is_second_menu:
@@ -137,7 +144,7 @@ async def list_selected_drive_copy(
     else: 
         menu.append(
             [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="copymenu^pages"),
-             KeyboardButtonCallback("NEXT ⏩", data= f"n_copy {next_offset} {is_second_menu}")
+             KeyboardButtonCallback("NEXT ⏩", data= f"n_copy {next_offset} {is_second_menu} {data_back_cb}")
             ]) 
            
 async def get_list_drive_results_copy(data, max_results=10, offset=0):
