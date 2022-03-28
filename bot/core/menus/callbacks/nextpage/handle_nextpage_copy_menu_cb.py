@@ -6,7 +6,7 @@
 from bot.core.get_vars import get_val
 from telethon.tl.types import KeyboardButtonCallback
 from telethon.errors.rpcerrorlist import MessageNotModifiedError
-from bot.core.settings_copy_menu import get_list_drive_results_copy, list_drive_copy
+from bot.core.menus.menu_copy import get_list_drive_results_copy, list_drive_copy
 
 
 async def next_page_copy(callback_query):

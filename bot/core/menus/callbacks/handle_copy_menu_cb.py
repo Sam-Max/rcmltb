@@ -1,6 +1,6 @@
 from bot.core.get_vars import get_val
 from bot.core.set_vars import set_val
-from bot.core.settings_copy_menu import settings_copy_menu
+from bot.core.menus.menu_copy import settings_copy_menu
 import logging
 from bot.uploaders.rclone.rclone_copy import rclone_copy_transfer
 from bot.utils.get_rclone_conf import get_config

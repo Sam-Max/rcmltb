@@ -1,6 +1,6 @@
 from telethon.tl.types import KeyboardButtonCallback
 from bot.utils.get_rclone_conf import get_config
-from .get_vars import get_val
+from ..get_vars import get_val
 import os, configparser, logging
 from telethon.tl.types import KeyboardButtonCallback
 import asyncio

@@ -1,6 +1,6 @@
 import logging
 from bot.core.get_vars import get_val
-from bot.core.settings_main_menu import settings_main_menu
+from bot.core.menus.main_menu import settings_main_menu
 from bot.core.set_vars import set_val
 
 log = logging.getLogger(__name__)

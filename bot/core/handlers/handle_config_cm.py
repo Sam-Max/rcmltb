@@ -1,5 +1,4 @@
-import logging
-from bot.core.settings_main_menu import settings_main_menu
+from bot.core.menus.main_menu import settings_main_menu
 from bot.utils.admin_check import is_admin
 
 

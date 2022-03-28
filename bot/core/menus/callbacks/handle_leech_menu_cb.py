@@ -1,7 +1,7 @@
 import logging
 import os
 from bot.core.get_vars import get_val
-from bot.core.settings_leech_menu import settings_leech_menu
+from bot.core.menus.menu_leech import settings_leech_menu
 from bot.core.set_vars import set_val
 from bot.uploaders.rclone.rclone_leech import rclone_downloader
 

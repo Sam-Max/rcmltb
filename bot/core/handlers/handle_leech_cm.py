@@ -1,6 +1,6 @@
 
 from bot.core.get_vars import get_val
-from bot.core.settings_leech_menu import settings_leech_menu
+from bot.core.menus.menu_leech import settings_leech_menu
 
 
 async def handle_leech_command(client, message):

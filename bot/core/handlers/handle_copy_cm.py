@@ -1,5 +1,5 @@
 from bot.core.get_vars import get_val
-from bot.core.settings_copy_menu import settings_copy_menu
+from bot.core.menus.menu_copy import settings_copy_menu
 
 
 async def handle_copy_command(message):
