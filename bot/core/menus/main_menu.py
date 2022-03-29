@@ -1,5 +1,6 @@
 from telethon.tl.types import KeyboardButtonCallback
 from bot.utils.get_rclone_conf import get_config
+from bot.utils.pairwise_row import pairwise
 from ..get_vars import get_val
 import os, configparser, logging
 from telethon.tl.types import KeyboardButtonCallback
@@ -26,6 +27,7 @@ async def settings_main_menu(
     ):
    
     menu = []
+    btns= []
 
     if submenu is None:
         path= os.path.join(os.getcwd(), "rclone.conf")
@@ -40,16 +42,24 @@ async def settings_main_menu(
                 prev = yes
 
             if "team_drive" in list(conf[j]):
-                menu.append(
-                    [KeyboardButtonCallback(f"{prev}{j} - TD", f"mainmenu^list_drive_main_menu^{j}")]   
-                )
+                btns.append(KeyboardButtonCallback(f"{prev}{j} - TD", f"mainmenu^list_drive_main_menu^{j}"))
             else:
-                menu.append(
-                    [KeyboardButtonCallback(f"{prev}{j} - ND", f"mainmenu^list_drive_main_menu^{j}")]
-                )
+                btns.append(KeyboardButtonCallback(f"{prev}{j} - ND", f"mainmenu^list_drive_main_menu^{j}"))
+        
+        for a, b in pairwise(btns):
+            row= [] 
+            if b == None:
+                row.append(a)  
+                menu.append(row)
+                break
+            row.append(a)
+            row.append(b)
+            menu.append(row)
+
         menu.append(
             [KeyboardButtonCallback("Close Menu", f"mainmenu^selfdest")]
         )
+
         base_dir= get_val("BASE_DIR")
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
         msg= f"Select cloud where you want to upload file\n\nPath:`{rclone_drive}:{base_dir}`"
