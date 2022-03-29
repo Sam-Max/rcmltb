@@ -12,6 +12,7 @@ from bot.core.handlers.handle_download_cm import handle_download_command
 from bot.core.handlers.handle_exec_cm import handle_exec_message_f
 from bot.core.handlers.handle_getlogs import get_logs_f
 from bot.core.handlers.handle_leech_cm import handle_leech_command
+from bot.core.handlers.handle_myfiles_cm import handle_myfiles
 from bot.core.handlers.handle_restart_cm import handle_restart
 from bot.core.handlers.handle_server_cm import handle_server_command
 from bot.core.handlers.handle_config_cm import handle_config_command
@@ -23,6 +24,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from bot.core.menus.callbacks.handle_copy_menu_cb import handle_setting_copy_menu_callback
 from bot.core.menus.callbacks.handle_leech_menu_cb import handle_setting_leech_menu_callback
 from bot.core.menus.callbacks.handle_main_menu_cb import handle_setting_main_menu_callback
+from bot.core.menus.callbacks.handle_myfiles_menu_cb import handle_setting_myfiles_menu_callback
 from bot.core.menus.callbacks.nextpage.handle_nextpage_copy_menu_cb import next_page_copy
 from bot.core.menus.callbacks.nextpage.handle_nextpage_leech_menu_cb import next_page_leech
 from bot.core.menus.callbacks.nextpage.handle_nextpage_main_menu_cb import next_page_menu
@@ -45,6 +47,12 @@ def add_handlers(bot: TelegramClient):
         filters=filters.command([get_command_pyro("LEECH")]) 
     )
     bot.pyro.add_handler(leech_handlers)
+
+    myfiles_handlers = MessageHandler(
+        handle_myfiles,
+        filters=filters.command([get_command_pyro("MYFILES")])
+    )
+    bot.pyro.add_handler(myfiles_handlers)
 
 
     test_handlers = MessageHandler(
@@ -125,6 +133,12 @@ def add_handlers(bot: TelegramClient):
         CallbackQueryHandler(
         next_page_leech, 
         filters= filters.regex("n_leech"))
+        )
+
+    bot.pyro.add_handler(
+        CallbackQueryHandler(
+        handle_setting_myfiles_menu_callback, 
+        filters= filters.regex("myfilesmenu"))
         )         
     
     bot.add_event_handler(

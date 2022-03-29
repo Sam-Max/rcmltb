@@ -3,6 +3,7 @@ class Commands:
     LEECH= "leech"
     COPY = "copy"
     CONFIG= "config"
+    MYFILES= "myfiles"
     EXEC = "exec"
     GETLOGS = "logs"
     SERVER = "server"
