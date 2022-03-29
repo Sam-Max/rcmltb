@@ -1,5 +1,4 @@
 from telethon.tl.types import KeyboardButtonCallback
-from bot.utils import pairwise_row
 from bot.utils.get_rclone_conf import get_config
 import os, configparser, logging
 from telethon.tl.types import KeyboardButtonCallback
@@ -8,6 +7,7 @@ import json
 import logging
 from bot.core.set_vars import set_val
 from bot.utils.get_size_p import get_size
+from bot.utils.pairwise_row import pairwise
 
 torlog = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ async def settings_copy_menu(
             else:
                 btns.append(KeyboardButtonCallback(f"{j}", f"copymenu^{data_cb}^{j}"))
         
-        for a, b in pairwise_row(btns):
+        for a, b in pairwise(btns):
             row= [] 
             if b == None:
                 row.append(a)  
