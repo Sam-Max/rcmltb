@@ -42,9 +42,9 @@ async def settings_main_menu(
                 prev = yes
 
             if "team_drive" in list(conf[j]):
-                btns.append(KeyboardButtonCallback(f"{prev}{j} - TD", f"mainmenu^list_drive_main_menu^{j}"))
+                btns.append(KeyboardButtonCallback(f"{prev}{j}", f"mainmenu^list_drive_main_menu^{j}"))
             else:
-                btns.append(KeyboardButtonCallback(f"{prev}{j} - ND", f"mainmenu^list_drive_main_menu^{j}"))
+                btns.append(KeyboardButtonCallback(f"{prev}{j}", f"mainmenu^list_drive_main_menu^{j}"))
         
         for a, b in pairwise(btns):
             row= [] 
