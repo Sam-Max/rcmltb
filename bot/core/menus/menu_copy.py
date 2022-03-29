@@ -1,4 +1,5 @@
 from telethon.tl.types import KeyboardButtonCallback
+from bot.utils import pairwise_row
 from bot.utils.get_rclone_conf import get_config
 import os, configparser, logging
 from telethon.tl.types import KeyboardButtonCallback
@@ -26,6 +27,7 @@ async def settings_copy_menu(
     ):
     
     menu = []
+    btns= []
 
     if submenu == "rclone_menu_copy":
         path= os.path.join(os.getcwd(), "rclone.conf")
@@ -34,13 +36,20 @@ async def settings_copy_menu(
 
         for j in conf.sections():
             if "team_drive" in list(conf[j]):
-                menu.append(
-                    [KeyboardButtonCallback(f"{j} - TD", f"copymenu^{data_cb}^{j}")]
-                )
+                btns.append(KeyboardButtonCallback(f"{j}", f"copymenu^{data_cb}^{j}"))
             else:
-                menu.append(
-                    [KeyboardButtonCallback(f"{j} - ND", f"copymenu^{data_cb}^{j}")]
-                )
+                btns.append(KeyboardButtonCallback(f"{j}", f"copymenu^{data_cb}^{j}"))
+        
+        for a, b in pairwise_row(btns):
+            row= [] 
+            if b == None:
+                row.append(a)  
+                menu.append(row)
+                break
+            row.append(a)
+            row.append(b)
+            menu.append(row)
+
 
         menu.append(
             [KeyboardButtonCallback("Close Menu", f"copymenu^selfdest")]

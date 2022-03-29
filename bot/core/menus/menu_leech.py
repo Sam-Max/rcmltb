@@ -1,3 +1,4 @@
+from bot.utils import pairwise_row
 from bot.utils.get_rclone_conf import get_config
 import os, configparser, logging
 from pyrogram.types import InlineKeyboardMarkup
@@ -26,6 +27,7 @@ async def settings_leech_menu(
     ):
     
     menu = []
+    btns= []
 
     if submenu is None:
         path= os.path.join(os.getcwd(), "rclone.conf")
@@ -34,13 +36,19 @@ async def settings_leech_menu(
 
         for j in conf.sections():
             if "team_drive" in list(conf[j]):
-                menu.append(
-                    [InlineKeyboardButton(f"{j} - TD", f"leechmenu^{data_cb}^{j}")]
-                )
+                btns.append(InlineKeyboardButton(f"{j}", f"leechmenu^{data_cb}^{j}"))
             else:
-                menu.append(
-                    [InlineKeyboardButton(f"{j} - ND", f"leechmenu^{data_cb}^{j}")]
-                )
+                btns.append(InlineKeyboardButton(f"{j}", f"leechmenu^{data_cb}^{j}"))
+        
+        for a, b in pairwise_row(btns):
+            row= [] 
+            if b == None:
+                row.append(a)  
+                menu.append(row)
+                break
+            row.append(a)
+            row.append(b)
+            menu.append(row)
 
         menu.append(
             [InlineKeyboardButton("Close Menu", f"leechmenu^selfdest")]
