@@ -43,7 +43,7 @@ async def settings_myfiles_menu(
 
         for a, b in pairwise(btns):
             row= [] 
-            if b == "":
+            if b == None:
                 row.append(a)  
                 menu.append(row)
                 break
@@ -58,7 +58,7 @@ async def settings_myfiles_menu(
         if edit:
             await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
         else:
-            await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(menu))
+            await message.reply_text(msg, quote=True, reply_markup= InlineKeyboardMarkup(menu))
 
     elif submenu == "list_drive":
         conf_path = await get_config()
