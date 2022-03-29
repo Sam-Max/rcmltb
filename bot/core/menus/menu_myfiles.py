@@ -14,6 +14,7 @@ from bot.utils.pairwise_row import pairwise
 torlog = logging.getLogger(__name__)
 
 header = ""
+folder_icon= "📁"
 
 async def settings_myfiles_menu(
     client,
@@ -37,9 +38,9 @@ async def settings_myfiles_menu(
 
         for j in conf.sections():
             if "team_drive" in list(conf[j]):
-                btns.append(InlineKeyboardButton(f"{j} - TD", f"myfilesmenu^{data_cb}^{j}"))
+                btns.append(InlineKeyboardButton(f"{folder_icon} {j} - TD", f"myfilesmenu^{data_cb}^{j}"))
             else:
-                btns.append(InlineKeyboardButton(f"{j} - ND", f"myfilesmenu^{data_cb}^{j}"))
+                btns.append(InlineKeyboardButton(f"{folder_icon} {j} - ND", f"myfilesmenu^{data_cb}^{j}"))
 
         for a, b in pairwise(btns):
             row= [] 
@@ -52,7 +53,7 @@ async def settings_myfiles_menu(
             menu.append(row)
 
         menu.append(
-            [InlineKeyboardButton("Close Menu", f"myfilesmenu^selfdest")]
+            [InlineKeyboardButton("🗙 Close Menu", f"myfilesmenu^selfdest")]
         )
 
         if edit:
@@ -73,11 +74,11 @@ async def settings_myfiles_menu(
             )    
 
         menu.append(
-            [InlineKeyboardButton("Close Menu", f"myfilesmenu^selfdest")]
+            [InlineKeyboardButton("⬅️ Back", f"myfilesmenu^{data_back_cb}")]
         )
 
         menu.append(
-            [InlineKeyboardButton("Back", f"myfilesmenu^{data_back_cb}")]
+            [InlineKeyboardButton("🗙 Close Menu", f"myfilesmenu^selfdest")]
         )
 
         if edit:
@@ -95,7 +96,7 @@ async def list_selected_drive_leech(
     offset= 0, 
     ):
 
-    menu.append([InlineKeyboardButton(f"Folder Options", callback_data= f"myfilesmenu^start_folder_actions")])
+    menu.append([InlineKeyboardButton(f"⚙️ Folder Settings", callback_data= f"myfilesmenu^start_folder_actions")])
     
     cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}" ] 
 

@@ -24,14 +24,14 @@ async def settings_options_menu(
 
      if submenu is None:
           if drive_base == "":
-               menu = [[InlineKeyboardButton(text= "Size", callback_data= "myfilesmenu^size_action")]]
+               menu = [[InlineKeyboardButton(text= "📁 Size", callback_data= "myfilesmenu^size_action")]]
           else:
-               menu = [[InlineKeyboardButton(text= "Rename", callback_data= "myfilesmenu^rename_action"),
-                    InlineKeyboardButton(text= "Delete", callback_data= "myfilesmenu^delete_action")],
-                    [InlineKeyboardButton(text= "Size", callback_data= "myfilesmenu^size_action")]]
+               menu = [[InlineKeyboardButton(text= "✏️ Rename", callback_data= "myfilesmenu^rename_action"),
+                    InlineKeyboardButton(text= "🗙 Delete", callback_data= "myfilesmenu^delete_action")],
+                    [InlineKeyboardButton(text= "📁 Size", callback_data= "myfilesmenu^size_action")]]
           
           menu.append(
-               [InlineKeyboardButton("Close Menu", f"myfilesmenu^selfdest")]
+               [InlineKeyboardButton("🗙 Close Menu", f"myfilesmenu^selfdest")]
           )
 
           if edit:

@@ -12,6 +12,7 @@ from bot.core.set_vars import set_val
 torlog = logging.getLogger(__name__)
 
 yes = "✅"
+folder_icon= "📁"
 header = ""
 
 async def settings_main_menu(
@@ -42,9 +43,9 @@ async def settings_main_menu(
                 prev = yes
 
             if "team_drive" in list(conf[j]):
-                btns.append(KeyboardButtonCallback(f"{prev}{j}", f"mainmenu^list_drive_main_menu^{j}"))
+                btns.append(KeyboardButtonCallback(f"{prev} {folder_icon} {j}", f"mainmenu^list_drive_main_menu^{j}"))
             else:
-                btns.append(KeyboardButtonCallback(f"{prev}{j}", f"mainmenu^list_drive_main_menu^{j}"))
+                btns.append(KeyboardButtonCallback(f"{prev} {folder_icon} {j}", f"mainmenu^list_drive_main_menu^{j}"))
         
         for a, b in pairwise(btns):
             row= [] 
@@ -57,7 +58,7 @@ async def settings_main_menu(
             menu.append(row)
 
         menu.append(
-            [KeyboardButtonCallback("Close Menu", f"mainmenu^selfdest")]
+            [KeyboardButtonCallback("🗙 Close Menu", f"mainmenu^selfdest")]
         )
 
         base_dir= get_val("BASE_DIR")
@@ -84,11 +85,11 @@ async def settings_main_menu(
             )
 
         menu.append(
-            [KeyboardButtonCallback("Close Menu", f"mainmenu^selfdest")]
+            [KeyboardButtonCallback("⬅️ Back", f"mainmenu^{data_back_cb}")]
         )
 
         menu.append(
-            [KeyboardButtonCallback("⬅️ Back", f"mainmenu^{data_back_cb}")]
+            [KeyboardButtonCallback("🗙 Close Menu", f"mainmenu^selfdest")]
         )
 
         if edit:

@@ -12,6 +12,7 @@ from bot.utils.pairwise_row import pairwise
 torlog = logging.getLogger(__name__)
 
 header = ""
+folder_icon= "📁"
 
 async def settings_copy_menu(
     query, 
@@ -36,9 +37,9 @@ async def settings_copy_menu(
 
         for j in conf.sections():
             if "team_drive" in list(conf[j]):
-                btns.append(KeyboardButtonCallback(f"{j}", f"copymenu^{data_cb}^{j}"))
+                btns.append(KeyboardButtonCallback(f"{folder_icon} {j}", f"copymenu^{data_cb}^{j}"))
             else:
-                btns.append(KeyboardButtonCallback(f"{j}", f"copymenu^{data_cb}^{j}"))
+                btns.append(KeyboardButtonCallback(f"{folder_icon} {j}", f"copymenu^{data_cb}^{j}"))
         
         for a, b in pairwise(btns):
             row= [] 
@@ -52,7 +53,7 @@ async def settings_copy_menu(
 
 
         menu.append(
-            [KeyboardButtonCallback("Close Menu", f"copymenu^selfdest")]
+            [KeyboardButtonCallback("🗙 Close Menu", f"copymenu^selfdest")]
         )
 
         if edit:
@@ -81,7 +82,7 @@ async def settings_copy_menu(
         )
 
         menu.append(
-            [KeyboardButtonCallback("Close Menu", f"copymenu^selfdest")]
+            [KeyboardButtonCallback("🗙 Close Menu", f"copymenu^selfdest")]
         )
 
         if edit:
