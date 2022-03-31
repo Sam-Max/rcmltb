@@ -22,7 +22,7 @@ async def next_page_myfiles(client, callback_query):
         [InlineKeyboardButton(f"⚙️ Folder Settings", callback_data= f"myfilesmenu^start_folder_actions")]
         )
 
-    list_drive_myfiles(result= result, data_cb="list_dir_leech_menu", menu=btn)
+    list_drive_myfiles(result= result, data_cb="list_dir_myfiles_menu", menu=btn)
         
     n_offset = int(next_offset)
     off_set = offset - 10 

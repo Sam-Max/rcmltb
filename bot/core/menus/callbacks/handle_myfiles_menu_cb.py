@@ -82,13 +82,21 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
     elif cmd[1] == "delete_action":
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
+        
+        if cmd[2] == "folder":
+            is_folder= True
+        
+        if cmd[2] == "file":
+            is_folder= False
+        
         await settings_options_menu(
             client= client, 
             message= mmes,
             drive_base= rclone_dir, 
             drive_name= rclone_drive, 
             edit=True, 
-            submenu= "rclone_delete", 
+            submenu= "rclone_delete",
+            is_folder= is_folder 
         )
 
     elif cmd[1] == "size_action":
@@ -112,13 +120,21 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
     elif cmd[1]== "yes":
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
+
+        if cmd[2] == "folder":
+            is_folder= True
+        
+        if cmd[2] == "file":
+            is_folder= False
+
         await settings_options_menu(
             client= client, 
             message= mmes,
             drive_base= rclone_dir, 
             drive_name= rclone_drive, 
             edit=True, 
-            submenu= "yes"
+            submenu= "yes",
+            is_folder= is_folder
         )
 
     elif cmd[1]== "no":

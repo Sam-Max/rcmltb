@@ -27,10 +27,10 @@ async def settings_options_menu(
           else:
                if is_folder:
                     menu = [[InlineKeyboardButton(text= "📁 Calculate Size", callback_data= "myfilesmenu^size_action"),
-                         InlineKeyboardButton(text= "🗙 Delete", callback_data= "myfilesmenu^delete_action")],
+                         InlineKeyboardButton(text= "🗙 Delete", callback_data= "myfilesmenu^delete_action^folder")],
                          ]
                else:
-                    menu = [[InlineKeyboardButton(text= "🗙 Delete", callback_data= "myfilesmenu^delete_action")]]
+                    menu = [[InlineKeyboardButton(text= "🗙 Delete", callback_data= "myfilesmenu^delete_action^file")]]
           
           menu.append(
                [InlineKeyboardButton("🗙 Close Menu", f"myfilesmenu^selfdest")]
@@ -65,12 +65,15 @@ async def settings_options_menu(
             await message.reply(header, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu))  
 
      elif submenu == "rclone_delete":
-          buttons = [[InlineKeyboardButton(text= "Yes", callback_data= "myfilesmenu^yes"),
-               InlineKeyboardButton(text= "No", callback_data= "myfilesmenu^no")]]
-
           if is_folder:
+               buttons = [[InlineKeyboardButton(text= "Yes", callback_data= "myfilesmenu^yes^folder"),
+               InlineKeyboardButton(text= "No", callback_data= "myfilesmenu^no^folder")]]
+
                msg= f"Are you sure you want to delete this folder permanently?"
           else:
+               buttons = [[InlineKeyboardButton(text= "Yes", callback_data= "myfilesmenu^yes^file"),
+               InlineKeyboardButton(text= "No", callback_data= "myfilesmenu^no^file")]]
+
                msg= f"Are you sure you want to delete this file permanently?"
 
           await message.edit(msg, parse_mode="md", reply_markup= InlineKeyboardMarkup(buttons))
@@ -87,7 +90,10 @@ async def settings_options_menu(
                [InlineKeyboardButton("🗙 Close Menu", f"myfilesmenu^selfdest")]
           )
 
-          msg= f"The folder has been deleted successfully!!"
+          if is_folder:
+               msg= f"The folder has been deleted successfully!!"
+          else:
+               msg= f"The file has been deleted successfully!!"
 
           if edit:
                await message.edit(msg, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu))
