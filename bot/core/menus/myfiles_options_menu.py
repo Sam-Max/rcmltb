@@ -14,10 +14,9 @@ async def settings_options_menu(
     drive_base="", 
     msg="", 
     drive_name="", 
-    data_cb="", 
-    data_back_cb="",
     submenu=None, 
-    edit=False
+    edit=False,
+    is_folder= True,
     ):
     
      menu = []
@@ -26,9 +25,12 @@ async def settings_options_menu(
           if drive_base == "":
                menu = [[InlineKeyboardButton(text= "📁 Calculate Size", callback_data= "myfilesmenu^size_action")]]
           else:
-               menu = [[InlineKeyboardButton(text= "📁 Calculate Size", callback_data= "myfilesmenu^size_action"),
-                    InlineKeyboardButton(text= "🗙 Delete", callback_data= "myfilesmenu^delete_action")],
-                    ]
+               if is_folder:
+                    menu = [[InlineKeyboardButton(text= "📁 Calculate Size", callback_data= "myfilesmenu^size_action"),
+                         InlineKeyboardButton(text= "🗙 Delete", callback_data= "myfilesmenu^delete_action")],
+                         ]
+               else:
+                    menu = [[InlineKeyboardButton(text= "🗙 Delete", callback_data= "myfilesmenu^delete_action")]]
           
           menu.append(
                [InlineKeyboardButton("🗙 Close Menu", f"myfilesmenu^selfdest")]
@@ -65,8 +67,12 @@ async def settings_options_menu(
      elif submenu == "rclone_delete":
           buttons = [[InlineKeyboardButton(text= "Yes", callback_data= "myfilesmenu^yes"),
                InlineKeyboardButton(text= "No", callback_data= "myfilesmenu^no")]]
-          
-          msg= f"Are you sure you want to delete this folder permanently?"
+
+          if is_folder:
+               msg= f"Are you sure you want to delete this folder permanently?"
+          else:
+               msg= f"Are you sure you want to delete this file permanently?"
+
           await message.edit(msg, parse_mode="md", reply_markup= InlineKeyboardMarkup(buttons))
 
      elif submenu == "yes":

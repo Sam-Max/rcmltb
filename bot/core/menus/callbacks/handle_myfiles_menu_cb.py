@@ -59,7 +59,8 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
             base_dir,
             msg= "Actions Menu", 
             edit=True, 
-            submenu=None, 
+            submenu=None,
+            is_folder= False 
         )
 
     elif cmd[1] == "start_folder_actions":
@@ -71,6 +72,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
             msg= "Actions Menu", 
             edit=True, 
             submenu=None, 
+            is_folder= True 
         )
 
     #Handling actions menu
