@@ -130,9 +130,10 @@ def add_handlers(bot: TelegramClient):
         events.CallbackQuery(pattern="n_copy")
         )
     
-    bot.add_event_handler(
-        next_page_myfiles,
-        events.CallbackQuery(pattern="n_myfiles")
+    bot.pyro.add_handler(
+        CallbackQueryHandler(
+        next_page_myfiles, 
+        filters= filters.regex("n_myfiles"))
         )
 
     bot.pyro.add_handler(
