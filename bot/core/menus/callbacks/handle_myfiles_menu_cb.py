@@ -52,6 +52,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
         path = get_val(cmd[2])
         base_dir= "/"
         base_dir += path
+        set_val("BASE_DIR", base_dir)  
         await settings_options_menu(
             client, 
             mmes,

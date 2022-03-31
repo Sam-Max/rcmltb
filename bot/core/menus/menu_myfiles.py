@@ -38,9 +38,9 @@ async def settings_myfiles_menu(
 
         for j in conf.sections():
             if "team_drive" in list(conf[j]):
-                btns.append(InlineKeyboardButton(f"{folder_icon} {j} - TD", f"myfilesmenu^{data_cb}^{j}"))
+                btns.append(InlineKeyboardButton(f"{folder_icon} {j}", f"myfilesmenu^{data_cb}^{j}"))
             else:
-                btns.append(InlineKeyboardButton(f"{folder_icon} {j} - ND", f"myfilesmenu^{data_cb}^{j}"))
+                btns.append(InlineKeyboardButton(f"{folder_icon} {j}", f"myfilesmenu^{data_cb}^{j}"))
 
         for a, b in pairwise(btns):
             row= [] 
@@ -121,21 +121,21 @@ async def list_selected_drive_leech(
     data.sort(key=lambda x: x["Size"])  
 
     set_val("JSON_RESULT_DATA", data)
-    data, next_offset, total= await get_list_drive_results_leech(data)
+    data, next_offset, total= await get_list_drive_results_myfiles(data)
     
-    list_drive_leech(data, menu, data_cb)
+    list_drive_myfiles(data, menu, data_cb)
 
     if offset == 0 and total <= 10:
         menu.append(
-            [InlineKeyboardButton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", callback_data="leechmenu^pages")]) 
+            [InlineKeyboardButton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", callback_data="myfilesmenu^pages")]) 
             
     else: 
         menu.append(
-            [InlineKeyboardButton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", callback_data="leechmenu^pages"),
-             InlineKeyboardButton("NEXT ⏩", callback_data= f"n_leech {next_offset} {data_back_cb}")
+            [InlineKeyboardButton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", callback_data="myfilesmenu^pages"),
+             InlineKeyboardButton("NEXT ⏩", callback_data= f"n_myfiles {next_offset} {data_back_cb}")
             ]) 
            
-async def get_list_drive_results_leech(data, max_results=8, offset=0):
+async def get_list_drive_results_myfiles(data, max_results=8, offset=0):
     total = len(data)
     next_offset = offset + max_results
     data = await list_range(offset, max_results, data)
@@ -153,7 +153,7 @@ async def list_range(offset, max_results, data):
     
     return data[start:end]             
 
-def list_drive_leech(
+def list_drive_myfiles(
     result, 
     menu=[], 
     data_cb=""

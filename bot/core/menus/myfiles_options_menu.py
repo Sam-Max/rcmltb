@@ -24,11 +24,11 @@ async def settings_options_menu(
 
      if submenu is None:
           if drive_base == "":
-               menu = [[InlineKeyboardButton(text= "📁 Size", callback_data= "myfilesmenu^size_action")]]
+               menu = [[InlineKeyboardButton(text= "📁 Calculate Size", callback_data= "myfilesmenu^size_action")]]
           else:
-               menu = [[InlineKeyboardButton(text= "✏️ Rename", callback_data= "myfilesmenu^rename_action"),
+               menu = [[InlineKeyboardButton(text= "📁 Calculate Size", callback_data= "myfilesmenu^size_action"),
                     InlineKeyboardButton(text= "🗙 Delete", callback_data= "myfilesmenu^delete_action")],
-                    [InlineKeyboardButton(text= "📁 Size", callback_data= "myfilesmenu^size_action")]]
+                    ]
           
           menu.append(
                [InlineKeyboardButton("🗙 Close Menu", f"myfilesmenu^selfdest")]
@@ -54,8 +54,8 @@ async def settings_options_menu(
         msg= f"Total Files: {files_count}\nFolder Size: {total_size}"
 
         menu.append(
-            [InlineKeyboardButton("Back", f"myfilesmenu^{data_back_cb}")]
-        )
+               [InlineKeyboardButton("🗙 Close Menu", f"myfilesmenu^selfdest")]
+          )
 
         if edit:
             await message.edit(msg, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu))
@@ -76,10 +76,13 @@ async def settings_options_menu(
                drive_name, 
                conf_path
           )    
+
           menu.append(
-               [InlineKeyboardButton("Back", f"myfilesmenu^{data_back_cb}")]
+               [InlineKeyboardButton("🗙 Close Menu", f"myfilesmenu^selfdest")]
           )
+
           msg= f"The folder has been deleted successfully!!"
+
           if edit:
                await message.edit(msg, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu))
           else:

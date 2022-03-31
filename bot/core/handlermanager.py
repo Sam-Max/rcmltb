@@ -28,6 +28,7 @@ from bot.core.menus.callbacks.handle_myfiles_menu_cb import handle_setting_myfil
 from bot.core.menus.callbacks.nextpage.handle_nextpage_copy_menu_cb import next_page_copy
 from bot.core.menus.callbacks.nextpage.handle_nextpage_leech_menu_cb import next_page_leech
 from bot.core.menus.callbacks.nextpage.handle_nextpage_main_menu_cb import next_page_menu
+from bot.core.menus.callbacks.nextpage.handle_nextpage_myfiles_menu_cb import next_page_myfiles
 
 torlog = logging.getLogger(__name__)
 
@@ -127,6 +128,11 @@ def add_handlers(bot: TelegramClient):
     bot.add_event_handler(
         next_page_copy,
         events.CallbackQuery(pattern="n_copy")
+        )
+    
+    bot.add_event_handler(
+        next_page_myfiles,
+        events.CallbackQuery(pattern="n_myfiles")
         )
 
     bot.pyro.add_handler(
