@@ -80,19 +80,25 @@ async def settings_myfiles_menu(
 
      elif submenu == "yes":
           conf_path = await get_config()
-          await rclone_purge(
-               drive_base, 
-               drive_name, 
-               conf_path
-          )    
-
+          
           menu.append(
                [InlineKeyboardButton("✘ Close Menu", f"myfilesmenu^selfdest")]
           )
 
           if is_folder:
+               await rclone_purge(
+                    drive_base, 
+                    drive_name, 
+                    conf_path
+               )    
                msg= f"The folder has been deleted successfully!!"
+
           else:
+               await rclone_delete(
+                    drive_base, 
+                    drive_name, 
+                    conf_path
+               )  
                msg= f"The file has been deleted successfully!!"
 
           if edit:
@@ -149,3 +155,24 @@ async def rclone_purge (
 
      if process.returncode != 0:
           logging.info(stderr)
+
+
+async def rclone_delete (
+     drive_base, 
+     drive_name, 
+     conf_path, 
+     ):
+
+     cmd = ["rclone", "delete", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
+
+     process = await asyncio.create_subprocess_exec(
+     *cmd,
+     stdout=asyncio.subprocess.PIPE
+     )
+
+     stdout, stderr = await process.communicate()
+     stdout = stdout.decode().strip()
+
+     if process.returncode != 0:
+          logging.info(stderr)
+

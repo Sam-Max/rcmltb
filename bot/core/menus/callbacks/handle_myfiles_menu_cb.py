@@ -50,9 +50,9 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
 
     elif cmd[1] == "start_file_actions":
         path = get_val(cmd[2])
-        base_dir= "/"
+        base_dir = get_val("BASE_DIR")
         base_dir += path
-        set_val("BASE_DIR", base_dir)  
+        set_val("BASE_DIR", base_dir) 
         await settings_myfiles_menu(
             client, 
             mmes,
