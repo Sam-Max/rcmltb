@@ -49,6 +49,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
             )
 
     elif cmd[1] == "start_file_actions":
+        rclone_drive = get_val("DEF_RCLONE_DRIVE")
         path = get_val(cmd[2])
         base_dir = get_val("BASE_DIR")
         base_dir += path
@@ -57,19 +58,20 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
             client, 
             mmes,
             base_dir,
-            msg= "Actions Menu", 
+            msg= f"Path:`{rclone_drive}:{base_dir}`", 
             edit=True, 
             submenu=None,
             is_folder= False 
         )
 
     elif cmd[1] == "start_folder_actions":
+        rclone_drive = get_val("DEF_RCLONE_DRIVE")
         base_dir = get_val("BASE_DIR")
         await settings_myfiles_menu(
             client, 
             mmes,
             base_dir,
-            msg= "Actions Menu", 
+            msg= f"Path:`{rclone_drive}:{base_dir}`", 
             edit=True, 
             submenu=None, 
             is_folder= True 
