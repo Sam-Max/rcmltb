@@ -1,6 +1,7 @@
 import logging
 from bot.core.get_vars import get_val
-from bot.core.menus.menu_myfiles import settings_myfiles_menu
+from bot.core.menus.menu_myfiles import myfiles_menu
+from bot.core.menus.menu_myfiles_settings import settings_myfiles_menu
 from bot.core.set_vars import set_val
 
 async def handle_setting_myfiles_menu_callback(client, callback_query):
@@ -17,7 +18,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
         set_val("BASE_DIR", "")     
         base_dir = get_val("BASE_DIR")
         set_val("DEF_RCLONE_DRIVE", cmd[2])
-        await settings_myfiles_menu(
+        await myfiles_menu(
             callback_query, 
             mmes, 
             edit=True,
@@ -35,7 +36,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
         logging.info("path: {}".format(path))
         rclone_dir +=  path +"/"
         set_val("BASE_DIR", rclone_dir)
-        await settings_myfiles_menu(
+        await myfiles_menu(
             callback_query, 
             mmes, 
             edit=True, 

@@ -16,7 +16,7 @@ torlog = logging.getLogger(__name__)
 header = ""
 folder_icon= "📁"
 
-async def settings_myfiles_menu(
+async def myfiles_menu(
     client,
     message, 
     drive_base="", 
