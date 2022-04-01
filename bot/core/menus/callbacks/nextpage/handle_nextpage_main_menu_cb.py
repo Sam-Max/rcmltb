@@ -54,12 +54,12 @@ async def next_page_menu(callback_query):
             ])
 
     btn.append(
-            [KeyboardButtonCallback("Close Menu", f"mainmenu^selfdest")]
-        )
-
-    btn.append(
             [KeyboardButtonCallback("⬅️ Back", f"mainmenu^{data_back_cb}")]
-        )    
+        )
+    
+    btn.append(
+            [KeyboardButtonCallback("✘ Close Menu", f"mainmenu^selfdest")]
+        )
 
     try:
         mmes= await callback_query.get_message()

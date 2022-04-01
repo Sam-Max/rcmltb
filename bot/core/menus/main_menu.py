@@ -58,7 +58,7 @@ async def settings_main_menu(
             menu.append(row)
 
         menu.append(
-            [KeyboardButtonCallback("🗙 Close Menu", f"mainmenu^selfdest")]
+            [KeyboardButtonCallback("✘ Close Menu", f"mainmenu^selfdest")]
         )
 
         base_dir= get_val("BASE_DIR")
@@ -89,7 +89,7 @@ async def settings_main_menu(
         )
 
         menu.append(
-            [KeyboardButtonCallback("🗙 Close Menu", f"mainmenu^selfdest")]
+            [KeyboardButtonCallback("✘ Close Menu", f"mainmenu^selfdest")]
         )
 
         if edit:

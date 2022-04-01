@@ -59,7 +59,7 @@ async def next_page_copy(callback_query):
         )
 
     btn.append(
-            [KeyboardButtonCallback("Close Menu", f"copymenu^selfdest")]
+            [KeyboardButtonCallback("✘ Close Menu", f"copymenu^selfdest")]
         )
                             
     try:

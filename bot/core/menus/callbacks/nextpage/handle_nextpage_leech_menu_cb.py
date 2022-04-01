@@ -53,12 +53,12 @@ async def next_page_leech(client, callback_query):
 
 
     btn.append(
-            [InlineKeyboardButton("Close Menu", f"leechmenu^selfdest")]
-        )
+            [InlineKeyboardButton("⬅️ Back", f"leechmenu^{data_back_cb}")]
+        ) 
 
     btn.append(
-            [InlineKeyboardButton("⬅️ Back", f"leechmenu^{data_back_cb}")]
-        )    
+            [InlineKeyboardButton("✘ Close Menu", f"leechmenu^selfdest")]
+        )
                 
     try:
         mmes= callback_query.message

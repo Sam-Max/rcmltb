@@ -51,9 +51,12 @@ async def next_page_myfiles(client, callback_query):
              InlineKeyboardButton("NEXT ⏩", callback_data=f"n_myfiles {n_offset} {data_back_cb}")
             ])
 
+    btn.append(
+            [InlineKeyboardButton("⬅️ Back", f"myfilesmenu^{data_back_cb}")]
+        )
 
     btn.append(
-            [InlineKeyboardButton("Close Menu", f"myfilesmenu^selfdest")]
+            [InlineKeyboardButton("✘ Close Menu", f"myfilesmenu^selfdest")]
         )
 
     try:

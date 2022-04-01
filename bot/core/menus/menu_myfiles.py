@@ -53,7 +53,7 @@ async def settings_myfiles_menu(
             menu.append(row)
 
         menu.append(
-            [InlineKeyboardButton("🗙 Close Menu", f"myfilesmenu^selfdest")]
+            [InlineKeyboardButton("✘ Close Menu", f"myfilesmenu^selfdest")]
         )
 
         if edit:
@@ -78,7 +78,7 @@ async def settings_myfiles_menu(
         )
 
         menu.append(
-            [InlineKeyboardButton("🗙 Close Menu", f"myfilesmenu^selfdest")]
+            [InlineKeyboardButton("✘ Close Menu", f"myfilesmenu^selfdest")]
         )
 
         if edit:
