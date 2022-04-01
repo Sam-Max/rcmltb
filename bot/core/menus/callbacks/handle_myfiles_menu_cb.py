@@ -1,7 +1,6 @@
 import logging
 from bot.core.get_vars import get_val
 from bot.core.menus.menu_myfiles import settings_myfiles_menu
-from bot.core.menus.myfiles_options_menu import settings_options_menu
 from bot.core.set_vars import set_val
 
 async def handle_setting_myfiles_menu_callback(client, callback_query):
@@ -53,7 +52,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
         base_dir= "/"
         base_dir += path
         set_val("BASE_DIR", base_dir)  
-        await settings_options_menu(
+        await settings_myfiles_menu(
             client, 
             mmes,
             base_dir,
@@ -65,7 +64,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
 
     elif cmd[1] == "start_folder_actions":
         base_dir = get_val("BASE_DIR")
-        await settings_options_menu(
+        await settings_myfiles_menu(
             client, 
             mmes,
             base_dir,
@@ -89,7 +88,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
         if cmd[2] == "file":
             is_folder= False
         
-        await settings_options_menu(
+        await settings_myfiles_menu(
             client= client, 
             message= mmes,
             drive_base= rclone_dir, 
@@ -102,7 +101,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
     elif cmd[1] == "size_action":
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
-        await settings_options_menu(
+        await settings_myfiles_menu(
             client= client, 
             message= mmes,
             drive_base= rclone_dir, 
@@ -127,7 +126,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
         if cmd[2] == "file":
             is_folder= False
 
-        await settings_options_menu(
+        await settings_myfiles_menu(
             client= client, 
             message= mmes,
             drive_base= rclone_dir, 
@@ -140,7 +139,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
     elif cmd[1]== "no":
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
-        await settings_options_menu(
+        await settings_myfiles_menu(
             client, 
             mmes,
             msg= "Actions Menu", 

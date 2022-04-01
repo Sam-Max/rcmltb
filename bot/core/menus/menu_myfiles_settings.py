@@ -8,7 +8,7 @@ from bot.utils.get_size_p import get_size
 
 header= ""
 
-async def settings_options_menu(
+async def settings_myfiles_menu(
     client,
     message, 
     drive_base="", 
@@ -104,7 +104,7 @@ async def rclone_size(
      message,
      drive_base, 
      drive_name, 
-     conf_path, 
+     conf_path
      ):
 
      await message.edit("**Calculating Folder Size...**\n\nPlease wait, it will take some time depending on number of files.", parse_mode="md")
@@ -134,7 +134,7 @@ async def rclone_size(
 async def rclone_purge (
      drive_base, 
      drive_name, 
-     conf_path, 
+     conf_path
      ):
 
      cmd = ["rclone", "purge", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
