@@ -1,7 +1,5 @@
 # An Rclone Telegram bot to transfer to and from many clouds
 
-Contact: [Telegram](https://t.me/SamMax009)
-
 ## Features:
 
 - Mirror from Telegram to cloud.
