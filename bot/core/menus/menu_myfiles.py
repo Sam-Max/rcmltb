@@ -64,7 +64,7 @@ async def myfiles_menu(
     elif submenu == "list_drive":
         conf_path = await get_config()
 
-        await list_selected_drive_leech(
+        await list_selected_drive_myfiles(
             drive_base, 
             drive_name, 
             conf_path, 
@@ -86,7 +86,7 @@ async def myfiles_menu(
         else:
             await message.reply(header, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu))
 
-async def list_selected_drive_leech(
+async def list_selected_drive_myfiles(
     drive_base, 
     drive_name, 
     conf_path, 
@@ -135,7 +135,7 @@ async def list_selected_drive_leech(
              InlineKeyboardButton("NEXT ⏩", callback_data= f"n_myfiles {next_offset} {data_back_cb}")
             ]) 
            
-async def get_list_drive_results_myfiles(data, max_results=8, offset=0):
+async def get_list_drive_results_myfiles(data, max_results=10, offset=0):
     total = len(data)
     next_offset = offset + max_results
     data = await list_range(offset, max_results, data)
