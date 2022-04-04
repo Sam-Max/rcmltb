@@ -15,6 +15,7 @@
 mirror - mirror to selected cloud 
 leech - leech from cloud to telegram
 copy - copy from cloud to cloud
+myfiles - file manager
 config - select cloud and folder for mirror
 logs - get logs from server
 server - get server info
