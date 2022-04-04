@@ -27,10 +27,10 @@ async def settings_myfiles_menu(
           else:
                if is_folder:
                     menu = [[InlineKeyboardButton(text= "📁 Calculate Size", callback_data= "myfilesmenu^size_action"),
-                         InlineKeyboardButton(text= "🗙 Delete", callback_data= "myfilesmenu^delete_action^folder")],
+                         InlineKeyboardButton(text= "🗑 Delete", callback_data= "myfilesmenu^delete_action^folder")],
                          ]
                else:
-                    menu = [[InlineKeyboardButton(text= "🗙 Delete", callback_data= "myfilesmenu^delete_action^file")]]
+                    menu = [[InlineKeyboardButton(text= "🗑 Delete", callback_data= "myfilesmenu^delete_action^file")]]
           
           menu.append(
                [InlineKeyboardButton("✘ Close Menu", f"myfilesmenu^selfdest")]
