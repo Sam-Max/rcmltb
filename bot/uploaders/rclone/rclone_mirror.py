@@ -2,6 +2,7 @@ import asyncio
 from configparser import ConfigParser
 import logging, os
 from random import randrange
+import re
 import subprocess, time
 from html import escape
 from bot.core.get_vars import get_val
