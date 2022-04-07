@@ -2,7 +2,8 @@ import asyncio
 from configparser import ConfigParser
 import logging, os
 from random import randrange
-import re, subprocess, time
+import subprocess, time
+from html import escape
 from bot.core.get_vars import get_val
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.utils.drive_utils import get_glink
@@ -84,7 +85,7 @@ class RcloneMirror:
 
           name = path.split('/')[(-1)]
           msg = 'Successfully uploaded ✅\n\n'
-          msg += f"<b>Name: </b><code>{re.escape(name)}</code><b>"
+          msg += f"<b>Name: </b><code>{escape(name)}</code><b>"
 
           if is_gdrive:
                gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path, False)
