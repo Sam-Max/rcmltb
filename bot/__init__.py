@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 
 uptime = time.time()
-
+GLOBAL_RC_INST= []
 load_dotenv('config.env', override=True)
 SessionVars = VarHolder()
 load_rclone()

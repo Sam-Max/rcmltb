@@ -1,6 +1,11 @@
 
-from bot.core.set_vars import set_val
+from bot import GLOBAL_RC_INST
 
 
-async def handle_cancel(callback_query):
-        set_val("UPLOAD_CANCEL", True)
+async def handle_cancel(e):
+   data = e.data.decode("UTF-8").split("_")
+   id= data[1]
+   for rc_up in GLOBAL_RC_INST:
+        if rc_up.id == id:
+            rc_up.cancel = True
+            break  
