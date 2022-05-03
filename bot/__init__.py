@@ -46,7 +46,7 @@ logging.info("Telethon Client created.")
 
 #---------------------------
 
-userbot = Client(session_name=SESSION, api_hash=API_HASH, api_id=API_ID)
+userbot = Client("userbot", session_string=SESSION, api_hash=API_HASH, api_id=API_ID)
 try:
     userbot.start()
     logging.info("Pyro userbot client created.")
