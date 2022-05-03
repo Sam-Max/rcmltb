@@ -1,7 +1,6 @@
 import re, logging
 from os import path as ospath, remove as osremove
-from bot import __version__
-from telethon import TelegramClient, events
+from telethon import events
 from bot.core.get_commands import get_command_pyro, get_command_tele
 from bot.core.get_vars import get_val
 from bot.core.handlers.callbacks.handle_download_cb import handle_download_cb
@@ -19,6 +18,7 @@ from bot.core.handlers.handle_config_cm import handle_config_command
 from bot.core.handlers.handle_speedtest import speed_handler
 from bot.core.handlers.handle_start import start_handler
 from bot.core.handlers.handle_test_cm import handle_test_command
+from bot.core.handlers import handle_batch
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from bot.core.menus.callbacks.handle_copy_menu_cb import handle_setting_copy_menu_callback
@@ -33,8 +33,8 @@ from bot.core.menus.callbacks.nextpage.handle_nextpage_myfiles_menu_cb import ne
 torlog = logging.getLogger(__name__)
 
 
-def add_handlers(bot: TelegramClient):
-
+def add_handlers(bot):
+         
     #pyrogram handlers
     download_handlers = MessageHandler(
         handle_download_command,
@@ -60,20 +60,20 @@ def add_handlers(bot: TelegramClient):
         handle_test_command,
         filters=filters.command([get_command_pyro("TEST")])
         )
-    
+
     bot.pyro.add_handler(test_handlers)
 
-   # telethon handlers
+    # telethon handlers
     bot.add_event_handler(
         handle_copy_command,
         events.NewMessage(pattern=command_process(get_command_tele("COPY")))
     )
-    
+
     bot.add_event_handler(
         handle_exec_message_f,
         events.NewMessage(pattern=command_process(get_command_tele("EXEC")))
     )
-    
+
     bot.add_event_handler(
         handle_restart,
         events.NewMessage(pattern=command_process(get_command_tele("RESTART")))
@@ -111,7 +111,7 @@ def add_handlers(bot: TelegramClient):
 
     bot.loop.run_until_complete(booted(bot))
 
-   
+
     # *********** Callback Handlerss ***********  
 
     bot.pyro.add_handler(
@@ -129,7 +129,7 @@ def add_handlers(bot: TelegramClient):
         next_page_copy,
         events.CallbackQuery(pattern="n_copy")
         )
-    
+
     bot.pyro.add_handler(
         CallbackQueryHandler(
         next_page_myfiles, 
@@ -147,7 +147,7 @@ def add_handlers(bot: TelegramClient):
         handle_setting_myfiles_menu_callback, 
         filters= filters.regex("myfilesmenu"))
         )         
-    
+
     bot.add_event_handler(
         handle_cancel,
         events.CallbackQuery(pattern="upcancel")
@@ -190,3 +190,6 @@ async def booted(client):
 
 def command_process(command):
     return re.compile(command, re.IGNORECASE)
+
+
+
