@@ -84,7 +84,7 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
             #return 
         except Exception as e:
             logging.info(str(e))
-            await client.edit_message_text(sender, edit_id, f'Failed to save: `{e.with_traceback}`')
+            await client.edit_message_text(sender, edit_id, f'Failed to save: `{e}`')
             #return 
     else:
         chat =  msg_link.split("/")[-2]
@@ -123,7 +123,7 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
             #return 
         except Exception as e:
             logging.info(str(e))
-            await client.edit_message_text(sender, edit_id, f'Failed to save: `{e.with_traceback}`')
+            await client.edit_message_text(sender, edit_id, f'Failed to save: `{e}`')
             #return 
 
 async def get_bulk_msg(userbot, client, sender, msg_link, i):

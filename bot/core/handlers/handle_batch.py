@@ -10,7 +10,7 @@ import time, asyncio
 from ... import bot
 from ... import userbot, Bot
 
-from bot.utils.helpers import get_link, check, get_bulk_msg
+from bot.utils.batch_helpers import get_link, check, get_bulk_msg
 
 from telethon import events, Button
 
