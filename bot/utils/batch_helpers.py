@@ -51,12 +51,7 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
         chat = int('-100' + str(msg_link.split("/")[-2]))
         try:
             msg = await userbot.get_messages(chat, msg_id)
-            if msg.media:
-                if 'web_page' in msg.media:
-                    edit = await client.edit_message_text(sender, edit_id, "Cloning.")
-                    await client.send_message(sender, msg.text.markdown)
-                    await edit.delete()
-                    return
+            print(msg)
             if not msg.media:
                 if msg.text:
                     edit = await client.edit_message_text(sender, edit_id, "Cloning.")
@@ -69,7 +64,7 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
                 progress=progress_for_pyrogram,
                 progress_args=(
                     "",
-                    "**DOWNLOADING:**\n",
+                    "**DOWNLOADING:**",
                     edit,
                     time.time()
                 )
@@ -90,12 +85,7 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
         chat =  msg_link.split("/")[-2]
         try:
             msg = await userbot.get_messages(chat, msg_id)
-            if msg.media:
-                if 'web_page' in msg.media:
-                    edit = await client.edit_message_text(sender, edit_id, "Cloning.")
-                    await client.send_message(sender, msg.text.markdown)
-                    await edit.delete()
-                    return
+            print(msg)
             if not msg.media:
                 if msg.text:
                     edit = await client.edit_message_text(sender, edit_id, "Cloning.")
@@ -108,7 +98,7 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
                 progress=progress_for_pyrogram,
                 progress_args=(
                     "",
-                    "**DOWNLOADING:**\n",
+                    "**DOWNLOADING:**",
                     edit,
                     time.time()
                 )
@@ -120,12 +110,12 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
             GLOBAL_RC_INST.remove(rclone_mirror)
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await client.edit_message_text(sender, edit_id, "Have you joined the channel?")
-            #return 
+            return 
         except Exception as e:
             logging.info(str(e))
             await client.edit_message_text(sender, edit_id, f'Failed to save: `{e}`')
-            #return 
+            return 
 
 async def get_bulk_msg(userbot, client, sender, msg_link, i):
     x = await client.send_message(sender, "Processing!")
-    await get_msg(userbot, client, sender, x.message_id, msg_link, i) 
+    await get_msg(userbot, client, sender, x.id, msg_link, i) 
