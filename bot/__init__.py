@@ -29,11 +29,13 @@ SessionVars = VarHolder()
 load_dotenv('config.env', override=True)
 load_rclone()
 
-# variables
-API_ID = int(getConfig("API_ID"))
-API_HASH = getConfig("API_HASH")
-BOT_TOKEN = getConfig("BOT_TOKEN")
-SESSION = getConfig("SESSION")
+try:
+    API_ID = int(getConfig("API_ID"))
+    API_HASH = getConfig("API_HASH")
+    BOT_TOKEN = getConfig("BOT_TOKEN")
+except:
+    logging.info("One or more env variables missing! Exiting now")
+    exit(1)
 
 #---------------------------
 
@@ -42,18 +44,28 @@ bot = RcloneTgClient("bot", API_ID, API_HASH, timeout=20, retry_delay=3,
 
 bot.start(bot_token=BOT_TOKEN)
 
-logging.info("Telethon Client created.")
+logging.info("Telethon client created.")
 
 #---------------------------
 
-userbot = Client("userbot", session_string=SESSION, api_hash=API_HASH, api_id=API_ID)
 try:
-    userbot.start()
+    SESSION = getConfig("SESSION")  
+    if len(SESSION) == 0:
+        raise KeyError 
+    userbot = Client("userbot", session_string=SESSION, api_hash=API_HASH, api_id=API_ID)
     logging.info("Pyro userbot client created.")
-except BaseException:
+except:
+    SESSION = None
+    userbot= None
     print("Userbot Error ! Have you added SESSION while deploying??")
-    sys.exit(1)
 
+if userbot is not None:
+    try:
+        userbot.start()
+    except Exception as e:
+      print(e)
+      sys.exit(1)      
+        
 #---------------------------
 
 Bot = Client("pyrosession", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN, workers=20)
