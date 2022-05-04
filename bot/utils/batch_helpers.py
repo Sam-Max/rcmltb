@@ -1,5 +1,6 @@
-#Regex---------------------------------------------------------------------------------------------------------------
-#to get the url from event
+#Tg:MaheshChauhan/DroneBots
+#Github.com/Vasusen-code
+
 
 import re
 import time, os
