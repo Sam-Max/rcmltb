@@ -3,6 +3,7 @@
 ## Features:
 
 - Mirror from Telegram to cloud.
+- Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
 - Leech files and folders from cloud to Telegram.
 - Copy from one cloud to another.
 - Button panels to interact with clouds.
@@ -13,6 +14,7 @@
 
 ```
 mirror - mirror to selected cloud 
+mirrorbatch - mirror batch files to selected cloud 
 leech - leech from cloud to telegram
 copy - copy from cloud to cloud
 myfiles - file manager
@@ -58,6 +60,7 @@ restart - restart bot
 
    - Non mandatory variables:
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
+        - `SESSION`: Pyrogram Session: [![Run on Repl.it](https://replit.com/badge/github/vasusen-code/saverestrictedcontentbot)](https://replit.com/@SpEcHiDe/GenerateStringSession) 
         - `UPSTREAM_BRANCH`: Upstream branch for update. 
         - `TG_SPLIT_SIZE`: Telegram upload limit in bytes (max `2097151000` which is ~2GB), to automatically slice the file bigger that this size into small parts to upload to Telegram.
         - `EDIT_SLEEP_SECS`: Seconds for update the progress message regulary. Default to 10. 
