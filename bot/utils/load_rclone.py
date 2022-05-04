@@ -4,14 +4,11 @@ import os
 def load_rclone():
     path = os.path.join(os.getcwd(), "rclone.conf")
     rclone_config = os.environ.get('RCLONE_CONFIG', "")  
-    if len(rclone_config) == 0:                                         
-        logging.info(f'rclone_config:0')                                          
-    else:
-        logging.info(f'rclone_config:1')           
+    if rclone_config:                                         
         rclone_config.strip()
         str_encoded = bytes(rclone_config,'UTF-8')
-
         with open(path, "wb") as rfile:
             rfile.write(str_encoded)
-
-    return path
+        logging.info(f'rclone file loaded')    
+    else:
+        logging.info(f'faile to load rclone file')     

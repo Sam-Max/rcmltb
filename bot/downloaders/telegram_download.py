@@ -45,7 +45,7 @@ async def down_load_media_pyro(client, message, media, tag, new_name= None, is_r
         )
     )
 
-    rclone_uploader= RcloneMirror(download_location, mess_age, new_name, tag, is_rename)
-    GLOBAL_RC_INST.append(rclone_uploader)
-    await rclone_uploader.download()
-    GLOBAL_RC_INST.remove(rclone_uploader)
+    rclone_mirror= RcloneMirror(download_location, mess_age, new_name, tag, is_rename)
+    GLOBAL_RC_INST.append(rclone_mirror)
+    await rclone_mirror.download()
+    GLOBAL_RC_INST.remove(rclone_mirror)

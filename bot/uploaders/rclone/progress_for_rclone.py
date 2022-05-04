@@ -1,9 +1,9 @@
 import time
-from bot import SessionVars
 import asyncio
 import re
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telethon import Button
+from ... import SessionVars
 from bot.core.get_vars import get_val
 
 async def rclone_process_update_pyro(rclone_pr, user_msg, status_message):
