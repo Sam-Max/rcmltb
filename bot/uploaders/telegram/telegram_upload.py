@@ -8,6 +8,7 @@ from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
 from bot.utils.g_vid_res import get_video_resolution
 from bot.utils.get_media_info import get_m_info
 from bot.utils.screenshot import screenshot
+from pyrogram import enums
 
 log= logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ async def upload_media_pyro(client, message, sender, file):
                         width=width,
                         height=height,
                         caption= f'`{caption}`',
-                        parse_mode= "md" ,
+                        parse_mode= enums.ParseMode.MARKDOWN ,
                         thumb= thumb_path,
                         supports_streaming=True,
                         duration= duration,
@@ -44,16 +45,13 @@ async def upload_media_pyro(client, message, sender, file):
                             c_time
                         )
                     )
-            # elif str(file).split(".")[-1] in ['jpg', 'jpeg', 'png', 'webp']:
-            #         await edit.edit("Uploading photo.")
-            #         await bot.send_file(sender, file, caption=caption)       
             else:
                 caption= str(file).split("/")[-1]  
                 await client.send_document(
                     chat_id= sender,
                     document= file, 
                     caption= f'`{caption}`',
-                    parse_mode= "md",
+                    parse_mode= enums.ParseMode.MARKDOWN,
                     progress=progress_for_pyrogram,
                     progress_args=(
                         "Name: `{}`".format(caption),
