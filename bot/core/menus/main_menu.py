@@ -66,9 +66,9 @@ async def settings_main_menu(
         msg= f"Select cloud where you want to upload file\n\nPath:`{rclone_drive}:{base_dir}`"
 
         if edit:
-            await mmes.edit(msg, parse_mode="md", buttons=menu)
+            await mmes.edit(msg, buttons=menu)
         else:
-            await query.reply(header + msg, parse_mode="md", buttons=menu)
+            await query.reply(header + msg, buttons=menu)
 
 
     elif submenu == "list_drive":
@@ -93,11 +93,9 @@ async def settings_main_menu(
         )
 
         if edit:
-            await mmes.edit(msg,
-                                 parse_mode="md", buttons=menu)
+            await mmes.edit(msg, buttons=menu)
         else:
-            await query.reply(header,
-                                  parse_mode="md", buttons=menu)
+            await query.reply(header, buttons=menu)
 
 async def list_selected_drive(
     query, 

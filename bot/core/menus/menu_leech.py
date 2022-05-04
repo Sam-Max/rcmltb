@@ -81,9 +81,9 @@ async def settings_leech_menu(
         )
 
         if edit:
-            await message.edit(msg, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu))
+            await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
         else:
-            await message.reply(header, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu))
+            await message.reply(header, reply_markup= InlineKeyboardMarkup(menu))
 
 async def list_selected_drive_leech(
     drive_base, 

@@ -60,9 +60,9 @@ async def settings_myfiles_menu(
           )
 
         if edit:
-            await message.edit(msg, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu))
+            await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
         else:
-            await message.reply(header, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu))  
+            await message.reply(header, reply_markup= InlineKeyboardMarkup(menu))  
 
      elif submenu == "rclone_delete":
           if is_folder:
@@ -76,7 +76,7 @@ async def settings_myfiles_menu(
 
                msg= f"Are you sure you want to delete this file permanently?"
 
-          await message.edit(msg, parse_mode="md", reply_markup= InlineKeyboardMarkup(buttons))
+          await message.edit(msg, reply_markup= InlineKeyboardMarkup(buttons))
 
      elif submenu == "yes":
           conf_path = await get_config()
@@ -102,9 +102,9 @@ async def settings_myfiles_menu(
                msg= f"The file has been deleted successfully!!"
 
           if edit:
-               await message.edit(msg, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu))
+               await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
           else:
-               await message.reply(header, parse_mode="md", reply_markup= InlineKeyboardMarkup(menu)) 
+               await message.reply(header, reply_markup= InlineKeyboardMarkup(menu)) 
 
 async def rclone_size(
      message,
@@ -113,7 +113,7 @@ async def rclone_size(
      conf_path
      ):
 
-     await message.edit("**Calculating Folder Size...**\n\nPlease wait, it will take some time depending on number of files.", parse_mode="md")
+     await message.edit("**Calculating Folder Size...**\n\nPlease wait, it will take some time depending on number of files.")
 
      cmd = ["rclone", "size", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--json"] 
 

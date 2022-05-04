@@ -57,11 +57,9 @@ async def settings_copy_menu(
         )
 
         if edit:
-            await mmes.edit(header + msg,
-                                 parse_mode="html", buttons=menu, link_preview=False)
+            await mmes.edit(header + msg, buttons=menu)
         else:
-           await query.reply(msg,
-                                  parse_mode="html", buttons=menu, link_preview=False)
+            await query.reply(msg, buttons=menu)
 
     elif submenu == "list_drive":
         conf_path = await get_config()
@@ -86,11 +84,9 @@ async def settings_copy_menu(
         )
 
         if edit:
-            await mmes.edit(msg,
-                                 parse_mode="md", buttons=menu, link_preview=False)
+            await mmes.edit(msg, buttons=menu)
         else:
-            await query.reply(header,
-                                  parse_mode="md", buttons=menu, link_preview=False)
+            await query.reply(header, buttons=menu)
 
 async def list_selected_drive_copy(
     query, 
