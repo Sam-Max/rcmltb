@@ -3,7 +3,7 @@
 ## Features:
 
 - Mirror from Telegram to cloud.
-- Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
+- Mirror-batch up to 100 files at once from Telegram to cloud (private or public channel)
 - Leech files and folders from cloud to Telegram.
 - Copy from one cloud to another.
 - Button panels to interact with clouds.
@@ -115,6 +115,8 @@ restart - restart bot
 3- [Rclone](https://github.com/rclone/rclone)
 
 4- [Telethon]() and [Pyrogram]()
+
+5- Others mentioned on bot's code.
 
 
 
