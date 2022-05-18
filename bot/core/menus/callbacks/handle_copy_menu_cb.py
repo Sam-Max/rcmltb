@@ -1,16 +1,14 @@
+from bot import GLOBAL_RC_INST
 from bot.core.get_vars import get_val
 from bot.core.menus.menu_copy import settings_copy_menu
 from bot.core.set_vars import set_val
 import logging
-from bot.uploaders.rclone.rclone_copy import rclone_copy_transfer
-from bot.utils.get_rclone_conf import get_config
+from bot.uploaders.rclone.rclone_copy import RcloneCopy
 
 torlog = logging.getLogger(__name__)
 
 
-
 async def handle_setting_copy_menu_callback(callback_query):
-    conf_path = await get_config()
     data = callback_query.data.decode()
     cmd = data.split("^")
     mmes = await callback_query.get_message()
@@ -121,7 +119,10 @@ async def handle_setting_copy_menu_callback(callback_query):
         origin_dir= origin_dir.split("/")[-2] + "/"
         rclone_dir= get_val("DEST_DIR")
         set_val("DEST_DIR", rclone_dir + origin_dir)
-        await rclone_copy_transfer(callback_query, conf_path)                               
+        rclone_copy= RcloneCopy(callback_query)
+        GLOBAL_RC_INST.append(rclone_copy)
+        await rclone_copy.copy()
+        GLOBAL_RC_INST.remove(rclone_copy)
 
     elif cmd[1] == "selfdest":
         await callback_query.answer("Closed")
