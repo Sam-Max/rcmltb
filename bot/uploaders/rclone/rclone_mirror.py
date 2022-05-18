@@ -20,7 +20,6 @@ class RcloneMirror:
         self.__new_name = new_name
         self.__tag = tag
         self.cancel = False
-        self.__rclone_pr = None
         self._is_rename = is_rename
 
     def __create_id(self, count):
@@ -33,7 +32,7 @@ class RcloneMirror:
             i += 1
         return id
 
-    async def download(self):
+    async def mirror(self):
           old_path = self.__path
           dest_base = ''
           gen_drive_name = ''
@@ -68,8 +67,8 @@ class RcloneMirror:
           f"{dest_drive}:{dest_base}", '-P']
           
           self.__rclone_pr = subprocess.Popen(rclone_copy_cmd,
-          stdout=(subprocess.PIPE),
-          stderr=(subprocess.PIPE)
+                stdout=(subprocess.PIPE),
+                stderr=(subprocess.PIPE)
           )
           
           log.info('Uploading...')
