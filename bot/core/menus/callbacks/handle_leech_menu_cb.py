@@ -1,9 +1,10 @@
 import logging
 import os
+from bot import GLOBAL_RC_INST
 from bot.core.get_vars import get_val
 from bot.core.menus.menu_leech import settings_leech_menu
 from bot.core.set_vars import set_val
-from bot.uploaders.rclone.rclone_leech import rclone_downloader
+from bot.uploaders.rclone.rclone_leech import RcloneLeech
 
 log = logging.getLogger(__name__)
 
@@ -61,7 +62,10 @@ async def handle_setting_leech_menu_callback(client, callback_query):
     elif cmd[1] == "start_leech_folder":
         origin_dir= get_val("BASE_DIR")
         dest_dir = os.path.join(os.getcwd(), "Downloads", origin_dir)
-        await rclone_downloader(client, mmes, chat_id, origin_dir, dest_dir, folder= True)
+        rclone_leech= RcloneLeech(client, mmes, chat_id, origin_dir, dest_dir, folder= True)
+        GLOBAL_RC_INST.append(rclone_leech)
+        await rclone_leech.leech()
+        GLOBAL_RC_INST.remove(rclone_leech)
 
     elif cmd[1] == "back":
         data_b_cb= "back"
