@@ -71,7 +71,7 @@ class RcloneLeech:
 
         if rcres == False:
             self.__rclone_pr.kill()
-            await self.__user_msg.edit("Download cancelled")
+            await self.__user_msg.edit("Leech cancelled")
             return 
 
         if self.__folder:

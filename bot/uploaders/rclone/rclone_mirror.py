@@ -77,8 +77,7 @@ class RcloneMirror:
           
           if rcres == False:
                self.__rclone_pr.kill()
-               await self.__user_msg.edit('Upload cancelled')
-               log.info('Upload cancelled')
+               await self.__user_msg.edit('Mirror cancelled')
                return
 
           log.info('Successfully uploaded')
