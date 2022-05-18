@@ -57,7 +57,10 @@ async def handle_setting_leech_menu_callback(client, callback_query):
         origin_dir= get_val("BASE_DIR")
         origin_dir += path
         dest_dir = os.path.join(os.getcwd(), "Downloads")
-        await rclone_downloader(client, mmes, chat_id, origin_dir, dest_dir, path= path)
+        rclone_leech= RcloneLeech(client, mmes, chat_id, origin_dir, dest_dir, path= path)
+        GLOBAL_RC_INST.append(rclone_leech)
+        await rclone_leech.leech()
+        GLOBAL_RC_INST.remove(rclone_leech)
 
     elif cmd[1] == "start_leech_folder":
         origin_dir= get_val("BASE_DIR")
