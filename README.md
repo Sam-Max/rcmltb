@@ -116,7 +116,7 @@ restart - restart bot
 
 4- [Telethon]() and [Pyrogram]()
 
-5- Others mentioned on bot's code.
+5- Others mentioned in the bot code...
 
 
 
