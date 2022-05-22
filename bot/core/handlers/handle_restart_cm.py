@@ -8,6 +8,7 @@ import signal
 from subprocess import run as srun
 from sys import executable
 from bot.core.get_vars import get_val
+from bot.utils.misc_utils import clean_path
 
 log = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ async def handle_restart(message):
             with open(".updatemsg", "w") as f:
                 f.truncate(0)
                 f.write(f"{user_id}\n{update_message.id}\n")
+            clean_path("./Downloads")
             srun(["python3", "update.py"])
             osexecl(executable, executable, "-m", "bot")
         else:
