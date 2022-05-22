@@ -2,11 +2,16 @@ import os
 import shutil
 
 
-async def clear_stuff(path):
+def clean_all():
     try:
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-        else:
-            os.remove(path)
+        shutil.rmtree()
     except:
         pass
+
+def clean_download(path: str):
+     if os.path.exists(path):
+        try:
+            shutil.rmtree(path)
+        except:
+            pass
+        os.makedirs(path)
