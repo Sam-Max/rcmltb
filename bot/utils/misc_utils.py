@@ -4,7 +4,7 @@ import shutil
 
 def clean_all():
     try:
-        shutil.rmtree()
+        shutil.rmtree("./Downloads")
     except:
         pass
 
