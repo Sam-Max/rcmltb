@@ -9,7 +9,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.core.get_vars import get_val
 from bot.uploaders.telegram.telegram_upload import upload_media_pyro
 from bot.utils.get_size_p import get_size
-from bot.utils.misc_utils import clear_stuff
+from bot.utils.misc_utils import clean_download
 from bot.utils.zip_utils import split_in_zip
 from bot.utils.get_rclone_conf import get_config
 import logging
@@ -113,7 +113,7 @@ class RcloneLeech:
                             await asyncio.sleep(fw.seconds + 5)
                             await upload_media_pyro(self.__client, self.__user_msg, self.__chat_id, f_path)
                         time.sleep(timer)
-            await clear_stuff("./Downloads")
+            await clean_download("./Downloads")
             await self.__client.send_message(self.__chat_id, "Nothing else to upload!")  
         else:
             f_path = os.path.join(self.__dest_dir, self.__path)
@@ -133,14 +133,14 @@ class RcloneLeech:
                         await asyncio.sleep(fw.seconds + 5)
                         await upload_media_pyro(self.__client, message, self.__chat_id, f_path)
                     time.sleep(timer)
-                await clear_stuff("./Downloads")    
                 await self.__client.send_message(self.__chat_id, "Nothing else to upload!")
             else:
                 try:    
                     await upload_media_pyro(self.__client, self.__user_msg, self.__chat_id, f_path)
                 except FloodWait as fw:
                     await asyncio.sleep(fw.seconds + 5)
-                    await upload_media_pyro(self.__client, self.__user_msg, self.__chat_id, f_path)   
+                    await upload_media_pyro(self.__client, self.__user_msg, self.__chat_id, f_path)
+            await clean_download("./Downloads")     
 
     async def __rclone_update(self):
         blank = 0
