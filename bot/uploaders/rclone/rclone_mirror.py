@@ -9,6 +9,7 @@ from bot.core.get_vars import get_val
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.utils.drive_utils import get_glink
 from bot.utils.get_rclone_conf import get_config
+from bot.utils.misc_utils import clean_download
 from bot.utils.rename_file import rename
 log = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ class RcloneMirror:
 
     async def mirror(self):
           old_path = self.__path
+          path = ''
           dest_base = ''
           gen_drive_name = ''
           dest_drive = get_val('DEF_RCLONE_DRIVE')
@@ -81,7 +83,6 @@ class RcloneMirror:
                return
 
           log.info('Successfully uploaded')
-
           name = path.split('/')[(-1)]
           msg = 'Successfully uploaded ✅\n\n'
           msg += f"<b>Name: </b><code>{escape(name)}</code><b>"
@@ -92,10 +93,10 @@ class RcloneMirror:
                button = []
                button.append([InlineKeyboardButton(text='Drive Link', url=link)])
                await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
-               return
           else:
                await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
-               return
+
+          clean_download(path)
 
     async def __rclone_update(self):
         blank = 0
