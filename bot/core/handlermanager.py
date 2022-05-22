@@ -13,7 +13,7 @@ from bot.core.handlers.handle_leech_cm import handle_leech_command
 from bot.core.handlers.handle_myfiles_cm import handle_myfiles
 from bot.core.handlers.handle_restart_cm import handle_restart
 from bot.core.handlers.handle_server_cm import handle_server_command
-from bot.core.handlers.handle_config_cm import handle_config_command
+from bot.core.handlers.handle_mirrorset_cm import handle_mirrorset_command
 from bot.core.handlers.handle_speedtest import speed_handler
 from bot.core.handlers.handle_start import start_handler
 from bot.core.handlers.handle_test_cm import handle_test_command
@@ -99,8 +99,8 @@ def add_handlers(bot):
     )
 
     bot.add_event_handler(
-        handle_config_command,
-        events.NewMessage(pattern=command_process(get_command_tele("CONFIG")))
+        handle_mirrorset_command,
+        events.NewMessage(pattern=command_process(get_command_tele("MIRRORSET")))
     )
 
     bot.loop.run_until_complete(booted(bot))
