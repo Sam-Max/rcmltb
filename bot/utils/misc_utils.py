@@ -17,4 +17,3 @@ def clean_download(path: str):
             shutil.rmtree(path)
         except:
             pass
-        os.makedirs(path)
