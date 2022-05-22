@@ -14,15 +14,14 @@
 
 ```
 mirror - mirror to selected cloud 
-mirrorbatch - mirror batch files to selected cloud 
-leech - leech from cloud to telegram
+mirrorbatch - mirror files in batch to selected cloud 
+mirrorset - select cloud and folder where to mirror
+leech - leech from cloud to Telegram
 copy - copy from cloud to cloud
 myfiles - file manager
-config - select cloud and folder for mirror
 logs - get logs from server
 server - get server info
 speedtest - test speed of server
-cleardata- clear downloads
 restart - restart bot
 ```
 
