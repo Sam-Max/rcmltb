@@ -9,7 +9,7 @@ from bot.core.get_vars import get_val
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.utils.drive_utils import get_glink
 from bot.utils.get_rclone_conf import get_config
-from bot.utils.misc_utils import clean_download
+from bot.utils.misc_utils import clean_filepath
 from bot.utils.rename_file import rename
 log = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ class RcloneMirror:
           else:
                await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
 
-          clean_download(path)
+          clean_filepath(path)
 
     async def __rclone_update(self):
         blank = 0

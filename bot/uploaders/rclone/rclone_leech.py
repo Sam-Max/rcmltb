@@ -9,7 +9,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.core.get_vars import get_val
 from bot.uploaders.telegram.telegram_upload import upload_media_pyro
 from bot.utils.get_size_p import get_size
-from bot.utils.misc_utils import clean_download
+from bot.utils.misc_utils import clean_path
 from bot.utils.zip_utils import split_in_zip
 from bot.utils.get_rclone_conf import get_config
 import logging
@@ -113,7 +113,7 @@ class RcloneLeech:
                             await asyncio.sleep(fw.seconds + 5)
                             await upload_media_pyro(self.__client, self.__user_msg, self.__chat_id, f_path)
                         time.sleep(timer)
-            await clean_download("./Downloads")
+            clean_path(self.__dest_dir)
             await self.__client.send_message(self.__chat_id, "Nothing else to upload!")  
         else:
             f_path = os.path.join(self.__dest_dir, self.__path)
@@ -140,7 +140,7 @@ class RcloneLeech:
                 except FloodWait as fw:
                     await asyncio.sleep(fw.seconds + 5)
                     await upload_media_pyro(self.__client, self.__user_msg, self.__chat_id, f_path)
-            await clean_download("./Downloads")     
+            clean_path(self.__dest_dir)    
 
     async def __rclone_update(self):
         blank = 0
