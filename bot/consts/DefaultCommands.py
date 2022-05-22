@@ -10,5 +10,4 @@ class Commands:
     START = "start"
     SPEEDTEST = "speedtest"
     TEST= "test"
-    CRLDATA = "cleardata"
     RESTART= "restart"

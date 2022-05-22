@@ -5,7 +5,6 @@ from bot.core.get_commands import get_command_pyro, get_command_tele
 from bot.core.get_vars import get_val
 from bot.core.handlers.callbacks.handle_download_cb import handle_download_cb
 from bot.core.handlers.handle_cancel import handle_cancel
-from bot.core.handlers.handle_cleardata import cleardata_handler
 from bot.core.handlers.handle_copy_cm import handle_copy_command
 from bot.core.handlers.handle_download_cm import handle_download_command
 from bot.core.handlers.handle_exec_cm import handle_exec_message_f
@@ -100,11 +99,6 @@ def add_handlers(bot):
     )
 
     bot.add_event_handler(
-        cleardata_handler,
-        events.NewMessage(pattern=command_process(get_command_tele("CRLDATA")))
-    )
-
-    bot.add_event_handler(
         handle_config_command,
         events.NewMessage(pattern=command_process(get_command_tele("CONFIG")))
     )
@@ -156,10 +150,6 @@ def add_handlers(bot):
     bot.add_event_handler(
         handle_server_command,
         events.CallbackQuery(pattern="fullserver")
-    )
-    bot.add_event_handler(
-        cleardata_handler,
-        events.CallbackQuery(pattern="cleardata")
     )
 
     bot.pyro.add_handler(
