@@ -22,11 +22,11 @@ from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from bot.core.menus.callbacks.handle_copy_menu_cb import handle_setting_copy_menu_callback
 from bot.core.menus.callbacks.handle_leech_menu_cb import handle_setting_leech_menu_callback
-from bot.core.menus.callbacks.handle_main_menu_cb import handle_setting_main_menu_callback
+from bot.core.menus.callbacks.handle_mirrorset_menu_cb import handle_setting_mirroset_callback
 from bot.core.menus.callbacks.handle_myfiles_menu_cb import handle_setting_myfiles_menu_callback
 from bot.core.menus.callbacks.nextpage.handle_nextpage_copy_menu_cb import next_page_copy
 from bot.core.menus.callbacks.nextpage.handle_nextpage_leech_menu_cb import next_page_leech
-from bot.core.menus.callbacks.nextpage.handle_nextpage_main_menu_cb import next_page_menu
+from bot.core.menus.callbacks.nextpage.handle_nextpage_mirrorset_menu_cb import next_page_mirrorset
 from bot.core.menus.callbacks.nextpage.handle_nextpage_myfiles_menu_cb import next_page_myfiles
 
 torlog = logging.getLogger(__name__)
@@ -108,64 +108,67 @@ def add_handlers(bot):
 
     # *********** Callback Handlerss ***********  
 
-    bot.pyro.add_handler(
-        CallbackQueryHandler(
-        handle_download_cb, 
-        filters= filters.regex("renaming"))
-        )
-
+    #next    
     bot.add_event_handler(
-        next_page_menu,
-        events.CallbackQuery(pattern="next")
-        )
-
-    bot.add_event_handler(
-        next_page_copy,
-        events.CallbackQuery(pattern="n_copy")
-        )
-
-    bot.pyro.add_handler(
-        CallbackQueryHandler(
-        next_page_myfiles, 
-        filters= filters.regex("n_myfiles"))
-        )
-
-    bot.pyro.add_handler(
-        CallbackQueryHandler(
-        next_page_leech, 
-        filters= filters.regex("n_leech"))
-        )
-
-    bot.pyro.add_handler(
-        CallbackQueryHandler(
-        handle_setting_myfiles_menu_callback, 
-        filters= filters.regex("myfilesmenu"))
-        )         
-
-    bot.add_event_handler(
-        handle_cancel,
-        events.CallbackQuery(pattern="upcancel")
+    next_page_mirrorset,
+    events.CallbackQuery(pattern="n_mirrorset")
     )
 
     bot.add_event_handler(
-        handle_server_command,
-        events.CallbackQuery(pattern="fullserver")
+    next_page_copy,
+    events.CallbackQuery(pattern="n_copy")
     )
 
     bot.pyro.add_handler(
-        CallbackQueryHandler(
-        handle_setting_leech_menu_callback, 
-        filters= filters.regex("leechmenu"))
-        )
+    CallbackQueryHandler(
+    next_page_myfiles, 
+    filters= filters.regex("n_myfiles"))
+    )
+
+    bot.pyro.add_handler(
+    CallbackQueryHandler(
+    next_page_leech, 
+    filters= filters.regex("n_leech"))
+    )
+
+    #menus
+    bot.pyro.add_handler(
+    CallbackQueryHandler(
+    handle_setting_myfiles_menu_callback, 
+    filters= filters.regex("myfilesmenu"))
+    )  
 
     bot.add_event_handler(
-        handle_setting_main_menu_callback,
-        events.CallbackQuery(pattern="mainmenu")
+    handle_setting_mirroset_callback,
+    events.CallbackQuery(pattern="mirrorsetmenu")
+    )
+
+    bot.pyro.add_handler(
+    CallbackQueryHandler(
+    handle_setting_leech_menu_callback, 
+    filters= filters.regex("leechmenu"))
     )
 
     bot.add_event_handler(
-        handle_setting_copy_menu_callback,
-        events.CallbackQuery(pattern="copymenu")
+    handle_setting_copy_menu_callback,
+    events.CallbackQuery(pattern="copymenu")
+    )
+
+    #others
+    bot.pyro.add_handler(
+    CallbackQueryHandler(
+    handle_download_cb, 
+    filters= filters.regex("renaming"))
+    )
+
+    bot.add_event_handler(
+    handle_cancel,
+    events.CallbackQuery(pattern="upcancel")
+    )
+
+    bot.add_event_handler(
+    handle_server_command,
+    events.CallbackQuery(pattern="fullserver")
     )
 
 async def booted(client):

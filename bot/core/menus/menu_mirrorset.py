@@ -15,7 +15,7 @@ yes = "✅"
 folder_icon= "📁"
 header = ""
 
-async def settings_main_menu(
+async def settings_mirrorset_menu(
     query, 
     mmes="", 
     drive_base="", 
@@ -43,9 +43,9 @@ async def settings_main_menu(
                 prev = yes
 
             if "team_drive" in list(conf[j]):
-                btns.append(KeyboardButtonCallback(f"{prev} {folder_icon} {j}", f"mainmenu^list_drive_main_menu^{j}"))
+                btns.append(KeyboardButtonCallback(f"{prev} {folder_icon} {j}", f"mirrorsetmenu^list_drive_mirrorset_menu^{j}"))
             else:
-                btns.append(KeyboardButtonCallback(f"{prev} {folder_icon} {j}", f"mainmenu^list_drive_main_menu^{j}"))
+                btns.append(KeyboardButtonCallback(f"{prev} {folder_icon} {j}", f"mirrorsetmenu^list_drive_mirrorset_menu^{j}"))
         
         for a, b in pairwise(btns):
             row= [] 
@@ -58,7 +58,7 @@ async def settings_main_menu(
             menu.append(row)
 
         menu.append(
-            [KeyboardButtonCallback("✘ Close Menu", f"mainmenu^selfdest")]
+            [KeyboardButtonCallback("✘ Close Menu", f"mirrorsetmenu^selfdest")]
         )
 
         base_dir= get_val("BASE_DIR")
@@ -85,11 +85,11 @@ async def settings_main_menu(
             )
 
         menu.append(
-            [KeyboardButtonCallback("⬅️ Back", f"mainmenu^{data_back_cb}")]
+            [KeyboardButtonCallback("⬅️ Back", f"mirrorsetmenu^{data_back_cb}")]
         )
 
         menu.append(
-            [KeyboardButtonCallback("✘ Close Menu", f"mainmenu^selfdest")]
+            [KeyboardButtonCallback("✘ Close Menu", f"mirrorsetmenu^selfdest")]
         )
 
         if edit:
@@ -107,7 +107,7 @@ async def list_selected_drive(
     data_back_cb="",
     offset= 0
     ):
-    menu.append([KeyboardButtonCallback(f" ✅ Select this folder", f"mainmenu^selfdest")])
+    menu.append([KeyboardButtonCallback(f" ✅ Select this folder", f"mirrorsetmenu^selfdest")])
 
     cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only" ] 
 
@@ -127,27 +127,27 @@ async def list_selected_drive(
 
     if data == []:
          menu.append(
-            [KeyboardButtonCallback("❌Nothing to show❌", data="mainmenu^pages")])
+            [KeyboardButtonCallback("❌Nothing to show❌", data="mirrorsetmenu^pages")])
          return     
 
     data.sort(key=lambda x: x["Name"])  
 
     set_val("JSON_RESULT_DATA", data)
-    data, next_offset, total= await get_list_drive_results_main(data)
+    data, next_offset, total= await get_list_drive_results_mirrorset(data)
     
-    list_drive_main(data, menu, data_cb)
+    list_drive_mirrorset(data, menu, data_cb)
 
     if offset == 0 and total <= 10:
         menu.append(
-            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="mainmenu^pages")]) 
+            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="mirrorsetmenu^pages")]) 
             
     else: 
         menu.append(
-            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="mainmenu^pages"),
-             KeyboardButtonCallback("NEXT ⏩", data= f"next {next_offset} {data_back_cb}")
+            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="mirrorsetmenu^pages"),
+             KeyboardButtonCallback("NEXT ⏩", data= f"n_mirrorset {next_offset} {data_back_cb}")
             ]) 
            
-async def get_list_drive_results_main(data, max_results=10, offset=0):
+async def get_list_drive_results_mirrorset(data, max_results=10, offset=0):
     total = len(data)
     next_offset = offset + max_results
     data = await list_range(offset, max_results, data)
@@ -165,7 +165,7 @@ async def list_range(offset, max_results, data):
     
     return data[start:end]             
 
-def list_drive_main(result, menu=[], data_cb=""):
+def list_drive_mirrorset(result, menu=[], data_cb=""):
      folder = ""
      file= ""
      index= 0
@@ -179,5 +179,5 @@ def list_drive_main(result, menu=[], data_cb=""):
             file= "" 
             folder= "📁"
         menu.append(        
-        [KeyboardButtonCallback(f"{folder} {file} {path}", f"mainmenu^{data_cb}^{index}")]
+        [KeyboardButtonCallback(f"{folder} {file} {path}", f"mirrorsetmenu^{data_cb}^{index}")]
      )

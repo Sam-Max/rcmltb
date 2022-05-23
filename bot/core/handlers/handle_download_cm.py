@@ -20,7 +20,7 @@ async def handle_download_command(client, message):
                         
                     keyboard = [[InlineKeyboardButton(f"📄 By default", callback_data= f'renaming default'),
                                 InlineKeyboardButton(f"📝 Rename", callback_data='renaming rename')],
-                                [InlineKeyboardButton("Close", callback_data= f"mainmenu^selfdest")]]
+                                [InlineKeyboardButton("Close", callback_data= f"mirrorsetmenu^selfdest")]]
 
                     await message.reply_text(header_m + msg, quote= True, reply_markup= InlineKeyboardMarkup(keyboard))
         else:
