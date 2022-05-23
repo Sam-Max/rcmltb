@@ -133,7 +133,7 @@ async def list_selected_drive(
     data.sort(key=lambda x: x["Name"])  
 
     set_val("JSON_RESULT_DATA", data)
-    data, next_offset, total= await get_list_drive_results_main(data)
+    data, next_offset, total= await get_list_drive_results_mirrorset(data)
     
     list_drive_mirrorset(data, menu, data_cb)
 
@@ -147,7 +147,7 @@ async def list_selected_drive(
              KeyboardButtonCallback("NEXT ⏩", data= f"n_mirrorset {next_offset} {data_back_cb}")
             ]) 
            
-async def get_list_drive_results_main(data, max_results=10, offset=0):
+async def get_list_drive_results_mirrorset(data, max_results=10, offset=0):
     total = len(data)
     next_offset = offset + max_results
     data = await list_range(offset, max_results, data)
