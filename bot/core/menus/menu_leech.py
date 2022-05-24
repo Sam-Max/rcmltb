@@ -175,5 +175,5 @@ def list_drive_leech(
         )
         else:
             menu.append(        
-            [InlineKeyboardButton(f"[{size}] {path}", f"leechmenu^start_leech^{index}")]
+            [InlineKeyboardButton(f"[{size}] {path}", f"leechmenu^start_leech_file^{index}")]
         )

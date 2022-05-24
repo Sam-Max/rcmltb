@@ -36,6 +36,7 @@ async def handle_setting_mirroset_callback(callback_query):
         path = get_val(cmd[2])
         rclone_dir += path + "/"
         set_val("BASE_DIR", rclone_dir)
+        print(get_val("BASE_DIR"))
         await settings_mirrorset_menu(
             callback_query, 
             mmes, 
@@ -52,14 +53,15 @@ async def handle_setting_mirroset_callback(callback_query):
         data_b_cb= "back"
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
-        dir_list= rclone_dir.split("/")
-        dir_list = dir_list[: len(dir_list) - 2]
-        listToStr = '/'.join([elem for elem in dir_list])
-        rclone_dir= listToStr
-        set_val("BASE_DIR", rclone_dir )
+        rclone_dir_split= rclone_dir.split("/")
+        rclone_dir_split = rclone_dir_split[:-2]
+        rclone_dir_string = "" 
+        for dir in rclone_dir_split: 
+            rclone_dir_string += dir + "/"
+        rclone_dir = rclone_dir_string
+        set_val("BASE_DIR", rclone_dir)
         
-        if rclone_dir == "":
-            data_b_cb= "mirrorsetmenu"
+        if rclone_dir_string == "": data_b_cb= "mirrorsetmenu"
 
         await settings_mirrorset_menu(
                     callback_query,
