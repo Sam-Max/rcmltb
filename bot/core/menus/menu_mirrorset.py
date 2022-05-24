@@ -97,6 +97,7 @@ async def settings_mirrorset_menu(
         else:
             await query.reply(header, buttons=menu)
 
+##########################################
 async def list_selected_drive(
     query, 
     drive_base, 
@@ -131,10 +132,8 @@ async def list_selected_drive(
          return     
 
     data.sort(key=lambda x: x["Name"])  
-
     set_val("JSON_RESULT_DATA", data)
-    data, next_offset, total= await get_list_drive_results_mirrorset(data)
-    
+    data, next_offset, total= get_list_drive_results_mirrorset(data)
     list_drive_mirrorset(data, menu, data_cb)
 
     if offset == 0 and total <= 10:
@@ -145,15 +144,16 @@ async def list_selected_drive(
         menu.append(
             [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="mirrorsetmenu^pages"),
              KeyboardButtonCallback("NEXT ⏩", data= f"n_mirrorset {next_offset} {data_back_cb}")
-            ]) 
+            ])
+
            
-async def get_list_drive_results_mirrorset(data, max_results=10, offset=0):
+def get_list_drive_results_mirrorset(data, max_results=10, offset=0):
     total = len(data)
     next_offset = offset + max_results
-    data = await list_range(offset, max_results, data)
+    data = list_range(offset, max_results, data)
     return data, next_offset, total    
 
-async def list_range(offset, max_results, data):
+def list_range(offset, max_results, data):
     start = offset
     end = max_results + start
     

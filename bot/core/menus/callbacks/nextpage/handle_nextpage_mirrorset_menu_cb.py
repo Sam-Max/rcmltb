@@ -18,7 +18,7 @@ async def next_page_mirrorset(callback_query):
     btn= []
     offset = int(offset)
     
-    result, next_offset, total = await get_list_drive_results_mirrorset(data, offset=offset)
+    result, next_offset, total = get_list_drive_results_mirrorset(data, offset=offset)
 
     btn.append(
         [KeyboardButtonCallback(f" ✅ Select this folder", f"mirrorsetmenu^selfdest")]
