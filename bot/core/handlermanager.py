@@ -3,10 +3,9 @@ from os import path as ospath, remove as osremove
 from telethon import events
 from bot.core.get_commands import get_command_pyro, get_command_tele
 from bot.core.get_vars import get_val
-from bot.core.handlers.callbacks.handle_download_cb import handle_download_cb
 from bot.core.handlers.handle_cancel import handle_cancel
 from bot.core.handlers.handle_copy_cm import handle_copy_command
-from bot.core.handlers.handle_download_cm import handle_download_command
+from bot.core.handlers.handle_mirror_cm import handle_mirror_command, handle_unzip_mirror_command
 from bot.core.handlers.handle_exec_cm import handle_exec_message_f
 from bot.core.handlers.handle_getlogs import get_logs_f
 from bot.core.handlers.handle_leech_cm import handle_leech_command
@@ -22,6 +21,7 @@ from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from bot.core.menus.callbacks.handle_copy_menu_cb import handle_setting_copy_menu_callback
 from bot.core.menus.callbacks.handle_leech_menu_cb import handle_setting_leech_menu_callback
+from bot.core.menus.callbacks.handle_mirror_menu_cb import handle_mirror_menu_callback
 from bot.core.menus.callbacks.handle_mirrorset_menu_cb import handle_setting_mirroset_callback
 from bot.core.menus.callbacks.handle_myfiles_menu_cb import handle_setting_myfiles_menu_callback
 from bot.core.menus.callbacks.nextpage.handle_nextpage_copy_menu_cb import next_page_copy
@@ -36,8 +36,14 @@ def add_handlers(bot):
          
     #pyrogram handlers
     download_handlers = MessageHandler(
-        handle_download_command,
+        handle_mirror_command,
         filters=filters.command([get_command_pyro("MIRROR")]) 
+    )
+    bot.pyro.add_handler(download_handlers)
+
+    download_handlers = MessageHandler(
+        handle_unzip_mirror_command,
+        filters=filters.command([get_command_pyro("ZIPMIRROR")]) 
     )
     bot.pyro.add_handler(download_handlers)
 
@@ -154,13 +160,13 @@ def add_handlers(bot):
     events.CallbackQuery(pattern="copymenu")
     )
 
-    #others
     bot.pyro.add_handler(
     CallbackQueryHandler(
-    handle_download_cb, 
-    filters= filters.regex("renaming"))
+    handle_mirror_menu_callback,
+    filters= filters.regex("mirrormenu"))
     )
 
+    #others
     bot.add_event_handler(
     handle_cancel,
     events.CallbackQuery(pattern="upcancel")
