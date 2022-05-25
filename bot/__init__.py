@@ -1,11 +1,10 @@
 __version__ = "1.0"
 __author__ = "Sam-Max"
 
-import logging
+from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from os import environ
 import sys
 import time
-
 from dotenv import load_dotenv
 from bot.client import RcloneTgClient
 from bot.core.var_holder import VarHolder
@@ -15,9 +14,11 @@ from pyrogram import Client
 
 from convopyro import Conversation
 
-logging.basicConfig(level= logging.INFO,
+basicConfig(level= INFO,
     format= "%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s",
-    handlers=[logging.StreamHandler(), logging.FileHandler("botlog.txt")])
+    handlers=[StreamHandler(), FileHandler("botlog.txt")])
+
+LOGGER = getLogger(__name__)
 
 def getConfig(name: str):
     return environ[name]
@@ -34,7 +35,7 @@ try:
     API_HASH = getConfig("API_HASH")
     BOT_TOKEN = getConfig("BOT_TOKEN")
 except:
-    logging.info("One or more env variables missing! Exiting now")
+    LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
 
 #---------------------------
@@ -44,7 +45,7 @@ bot = RcloneTgClient("bot", API_ID, API_HASH, timeout=20, retry_delay=3,
 
 bot.start(bot_token=BOT_TOKEN)
 
-logging.info("Telethon client created.")
+LOGGER.info("Telethon client created.")
 
 #---------------------------
 
@@ -53,7 +54,7 @@ try:
     if len(SESSION) == 0:
         raise KeyError 
     userbot = Client("userbot", session_string=SESSION, api_hash=API_HASH, api_id=API_ID)
-    logging.info("Pyro userbot client created.")
+    LOGGER.info("Pyro userbot client created.")
 except:
     SESSION = None
     userbot= None
@@ -73,7 +74,7 @@ Conversation(Bot)
 try:
     Bot.start()
     bot.pyro = Bot
-    logging.info("Pyro client created.")
+    LOGGER.info("Pyro client created.")
 except Exception as e:
     print(e)
     sys.exit(1)
