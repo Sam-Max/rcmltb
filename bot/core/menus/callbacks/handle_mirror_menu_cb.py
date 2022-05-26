@@ -1,17 +1,17 @@
 import asyncio
 from bot.core.get_vars import get_val
-from pyrogram import filters
 from bot.downloaders.telegram_download import down_load_media_pyro
+from pyrogram import filters
 
-
-async def handle_download_cb(client, query):
-        list = query.data.split(" ")
+async def handle_mirror_menu_callback(client, query):
+        list = query.data.split("_")
         message= query.message
         tag = f"@{message.reply_to_message.from_user.username}"
         media= get_val("MEDIA")
+        isZip = get_val("IS_ZIP")
 
         if "default" in list[1]:
-            await down_load_media_pyro(client, message, media, tag)
+            await down_load_media_pyro(client, message, media, tag, isZip)
 
         if "rename" in list[1]: 
             question= await client.send_message(message.chat.id, text= "Send the new name /ignore to cancel")
@@ -25,6 +25,6 @@ async def handle_download_cb(client, query):
                         await question.reply("Okay cancelled question!")
                         await client.listen.Cancel(tag)
                     else:
-                        await down_load_media_pyro(client, message, media, tag, response.text, True)
+                        await down_load_media_pyro(client, message, media, tag, isZip, response.text, True)
             finally:
                 await question.delete()

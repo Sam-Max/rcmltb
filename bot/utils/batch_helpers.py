@@ -6,7 +6,7 @@ import re
 import time
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
-from .. import GLOBAL_RC_INST, logging
+from .. import GLOBAL_RC_INST
 
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 

@@ -33,7 +33,10 @@ class VarHolder:
             "EDIT_SLEEP_SECS"
         ]
 
-        BOOLS = ["UPLOAD_CANCEL"]
+        BOOLS = [
+            "UPLOAD_CANCEL",
+            "IS_ZIP"
+            ]
         
         if variable == "ALLOWED_CHATS":
             if envval is not None:
