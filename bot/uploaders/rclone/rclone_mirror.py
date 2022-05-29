@@ -1,6 +1,6 @@
 import asyncio
 from configparser import ConfigParser
-import logging, os
+import os
 from random import randrange
 import re
 import subprocess, time
@@ -11,7 +11,7 @@ from bot.utils.drive_utils import get_glink
 from bot.utils.get_rclone_conf import get_config
 from bot.utils.misc_utils import clean_filepath
 from bot.utils.rename_file import rename
-log = logging.getLogger(__name__)
+from bot import LOGGER
 
 class RcloneMirror:
     def __init__(self, path, user_msg, new_name, tag, is_rename=False) -> None:
@@ -48,12 +48,12 @@ class RcloneMirror:
                     if conf[i]['type'] == 'drive':
                          is_gdrive = True
                          dest_base = get_val('BASE_DIR')
-                         log.info('Google Drive Upload Detected.')
+                         LOGGER.info('Google Drive Upload Detected.')
                     else:
                          is_gdrive = False
                          gen_drive_name = conf[i]['type']
                          dest_base = get_val('BASE_DIR')
-                         log.info(f"{gen_drive_name} Upload Detected.")
+                         LOGGER.info(f"{gen_drive_name} Upload Detected.")
                     break
         
           if not os.path.exists(old_path):
@@ -64,17 +64,21 @@ class RcloneMirror:
                path = await rename(old_path, self.__new_name)
           else:
                path = old_path
-          
-          rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
-          f"{dest_drive}:{dest_base}", '-P']
+
+          if os.path.isdir(path):
+            new_dest_base = os.path.join(dest_base, os.path.basename(path))
+            rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
+                              f"{dest_drive}:{new_dest_base}", '-P']
+          else:
+            rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
+                              f"{dest_drive}:{dest_base}", '-P']
           
           self.__rclone_pr = subprocess.Popen(rclone_copy_cmd,
                 stdout=(subprocess.PIPE),
                 stderr=(subprocess.PIPE)
           )
           
-          log.info('Uploading...')
-          
+          LOGGER.info('Uploading...')
           rcres = await self.__rclone_update()
           
           if rcres == False:
@@ -82,19 +86,30 @@ class RcloneMirror:
                await self.__user_msg.edit('Mirror cancelled')
                return
 
-          log.info('Successfully uploaded')
-          name = path.split('/')[(-1)]
+          LOGGER.info('Successfully uploaded')
+
+          name = os.path.basename(path)
           msg = 'Successfully uploaded ✅\n\n'
           msg += f"<b>Name: </b><code>{escape(name)}</code><b>"
-
-          if is_gdrive:
-               gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path, False)
-               link = f"https://drive.google.com/file/d/{gid[0]}/view"
-               button = []
-               button.append([InlineKeyboardButton(text='Drive Link', url=link)])
-               await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
+          
+          if os.path.isdir(path):
+            if is_gdrive:
+                gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path)
+                folder_link = f"https://drive.google.com/folderview?id={gid[0]}"
+                button = []
+                button.append([InlineKeyboardButton(text='Drive Link', url=folder_link)])
+                await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
+            else:
+                await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
           else:
-               await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
+            if is_gdrive:
+                gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path, False)
+                link = f"https://drive.google.com/file/d/{gid[0]}/view"
+                button = []
+                button.append([InlineKeyboardButton(text='Drive Link', url=link)])
+                await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
+            else:
+                await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
 
           clean_filepath(path)
 
