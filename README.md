@@ -3,9 +3,10 @@
 ## Features:
 
 - Mirror from Telegram to cloud.
-- Mirror-batch up to 100 files at once from Telegram to cloud (private or public channel)
+- Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
+- Zip/Unzip from Telegram to cloud
 - Leech files and folders from cloud to Telegram.
-- Copy from one cloud to another.
+- Copy from cloud to cloud.
 - Button panels to interact with clouds.
 - Renaming of Telegram files.
 - Progress bar when downloading and uploading.
@@ -14,8 +15,10 @@
 
 ```
 mirror - mirror to selected cloud 
-mirrorbatch - mirror files in batch to selected cloud 
-mirrorset - select cloud and folder where to mirror
+zipmirror - mirror and zip to cloud 
+unzipmirror - mirror and extract to cloud 
+mirrorbatch - mirror files in batch to cloud 
+mirrorset - select cloud/folder where to mirror
 leech - leech from cloud to Telegram
 copy - copy from cloud to cloud
 myfiles - file manager
@@ -24,6 +27,10 @@ server - get server info
 speedtest - test speed of server
 restart - restart bot
 ```
+
+## Deploying on Heroku
+<p><a href="https://github.com/Sam-Max/Rclone-Tg-Bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
+
 
 ## Deploy on VPS: 
 
@@ -55,7 +62,7 @@ restart - restart bot
 
    - Non mandatory variables:
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
-        - `SESSION`: Pyrogram Session: To generate string session use this command `python3 generate_string_session.py` on repo folder.
+        - `SESSION`: Pyrogram Session: [![Run on Repl.it](https://replit.com/badge/github/vasusen-code/saverestrictedcontentbot)](https://replit.com/@SpEcHiDe/GenerateStringSession) 
         - `UPSTREAM_BRANCH`: Upstream branch for update. 
         - `TG_SPLIT_SIZE`: Telegram upload limit in bytes (max `2097151000` which is ~2GB), to automatically slice the file bigger that this size into small parts to upload to Telegram.
         - `EDIT_SLEEP_SECS`: Seconds for update the progress message regulary. Default to 10. 
@@ -92,30 +99,13 @@ restart - restart bot
 
         sudo docker image prune -a
 
-4. **Deploying on VPS without Docker**
-- sudo apt update 
-- sudo apt install -y python3.8 
-- sudo apt install -y python3-venv 
-- python3 -m venv venv 
-- source venv/bin/activate 
-- pip install -r requirements.txt 
-- sudo apt -qq install -y git wget curl python3 python3-pip locales ffmpeg p7zip-full
-- curl https://rclone.org/install.sh | bash
-- chmod 777 start.sh 
-- ./start.sh
-
 
 ## Repositories used to develop this bot:
 
 1- [TorToolkit-Telegram](https://github.com/yash-dk/TorToolkit-Telegram) 
 
-2- [Conversation-Pyrogram](https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip)
+2- [Rclone](https://github.com/rclone/rclone)
 
-3- [Rclone](https://github.com/rclone/rclone)
+3- [Telethon]() and [Pyrogram]()
 
-4- [Telethon]() and [Pyrogram]()
-
-5- Others mentioned in the bot code...
-
-
-
+4- [Conversation-Pyrogram](https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip)
