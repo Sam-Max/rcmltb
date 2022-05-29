@@ -4,8 +4,9 @@
 
 - Mirror from Telegram to cloud.
 - Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
+- Zip/Unzip from Telegram to cloud
 - Leech files and folders from cloud to Telegram.
-- Copy from one cloud to another.
+- Copy from cloud to cloud.
 - Button panels to interact with clouds.
 - Renaming of Telegram files.
 - Progress bar when downloading and uploading.
@@ -14,8 +15,10 @@
 
 ```
 mirror - mirror to selected cloud 
-mirrorbatch - mirror files in batch to selected cloud 
-mirrorset - select cloud and folder where to mirror
+zipmirror - mirror and zip to cloud 
+unzipmirror - mirror and extract to cloud 
+mirrorbatch - mirror files in batch to cloud 
+mirrorset - select cloud/folder where to mirror
 leech - leech from cloud to Telegram
 copy - copy from cloud to cloud
 myfiles - file manager
@@ -96,28 +99,20 @@ restart - restart bot
 
         sudo docker image prune -a
 
-4. **Deploying on VPS without Docker**
-- sudo apt update 
-- sudo apt install -y python3.8 
-- sudo apt install -y python3-venv 
-- python3 -m venv venv 
-- source venv/bin/activate 
-- pip install -r requirements.txt 
-- sudo apt -qq install -y git wget curl python3 python3-pip locales ffmpeg p7zip-full
-- curl https://rclone.org/install.sh | bash
-- chmod 777 start.sh 
-- ./start.sh
-
 
 ## Repositories used to develop this bot:
 
 1- [TorToolkit-Telegram](https://github.com/yash-dk/TorToolkit-Telegram) 
 
-2- [Conversation-Pyrogram](https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip)
+2- [Rclone](https://github.com/rclone/rclone)
 
-3- [Rclone](https://github.com/rclone/rclone)
+3- [Telethon]() and [Pyrogram]()
 
-4- [Telethon]() and [Pyrogram]()
+4- [Conversation-Pyrogram](https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip)
+
+
+
+
 
 
 
