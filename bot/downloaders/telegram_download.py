@@ -37,7 +37,9 @@ async def down_load_media_pyro(client, message, media, tag, pswd, isZip=False, e
         m_path = media_path
         LOGGER.info("Compressing...")
         await mess_age.edit("Compressing...")
-        path = m_path + ".zip"
+        base = os.path.basename(m_path)
+        file_name = base.rsplit('.', maxsplit=1)[0]
+        path = os.path.join(os.getcwd(), "Downloads", file_name + ".zip")
         LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
         size = os.path.getsize(m_path)
         TG_SPLIT_SIZE= get_val("TG_SPLIT_SIZE")
@@ -59,7 +61,6 @@ async def down_load_media_pyro(client, message, media, tag, pswd, isZip=False, e
         await mess_age.edit("Extracting...")
         extracted_path= await extract_archive(m_path, pswd)
         clean_filepath(m_path)
-        LOGGER.info(extracted_path)
         if extracted_path is not False:
             await rclone_mirror(extracted_path, mess_age, new_name, tag, is_rename)
         else:
