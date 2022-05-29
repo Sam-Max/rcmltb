@@ -5,15 +5,14 @@ import re
 
 
 async def get_glink(drive_name, drive_base, ent_name, conf_path, isdir=True):
-        print("Ent - ", ent_name)
         ent_name = re.escape(ent_name)
 
         if isdir:
-                get_id_cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only",
-                              "-f", f"+ {ent_name}/", "-f", "- *"]
+            get_id_cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only",
+                            "-f", f"+ {ent_name}/", "-f", "- *"]
         else:
-                get_id_cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--files-only",
-                              "-f", f"+ {ent_name}", "-f", "- *"]
+            get_id_cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--files-only",
+                            "-f", f"+ {ent_name}", "-f", "- *"]
 
         process = await asyncio.create_subprocess_exec(
             *get_id_cmd,

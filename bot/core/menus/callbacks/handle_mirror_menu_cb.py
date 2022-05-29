@@ -9,9 +9,11 @@ async def handle_mirror_menu_callback(client, query):
         tag = f"@{message.reply_to_message.from_user.username}"
         media= get_val("MEDIA")
         isZip = get_val("IS_ZIP")
+        extract = get_val("EXTRACT")
+        pswd = get_val("PSWD") 
 
         if "default" in list[1]:
-            await down_load_media_pyro(client, message, media, tag, isZip)
+            await down_load_media_pyro(client, message, media, tag, pswd, isZip, extract)
 
         if "rename" in list[1]: 
             question= await client.send_message(message.chat.id, text= "Send the new name /ignore to cancel")
@@ -25,6 +27,6 @@ async def handle_mirror_menu_callback(client, query):
                         await question.reply("Okay cancelled question!")
                         await client.listen.Cancel(tag)
                     else:
-                        await down_load_media_pyro(client, message, media, tag, isZip, response.text, True)
+                        await down_load_media_pyro(client, message, media, tag, pswd, isZip, extract, response.text, True)
             finally:
                 await question.delete()
