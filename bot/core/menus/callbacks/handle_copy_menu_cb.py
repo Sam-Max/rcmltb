@@ -1,11 +1,9 @@
 from bot import GLOBAL_RC_INST
 from bot.core.get_vars import get_val
-from bot.core.menus.menu_copy import settings_copy_menu
 from bot.core.set_vars import set_val
-import logging
+from bot.core.menus.menu_copy import settings_copy_menu
 from bot.uploaders.rclone.rclone_copy import RcloneCopy
 
-torlog = logging.getLogger(__name__)
 
 
 async def handle_setting_copy_menu_callback(callback_query):
@@ -31,14 +29,12 @@ async def handle_setting_copy_menu_callback(callback_query):
             submenu="list_drive", 
             data_cb="list_dir_origin",
             data_back_cb= "cp_menu_origin",
-            is_second_menu=False
-           )
+            is_second_menu=False)
 
     elif cmd[1] == "list_dir_origin":
         origin_drive = get_val("ORIGIN_DRIVE")
         origin_dir= get_val("ORIGIN_DIR")
         path = get_val(cmd[2])
-        logging.info("path: {}".format(path))
         rclone_dir= origin_dir + path + "/"
         set_val("ORIGIN_DIR", rclone_dir)
         await settings_copy_menu(
@@ -51,8 +47,7 @@ async def handle_setting_copy_menu_callback(callback_query):
              data_cb="list_dir_origin",
              data_back_cb="origin_m_back",
              submenu="list_drive",
-             is_second_menu= False
-             )
+             is_second_menu= False)
 
     elif cmd[1] == "rclone_menu_copy":
         #True if click on a File, False if click on Folder
@@ -67,8 +62,7 @@ async def handle_setting_copy_menu_callback(callback_query):
                 edit=True, 
                 msg=f"Select cloud where to copy files", 
                 submenu="rclone_menu_copy", 
-                data_cb="list_drive_dest",
-                )
+                data_cb="list_drive_dest")
         else:
             await settings_copy_menu(
                 callback_query,
@@ -76,8 +70,7 @@ async def handle_setting_copy_menu_callback(callback_query):
                 edit=True, 
                 msg=f"Select cloud where to copy files", 
                 submenu="rclone_menu_copy", 
-                data_cb="list_drive_dest",
-                )                               
+                data_cb="list_drive_dest")                               
   
     elif cmd[1] == "list_drive_dest":
         set_val("DEST_DRIVE", cmd[2])
@@ -92,8 +85,7 @@ async def handle_setting_copy_menu_callback(callback_query):
             submenu="list_drive", 
             data_cb="list_dir_dest",
             data_back_cb= "cp_menu_dest",
-            is_second_menu=True
-            )
+            is_second_menu=True)
 
     elif cmd[1] == "list_dir_dest":
         dest_drive = get_val("DEST_DRIVE")
@@ -111,8 +103,7 @@ async def handle_setting_copy_menu_callback(callback_query):
              data_cb="list_dir_dest",
              data_back_cb= "dest_m_back",
              submenu="list_drive", 
-             is_second_menu= True
-             )        
+             is_second_menu= True)        
  
     elif cmd[1] == "start_copy":
         origin_dir = get_val("ORIGIN_DIR")
@@ -130,16 +121,17 @@ async def handle_setting_copy_menu_callback(callback_query):
 
     #.........BACK BUTTONS HANDLING........#  
 
-    # ORIGIN MENU
-
+    # Origin Menu Back Button
     elif cmd[1] == "origin_m_back":
         data_b_cb= "origin_m_back"
         origin_drive = get_val("ORIGIN_DRIVE")
         rclone_dir= get_val("ORIGIN_DIR")
-        dir_list= rclone_dir.split("/")
-        dir_list = dir_list[: len(dir_list) - 2]
-        listToStr = '/'.join([elem for elem in dir_list])
-        rclone_dir= listToStr
+        rclone_dir_split= rclone_dir.split("/")
+        rclone_dir_split = rclone_dir_split[:-2]
+        rclone_dir_string = "" 
+        for dir in rclone_dir_split: 
+            rclone_dir_string += dir + "/"
+        rclone_dir= rclone_dir_string
         set_val("ORIGIN_DIR", rclone_dir)
         
         if rclone_dir == "": data_b_cb= "cp_menu_origin"
@@ -154,8 +146,7 @@ async def handle_setting_copy_menu_callback(callback_query):
              data_cb="list_dir_origin",
              data_back_cb= data_b_cb,
              submenu="list_drive",
-             is_second_menu= False
-             )   
+             is_second_menu= False)   
     
     elif cmd[1]== "cp_menu_origin":
         await settings_copy_menu(
@@ -164,20 +155,19 @@ async def handle_setting_copy_menu_callback(callback_query):
             msg= "Select cloud where your files are stored",
             submenu= "rclone_menu_copy",
             data_cb="list_drive_origin",
-            edit=True
-        )
+            edit=True)
 
-    # DESTINATION MENU
-
+    # Destination Menu Back Button
     elif cmd[1] == "dest_m_back":
         data_b_cb= "dest_m_back"
         dest_drive = get_val("DEST_DRIVE")
         rclone_dir=  get_val("DEST_DIR")
-        dir_list= rclone_dir.split("/")
-        dir_list = dir_list[: len(dir_list) - 2]
-        listToStr = '/'.join([elem for elem in dir_list])
-        rclone_dir= listToStr
-        logging.info(rclone_dir)
+        rclone_dir_split= rclone_dir.split("/")
+        rclone_dir_split = rclone_dir_split[:-2]
+        rclone_dir_string = "" 
+        for dir in rclone_dir_split: 
+            rclone_dir_string += dir + "/"
+        rclone_dir= rclone_dir_string
         set_val("DEST_DIR", rclone_dir)
         
         if rclone_dir == "": data_b_cb= "cp_menu_dest"
@@ -192,8 +182,7 @@ async def handle_setting_copy_menu_callback(callback_query):
              data_cb="list_dir_dest",
              data_back_cb= data_b_cb,
              submenu="list_drive", 
-             is_second_menu= True
-             )   
+             is_second_menu= True)   
 
     elif cmd[1]== "cp_menu_dest":
         await settings_copy_menu(
@@ -202,8 +191,7 @@ async def handle_setting_copy_menu_callback(callback_query):
             msg= f"Select cloud where to copy files", 
             submenu= "rclone_menu_copy",
             data_cb="list_drive_dest",
-            edit=True
-        )          
+            edit=True)          
 
                 
 
