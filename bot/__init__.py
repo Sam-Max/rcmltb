@@ -2,6 +2,7 @@ __version__ = "1.0"
 __author__ = "Sam-Max"
 
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
+from time import time
 from os import environ
 import sys
 import time
@@ -9,9 +10,7 @@ from dotenv import load_dotenv
 from bot.client import RcloneTgClient
 from bot.core.var_holder import VarHolder
 from bot.utils.load_rclone import load_rclone
-
 from pyrogram import Client
-
 from convopyro import Conversation
 
 basicConfig(level= INFO,
@@ -25,6 +24,7 @@ def getConfig(name: str):
 
 uptime = time.time()
 GLOBAL_RC_INST= []
+download_dict = {}
 SessionVars = VarHolder()
 
 load_dotenv('config.env', override=True)

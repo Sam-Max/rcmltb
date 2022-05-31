@@ -65,7 +65,7 @@ class AriaDownloader():
             download = await self._aloop.run_in_executor(None, 
             aria_instance.add_magnet, magnetic_link)
         except Exception as e:
-            return False, "**FAILED** \n" + str(e) + " \nPlease do not send SLOW links. Read /help"
+            return False, "**FAILED** \n" + str(e) + " \nPlease do not send slow links"
         else:
             return True, "" + download.gid + ""
 
@@ -77,7 +77,7 @@ class AriaDownloader():
             try:
                 download = await self._aloop.run_in_executor(None, partial(aria_instance.add_torrent, torrent_file_path, uris=None, options=None, position=None))
             except Exception as e:
-                return False, "**FAILED** \n" + str(e) + " \nPlease do not send SLOW links. Read /help"
+                return False, "**FAILED** \n" + str(e) + " \nPlease do not send slow links"
             else:
                 return True, "" + download.gid + ""
         else:
@@ -88,7 +88,7 @@ class AriaDownloader():
         try:
             download = await self._aloop.run_in_executor(None, aria_instance.add_uris, uris)
         except Exception as e:
-            return False, "**FAILED** \n" + str(e) + " \nPlease do not send SLOW links. Read /help"
+            return False, "**FAILED** \n" + str(e) + " \nPlease do not send slow links."
         else:
             return True, "" + download.gid + ""
 
