@@ -1,6 +1,7 @@
 
 from bot import GLOBAL_RC_INST, LOGGER
 from bot.downloaders.aria.aria_download import AriaDownloader
+from bot.downloaders.mega.mega_download import MegaDownloader
 
 
 async def handle_cancel(e):
@@ -10,6 +11,11 @@ async def handle_cancel(e):
         hashid = hashid.strip("'")
         LOGGER.info(f"Hashid :- {hashid}")
         await AriaDownloader(None, None).remove_dl(hashid)
+   if data[1] == "megadl":  
+        hashid = data[2]
+        hashid = hashid.strip("'")
+        LOGGER.info(f"Hashid :- {hashid}")
+        await MegaDownloader(None, None).remove_mega_dl(hashid)
    if data[1] == "rclone":
         id= data[2]
         for rc_up in GLOBAL_RC_INST:
