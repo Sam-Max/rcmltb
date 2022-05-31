@@ -4,7 +4,9 @@ from subprocess import run
 from bot import GLOBAL_RC_INST
 from bot.core.get_vars import get_val
 from bot.downloaders.aria.aria_download import AriaDownloader
+from bot.downloaders.mega.mega_download import MegaDownloader
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
+from bot.utils.bot_utils import is_mega_link
 from bot.utils.get_rclone_conf import get_config
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
 from bot import LOGGER
@@ -25,10 +27,15 @@ async def handle_mirror_download(client, message, file, link, tag, pswd, isZip=F
         return      
 
     if link is not None:
-        path = os.path.join(os.getcwd(), "Downloads", "")
-        aria2= AriaDownloader(link, mess_age)   
-        file_path= await aria2.execute()
-        await rclone_mirror(file_path, mess_age, new_name, tag, is_rename)
+        if is_mega_link(link):
+            mega_dl= MegaDownloader(link, mess_age)   
+            file_path= await mega_dl.execute()
+            await rclone_mirror(file_path, mess_age, new_name, tag, is_rename)     
+        else:
+            path = os.path.join(os.getcwd(), "Downloads", "")
+            aria2= AriaDownloader(link, mess_age)   
+            file_path= await aria2.execute()
+            await rclone_mirror(file_path, mess_age, new_name, tag, is_rename)
     else:
         path = os.path.join(os.getcwd(), "Downloads", "")
         c_time = time.time()

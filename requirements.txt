@@ -8,5 +8,6 @@ Pyrogram
 speedtest-cli
 python-dotenv
 requests
+megasdkrestclient
 https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip
 
