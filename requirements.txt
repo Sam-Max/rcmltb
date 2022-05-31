@@ -1,5 +1,6 @@
 cryptg==0.2.post2
 psutil==5.8.0
+aria2p
 Telethon
 TgCrypto==1.2.3
 urllib3==1.26.5

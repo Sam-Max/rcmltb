@@ -1,6 +1,7 @@
 from bot.core.get_vars import get_val
 from bot.core.set_vars import set_val
-from bot.utils.get_message_type import get_media_type
+from bot.utils.bot_utils import is_magnet, is_url
+from bot.utils.get_message_type import get_file
 from bot.utils.get_size_p import get_size
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -28,11 +29,19 @@ async def mirror(client, message, isZip=False, extract=False):
     if user_id in get_val("ALLOWED_USERS") or chat_id in get_val("ALLOWED_CHATS") or user_id == get_val("OWNER_ID"):
         replied_message= message.reply_to_message
         if replied_message is not None :
-                    media = get_media_type(replied_message)
-                    name= media.file_name
-                    size= get_size(media.file_size)
-                    msg= f"**Name**: `{name}`\n\n**Size**: `{size}`"
-                    set_val("MEDIA", media)
+                    file = get_file(replied_message)
+                    msg= ""
+                    link= None
+                    if file is None:
+                        reply_text = message.reply_to_message.text
+                        if is_url(reply_text) or is_magnet(reply_text):
+                            link = reply_text.strip()
+                    else:
+                        name= file.file_name
+                        size= get_size(file.file_size)
+                        msg= f"**Name**: `{name}`\n\n**Size**: `{size}`"
+                    set_val("MEDIA", file)
+                    set_val("LINK", link)
                     set_val("IS_ZIP", isZip)
                     set_val("EXTRACT", extract)
                     set_val("PSWD", pswd)
