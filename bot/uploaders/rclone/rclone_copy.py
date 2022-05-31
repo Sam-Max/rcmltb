@@ -85,7 +85,7 @@ class RcloneCopy:
                     if time.time() - start > edit_time:
                         if msg1 != msg:
                             start = time.time()
-                            await user_message.edit(text=msg, buttons= [[Button.inline("Cancel", f"upcancel_{self.id}".encode('UTF-8'))]])
+                            await user_message.edit(text=msg, buttons= [[Button.inline("Cancel", f"cancel_rclone_{self.id}".encode('UTF-8'))]])
                             msg1= msg
 
             if data == "":

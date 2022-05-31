@@ -174,7 +174,7 @@ class RcloneLeech:
                     if msg1 != msg:
                         start = time.time()
                         await user_message.edit(text=msg, reply_markup=(InlineKeyboardMarkup([
-                            [InlineKeyboardButton('Cancel', callback_data=(f"upcancel_{self.id}".encode('UTF-8')))]
+                            [InlineKeyboardButton('Cancel', callback_data=(f"cancel_rclone_{self.id}".encode('UTF-8')))]
                             ])))                            
                         msg1 = msg
                 

@@ -175,7 +175,7 @@ def add_handlers(bot):
     #others
     bot.add_event_handler(
     handle_cancel,
-    events.CallbackQuery(pattern="upcancel")
+    events.CallbackQuery(pattern="cancel")
     )
 
     bot.add_event_handler(
