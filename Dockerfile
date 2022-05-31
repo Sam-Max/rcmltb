@@ -10,6 +10,8 @@ RUN apt-get -qq update --fix-missing
 
 RUN apt-get -qq install -y git wget curl busybox python3 python3-pip locales ffmpeg p7zip-full p7zip-rar
 
+RUN curl -L https://github.com/jaskaranSM/megasdkrest/releases/download/v0.1/megasdkrest -o /usr/local/bin/megasdkrest && chmod +x /usr/local/bin/megasdkrest
+
 RUN curl https://rclone.org/install.sh | bash
 
 COPY requirements.txt .
