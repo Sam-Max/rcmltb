@@ -84,6 +84,8 @@ class RcloneMirror:
           if rcres == False:
                self.__rclone_pr.kill()
                await self.__user_msg.edit('Mirror cancelled')
+               if os.path.isdir(path):clean_path(path) 
+               else:clean_filepath(path)   
                return
 
           LOGGER.info('Successfully uploaded')
