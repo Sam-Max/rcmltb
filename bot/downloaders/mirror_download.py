@@ -1,7 +1,7 @@
 import os
 import time
 from subprocess import run
-from bot import GLOBAL_RC_INST
+from bot import DOWNLOAD_DIR, GLOBAL_RC_INST
 from bot.core.get_vars import get_val
 from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
@@ -29,19 +29,24 @@ async def handle_mirror_download(client, message, file, link, tag, pswd, isZip=F
     if link is not None:
         if is_mega_link(link):
             mega_dl= MegaDownloader(link, mess_age)   
-            file_path= await mega_dl.execute()
-            await rclone_mirror(file_path, mess_age, new_name, tag, is_rename)     
+            state, message, file_path= await mega_dl.execute()
+            if not state:
+                await mess_age.edit(message)
+            else:
+                await rclone_mirror(file_path, mess_age, new_name, tag, is_rename)     
         else:
-            path = os.path.join(os.getcwd(), "Downloads", "")
             aria2= AriaDownloader(link, mess_age)   
-            file_path= await aria2.execute()
-            await rclone_mirror(file_path, mess_age, new_name, tag, is_rename)
+            state, message, file_path= await aria2.execute()
+            if not state:
+                await mess_age.edit(message)
+            else:
+                await mess_age.edit(message)
+                await rclone_mirror(file_path, mess_age, new_name, tag, is_rename) 
     else:
-        path = os.path.join(os.getcwd(), "Downloads", "")
         c_time = time.time()
         media_path = await client.download_media(
             message=file,
-            file_name=path,
+            file_name= DOWNLOAD_DIR,
             progress=progress_for_pyrogram,
             progress_args=(
             "**Name**: `{}`".format(file.file_name),

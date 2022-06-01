@@ -27,19 +27,11 @@ class AriaDownloader():
         aria2_daemon_start_cmd.append("aria2c")
         aria2_daemon_start_cmd.append("--daemon=true")
         aria2_daemon_start_cmd.append("--enable-rpc")
-        aria2_daemon_start_cmd.append("--disk-cache=0")
-        aria2_daemon_start_cmd.append("--follow-torrent=false")
-        aria2_daemon_start_cmd.append("--max-connection-per-server=10")
-        aria2_daemon_start_cmd.append("--min-split-size=10M")
         aria2_daemon_start_cmd.append("--rpc-listen-all=true")
         aria2_daemon_start_cmd.append(f"--rpc-listen-port=8100")
         aria2_daemon_start_cmd.append("--rpc-max-request-size=1024M")
-        aria2_daemon_start_cmd.append("--seed-ratio=0.0")
-        aria2_daemon_start_cmd.append("--seed-time=1")
-        aria2_daemon_start_cmd.append("--split=10")
-        aria2_daemon_start_cmd.append(f"--bt-stop-timeout=100")
-        aria2_daemon_start_cmd.append(f"--max-tries=10")
-        aria2_daemon_start_cmd.append(f"--retry-wait=2")
+        aria2_daemon_start_cmd.append("--check-certificate=false")
+        aria2_daemon_start_cmd.append("--conf-path=aria2/aria2.conf")
 
         process = await asyncio.create_subprocess_exec(
             *aria2_daemon_start_cmd,
@@ -62,12 +54,11 @@ class AriaDownloader():
 
     async def add_magnet(self, aria_instance, magnetic_link):
         try:
-            download = await self._aloop.run_in_executor(None, 
-            aria_instance.add_magnet, magnetic_link)
+            download = await self._aloop.run_in_executor(None,aria_instance.add_magnet, magnetic_link)
         except Exception as e:
             return False, "**FAILED** \n" + str(e) + " \nPlease do not send slow links"
         else:
-            return True, "" + download.gid + ""
+            return True, "", "" + download.gid + ""
 
 
     async def add_torrent(self, aria_instance, torrent_file_path):
@@ -88,9 +79,9 @@ class AriaDownloader():
         try:
             download = await self._aloop.run_in_executor(None, aria_instance.add_uris, uris)
         except Exception as e:
-            return False, "**FAILED** \n" + str(e) + " \nPlease do not send slow links."
+            return False, "**FAILED** \n" + str(e) + " \nPlease do not send slow links.", None
         else:
-            return True, "" + download.gid + ""
+            return True, "", "" + download.gid + ""
 
     async def check_metadata(self, aria2, gid):
         file = await self._aloop.run_in_executor(None, aria2.get_download, gid)
@@ -98,42 +89,38 @@ class AriaDownloader():
             return None
         new_gid = file.followed_by_ids[0]
         LOGGER.info("Changing GID " + gid + " to " + new_gid)
-        return new_gid
+        self._gid = new_gid
 
     async def execute(self):
         aria_instance = await self.get_client()
-
         if self._dl_link.lower().startswith("magnet:"):
-            sagtus, err_message = await self.add_magnet(aria_instance, self._dl_link) 
+            sagtus, err_message, gid = await self.add_magnet(aria_instance, self._dl_link) 
             if not sagtus:
-                self._is_errored = True
-                self._error_reason = err_message
-                return False
-            self._gid = err_message
-            err_message = await self.check_metadata(aria_instance, err_message)
+                return False, err_message, None
+            self._gid = gid
+            resp = await self.check_metadata(aria_instance, gid)
             await sleep(1)
-            if err_message is not None:
+            if resp is not None:
                 await self.aria_progress_update()
             else:
-              LOGGER.error("Can't get metadata.\n")
-              self._is_errored = True
-              self._error_reason = "Can't get metadata.\n"
-              return False
+              err_message= "Can't process because not metadata from magnet retrieved"
+              return False, err_message, None
         elif self._dl_link.lower().endswith(".torrent"):
-            LOGGER.info("Cant download this .torrent file")
-            return False
+            err_message= "Cant download this .torrent file"
+            return False, err_message, None  
         else:
-            sagtus, err_message = await self.add_url(aria_instance, self._dl_link)
+            LOGGER.info("add_url")
+            sagtus, err_message, gid = await self.add_url(aria_instance, self._dl_link)
             if not sagtus:
-                self._is_errored = True
-                self._error_reason = err_message
-                return False
-            self._gid = err_message
-            statusr= await self.aria_progress_update()
-            if statusr:
-                file = await self._aloop.run_in_executor(None, aria_instance.get_download,err_message)
+                return False, err_message, None 
+            self._gid = gid
+            statusr, error_message= await self.aria_progress_update()
+            if not statusr:
+               return False, error_message, None
+            else:
+                file = await self._aloop.run_in_executor(None, aria_instance.get_download, self._gid)
                 file_path = os.path.join(file.dir, file.name)
-                return file_path
+                return True, error_message, file_path
 
     async def aria_progress_update(self):
         aria2 = await self.get_client()
@@ -149,8 +136,8 @@ class AriaDownloader():
                 if not complete:
                     if not file.error_message:
                         if file is None:
-                            LOGGER.exception("Errored in fetching the direct DL.")
-                            return False
+                            error_message= "Error in fetching the direct DL"
+                            return False, error_message
                         else:
                             sleeps = True
                             update_message= await self.create_update_message()
@@ -162,7 +149,6 @@ class AriaDownloader():
                                             ])))
                                     update_message1 = update_message
                                 except Exception as e:
-                                    LOGGER.info("Not expected {}".format(e))
                                     pass
 
                             if sleeps:
@@ -173,44 +159,38 @@ class AriaDownloader():
                                 await asyncio.sleep(2)
                     else:
                         msg = file.error_message
-                        self._is_errored = True
-                        self._error_reason = msg
-                        await user_msg.edit(msg)
-                        LOGGER.info(f"The aria download failed due to this reason:- {msg}")
-                        return False
+                        error_message = f"The aria download failed due to this reason:- {msg}"
+                        return False, error_message
                 else:
-                    self._is_completed = True
-                    self._is_done = True
-                    self._error_reason = f"Download completed: `{file.name}` - (`{file.total_length_string()}`)"
-                    await user_msg.edit(f"Download completed: `{file.name}` - (`{file.total_length_string()}`)")
-                    return True
+                    error_message= f"Download completed: `{file.name}` - (`{file.total_length_string()}`)"
+                    return True, error_message
             except aria2p.client.ClientException as e:
                 if " not found" in str(e) or "'file'" in str(e):
                     fname = "N/A"
                     try:
                         fname = file.name
                     except:pass
-                    self._is_canceled = True
-                    self._error_reason = f"The Download was canceled. {fname}"
+                    error_reason = "The Download was canceled"
+                    return False, error_reason
                 else:
-                    LOGGER.warning("Errored due to ta client error.")
+                    LOGGER.warning("Error due to a client error.")
                 pass
             except RecursionError:
                 file.remove(force=True)
-                self._is_errored = True
-                self._error_reason = "The link is basically dead."
-                return False
+                error_reason = "The link is basically dead."
+                return False, error_reason
             except Exception as e:
                 LOGGER.info(str(e))
                 self._is_errored = True
                 if " not found" in str(e) or "'file'" in str(e):
-                    self._error_reason = "The Download was canceled."
+                    error_reason = "The Download was canceled."
+                    return False, error_reason
                 else:
                     LOGGER.warning(str(e))
-                    self._error_reason =  f"Error: {str(e)}"
+                    error_reason =  f"Error: {str(e)}"
+                    return False, error_reason
 
     async def create_update_message(self):
-        LOGGER.info("create_update_message")
         file= self._update_info
         downloading_dir_name = "N/A"
         try:
@@ -230,8 +210,8 @@ class AriaDownloader():
         """Returns a progress bar for download
         """
         #percentage is on the scale of 0-1
-        comp = "▰"
-        ncomp = "▱"
+        comp ="▪️"
+        ncomp ="▫️"
         pr = ""
 
         for i in range(1,11):
