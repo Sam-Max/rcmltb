@@ -64,7 +64,6 @@ class AriaDownloader():
         else:
             return True, "", "" + download.gid + ""
 
-
     async def add_torrent(self, aria_instance, torrent_file_path):
         if torrent_file_path is None:
             return False, "**FAILED** \n\nsomething wrongings when trying to add <u>TORRENT</u> file"
@@ -113,7 +112,6 @@ class AriaDownloader():
             err_message= "Cant download this .torrent file"
             return False, err_message, None  
         else:
-            LOGGER.info("add_url")
             sagtus, err_message, gid = await self.add_url(aria_instance, self._dl_link)
             if not sagtus:
                 return False, err_message, None 
@@ -240,7 +238,6 @@ class AriaDownloader():
         try:
             downloads = await self._aloop.run_in_executor(None, aria2.get_download, gid)
             downloads.remove(force=True, files=True)
-            #await self._user_message.edit("Download Removed")
             LOGGER.info("Download Removed")
         except Exception as e:
             LOGGER.exception(e)
@@ -250,16 +247,4 @@ class AriaDownloader():
     def get_gid(self):
         return self._gid
 
-    def cancel(self, is_admin=False):
-        self._is_canceled = True
-        if is_admin:
-            self._canceled_by = self.ADMIN
-        else: 
-            self._canceled_by = self.USER
-    
-    async def get_update(self):
-        return self._update_info
-
-    def get_error_reason(self):
-        return self._error_reason
     

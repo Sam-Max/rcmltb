@@ -94,8 +94,8 @@ async def extract_archive(path, password=""):
                 else:
                     return extpath
         else:
-            # False means that the stuff can be upload but cant be extracted as its a dir
+            LOGGER.info("Wrong file extension, can't extract")
             return False
     else:
-        # None means fetal error and cant be ignored
+        LOGGER.info("Fatal Error")
         return None 

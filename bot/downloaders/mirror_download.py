@@ -40,10 +40,10 @@ async def handle_mirror_download(client, message, file, link, tag, pswd, isZip=F
             if not state:
                 await mess_age.edit(message)
             else:
-                await mess_age.edit(message)
                 await rclone_mirror(file_path, mess_age, new_name, tag, is_rename) 
     else:
         c_time = time.time()
+
         media_path = await client.download_media(
             message=file,
             file_name= DOWNLOAD_DIR,
@@ -55,37 +55,39 @@ async def handle_mirror_download(client, message, file, link, tag, pswd, isZip=F
             c_time))
             
         if isZip:
-            m_path = media_path
-            LOGGER.info("Compressing...")
-            await mess_age.edit("Compressing...")
-            base = os.path.basename(m_path)
-            file_name = base.rsplit('.', maxsplit=1)[0]
-            path = os.path.join(os.getcwd(), "Downloads", file_name + ".zip")
-            LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
-            size = os.path.getsize(m_path)
-            TG_SPLIT_SIZE= get_val("TG_SPLIT_SIZE")
-            if pswd is not None:
-                LOGGER.info("Password: {}".format(pswd))     
-                if int(size) > TG_SPLIT_SIZE:
-                    run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{pswd}", path, m_path])     
+            try:
+                m_path = media_path
+                await mess_age.edit("Compressing...")
+                base = os.path.basename(m_path)
+                file_name = base.rsplit('.', maxsplit=1)[0]
+                path = os.path.join(os.getcwd(), "Downloads", file_name + ".zip")
+                LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
+                size = os.path.getsize(m_path)
+                TG_SPLIT_SIZE= get_val("TG_SPLIT_SIZE")
+                if pswd is not None:
+                    LOGGER.info("Password: {}".format(pswd))     
+                    if int(size) > TG_SPLIT_SIZE:
+                        run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{pswd}", path, m_path])     
+                    else:
+                        run(["7z", "a", "-mx=0", f"-p{pswd}", path, m_path])
+                elif int(size) > TG_SPLIT_SIZE:
+                    run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, m_path])
                 else:
-                    run(["7z", "a", "-mx=0", f"-p{pswd}", path, m_path])
-            elif int(size) > TG_SPLIT_SIZE:
-                run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, m_path])
-            else:
-                run(["7z", "a", "-mx=0", path, m_path])
+                    run(["7z", "a", "-mx=0", path, m_path])
+            except FileNotFoundError:
+                LOGGER.info('File to archive not found!')
+                return
             clean_filepath(m_path)
             await rclone_mirror(path, mess_age, new_name, tag, is_rename)
         elif extract:
             m_path = media_path
-            LOGGER.info("Extracting...")
             await mess_age.edit("Extracting...")
             extracted_path= await extract_archive(m_path, pswd)
             clean_filepath(m_path)
             if extracted_path is not False:
                 await rclone_mirror(extracted_path, mess_age, new_name, tag, is_rename)
             else:
-                LOGGER.error('Unable to extract archive!')
+                await mess_age.edit('Unable to extract archive!')
         else:
             await rclone_mirror(media_path, mess_age, new_name, tag, is_rename)
 
@@ -95,6 +97,3 @@ async def rclone_mirror(path, mess_age, new_name, tag, is_rename):
     await rclone_mirror.mirror()
     GLOBAL_RC_INST.remove(rclone_mirror)
 
-class NotSupportedExtractionArchive(Exception):
-    """The archive format use is trying to extract is not supported"""
-    pass

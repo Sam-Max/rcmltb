@@ -36,7 +36,6 @@ class MegaDownloader():
             MEGA_API_KEY = get_val("MEGA_API_KEY")
             MEGA_UNAME = get_val("MEGA_UNAME")
             MEGA_PASSWORD = get_val("MEGA_PASSWORD")
-            MEGA_API_KEY = "LhtgABDA"
             
             if MEGA_API_KEY is None:
                  return None
@@ -170,16 +169,3 @@ class MegaDownloader():
 
     def get_gid(self):
         return self._gid
-
-    def cancel(self, is_admin=False):
-        self._is_canceled = True
-        if is_admin:
-            self._canceled_by = self.ADMIN
-        else: 
-            self._canceled_by = self.USER
-    
-    async def get_update(self):
-        return self._update_info
-
-    def get_error_reason(self):
-        return self._error_reason
