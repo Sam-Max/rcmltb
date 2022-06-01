@@ -28,10 +28,6 @@ speedtest - test speed of server
 restart - restart bot
 ```
 
-## Deploying on Heroku
-<p><a href="https://github.com/Sam-Max/Rclone-Tg-Bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
-
-
 ## Deploy on VPS: 
 
 1. **Installing requirements**
@@ -62,7 +58,7 @@ restart - restart bot
 
    - Non mandatory variables:
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
-        - `SESSION`: Pyrogram Session: To generate string session use this command `python3 generate_string_session.py` on repo folder. 
+        - `SESSION`: Pyrogram Session: To generate string session use this command `python3 session_pyro_gen.py` on repo folder. 
         - `UPSTREAM_BRANCH`: Upstream branch for update. 
         - `TG_SPLIT_SIZE`: Telegram upload limit in bytes (max `2097151000` which is ~2GB), to automatically slice the file bigger that this size into small parts to upload to Telegram.
         - `EDIT_SLEEP_SECS`: Seconds for update the progress message regulary. Default to 10. 
