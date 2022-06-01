@@ -1,7 +1,6 @@
 import shutil
 from subprocess import Popen
 import time
-
 from psutil import cpu_percent, virtual_memory
 from bot import DOWNLOAD_DIR, LOGGER, uptime
 from bot.core.get_vars import get_val
@@ -105,7 +104,7 @@ class MegaDownloader():
                     LOGGER.info(e)
             else:
                 if dl_info["state"] == constants.State.TYPE_STATE_CANCELED:
-                    error_reason = "Mega canceled"
+                    error_reason = "Mega download canceled"
                     return False, error_reason, None
                 else:
                     error_reason = dl_info["error_string"]

@@ -3,7 +3,6 @@ from requests import head as rhead
 from urllib.request import urlopen
 
 MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
-
 URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
 
 def is_url(url: str):

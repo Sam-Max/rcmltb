@@ -52,6 +52,6 @@ async def mirror(client, message, isZip=False, extract=False):
 
                     await message.reply_text(header_m + msg, quote= True, reply_markup= InlineKeyboardMarkup(keyboard))
         else:
-            await message.reply_text("Reply to a telegram file", quote= True) 
+            await message.reply_text("Reply to a link or telegram file", quote=True) 
     else:
         await message.reply('Not Authorized user', quote= True)

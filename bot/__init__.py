@@ -2,6 +2,7 @@ __version__ = "1.0"
 __author__ = "Sam-Max"
 
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
+from os import getcwd, path as ospath
 from time import time
 from os import environ
 import sys
@@ -24,11 +25,12 @@ def getConfig(name: str):
 
 uptime = time.time()
 GLOBAL_RC_INST= []
-download_dict = {}
 SessionVars = VarHolder()
 
 load_dotenv('config.env', override=True)
 load_rclone()
+
+DOWNLOAD_DIR = ospath.join(getcwd(), "Downloads", "")
 
 try:
     API_ID = int(getConfig("API_ID"))
