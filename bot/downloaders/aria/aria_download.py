@@ -1,10 +1,14 @@
 #Modified from: (c) YashDK [yash-dk@github]
 
 import asyncio, aria2p, os
+import time
+import shutil
 from asyncio import sleep
-from bot import LOGGER
+from psutil import cpu_percent, virtual_memory
+from bot import LOGGER, uptime
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from functools import partial
+from bot.utils import human_format
 from bot.utils.human_format import human_readable_bytes
 
 
@@ -170,7 +174,7 @@ class AriaDownloader():
                     try:
                         fname = file.name
                     except:pass
-                    error_reason = "The Download was canceled"
+                    error_reason = "Aria download canceled."
                     return False, error_reason
                 else:
                     LOGGER.warning("Error due to a client error.")
@@ -183,7 +187,7 @@ class AriaDownloader():
                 LOGGER.info(str(e))
                 self._is_errored = True
                 if " not found" in str(e) or "'file'" in str(e):
-                    error_reason = "The Download was canceled."
+                    error_reason = "Aria download canceled."
                     return False, error_reason
                 else:
                     LOGGER.warning(str(e))
@@ -197,13 +201,21 @@ class AriaDownloader():
             downloading_dir_name = str(file.name)
         except:
             pass
-        msg = "Downloading:{}\n".format(downloading_dir_name)
-        msg += "Down: {} Up: {}\n".format(file.download_speed_string(),file.upload_speed_string())
-        msg += "Progress: {} - {}%\n".format(self.progress_bar(file.progress/100), round(file.progress, 2))
-        msg += "Downloaded: {} of {}\n".format(human_readable_bytes(file.completed_length),human_readable_bytes(file.total_length))
-        msg += "ETA: {} Mins\n".format(file.eta_string())
-        msg += "Conns:{}\n".format(file.connections)
-        msg += "Using engine: Aria2 For Direct Links"
+        bottom_status= ''
+        diff = time.time() - uptime
+        diff = human_format.human_readable_timedelta(diff)
+        usage = shutil.disk_usage("/")
+        free = human_format.human_readable_bytes(usage.free) 
+        bottom_status += f"\n<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}" + f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {diff}"
+        msg = "<b>Name:</b>{}\n".format(downloading_dir_name)
+        msg += "<b>Status:</b> Downloading...\n"
+        msg += "<b>Progress:</b> {}\n".format(self.progress_bar(file.progress/100))
+        msg += "<b>P:</b> {}%\n".format(round(file.progress, 2))
+        msg += "<b>Downloaded:</b> {} <b>of:</b> {}\n".format(human_readable_bytes(file.completed_length),human_readable_bytes(file.total_length))
+        msg += "<b>Speed:</b> {}".format(file.download_speed_string()) + "|" + "<b>ETA: {} Mins\n</b>".format(file.eta_string())
+        msg += "<b>Conns:</b>{}\n".format(file.connections)
+        msg += "<b>Using engine: Aria2</b>\n"
+        msg += bottom_status
         return msg
     
     def progress_bar(self, percentage):
