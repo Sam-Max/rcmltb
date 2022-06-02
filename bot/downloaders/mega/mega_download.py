@@ -144,7 +144,6 @@ class MegaDownloader():
         msg += "<b>Downloaded:</b> {} of {}\n".format(human_readable_bytes(update["completed_length"]),
             human_readable_bytes(update["total_length"]))
         msg += "<b>Speed:</b> {}".format(human_readable_bytes(update["speed"])) + "|" + "<b>ETA:</b> <b>N/A</b>\n"
-        msg += "<b>Using engine:</b> Mega\n"
         msg += bottom_status
         return msg
 

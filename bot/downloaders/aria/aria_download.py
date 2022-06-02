@@ -35,7 +35,7 @@ class AriaDownloader():
         aria2_daemon_start_cmd.append(f"--rpc-listen-port=8100")
         aria2_daemon_start_cmd.append("--rpc-max-request-size=1024M")
         aria2_daemon_start_cmd.append("--check-certificate=false")
-        aria2_daemon_start_cmd.append("--conf-path=aria2/aria2.conf")
+        aria2_daemon_start_cmd.append("--conf-path=/usr/src/app/aria2/aria2.conf")
 
         process = await asyncio.create_subprocess_exec(
             *aria2_daemon_start_cmd,
@@ -212,7 +212,6 @@ class AriaDownloader():
         msg += "<b>Downloaded:</b> {} <b>of:</b> {}\n".format(human_readable_bytes(file.completed_length),human_readable_bytes(file.total_length))
         msg += "<b>Speed:</b> {}".format(file.download_speed_string()) + "|" + "<b>ETA: {} Mins\n</b>".format(file.eta_string())
         msg += "<b>Conns:</b>{}\n".format(file.connections)
-        msg += "<b>Using engine: Aria2</b>\n"
         msg += bottom_status
         return msg
     
