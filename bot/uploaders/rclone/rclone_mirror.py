@@ -61,9 +61,9 @@ class RcloneMirror:
                return
                 
           if self._is_rename:
-               path = await rename(old_path, self.__new_name)
+                path = await rename(old_path, self.__new_name)
           else:
-               path = old_path
+                path = old_path
 
           if os.path.isdir(path):
             new_dest_base = os.path.join(dest_base, os.path.basename(path))

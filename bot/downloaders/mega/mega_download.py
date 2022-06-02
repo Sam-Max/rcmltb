@@ -139,7 +139,7 @@ class MegaDownloader():
 
         msg =  "<b>Name:</b> {}\n".format(update["name"])
         msg += "<b>Status:</b> Downloading...\n"
-        msg += "<b>Progress:</b> {}\n".format(self.progress_bar((update["completed_length"]/update["total_length"])))
+        msg += "{}\n".format(self.progress_bar((update["completed_length"]/update["total_length"])))
         msg += "<b>P:</b> {}%\n".format(round((update["completed_length"]/update["total_length"])*100, 2))
         msg += "<b>Downloaded:</b> {} of {}\n".format(human_readable_bytes(update["completed_length"]),
             human_readable_bytes(update["total_length"]))

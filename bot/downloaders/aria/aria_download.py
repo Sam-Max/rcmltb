@@ -207,7 +207,7 @@ class AriaDownloader():
         bottom_status += f"\n<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}" + f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {diff}"
         msg = "<b>Name:</b>{}\n".format(downloading_dir_name)
         msg += "<b>Status:</b> Downloading...\n"
-        msg += "<b>Progress:</b> {}\n".format(self.progress_bar(file.progress/100))
+        msg += "{}\n".format(self.progress_bar(file.progress/100))
         msg += "<b>P:</b> {}%\n".format(round(file.progress, 2))
         msg += "<b>Downloaded:</b> {} <b>of:</b> {}\n".format(human_readable_bytes(file.completed_length),human_readable_bytes(file.total_length))
         msg += "<b>Speed:</b> {}".format(file.download_speed_string()) + "|" + "<b>ETA: {} Mins\n</b>".format(file.eta_string())

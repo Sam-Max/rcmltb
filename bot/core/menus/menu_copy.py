@@ -6,7 +6,7 @@ import asyncio
 import json
 import logging
 from bot.core.set_vars import set_val
-from bot.utils.get_size_p import get_size
+from bot.utils.get_size_p import get_readable_size
 from bot.utils.pairwise_row import pairwise
 
 torlog = logging.getLogger(__name__)
@@ -184,7 +184,7 @@ def list_drive_copy(
         index= index + 1
         set_val(f"{index}", path)
         size= i['Size']
-        size= get_size(size)
+        size= get_readable_size(size)
         mime_type= i['MimeType']
         if mime_type == 'inode/directory': 
             folder= "📁"

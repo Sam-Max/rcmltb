@@ -8,7 +8,7 @@ from pyrogram.errors import FloodWait
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.core.get_vars import get_val
 from bot.uploaders.telegram.telegram_upload import upload_media_pyro
-from bot.utils.get_size_p import get_size
+from bot.utils.get_size_p import get_readable_size
 from bot.utils.misc_utils import clean_path
 from bot.utils.zip_utils import split_in_zip
 from bot.utils.get_rclone_conf import get_config
@@ -43,7 +43,7 @@ class RcloneLeech:
     async def leech(self):
         await self.__user_msg.edit("Preparing for download...")
         origin_drive = get_val("DEF_RCLONE_DRIVE")
-        tg_split_size= get_size(get_val("TG_SPLIT_SIZE")) 
+        tg_split_size= get_readable_size(get_val("TG_SPLIT_SIZE")) 
         conf_path = await get_config()
         conf = ConfigParser()
         conf.read(conf_path)

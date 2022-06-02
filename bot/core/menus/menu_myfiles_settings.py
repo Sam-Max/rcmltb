@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 from bot.utils.get_rclone_conf import get_config
-from bot.utils.get_size_p import get_size
+from bot.utils.get_size_p import get_readable_size
 
 header= ""
 
@@ -52,7 +52,7 @@ async def settings_myfiles_menu(
             conf_path, 
         )
 
-        total_size = get_size(total_size)
+        total_size = get_readable_size(total_size)
         msg= f"Total Files: {files_count}\nFolder Size: {total_size}"
 
         menu.append(

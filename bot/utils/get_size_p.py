@@ -1,4 +1,4 @@
-def get_size(size):
+def get_readable_size(size):
     """Get size in readable format"""
 
     units = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB"]
