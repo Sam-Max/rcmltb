@@ -7,14 +7,14 @@ async def handle_mirror_menu_callback(client, query):
         list = query.data.split("_")
         message= query.message
         tag = f"@{message.reply_to_message.from_user.username}"
-        link= get_val("LINK")
-        file= get_val("MEDIA")
+        
+        file= get_val("FILE")
         isZip = get_val("IS_ZIP")
         extract = get_val("EXTRACT")
         pswd = get_val("PSWD") 
 
         if "default" in list[1]:
-            await handle_mirror_download(client, message, file, link, tag, pswd, isZip, extract)
+            await handle_mirror_download(client, message, file, tag, pswd, isZip=isZip, extract=extract)
 
         if "rename" in list[1]: 
             question= await client.send_message(message.chat.id, text= "Send the new name /ignore to cancel")
@@ -28,6 +28,6 @@ async def handle_mirror_menu_callback(client, query):
                         await question.reply("Okay cancelled question!")
                         await client.listen.Cancel(tag)
                     else:
-                        await handle_mirror_download(client, message, file, link, tag, pswd, isZip, extract, response.text, True)
+                        await handle_mirror_download(client, message, file, tag, pswd, isZip=isZip, extract=extract, new_name=response.text, is_rename=True)
             finally:
                 await question.delete()

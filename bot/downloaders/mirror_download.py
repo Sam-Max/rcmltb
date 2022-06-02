@@ -13,7 +13,7 @@ from bot import LOGGER
 from bot.utils.misc_utils import clean_filepath
 from bot.utils.zip_utils import extract_archive
 
-async def handle_mirror_download(client, message, file, link, tag, pswd, isZip=False, extract=False, new_name=None, is_rename= False):
+async def handle_mirror_download(client, message, file, tag, pswd, link= None, isZip=False, extract=False, new_name=None, is_rename= False):
     mess_age = await message.reply_text("Preparing for download...", quote=True)
     LOGGER.info("Preparing for download...")
 
@@ -77,17 +77,17 @@ async def handle_mirror_download(client, message, file, link, tag, pswd, isZip=F
             except FileNotFoundError:
                 LOGGER.info('File to archive not found!')
                 return
-            clean_filepath(m_path)
             await rclone_mirror(path, mess_age, new_name, tag, is_rename)
+            clean_filepath(m_path)
         elif extract:
             m_path = media_path
             await mess_age.edit("Extracting...")
             extracted_path= await extract_archive(m_path, pswd)
-            clean_filepath(m_path)
             if extracted_path is not False:
                 await rclone_mirror(extracted_path, mess_age, new_name, tag, is_rename)
             else:
                 await mess_age.edit('Unable to extract archive!')
+            clean_filepath(m_path)
         else:
             await rclone_mirror(media_path, mess_age, new_name, tag, is_rename)
 
