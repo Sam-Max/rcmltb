@@ -34,7 +34,6 @@ class RcloneMirror:
         return id
 
     async def mirror(self):
-          old_path = self.__path
           path = ''
           dest_base = ''
           gen_drive_name = ''
@@ -56,22 +55,22 @@ class RcloneMirror:
                          LOGGER.info(f"{gen_drive_name} Upload Detected.")
                     break
         
-          if not os.path.exists(old_path):
+          if not os.path.exists(self.__path):
                await self.__user_msg.reply('the path {path} not found')
                return
                 
           if self._is_rename:
-                path = await rename(old_path, self.__new_name)
+                path = await rename(self.__path, self.__new_name)
           else:
-                path = old_path
+                path = self.__path
 
           if os.path.isdir(path):
-            new_dest_base = os.path.join(dest_base, os.path.basename(path))
-            rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
-                              f"{dest_drive}:{new_dest_base}", '-P']
+                new_dest_base = os.path.join(dest_base, os.path.basename(path))
+                rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
+                                    f"{dest_drive}:{new_dest_base}", '-P']
           else:
-            rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
-                              f"{dest_drive}:{dest_base}", '-P']
+                rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
+                                    f"{dest_drive}:{dest_base}", '-P']
           
           self.__rclone_pr = subprocess.Popen(rclone_copy_cmd,
                 stdout=(subprocess.PIPE),
@@ -84,8 +83,10 @@ class RcloneMirror:
           if rcres == False:
                self.__rclone_pr.kill()
                await self.__user_msg.edit('Mirror cancelled')
-               if os.path.isdir(path):clean_path(path) 
-               else:clean_filepath(path)   
+               if os.path.isdir(path):
+                    clean_path(path) 
+               else:
+                    clean_filepath(path)   
                return
 
           LOGGER.info('Successfully uploaded')

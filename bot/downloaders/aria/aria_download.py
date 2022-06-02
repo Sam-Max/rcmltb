@@ -43,6 +43,7 @@ class AriaDownloader():
             stderr=asyncio.subprocess.PIPE
         )
         await process.communicate()
+        
         arcli = await self._aloop.run_in_executor(
             None, 
             partial(
