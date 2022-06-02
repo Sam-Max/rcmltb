@@ -10,7 +10,7 @@ from bot.utils.bot_utils import is_mega_link
 from bot.utils.get_rclone_conf import get_config
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
 from bot import LOGGER
-from bot.utils.misc_utils import clean_filepath
+from bot.utils.misc_utils import clean_filepath, clean_path
 from bot.utils.zip_utils import extract_archive
 
 async def handle_mirror_download(client, message, file, tag, pswd, link= None, isZip=False, extract=False, new_name=None, is_rename= False):
@@ -29,11 +29,12 @@ async def handle_mirror_download(client, message, file, tag, pswd, link= None, i
     if link is not None:
         if is_mega_link(link):
             mega_dl= MegaDownloader(link, mess_age)   
-            state, message, file_path= await mega_dl.execute()
+            state, message, path= await mega_dl.execute()
             if not state:
                 await mess_age.edit(message)
+                clean_path(path)
             else:
-                await rclone_mirror(file_path, mess_age, new_name, tag, is_rename)     
+                await rclone_mirror(path, mess_age, new_name, tag, is_rename)     
         else:
             aria2= AriaDownloader(link, mess_age)   
             state, message, file_path= await aria2.execute()

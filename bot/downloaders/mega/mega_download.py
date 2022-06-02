@@ -1,13 +1,12 @@
+import pathlib
 import shutil
-from subprocess import Popen
 import time
 from psutil import cpu_percent, virtual_memory
-from bot import DOWNLOAD_DIR, LOGGER, uptime
-from bot.core.get_vars import get_val
+from bot import DOWNLOAD_DIR, LOGGER, uptime, mega_client
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.utils import human_format
 from bot.utils.human_format import human_readable_bytes
-from megasdkrestclient import MegaSdkRestClient, errors, constants
+from megasdkrestclient import errors, constants
 import asyncio
 import os
 from functools import partial
@@ -25,59 +24,12 @@ class MegaDownloader():
         self._gid = 0
         self._aloop = asyncio.get_event_loop()
 
-    async def init_mega_client(self, return_pr=False):
-        if len(self.CLI_LIST) > 0:
-            if return_pr:
-                return self.CLI_LIST[1]
-            else:
-                return self.CLI_LIST[0]
-        
-        if self._client is None and self._process is None:
-            MEGA_API_KEY = get_val("MEGA_API_KEY")
-            MEGA_UNAME = get_val("MEGA_UNAME")
-            MEGA_PASSWORD = get_val("MEGA_PASSWORD")
-            
-            if MEGA_API_KEY is None:
-                 return None
-
-            process = Popen(["megasdkrest", "--apikey", MEGA_API_KEY, "--port", "8200"])
-            await asyncio.sleep(5)
-            mega_client = MegaSdkRestClient("http://localhost:8200")
-            
-            anon = False
-            if MEGA_UNAME is None:
-                anon = True
-                LOGGER.warn("Mega Username not specified")
-            
-            if MEGA_PASSWORD is None:
-                anon = True
-                LOGGER.warn("Mega Password not specified")
-            
-            if anon:
-                LOGGER.info("Mega running in Anon mode.")
-            else:
-                LOGGER.info("Mega running in Logged in mode.")
-                
-                try:
-                    mega_client.login(MEGA_UNAME, MEGA_PASSWORD)
-                except:
-                    LOGGER.error("Mega login failed.")
-                    LOGGER.info("Started in anon mode.")
-
-            self._client = mega_client
-            self._process = process
-            self.CLI_LIST.append(mega_client)
-            self.CLI_LIST.append(process)
-        
-        if return_pr:
-            return self._process
-        else:
-            return self._client
-
     async def execute(self):
-        mega_client = await self.init_mega_client()
+        path= os.path.join(os.getcwd(), "Downloads", str(time.time()).replace(".","")) 
+        pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+        
         try:
-            dl_add_info = await self._aloop.run_in_executor(None, partial(mega_client.addDl, self._link, DOWNLOAD_DIR))
+            dl_add_info = await self._aloop.run_in_executor(None, partial(mega_client.addDl, self._link, path))
         except errors.MegaSdkRestClientException as e:
             error_reason = str(dict(e.message)["message"]).title()
             return False, error_reason, None
@@ -104,7 +56,7 @@ class MegaDownloader():
             else:
                 if dl_info["state"] == constants.State.TYPE_STATE_CANCELED:
                     error_reason = "Mega download canceled"
-                    return False, error_reason, None
+                    return False, error_reason, self._path
                 else:
                     error_reason = dl_info["error_string"]
                 return False, error_reason, None
@@ -163,7 +115,6 @@ class MegaDownloader():
         return pr
 
     async def remove_mega_dl(self, gid):
-        mega_client = await self.init_mega_client()
         await self._aloop.run_in_executor(None, partial(mega_client.cancelDl, gid))
 
     def get_gid(self):

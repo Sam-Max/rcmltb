@@ -3,14 +3,16 @@ __author__ = "Sam-Max"
 
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from os import getcwd, path as ospath
-from time import time
+from time import sleep, time
 from os import environ
 import sys
 import time
 from dotenv import load_dotenv
+from psutil import Popen
 from bot.client import RcloneTgClient
 from bot.core.var_holder import VarHolder
 from bot.utils.load_rclone import load_rclone
+from megasdkrestclient import MegaSdkRestClient, errors
 from pyrogram import Client
 from convopyro import Conversation
 
@@ -31,6 +33,34 @@ load_dotenv('config.env', override=True)
 load_rclone()
 
 DOWNLOAD_DIR = ospath.join(getcwd(), "Downloads", "")
+
+try:
+    MEGA_KEY = getConfig('MEGA_API_KEY')
+    if len(MEGA_KEY) == 0:
+        raise KeyError
+except:
+    MEGA_KEY = None
+    LOGGER.info('MEGA_API_KEY not provided!')
+
+if MEGA_KEY is not None:
+    Popen(["megasdkrest", "--apikey", MEGA_KEY])
+    sleep(3)
+    mega_client = MegaSdkRestClient('http://localhost:6090')
+    try:
+        MEGA_USERNAME = getConfig('MEGA_EMAIL_ID')
+        MEGA_PASSWORD = getConfig('MEGA_PASSWORD')
+        if len(MEGA_USERNAME) > 0 and len(MEGA_PASSWORD) > 0:
+            try:
+                mega_client.login(MEGA_USERNAME, MEGA_PASSWORD)
+            except errors.MegaSdkRestClientException as e:
+                LOGGER.error(e.message['message'])
+                exit(0)
+        else:
+            LOGGER.info("Mega username and password not not provided. Starting mega in anonymous mode!")
+    except:
+            LOGGER.info("Mega username and password not not provided. Starting mega in anonymous mode!")
+else:
+    sleep(1.5)
 
 try:
     API_ID = int(getConfig("API_ID"))
