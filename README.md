@@ -3,7 +3,7 @@
 ## Features:
 
 - Mirror from Telegram to cloud.
-- Mirror mega and direct links to cloud
+- Mirror Mega and direct download links to cloud
 - Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
 - Zip/Unzip from Telegram to cloud
 - Leech files and folders from cloud to Telegram.
