@@ -1,4 +1,4 @@
-__version__ = "1.0"
+__version__ = "2.0"
 __author__ = "Sam-Max"
 
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
