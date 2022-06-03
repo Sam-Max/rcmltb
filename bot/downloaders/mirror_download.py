@@ -1,7 +1,7 @@
 import os
 import time
 from subprocess import run
-from bot import DOWNLOAD_DIR, GLOBAL_RC_INST
+from bot import GLOBAL_RC_INST
 from bot.core.get_vars import get_val
 from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
@@ -44,7 +44,7 @@ async def handle_mirror_download(client, message, file, tag, pswd, link= None, i
                 await rclone_mirror(file_path, mess_age, new_name, tag, is_rename) 
     else:
         c_time = time.time()
-
+        DOWNLOAD_DIR = os.path.join(os.getcwd(), "Downloads", "")
         media_path = await client.download_media(
             message=file,
             file_name= DOWNLOAD_DIR,

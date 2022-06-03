@@ -67,7 +67,7 @@ class AriaDownloader():
 
     async def add_torrent(self, aria_instance, torrent_file_path):
         if torrent_file_path is None:
-            return False, "**FAILED** \n\nsomething wrongings when trying to add <u>TORRENT</u> file"
+            return False, "**FAILED** \n\nsomething wrong when trying to add <u>TORRENT</u> file"
         if os.path.exists(torrent_file_path):
             try:
                 download = await self._aloop.run_in_executor(None, partial(aria_instance.add_torrent, torrent_file_path, uris=None, options=None, position=None))

@@ -1,8 +1,10 @@
+#Modified from: (c) YashDK [yash-dk@github]
+
 import pathlib
 import shutil
 import time
 from psutil import cpu_percent, virtual_memory
-from bot import DOWNLOAD_DIR, LOGGER, uptime, mega_client
+from bot import LOGGER, uptime, mega_client
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.utils import human_format
 from bot.utils.human_format import human_readable_bytes

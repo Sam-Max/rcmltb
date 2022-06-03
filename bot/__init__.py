@@ -2,16 +2,15 @@ __version__ = "1.0"
 __author__ = "Sam-Max"
 
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
-from os import getcwd, path as ospath
 from time import sleep, time
-from os import environ
 import sys
 import time
+from os import environ
 from dotenv import load_dotenv
+from bot.utils.load_rclone import load_rclone
 from psutil import Popen
 from bot.client import RcloneTgClient
 from bot.core.var_holder import VarHolder
-from bot.utils.load_rclone import load_rclone
 from megasdkrestclient import MegaSdkRestClient, errors
 from pyrogram import Client
 from convopyro import Conversation
@@ -31,8 +30,6 @@ SessionVars = VarHolder()
 
 load_dotenv('config.env', override=True)
 load_rclone()
-
-DOWNLOAD_DIR = ospath.join(getcwd(), "Downloads", "")
 
 try:
     MEGA_KEY = getConfig('MEGA_API_KEY')
