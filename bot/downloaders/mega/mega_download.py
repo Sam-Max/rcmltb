@@ -4,11 +4,11 @@ import pathlib
 import shutil
 import time
 from psutil import cpu_percent, virtual_memory
-from bot import LOGGER, uptime, mega_client
+from bot import LOGGER, uptime
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.utils import human_format
 from bot.utils.human_format import human_readable_bytes
-from megasdkrestclient import errors, constants
+from megasdkrestclient import MegaSdkRestClient, errors, constants
 import asyncio
 import os
 from functools import partial
@@ -21,6 +21,7 @@ class MegaDownloader():
         self._client = None 
         self._process = None
         self._link = link
+        self.__mega_client = MegaSdkRestClient('http://localhost:6090')
         self._user_message = user_message
         self._update_info = None
         self._gid = 0
@@ -31,18 +32,18 @@ class MegaDownloader():
         pathlib.Path(path).mkdir(parents=True, exist_ok=True)
         
         try:
-            dl_add_info = await self._aloop.run_in_executor(None, partial(mega_client.addDl, self._link, path))
+            dl_add_info = await self._aloop.run_in_executor(None, partial(self.__mega_client.addDl, self._link, path))
         except errors.MegaSdkRestClientException as e:
             error_reason = str(dict(e.message)["message"]).title()
             return False, error_reason, None
 
         LOGGER.info("MegaDL Task Running....")
         self._gid  = dl_add_info["gid"]
-        dl_info = await self._aloop.run_in_executor(None, partial(mega_client.getDownloadInfo,dl_add_info["gid"]))
+        dl_info = await self._aloop.run_in_executor(None, partial(self.__mega_client.getDownloadInfo,dl_add_info["gid"]))
         self._path = os.path.join(dl_add_info["dir"], dl_info["name"])
 
         while True:
-            dl_info = await self._aloop.run_in_executor(None, partial(mega_client.getDownloadInfo, dl_add_info["gid"]))
+            dl_info = await self._aloop.run_in_executor(None, partial(self.__mega_client.getDownloadInfo, dl_add_info["gid"]))
             
             if dl_info["state"] not in [constants.State.TYPE_STATE_CANCELED, constants.State.TYPE_STATE_FAILED]:
                 if dl_info["state"] == constants.State.TYPE_STATE_COMPLETED:

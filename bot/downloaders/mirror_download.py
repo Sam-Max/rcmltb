@@ -1,7 +1,7 @@
 import os
 import time
 from subprocess import run
-from bot import GLOBAL_RC_INST
+from bot import GLOBAL_RC_INST, MEGA_KEY
 from bot.core.get_vars import get_val
 from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
@@ -28,13 +28,16 @@ async def handle_mirror_download(client, message, file, tag, pswd, link= None, i
 
     if link is not None:
         if is_mega_link(link):
-            mega_dl= MegaDownloader(link, mess_age)   
-            state, message, path= await mega_dl.execute()
-            if not state:
-                await mess_age.edit(message)
-                clean_path(path)
+            if MEGA_KEY is not None:
+                mega_dl= MegaDownloader(link, mess_age)   
+                state, message, path= await mega_dl.execute()
+                if not state:
+                    await mess_age.edit(message)
+                    clean_path(path)
+                else:
+                    await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
             else:
-                await rclone_mirror(path, mess_age, new_name, tag, is_rename)     
+                await mess_age.edit("MEGA_API_KEY not Provided")
         else:
             aria2= AriaDownloader(link, mess_age)   
             state, message, file_path= await aria2.execute()
