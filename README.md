@@ -3,6 +3,7 @@
 ## Features:
 
 - Mirror from Telegram to cloud.
+- Mirror mega and direct links to cloud
 - Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
 - Zip/Unzip from Telegram to cloud
 - Leech files and folders from cloud to Telegram.
@@ -61,8 +62,13 @@ restart - restart bot
         - `SESSION`: Pyrogram Session: To generate string session use this command `python3 session_pyro_gen.py` on repo folder. 
         - `UPSTREAM_BRANCH`: Upstream branch for update. 
         - `TG_SPLIT_SIZE`: Telegram upload limit in bytes (max `2097151000` which is ~2GB), to automatically slice the file bigger that this size into small parts to upload to Telegram.
-        - `EDIT_SLEEP_SECS`: Seconds for update the progress message regulary. Default to 10. 
+        - `EDIT_SLEEP_SECS`: Seconds for update the progress message regulary. Default to 10.
 
+   - MEGA
+        - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from Mega SDK Page
+        - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account.
+        - `MEGA_PASSWORD`: Password for mega.nz account.
+ 
 3. **Deploying on VPS Using Docker**
 
 - Start Docker daemon (skip if already running), if installed by snap then use 2nd command:
