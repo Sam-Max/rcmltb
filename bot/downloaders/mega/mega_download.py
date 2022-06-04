@@ -118,7 +118,7 @@ class MegaDownloader():
         return pr
 
     async def remove_mega_dl(self, gid):
-        await self._aloop.run_in_executor(None, partial(mega_client.cancelDl, gid))
+        await self._aloop.run_in_executor(None, partial(self.__mega_client.cancelDl, gid))
 
     def get_gid(self):
         return self._gid
