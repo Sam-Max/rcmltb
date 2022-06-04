@@ -4,6 +4,7 @@ import asyncio, os
 from aria2p import API, Client
 import time
 import shutil
+from asyncio import sleep
 import aria2p
 from psutil import cpu_percent, virtual_memory
 from bot import LOGGER, uptime
@@ -98,7 +99,7 @@ class AriaDownloader():
                 file_path = os.path.join(file.dir, file.name)
                 return True, error_message, file_path
         elif self._dl_link.lower().endswith(".torrent"):
-            err_message= "Cant download this .torrent file"
+            err_message= "Not supported .torrent files"
             return False, err_message, None  
         else:
             sagtus, err_message, gid = await self.add_url(aria_instance, self._dl_link)
@@ -115,11 +116,10 @@ class AriaDownloader():
 
     async def aria_progress_update(self):
         aria2 = await self.get_client()
-        gid = self._gid
         user_msg= self._user_message
         while True:
             try:
-                file = await self._aloop.run_in_executor(None, aria2.get_download, gid)
+                file = await self._aloop.run_in_executor(None, aria2.get_download, self._gid)
                 if file.followed_by_ids:
                     self._gid = file.followed_by_ids[0]
                 self._update_info = file
@@ -136,7 +136,7 @@ class AriaDownloader():
                             update_message= await self.create_update_message()
                             if update_message1 != update_message:
                                 try:
-                                    data = "cancel_aria2_{}".format(gid)
+                                    data = "cancel_aria2_{}".format(self._gid)
                                     await user_msg.edit(text=update_message, reply_markup=(InlineKeyboardMarkup([
                                             [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
                                             ])))
@@ -196,7 +196,7 @@ class AriaDownloader():
         msg += "<b>Status:</b> Downloading...\n"
         msg += "{}\n".format(self.progress_bar(file.progress/100))
         msg += "<b>P:</b> {}%\n".format(round(file.progress, 2))
-        msg += "<b>Downloaded:</b> {} <b>of:</b> {}\n".format(human_readable_bytes(file.completed_length),human_readable_bytes(file.total_length))
+        msg += "<b>Downloaded:</b> {} <b>of:</b> {}\n".format(human_readable_bytes(file.completed_length), human_readable_bytes(file.total_length))
         msg += "<b>Speed:</b> {}".format(file.download_speed_string()) + "|" + "<b>ETA: {} Mins\n</b>".format(file.eta_string())
         msg += "<b>Conns:</b>{}\n".format(file.connections)
         msg += bottom_status
@@ -222,8 +222,16 @@ class AriaDownloader():
             gid = self._gid
         aria2 = await self.get_client()
         try:
-            downloads = await self._aloop.run_in_executor(None, aria2.get_download, gid)
-            downloads.remove(force=True, files=True)
+            download = await self._aloop.run_in_executor(None, aria2.get_download, gid)
+            if download.is_waiting:
+                aria2.remove([download], force=True, files=True)
+                return
+            if len(download.followed_by_ids) != 0:
+                downloads = aria2.get_downloads(download.followed_by_ids)
+                aria2.remove(downloads, force=True, files=True)
+                aria2.remove([download], force=True, files=True)
+                return
+            aria2.remove([download], force=True, files=True)
             LOGGER.info("Download Removed")
         except Exception as e:
             LOGGER.exception(e)
@@ -233,4 +241,5 @@ class AriaDownloader():
     def get_gid(self):
         return self._gid
 
+    
     
