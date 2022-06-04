@@ -13,7 +13,7 @@ from bot import LOGGER
 from bot.utils.misc_utils import clean_filepath, clean_path
 from bot.utils.zip_utils import extract_archive
 
-async def handle_mirror_download(client, message, file, tag, pswd, link= None, isZip=False, extract=False, new_name=None, is_rename= False):
+async def handle_mirror_download(client, message, file, tag, pswd, link= None, isZip=False, extract=False, new_name=None, is_rename= False, isQbit=False, qbitsel=False):
     mess_age = await message.reply_text("Preparing for download...", quote=True)
     LOGGER.info("Preparing for download...")
 
@@ -34,7 +34,10 @@ async def handle_mirror_download(client, message, file, tag, pswd, link= None, i
                 await mess_age.edit(message)
                 clean_path(path)
             else:
-                await rclone_mirror(path, mess_age, new_name, tag, is_rename)     
+                await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
+        # elif isQbit:
+        #     qbit_dl= QbDownloader()   
+        #     qbit_dl.add_qb_torrent(link, DOWNLOAD_DIR, qbitsel)
         else:
             aria2= AriaDownloader(link, mess_age)   
             state, message, file_path= await aria2.execute()
