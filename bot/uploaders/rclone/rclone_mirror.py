@@ -36,6 +36,7 @@ class RcloneMirror:
     async def mirror(self):
           path = ''
           dest_base = ''
+          is_gdrive= False
           gen_drive_name = ''
           dest_drive = get_val('DEF_RCLONE_DRIVE')
           conf_path = await get_config()
@@ -96,25 +97,25 @@ class RcloneMirror:
           msg += f"<b>Name: </b><code>{escape(name)}</code><b>"
           
           if os.path.isdir(path):
-            if is_gdrive:
-                gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path)
-                folder_link = f"https://drive.google.com/folderview?id={gid[0]}"
-                button = []
-                button.append([InlineKeyboardButton(text='Drive Link', url=folder_link)])
-                await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
-            else:
-                await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
-            clean_path(path)
+                if is_gdrive:
+                    gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path)
+                    folder_link = f"https://drive.google.com/folderview?id={gid[0]}"
+                    button = []
+                    button.append([InlineKeyboardButton(text='Drive Link', url=folder_link)])
+                    await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
+                else:
+                    await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
+                clean_path(path)
           else:
-            if is_gdrive:
-                gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path, False)
-                link = f"https://drive.google.com/file/d/{gid[0]}/view"
-                button = []
-                button.append([InlineKeyboardButton(text='Drive Link', url=link)])
-                await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
-            else:
-                await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
-            clean_filepath(path)
+                if is_gdrive:
+                    gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path, False)
+                    link = f"https://drive.google.com/file/d/{gid[0]}/view"
+                    button = []
+                    button.append([InlineKeyboardButton(text='Drive Link', url=link)])
+                    await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
+                else:
+                    await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
+                clean_filepath(path)
 
     async def __rclone_update(self):
         blank = 0
