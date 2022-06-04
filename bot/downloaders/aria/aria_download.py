@@ -4,7 +4,6 @@ import asyncio, os
 from aria2p import API, Client
 import time
 import shutil
-from asyncio import sleep
 import aria2p
 from psutil import cpu_percent, virtual_memory
 from bot import LOGGER, uptime
@@ -12,7 +11,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from functools import partial
 from bot.utils import human_format
 from bot.utils.bot_utils import is_magnet
-from bot.utils.human_format import human_readable_bytes
+from bot.utils.human_format import get_readable_file_size
 
 
 class AriaDownloader():
@@ -32,8 +31,8 @@ class AriaDownloader():
 
         aria2_daemon_start_cmd = []
         aria2_daemon_start_cmd.append("aria2c")
-        aria2_daemon_start_cmd.append("--conf-path=aria2/aria2.conf")
-        #aria2_daemon_start_cmd.append("--conf-path=/usr/src/app/aria2/aria2.conf")
+        #aria2_daemon_start_cmd.append("--conf-path=aria2/aria2.conf")
+        aria2_daemon_start_cmd.append("--conf-path=/usr/src/app/aria2/aria2.conf")
 
         process = await asyncio.create_subprocess_exec(
             *aria2_daemon_start_cmd,
@@ -191,14 +190,23 @@ class AriaDownloader():
         diff = human_format.human_readable_timedelta(diff)
         usage = shutil.disk_usage("/")
         free = human_format.human_readable_bytes(usage.free) 
-        bottom_status += f"\n<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}" + f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {diff}"
+        bottom_status += f"\n\n<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}" + f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {diff}"
         msg = "<b>Name:</b>{}\n".format(downloading_dir_name)
         msg += "<b>Status:</b> Downloading...\n"
-        msg += "{}\n".format(self.progress_bar(file.progress/100))
+        msg += "{}\n".format(self.get_progress_bar_string())
         msg += "<b>P:</b> {}%\n".format(round(file.progress, 2))
-        msg += "<b>Downloaded:</b> {} <b>of:</b> {}\n".format(human_readable_bytes(file.completed_length), human_readable_bytes(file.total_length))
+        msg += "<b>Downloaded:</b> {} <b>of:</b> {}\n".format(get_readable_file_size(file.completed_length), file.total_length_string())
         msg += "<b>Speed:</b> {}".format(file.download_speed_string()) + "|" + "<b>ETA: {} Mins\n</b>".format(file.eta_string())
-        msg += "<b>Conns:</b>{}\n".format(file.connections)
+        try:
+            msg += f"<b>Seeders:</b> {file.num_seeders}" 
+            msg += f" | <b>Peers:</b> {file.connections}"
+        except:
+            pass
+        try:
+            msg += f"<b>Seeders:</b> {file.num_seeds}"
+            msg += f" | <b>Leechers:</b> {file.num_leechs}"
+        except:
+            pass
         msg += bottom_status
         return msg
     
@@ -216,6 +224,17 @@ class AriaDownloader():
             else:
                 pr += ncomp
         return pr
+
+    def get_progress_bar_string(self):
+        completed = self._update_info.completed_length / 8
+        total = self._update_info.total_length / 8
+        p = 0 if total == 0 else round(completed * 100 / total)
+        p = min(max(p, 0), 100)
+        cFull = p // 8
+        p_str = '■' * cFull
+        p_str += '□' * (12 - cFull)
+        p_str = f"[{p_str}]"
+        return p_str
 
     async def remove_dl(self, gid):
         if gid is None:
