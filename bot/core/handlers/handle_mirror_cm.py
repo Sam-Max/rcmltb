@@ -38,7 +38,6 @@ async def mirror(client, message, isZip=False, extract=False):
             for i in media_array:
                 if i is not None:
                     file = i
-                    return file
             tag = f"@{replied_message.from_user.username}"
             if file is None:
                 reply_text = str(replied_message.text)
