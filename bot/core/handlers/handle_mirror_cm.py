@@ -33,7 +33,12 @@ async def mirror(client, message, isZip=False, extract=False):
                 print("Password: {}".format(pswd))
             else:
                 pswd= None  
-            file = get_file(replied_message)
+            file= None  
+            media_array = [replied_message.document, replied_message.video, replied_message.audio]
+            for i in media_array:
+                if i is not None:
+                    file = i
+                    return file
             tag = f"@{replied_message.from_user.username}"
             if file is None:
                 reply_text = str(replied_message.text)
@@ -50,24 +55,20 @@ async def mirror(client, message, isZip=False, extract=False):
                                     if str(e).startswith('ERROR:'):
                                         return await message.reply_text(str(e))
                     if is_gdrive_link(reply_text):
-                        return await message.reply_text("Not supported Google drive links")
+                        return await message.reply_text("Bot don't support Google drive links")
                 else:
                     return await message.reply_text("<b>Reply to a link or Telegram file</b>", quote=True)    
                 await handle_mirror_download(client, message, file, tag, pswd, link, isZip, extract)
             else:
-                name= file.file_name
                 size= get_readable_size(file.file_size)
-                msg = f"<b>Which name do you want to use?</b>\n\n<b>Name</b>: `{name}`\n\n<b>Size</b>: `{size}`"
-
+                msg = f"<b>Which name do you want to use?</b>\n\n<b>Name</b>: `{file.file_name}`\n\n<b>Size</b>: `{size}`"
                 set_val("FILE", file)
                 set_val("IS_ZIP", isZip)
                 set_val("EXTRACT", extract)
                 set_val("PSWD", pswd)
-            
                 keyboard = [[InlineKeyboardButton(f"📄 By default", callback_data= f'mirrormenu_default'),
                         InlineKeyboardButton(f"📝 Rename", callback_data='mirrormenu_rename')],
                         [InlineKeyboardButton("Close", callback_data= f"mirrorsetmenu^selfdest")]]
-
                 await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(keyboard))
         else:
            if isZip or extract:
