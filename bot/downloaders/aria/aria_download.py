@@ -1,14 +1,17 @@
 #Modified from: (c) YashDK [yash-dk@github]
 
-import asyncio, aria2p, os
+import asyncio, os
+from aria2p import API, Client
 import time
 import shutil
 from asyncio import sleep
+import aria2p
 from psutil import cpu_percent, virtual_memory
 from bot import LOGGER, uptime
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from functools import partial
 from bot.utils import human_format
+from bot.utils.bot_utils import is_magnet
 from bot.utils.human_format import human_readable_bytes
 
 
@@ -29,13 +32,8 @@ class AriaDownloader():
 
         aria2_daemon_start_cmd = []
         aria2_daemon_start_cmd.append("aria2c")
-        aria2_daemon_start_cmd.append("--daemon=true")
-        aria2_daemon_start_cmd.append("--enable-rpc")
-        aria2_daemon_start_cmd.append("--rpc-listen-all=true")
-        aria2_daemon_start_cmd.append(f"--rpc-listen-port=8100")
-        aria2_daemon_start_cmd.append("--rpc-max-request-size=1024M")
-        aria2_daemon_start_cmd.append("--check-certificate=false")
-        aria2_daemon_start_cmd.append("--conf-path=/usr/src/app/aria2/aria2.conf")
+        aria2_daemon_start_cmd.append("--conf-path=aria2/aria2.conf")
+        #aria2_daemon_start_cmd.append("--conf-path=/usr/src/app/aria2/aria2.conf")
 
         process = await asyncio.create_subprocess_exec(
             *aria2_daemon_start_cmd,
@@ -47,23 +45,22 @@ class AriaDownloader():
         arcli = await self._aloop.run_in_executor(
             None, 
             partial(
-                aria2p.Client, 
+                Client, 
                 host="http://localhost", 
                 port=8100, 
                 secret=""
                 )
         )
-        aria2 = await self._aloop.run_in_executor(None, aria2p.API, arcli)
+        aria2 = await self._aloop.run_in_executor(None, API, arcli)
         self._client = aria2
         return aria2
 
     async def add_magnet(self, aria_instance, magnetic_link):
-        try:
-            download = await self._aloop.run_in_executor(None,aria_instance.add_magnet, magnetic_link)
-        except Exception as e:
-            return False, "**FAILED** \n" + str(e) + " \nPlease do not send slow links"
-        else:
-            return True, "", "" + download.gid + ""
+        download = await self._aloop.run_in_executor(None, aria_instance.add_magnet, magnetic_link)
+        if download.error_message:
+            error = str(download.error_message).replace('<', ' ').replace('>', ' ')
+            return False, "**FAILED** \n" + error + "\n", None
+        return True, "", "" + download.gid + ""
 
     async def add_torrent(self, aria_instance, torrent_file_path):
         if torrent_file_path is None:
@@ -80,35 +77,27 @@ class AriaDownloader():
 
     async def add_url(self, aria_instance, text_url):
         uris = [text_url]
-        try:
-            download = await self._aloop.run_in_executor(None, aria_instance.add_uris, uris)
-        except Exception as e:
-            return False, "**FAILED** \n" + str(e) + " \nPlease do not send slow links.", None
+        download = await self._aloop.run_in_executor(None, aria_instance.add_uris, uris)
+        if download.error_message:
+            error = str(download.error_message).replace('<', ' ').replace('>', ' ')
+            return False, "**FAILED** \n" + error + "\n", None
         else:
             return True, "", "" + download.gid + ""
 
-    async def check_metadata(self, aria2, gid):
-        file = await self._aloop.run_in_executor(None, aria2.get_download, gid)
-        if not file.followed_by_ids:
-            return None
-        new_gid = file.followed_by_ids[0]
-        LOGGER.info("Changing GID " + gid + " to " + new_gid)
-        self._gid = new_gid
-
     async def execute(self):
         aria_instance = await self.get_client()
-        if self._dl_link.lower().startswith("magnet:"):
+        if is_magnet(self._dl_link):
             sagtus, err_message, gid = await self.add_magnet(aria_instance, self._dl_link) 
             if not sagtus:
                 return False, err_message, None
             self._gid = gid
-            resp = await self.check_metadata(aria_instance, gid)
-            await sleep(1)
-            if resp is not None:
-                await self.aria_progress_update()
+            statusr, error_message= await self.aria_progress_update()
+            if not statusr:
+                return False, error_message, None
             else:
-              err_message= "Can't process because not metadata from magnet retrieved"
-              return False, err_message, None
+                file = await self._aloop.run_in_executor(None, aria_instance.get_download, self._gid)
+                file_path = os.path.join(file.dir, file.name)
+                return True, error_message, file_path
         elif self._dl_link.lower().endswith(".torrent"):
             err_message= "Cant download this .torrent file"
             return False, err_message, None  
@@ -132,6 +121,8 @@ class AriaDownloader():
         while True:
             try:
                 file = await self._aloop.run_in_executor(None, aria2.get_download, gid)
+                if file.followed_by_ids:
+                    self._gid = file.followed_by_ids[0]
                 self._update_info = file
                 complete = file.is_complete
                 update_message1= ""
@@ -169,10 +160,6 @@ class AriaDownloader():
                     return True, error_message
             except aria2p.client.ClientException as e:
                 if " not found" in str(e) or "'file'" in str(e):
-                    fname = "N/A"
-                    try:
-                        fname = file.name
-                    except:pass
                     error_reason = "Aria download canceled."
                     return False, error_reason
                 else:
