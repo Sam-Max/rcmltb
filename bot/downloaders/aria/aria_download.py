@@ -13,7 +13,6 @@ from bot.utils import human_format
 from bot.utils.bot_utils import is_magnet
 from bot.utils.human_format import get_readable_file_size
 
-
 class AriaDownloader():
     def __init__(self, dl_link, user_message, new_file_name=None):
         super().__init__()
@@ -31,8 +30,8 @@ class AriaDownloader():
 
         aria2_daemon_start_cmd = []
         aria2_daemon_start_cmd.append("aria2c")
-        #aria2_daemon_start_cmd.append("--conf-path=aria2/aria2.conf")
-        aria2_daemon_start_cmd.append("--conf-path=/usr/src/app/aria2/aria2.conf")
+        aria2_daemon_start_cmd.append("--conf-path=aria2/aria2.conf")
+        #aria2_daemon_start_cmd.append("--conf-path=/usr/src/app/aria2/aria2.conf")
 
         process = await asyncio.create_subprocess_exec(
             *aria2_daemon_start_cmd,
@@ -59,16 +58,15 @@ class AriaDownloader():
         if download.error_message:
             error = str(download.error_message).replace('<', ' ').replace('>', ' ')
             return False, "**FAILED** \n" + error + "\n", None
-        return True, "", "" + download.gid + ""
+        return True, "", download.gid
 
     async def add_url(self, aria_instance, text_url, path):
-        uris = [text_url]
-        download = await self._aloop.run_in_executor(None, aria_instance.add_uris, uris, {'dir': path})
+        download = await self._aloop.run_in_executor(None, aria_instance.add_uris, [text_url], {'dir': path})
         if download.error_message:
             error = str(download.error_message).replace('<', ' ').replace('>', ' ')
             return False, "**FAILED** \n" + error + "\n", None
         else:
-            return True, "", "" + download.gid + ""
+            return True, "", download.gid
 
     async def add_torrent(self, aria_instance, torrent_file_path):
         if torrent_file_path is None:
@@ -82,6 +80,7 @@ class AriaDownloader():
                 return True, "" + download.gid + ""
         else:
             return False, "**FAILED** \n" + str(e) + " \nPlease try other sources to get workable link"
+
 
     async def execute(self):
         aria_instance = await self.get_client()
@@ -119,21 +118,22 @@ class AriaDownloader():
         user_msg= self._user_message
         while True:
             try:
-                file = await self._aloop.run_in_executor(None, aria2.get_download, self._gid)
-                if file.followed_by_ids:
-                    self._gid = file.followed_by_ids[0]
-                self._update_info = file
-                complete = file.is_complete
+                download = await self._aloop.run_in_executor(None, aria2.get_download, self._gid)
+                if download.followed_by_ids:
+                    self._gid = download.followed_by_ids[0]
+                self._update_info = download
+                complete = download.is_complete
+                LOGGER.info("IS_DOWNLOAD_COMPLETE: {}".format(complete))
                 update_message1= ""
                 sleeps= False
                 if not complete:
-                    if not file.error_message:
-                        if file is None:
+                    if not download.error_message:
+                        if download is None:
                             error_message= "Error in fetching the direct DL"
                             return False, error_message
                         else:
                             sleeps = True
-                            update_message= await self.create_update_message()
+                            update_message= await self.create_update_message(download)
                             if update_message1 != update_message:
                                 try:
                                     data = "cancel_aria2_{}".format(self._gid)
@@ -151,11 +151,11 @@ class AriaDownloader():
                                 sleeps = False
                                 await asyncio.sleep(2)
                     else:
-                        msg = file.error_message
+                        msg = download.error_message
                         error_message = f"The aria download failed due to this reason:- {msg}"
                         return False, error_message
                 else:
-                    error_message= f"Download completed: `{file.name}` - (`{file.total_length_string()}`)"
+                    error_message= f"Download completed: `{download.name}` - (`{download.total_length_string()}`)"
                     return True, error_message
             except aria2p.client.ClientException as e:
                 if " not found" in str(e) or "'file'" in str(e):
@@ -165,7 +165,7 @@ class AriaDownloader():
                     LOGGER.warning("Error due to a client error.")
                 pass
             except RecursionError:
-                file.remove(force=True)
+                download.remove(force=True)
                 error_reason = "The link is basically dead."
                 return False, error_reason
             except Exception as e:
@@ -179,11 +179,10 @@ class AriaDownloader():
                     error_reason =  f"Error: {str(e)}"
                     return False, error_reason
 
-    async def create_update_message(self):
-        file= self._update_info
+    async def create_update_message(self, download):
         downloading_dir_name = "N/A"
         try:
-            downloading_dir_name = str(file.name)
+            downloading_dir_name = str(download.name)
         except:
             pass
         bottom_status= ''
@@ -195,17 +194,17 @@ class AriaDownloader():
         msg = "<b>Name:</b>{}\n".format(downloading_dir_name)
         msg += "<b>Status:</b> Downloading...\n"
         msg += "{}\n".format(self.get_progress_bar_string())
-        msg += "<b>P:</b> {}%\n".format(round(file.progress, 2))
-        msg += "<b>Downloaded:</b> {} <b>of:</b> {}\n".format(get_readable_file_size(file.completed_length), file.total_length_string())
-        msg += "<b>Speed:</b> {}".format(file.download_speed_string()) + "|" + "<b>ETA: {} Mins\n</b>".format(file.eta_string())
+        msg += "<b>P:</b> {}%\n".format(round(download.progress, 2))
+        msg += "<b>Downloaded:</b> {} <b>of:</b> {}\n".format(get_readable_file_size(download.completed_length), download.total_length_string())
+        msg += "<b>Speed:</b> {}".format(download.download_speed_string()) + "|" + "<b>ETA: {} Mins\n</b>".format(download.eta_string())
         try:
-            msg += f"<b>Seeders:</b> {file.num_seeders}" 
-            msg += f" | <b>Peers:</b> {file.connections}"
+            msg += f"<b>Seeders:</b> {download.num_seeders}" 
+            msg += f" | <b>Peers:</b> {download.connections}"
         except:
             pass
         try:
-            msg += f"<b>Seeders:</b> {file.num_seeds}"
-            msg += f" | <b>Leechers:</b> {file.num_leechs}"
+            msg += f"<b>Seeders:</b> {download.num_seeds}"
+            msg += f" | <b>Leechers:</b> {download.num_leechs}"
         except:
             pass
         msg += bottom_status
