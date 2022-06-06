@@ -1,9 +1,8 @@
 from logging import FileHandler, StreamHandler, INFO, basicConfig, error as log_error, info as log_info
-from os import path as ospath, environ, execl as osexecl
+from os import path as ospath, environ
 from subprocess import run as srun
 from requests import get as rget
 from dotenv import load_dotenv
-from sys import executable
 
 if ospath.exists('log.txt'):
     with open('log.txt', 'r+') as f:
@@ -21,7 +20,7 @@ try:
         res = rget(CONFIG_FILE_URL)
         if res.status_code == 200:
             with open('config.env', 'wb+') as f:
-                f.writehttps://echallan.parivahan.gov.in/index/accused-challan(res.content)
+                f.write(res.content)
         else:
             log_error(f"Failed to download config.env {res.status_code}")
     except Exception as e:
@@ -37,15 +36,16 @@ try:
     if len(UPSTREAM_REPO) == 0:
        raise TypeError
 except:
-    UPSTREAM_REPO = "https://github.com/anasty17/mirror-leech-telegram-bot"
+    UPSTREAM_REPO = None
 try:
     if len(UPSTREAM_BRANCH) == 0:
        raise TypeError
 except:
-    UPSTREAM_BRANCH = 'h-code'
+    UPSTREAM_BRANCH = 'master'
 
-if ospath.exists('.git'):
-    srun(["rm", "-rf", ".git"])
+if UPSTREAM_REPO is not None:
+    if ospath.exists('.git'):
+        srun(["rm", "-rf", ".git"])
 
     srun([f"git init -q \
             && git config --global user.email sam.agd@outlook.com \
