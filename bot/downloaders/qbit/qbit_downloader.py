@@ -20,18 +20,16 @@ class QbDownloader:
         self.__path = ''
         self.__name = ''
         self.__message= message
-        self.select = False
         self.client = None
         self.ext_hash = ''
         self.__periodic = None
         self.__stalled_time = time()
+        self.__cancel= False
         self.__uploaded = False
-        self.__seeding = False
         self.__rechecked = False
 
-    async def add_qb_torrent(self, link, path, select):
+    async def add_qb_torrent(self, link, path):
         self.__path = path
-        self.select = select
         self.client = get_client()
         try:
             if link.startswith('magnet:'):
@@ -74,6 +72,8 @@ class QbDownloader:
             LOGGER.info(f"QbitDownload started: {self.__name} - Hash: {self.ext_hash}")
             self.__periodic = setInterval(self.POLLING_INTERVAL, self.__qb_listener)
             await self.qbit_progress_update()
+           
+
         except Exception as e:
             await self.__message.edit(str(e))
             self.client.auth_log_out()
@@ -95,6 +95,9 @@ class QbDownloader:
                     pass
 
                 if sleeps:
+                    if self.__cancel:
+                        await self.__message.edit('Download stopped by user!')     
+                        break       
                     sleeps = False
                     await asyncio.sleep(5)
 
@@ -174,14 +177,12 @@ class QbDownloader:
         LOGGER.info(err)
         self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
         self.client.auth_log_out()
+        self.__cancel= True
         self.__periodic.cancel()
 
     def cancel_download(self):
-        if self.__seeding:
-            LOGGER.info(f"Cancelling Seed: {self.__name}")
-            self.client.torrents_pause(torrent_hashes=self.ext_hash)
-        else:
-            self.__onDownloadError('Download stopped by user!')
+        self.__onDownloadError('Download stopped by user!')
+        
 
 def _get_hash_magnet(mgt: str):
     hash_ = re_search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
