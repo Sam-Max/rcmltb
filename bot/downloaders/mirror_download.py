@@ -1,7 +1,7 @@
 import os
 import time
 from subprocess import run
-from bot import GLOBAL_RC_INST
+from bot import GLOBAL_QBIT, GLOBAL_RCLONE
 from bot.core.get_vars import get_val
 from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
@@ -25,8 +25,8 @@ async def handle_mirror_download(
     extract=False, 
     isQbit=False, 
     new_name=None, 
-    is_rename= False, 
-    qbitsel=False):
+    is_rename= False
+    ):
 
     mess_age = await message.reply_text("Preparing for download...", quote=True)
     LOGGER.info("Preparing for download...")
@@ -51,8 +51,10 @@ async def handle_mirror_download(
                 await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
         elif isQbit:
              DOWNLOAD_DIR = os.path.join(os.getcwd(), "Downloads", "")
-             qbit_dl= QbDownloader(mess_age)   
-             await qbit_dl.add_qb_torrent(link, DOWNLOAD_DIR, qbitsel)
+             qbit_dl= QbDownloader(mess_age)
+             GLOBAL_QBIT.append(qbit_dl)   
+             await qbit_dl.add_qb_torrent(link, DOWNLOAD_DIR)
+             GLOBAL_QBIT.remove(qbit_dl)  
         else:
             aria2= AriaDownloader(link, mess_age)   
             state, message, file_path= await aria2.execute()
@@ -112,7 +114,7 @@ async def handle_mirror_download(
 
 async def rclone_mirror(path, mess_age, new_name, tag, is_rename):
     rclone_mirror= RcloneMirror(path, mess_age, new_name, tag, is_rename)
-    GLOBAL_RC_INST.append(rclone_mirror)
+    GLOBAL_RCLONE.append(rclone_mirror)
     await rclone_mirror.mirror()
-    GLOBAL_RC_INST.remove(rclone_mirror)
+    GLOBAL_RCLONE.remove(rclone_mirror)
 
