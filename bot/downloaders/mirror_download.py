@@ -5,6 +5,7 @@ from bot import GLOBAL_RC_INST
 from bot.core.get_vars import get_val
 from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
+from bot.downloaders.qbit.qbit_downloader import QbDownloader
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
 from bot.utils.bot_utils import is_mega_link
 from bot.utils.get_rclone_conf import get_config
@@ -13,7 +14,20 @@ from bot import LOGGER
 from bot.utils.misc_utils import clean_filepath, clean_path
 from bot.utils.zip_utils import extract_archive
 
-async def handle_mirror_download(client, message, file, tag, pswd, link= None, isZip=False, extract=False, new_name=None, is_rename= False, isQbit=False, qbitsel=False):
+async def handle_mirror_download(
+    client, 
+    message, 
+    file, 
+    tag, 
+    pswd, 
+    link= None, 
+    isZip=False, 
+    extract=False, 
+    isQbit=False, 
+    new_name=None, 
+    is_rename= False, 
+    qbitsel=False):
+
     mess_age = await message.reply_text("Preparing for download...", quote=True)
     LOGGER.info("Preparing for download...")
 
@@ -35,9 +49,10 @@ async def handle_mirror_download(client, message, file, tag, pswd, link= None, i
                 clean_path(path)
             else:
                 await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
-        # elif isQbit:
-        #     qbit_dl= QbDownloader()   
-        #     qbit_dl.add_qb_torrent(link, DOWNLOAD_DIR, qbitsel)
+        elif isQbit:
+             DOWNLOAD_DIR = os.path.join(os.getcwd(), "Downloads", "")
+             qbit_dl= QbDownloader(mess_age)   
+             await qbit_dl.add_qb_torrent(link, DOWNLOAD_DIR, qbitsel)
         else:
             aria2= AriaDownloader(link, mess_age)   
             state, message, file_path= await aria2.execute()

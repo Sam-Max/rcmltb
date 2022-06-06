@@ -4,6 +4,7 @@ class Commands:
     MIRRORSET = "mirrorset"
     ZIPMIRROR = "zipmirror"
     UNZIPMIRROR = "unzipmirror"
+    QBITMIRROR= "qbitmirror"
     LEECH= "leech"
     COPY = "copy"
     MYFILES= "myfiles"

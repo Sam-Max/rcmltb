@@ -7,8 +7,9 @@ import sys
 import time
 from os import environ
 from dotenv import load_dotenv
+from qbittorrentapi import Client as qbitClient
 from bot.utils.load_rclone import load_rclone
-from psutil import Popen
+from subprocess import Popen, run as srun
 from bot.client import RcloneTgClient
 from bot.core.var_holder import VarHolder
 from megasdkrestclient import MegaSdkRestClient, errors
@@ -24,6 +25,9 @@ LOGGER = getLogger(__name__)
 def getConfig(name: str):
     return environ[name]
 
+def get_client():
+    return qbitClient(host="localhost", port=8090)
+
 uptime = time.time()
 GLOBAL_RC_INST= []
 SessionVars = VarHolder()
@@ -31,6 +35,17 @@ SessionVars = VarHolder()
 load_dotenv('config.env', override=True)
 load_rclone()
 
+srun(["qbittorrent-nox", "-d", "--profile=."])
+sleep(0.5)
+
+try:
+    TORRENT_TIMEOUT = getConfig('TORRENT_TIMEOUT')
+    if len(TORRENT_TIMEOUT) == 0:
+        raise KeyError
+    TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
+except:
+    TORRENT_TIMEOUT = None
+    
 try:
     MEGA_KEY = getConfig('MEGA_API_KEY')
     if len(MEGA_KEY) == 0:
