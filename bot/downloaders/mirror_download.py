@@ -1,10 +1,11 @@
 import os
 import time
 from subprocess import run
-from bot import GLOBAL_RC_INST, MEGA_KEY
+from bot import GLOBAL_RCLONE, MEGA_KEY
 from bot.core.get_vars import get_val
 from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
+from bot.downloaders.qbit.qbit_downloader import QbDownloader
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
 from bot.utils.bot_utils import is_mega_link
 from bot.utils.get_rclone_conf import get_config
@@ -13,7 +14,19 @@ from bot import LOGGER
 from bot.utils.misc_utils import clean_filepath, clean_path
 from bot.utils.zip_utils import extract_archive
 
-async def handle_mirror_download(client, message, file, tag, pswd, link= None, isZip=False, extract=False, new_name=None, is_rename= False):
+async def handle_mirror_download(
+    client, 
+    message, 
+    file, 
+    tag, 
+    pswd, 
+    link="", 
+    isZip=False, 
+    extract=False, 
+    isQbit=False, 
+    new_name="", 
+    is_rename= False
+    ):
     mess_age = await message.reply_text("Preparing for download...", quote=True)
     LOGGER.info("Preparing for download...")
 
@@ -26,7 +39,7 @@ async def handle_mirror_download(client, message, file, tag, pswd, link= None, i
         await mess_age.edit("Select a cloud first please")
         return      
 
-    if link is not None:
+    if file is None:
         if is_mega_link(link):
             if MEGA_KEY is not None:
                 mega_dl= MegaDownloader(link, mess_age)   
@@ -37,14 +50,22 @@ async def handle_mirror_download(client, message, file, tag, pswd, link= None, i
                 else:
                     await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
             else:
-                await mess_age.edit("MEGA_API_KEY not Provided")
+                await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
+        elif isQbit:
+             qbit_dl= QbDownloader(mess_age)
+             state, message, path= await qbit_dl.add_qb_torrent(link)
+             if not state:
+                await mess_age.edit(message)
+                clean_path(path)
+             else:
+                await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
         else:
             aria2= AriaDownloader(link, mess_age)   
-            state, message, file_path= await aria2.execute()
+            state, message, path= await aria2.execute()
             if not state:
                 await mess_age.edit(message)
             else:
-                await rclone_mirror(file_path, mess_age, new_name, tag, is_rename) 
+                await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
     else:
         c_time = time.time()
         DOWNLOAD_DIR = os.path.join(os.getcwd(), "Downloads", "")
@@ -97,7 +118,7 @@ async def handle_mirror_download(client, message, file, tag, pswd, link= None, i
 
 async def rclone_mirror(path, mess_age, new_name, tag, is_rename):
     rclone_mirror= RcloneMirror(path, mess_age, new_name, tag, is_rename)
-    GLOBAL_RC_INST.append(rclone_mirror)
+    GLOBAL_RCLONE.append(rclone_mirror)
     await rclone_mirror.mirror()
-    GLOBAL_RC_INST.remove(rclone_mirror)
+    GLOBAL_RCLONE.remove(rclone_mirror)
 
