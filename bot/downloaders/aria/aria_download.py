@@ -182,21 +182,6 @@ class AriaDownloader():
         msg += bottom_status
         return msg
     
-    def progress_bar(self, percentage):
-        """Returns a progress bar for download
-        """
-        #percentage is on the scale of 0-1
-        comp ="▪️"
-        ncomp ="▫️"
-        pr = ""
-
-        for i in range(1,11):
-            if i <= int(percentage*10):
-                pr += comp
-            else:
-                pr += ncomp
-        return pr
-
     def get_progress_bar_string(self):
         completed = self._update_info.completed_length / 8
         total = self._update_info.total_length / 8
