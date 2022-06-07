@@ -4,6 +4,7 @@
 
 - Mirror from Telegram to cloud.
 - Mirror Mega and direct download links to cloud
+- Mirror torrent and magnets links to cloud using qbitorrent.
 - Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
 - Zip/Unzip from Telegram to cloud
 - Leech files and folders from cloud to Telegram.
@@ -16,10 +17,11 @@
 
 ```
 mirror - mirror to selected cloud 
-zipmirror - mirror and zip to cloud 
-unzipmirror - mirror and extract to cloud 
-mirrorbatch - mirror files in batch to cloud 
 mirrorset - select cloud/folder where to mirror
+qbmirror - mirror torrent to cloud
+unzipmirror - mirror and extract to cloud 
+zipmirror - mirror and zip to cloud 
+mirrorbatch - mirror files in batch to cloud 
 leech - leech from cloud to Telegram
 copy - copy from cloud to cloud
 myfiles - file manager
