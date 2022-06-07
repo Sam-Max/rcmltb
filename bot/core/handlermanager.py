@@ -5,7 +5,7 @@ from bot.core.get_commands import get_command_pyro, get_command_tele
 from bot.core.get_vars import get_val
 from bot.core.handlers.handle_cancel import handle_cancel
 from bot.core.handlers.handle_copy_cm import handle_copy_command
-from bot.core.handlers.handle_mirror_cm import handle_mirror_command, handle_unzip_mirror_command, handle_zip_mirror_command
+from bot.core.handlers.handle_mirror_cm import handle_mirror_command, handle_qbit_mirror_command, handle_unzip_mirror_command, handle_zip_mirror_command
 from bot.core.handlers.handle_exec_cm import handle_exec_message_f
 from bot.core.handlers.handle_getlogs import get_logs_f
 from bot.core.handlers.handle_leech_cm import handle_leech_command
@@ -50,6 +50,12 @@ def add_handlers(bot):
     download_handlers = MessageHandler(
         handle_unzip_mirror_command,
         filters=filters.command([get_command_pyro("UNZIPMIRROR")]) 
+    )
+    bot.pyro.add_handler(download_handlers)
+
+    download_handlers = MessageHandler(
+        handle_qbit_mirror_command,
+        filters=filters.command([get_command_pyro("QBMIRROR")]) 
     )
     bot.pyro.add_handler(download_handlers)
 

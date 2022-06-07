@@ -50,7 +50,7 @@ class MegaDownloader():
                     error_reason = "Download Complete."
                     await asyncio.sleep(2)
                     return True, error_reason, self._path
-
+                
                 try:
                     self._update_info = dl_info
                     await self.aria_progress_update()

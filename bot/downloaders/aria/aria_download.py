@@ -30,8 +30,8 @@ class AriaDownloader():
 
         aria2_daemon_start_cmd = []
         aria2_daemon_start_cmd.append("aria2c")
-        aria2_daemon_start_cmd.append("--conf-path=aria2/aria2.conf")
-        #aria2_daemon_start_cmd.append("--conf-path=/usr/src/app/aria2/aria2.conf")
+        #aria2_daemon_start_cmd.append("--conf-path=aria2/aria2.conf")
+        aria2_daemon_start_cmd.append("--conf-path=/usr/src/app/aria2/aria2.conf")
 
         process = await asyncio.create_subprocess_exec(
             *aria2_daemon_start_cmd,
@@ -53,13 +53,6 @@ class AriaDownloader():
         self._client = aria2
         return aria2
 
-    async def add_magnet(self, aria_instance, magnetic_link, path):
-        download = await self._aloop.run_in_executor(None, aria_instance.add_magnet, magnetic_link, {'dir': path})
-        if download.error_message:
-            error = str(download.error_message).replace('<', ' ').replace('>', ' ')
-            return False, "**FAILED** \n" + error + "\n", None
-        return True, "", download.gid
-
     async def add_url(self, aria_instance, text_url, path):
         download = await self._aloop.run_in_executor(None, aria_instance.add_uris, [text_url], {'dir': path})
         if download.error_message:
@@ -68,35 +61,12 @@ class AriaDownloader():
         else:
             return True, "", download.gid
 
-    async def add_torrent(self, aria_instance, torrent_file_path):
-        if torrent_file_path is None:
-            return False, "**FAILED** \n\nsomething wrong when trying to add <u>TORRENT</u> file"
-        if os.path.exists(torrent_file_path):
-            try:
-                download = await self._aloop.run_in_executor(None, partial(aria_instance.add_torrent, torrent_file_path, uris=None, options=None, position=None))
-            except Exception as e:
-                return False, "**FAILED** \n" + str(e) + " \nPlease do not send slow links"
-            else:
-                return True, "" + download.gid + ""
-        else:
-            return False, "**FAILED** \n" + str(e) + " \nPlease try other sources to get workable link"
-
-
     async def execute(self):
         aria_instance = await self.get_client()
         path= os.path.join(os.getcwd(), "Downloads", str(time.time()).replace(".","")) 
         if is_magnet(self._dl_link):
-            sagtus, err_message, gid = await self.add_magnet(aria_instance, self._dl_link, path) 
-            if not sagtus:
-                return False, err_message, None
-            self._gid = gid
-            statusr, error_message= await self.aria_progress_update()
-            if not statusr:
-                return False, error_message, None
-            else:
-                file = await self._aloop.run_in_executor(None, aria_instance.get_download, self._gid)
-                file_path = os.path.join(file.dir, file.name)
-                return True, error_message, file_path
+            err_message= "Not supported magnet links"
+            return False, err_message, None  
         elif self._dl_link.lower().endswith(".torrent"):
             err_message= "Not supported .torrent files"
             return False, err_message, None  
@@ -210,21 +180,6 @@ class AriaDownloader():
         msg += bottom_status
         return msg
     
-    def progress_bar(self, percentage):
-        """Returns a progress bar for download
-        """
-        #percentage is on the scale of 0-1
-        comp ="▪️"
-        ncomp ="▫️"
-        pr = ""
-
-        for i in range(1,11):
-            if i <= int(percentage*10):
-                pr += comp
-            else:
-                pr += ncomp
-        return pr
-
     def get_progress_bar_string(self):
         completed = self._update_info.completed_length / 8
         total = self._update_info.total_length / 8

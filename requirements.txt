@@ -1,6 +1,7 @@
 cryptg==0.2.post2
 psutil==5.8.0
 aria2p
+bencoding
 lk21
 cfscrape
 Telethon
@@ -11,5 +12,6 @@ speedtest-cli
 python-dotenv
 requests
 megasdkrestclient
+qbittorrent-api
 https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip
 
