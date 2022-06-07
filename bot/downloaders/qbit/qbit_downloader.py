@@ -27,7 +27,7 @@ class QbDownloader:
         self.__periodic = None
         self.__stalled_time = time()
         self.__cancel= False
-        self.__uploaded = False
+        self.__completed = False
         self.__rechecked = False
 
     async def add_qb_torrent(self, link):
@@ -103,7 +103,7 @@ class QbDownloader:
                 if sleeps:
                     if self.__cancel:     
                         return False, self.__error_message
-                    if self.__uploaded:
+                    if self.__completed:
                         return True, "Successfully Downloaded!"        
                     sleeps = False
                     await asyncio.sleep(5)
@@ -127,6 +127,11 @@ class QbDownloader:
         msg += "<b>P:</b>{}\n".format(f'{round(self.__info.progress*100, 2)}%')
         msg += "<b>Downloaded:</b> {} <b>of:</b> {}\n".format(get_readable_file_size(self.__info.downloaded), get_readable_file_size(self.__info.total_size))
         msg += "<b>Speed:</b> {}".format(f"{get_readable_file_size(self.__info.dlspeed)}/s") + "|" + "<b>ETA: {}\n</b>".format(get_readable_time(self.__info.eta))
+        try:
+            msg += f"<b>Seeders:</b> {self.__info.num_seeds}" \
+                    f" | <b>Leechers:</b> {self.__info.num_leechs}\n"
+        except:
+            pass
         return msg + bottom_status
 
     def get_progress_bar_string(self):
@@ -146,7 +151,11 @@ class QbDownloader:
             if len(tor_info) == 0:
                 return
             tor_info = tor_info[0]
-            if tor_info.state == "metaDL":
+            if tor_info.state_enum.is_complete:
+                LOGGER.info(f'Qbit download completed.')        
+                self.__completed = True     
+                self.__periodic.cancel()
+            elif tor_info.state == "metaDL":
                 self.__stalled_time = time()
                 if TORRENT_TIMEOUT is not None and time() - tor_info.added_on >= TORRENT_TIMEOUT:
                     self.__onDownloadError("Dead Torrent!")
@@ -166,13 +175,6 @@ class QbDownloader:
                 self.client.torrents_recheck(torrent_hashes=self.ext_hash)
             elif tor_info.state == "error":
                 self.__onDownloadError("No enough space for this torrent on device")
-            elif (tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and \
-                  not self.__uploaded and len(listdir(self.__path)) != 0:
-                self.__uploaded = True
-                self.client.torrents_pause(torrent_hashes=self.ext_hash)
-                self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
-                self.client.auth_log_out()
-                self.__periodic.cancel()
         except Exception as e:
             LOGGER.error(str(e))
 
