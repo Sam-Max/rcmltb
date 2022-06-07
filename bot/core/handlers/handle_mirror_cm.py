@@ -8,7 +8,6 @@ from bot.utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_
 from re import match as re_match
 from bot.utils.direct_link_generator import direct_link_generator
 from bot.utils.exceptions import DirectDownloadLinkException
-from bot.utils.get_message_type import get_file
 from bot.utils.get_size_p import get_readable_size
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -38,10 +37,12 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                 print("Password: {}".format(pswd))
             else:
                 pswd= None  
-            file = get_file(replied_message)
+            file= None
+            media_array = [replied_message.document, replied_message.video, replied_message.audio]
+            for i in media_array:
+                if i is not None:
+                    file = i
             tag = f"@{replied_message.from_user.username}"
-            reply_text = str(replied_message.text)
-            link = reply_text.strip()
             if file is not None:
                 if not isQbit: 
                     if file.mime_type != "application/x-bittorrent":
@@ -57,14 +58,22 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                                 [InlineKeyboardButton("Close", callback_data= f"mirrorsetmenu^selfdest")]]
                         return await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(keyboard))
                     else:
-                        return await message.reply_text("Use /qbitmirror command to mirror .torrent file")   
+                        return await message.reply_text("Use qbmirror command to mirror torrent file")   
                 else:
-                   return
+                    path = await client.download_media(file)
+                    file_name = str(time()).replace(".", "") + ".torrent"
+                    with open(path, "rb") as f:
+                        with open(file_name, "wb") as t:
+                            t.write(f.read())
+                    link = str(file_name)
+                    await handle_mirror_download(client, message, None, tag, pswd, link, isZip, extract, isQbit)
             else:
-                if is_url(link) or is_magnet(link): 
+                reply_text = replied_message.text     
+                if is_url(reply_text) or is_magnet(reply_text): 
+                    link = reply_text.strip()
                     if isQbit:
                         if not is_magnet(link):
-                            if link.endswith('.torrent') or "https://api.telegram.org/file/" in link:
+                            if link.endswith('.torrent'):
                                 content_type = None
                             else:
                                 content_type = get_content_type(link)
@@ -91,7 +100,9 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                                         return await message.reply_text(tag + " " + error) 
                     else:
                         if is_magnet(link) or link.endswith('.torrent'):
-                            return await message.reply_text("Use /qbitmirror command to mirror torrent or magnet link") 
+                            return await message.reply_text("Use qbmirror command to mirror torrent or magnet link")
+                        if is_gdrive_link(link):
+                            return await message.reply_text("Not supported Google Drive links") 
                         if not is_mega_link(link) and not is_magnet(link) and not is_gdrive_link(link) \
                             and not link.endswith('.torrent'):
                             content_type = get_content_type(link)
@@ -102,8 +113,6 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                                 except DirectDownloadLinkException as e:
                                     if str(e).startswith('ERROR:'):
                                         return await message.reply_text(str(e))
-                        if is_gdrive_link(link):
-                            return await message.reply_text("Not supported GoogleDrive links")
                 await handle_mirror_download(client, message, file, tag, pswd, link, isZip, extract, isQbit)
         else:
            if isZip or extract:
@@ -111,7 +120,7 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
            else:
                 await message.reply_text("<b>Reply to a link or Telegram file</b>\n", quote=True) 
     else:
-        await message.reply('Not Authorized user', quote= True)
+        await message.reply('Not Authorized user', quote=True)
 
 
     
