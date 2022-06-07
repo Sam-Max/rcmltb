@@ -1,13 +1,14 @@
 import asyncio
 from hashlib import sha1
 from base64 import b16encode, b32decode
+import os
 import shutil
 from time import sleep, time
 from psutil import cpu_percent, virtual_memory
 from bencoding import bencode, bdecode
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from os import listdir
-from bot import uptime
+from bot import GLOBAL_QBIT, uptime
 from re import search as re_search
 from bot import get_client, TORRENT_TIMEOUT, LOGGER
 from bot.utils import human_format
@@ -20,6 +21,7 @@ class QbDownloader:
         self.__path = ''
         self.__name = ''
         self.__message= message
+        self.__error_message= ''
         self.client = None
         self.ext_hash = ''
         self.__periodic = None
@@ -28,8 +30,8 @@ class QbDownloader:
         self.__uploaded = False
         self.__rechecked = False
 
-    async def add_qb_torrent(self, link, path):
-        self.__path = path
+    async def add_qb_torrent(self, link):
+        self.__path =  os.path.join(os.getcwd(), "Downloads", str(time()).replace(".",""))
         self.client = get_client()
         try:
             if link.startswith('magnet:'):
@@ -40,13 +42,13 @@ class QbDownloader:
             
             tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
             if len(tor_info) > 0:
-                await self.__message.edit("This Torrent already added!")
-                return self.client.auth_log_out()
+                self.client.auth_log_out()
+                return False, "This Torrent already added!", None
             
             if link.startswith('magnet:'):
-                op = self.client.torrents_add(link, save_path=path)
+                op = self.client.torrents_add(link, save_path=self.__path)
             else:
-                op = self.client.torrents_add(torrent_files=[link], save_path=path)
+                op = self.client.torrents_add(torrent_files=[link], save_path=self.__path)
             sleep(0.3)
 
             if op.lower() == "ok.":
@@ -59,11 +61,11 @@ class QbDownloader:
                         elif time() - self.__stalled_time >= 30:
                             msg = "Not a torrent. If something wrong please report."
                             self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
-                            await self.__message.edit(msg)
-                            return self.client.auth_log_out()
+                            self.client.auth_log_out()
+                            return False, msg, None
             else:
-                await self.__message.edit("This is an unsupported/invalid link.")
-                return self.client.auth_log_out()
+                self.client.auth_log_out()
+                return False, "This is an unsupported/invalid link.", None
 
             tor_info = tor_info[0]
             self.__name = tor_info.name
@@ -71,8 +73,13 @@ class QbDownloader:
 
             LOGGER.info(f"QbitDownload started: {self.__name} - Hash: {self.ext_hash}")
             self.__periodic = setInterval(self.POLLING_INTERVAL, self.__qb_listener)
-            await self.qbit_progress_update()
-           
+            GLOBAL_QBIT.append(self) 
+            status, msg= await self.qbit_progress_update()
+            GLOBAL_QBIT.remove(self)  
+            if not status:
+                return False, msg, self.__path
+            else:
+                return True, msg, self.__path
 
         except Exception as e:
             await self.__message.edit(str(e))
@@ -85,7 +92,6 @@ class QbDownloader:
             sleeps = True
             update_message= self.create_update_message()
             if update_message1 != update_message:
-                LOGGER.info("update_message1 != update_message")     
                 try:
                     data = "cancel_qbitdl_{}".format(self.ext_hash)
                     await self.__message.edit(text=update_message, reply_markup=(InlineKeyboardMarkup([
@@ -95,14 +101,14 @@ class QbDownloader:
                     pass
 
                 if sleeps:
-                    if self.__cancel:
-                        await self.__message.edit('Download stopped by user!')     
-                        break       
+                    if self.__cancel:     
+                        return False, self.__error_message
+                    if self.__uploaded:
+                        return True, "Successfully Downloaded!"        
                     sleeps = False
                     await asyncio.sleep(5)
 
     def create_update_message(self):
-        LOGGER.info("create_update_message")
         try:
             self.__info = self.client.torrents_info(torrent_hashes=self.ext_hash)[0]
         except Exception as e:
@@ -172,17 +178,17 @@ class QbDownloader:
 
     def __onDownloadError(self, err):
         LOGGER.info(f"Cancelling Download: {self.__name}")
+        self.__error_message= err
+        self.__cancel= True
+        LOGGER.info(err)
         self.client.torrents_pause(torrent_hashes=self.ext_hash)
         sleep(0.3)
-        LOGGER.info(err)
         self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
         self.client.auth_log_out()
-        self.__cancel= True
         self.__periodic.cancel()
 
     def cancel_download(self):
-        self.__onDownloadError('Download stopped by user!')
-        
+        self.__onDownloadError("Download stopped by user!")     
 
 def _get_hash_magnet(mgt: str):
     hash_ = re_search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
