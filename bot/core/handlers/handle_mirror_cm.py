@@ -102,7 +102,7 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                         if is_magnet(link) or link.endswith('.torrent'):
                             return await message.reply_text("Use qbmirror command to mirror torrent or magnet link")
                         if is_gdrive_link(link):
-                            return await message.reply_text("Not supported Google Drive links") 
+                            return await message.reply_text("Not currently supported Google Drive links") 
                         if not is_mega_link(link) and not is_magnet(link) and not is_gdrive_link(link) \
                             and not link.endswith('.torrent'):
                             content_type = get_content_type(link)

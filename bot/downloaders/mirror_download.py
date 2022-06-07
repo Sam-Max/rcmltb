@@ -20,11 +20,11 @@ async def handle_mirror_download(
     file, 
     tag, 
     pswd, 
-    link= None, 
+    link="", 
     isZip=False, 
     extract=False, 
     isQbit=False, 
-    new_name=None, 
+    new_name="", 
     is_rename= False
     ):
     mess_age = await message.reply_text("Preparing for download...", quote=True)
@@ -39,7 +39,7 @@ async def handle_mirror_download(
         await mess_age.edit("Select a cloud first please")
         return      
 
-    if link is not None:
+    if file is None:
         if is_mega_link(link):
             mega_dl= MegaDownloader(link, mess_age)   
             state, message, path= await mega_dl.execute()
