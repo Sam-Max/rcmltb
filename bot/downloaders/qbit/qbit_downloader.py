@@ -1,3 +1,8 @@
+#**************************************************
+# Modified from:
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/helper/mirror_utils/download_utils/qbit_downloader.py
+#**************************************************/
+
 import asyncio
 from hashlib import sha1
 from base64 import b16encode, b32decode
@@ -7,7 +12,6 @@ from time import sleep, time
 from psutil import cpu_percent, virtual_memory
 from bencoding import bencode, bdecode
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from os import listdir
 from bot import GLOBAL_QBIT, uptime
 from re import search as re_search
 from bot import get_client, TORRENT_TIMEOUT, LOGGER
