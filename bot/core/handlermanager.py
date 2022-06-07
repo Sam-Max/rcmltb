@@ -55,7 +55,7 @@ def add_handlers(bot):
 
     download_handlers = MessageHandler(
         handle_qbit_mirror_command,
-        filters=filters.command([get_command_pyro("QBITMIRROR")]) 
+        filters=filters.command([get_command_pyro("QBMIRROR")]) 
     )
     bot.pyro.add_handler(download_handlers)
 
