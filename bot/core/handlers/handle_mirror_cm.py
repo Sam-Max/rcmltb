@@ -115,9 +115,11 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                                         return await message.reply_text(str(e))
                 await handle_mirror_download(client, message, file, tag, pswd, link, isZip, extract, isQbit)
         else:
-           if isZip or extract:
-                await message.reply_text("<b>Reply to a link or Telegram file</b>\n\n<b>For password use this format:</b>\n/zipmirror pswd: password", quote=True) 
-           else:
+            if isZip or extract:
+                await message.reply_text("<b>Reply to a Telegram file</b>\n\n<b>For password use this format:</b>\n/zipmirror pswd: password", quote=True) 
+            elif isQbit:
+                await message.reply_text("<b>Reply to a torrent or magnet link</b>", quote=True)
+            else:
                 await message.reply_text("<b>Reply to a link or Telegram file</b>\n", quote=True) 
     else:
         await message.reply('Not Authorized user', quote=True)
