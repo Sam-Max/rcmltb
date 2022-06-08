@@ -130,12 +130,12 @@ sudo docker-compose start
 
 ## Repositories used to develop this bot:
 
-1- [TorToolkit-Telegram](https://github.com/yash-dk/TorToolkit-Telegram).
+1- [TorToolkit-Telegram](https://github.com/yash-dk/TorToolkit-Telegram)
 
-2- [Rclone](https://github.com/rclone/rclone).
+2- [Rclone](https://github.com/rclone/rclone)
 
-3- [Telethon]() and [Pyrogram]().
+3- [Telethon]() and [Pyrogram]()
 
-4- [Conversation-Pyrogram](https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip).
+4- [Conversation-Pyrogram](https://github.com/Ripeey/Conversation-Pyrogram/)
 
-5- Others referenced in code.
+5- and others referenced in the code.
