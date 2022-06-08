@@ -3,8 +3,8 @@
 ## Features:
 
 - Mirror from Telegram to cloud.
-- Mirror Mega and direct download links to cloud
-- Mirror torrent and magnets links to cloud using qbitorrent.
+- Mirror direct download links and Mega.nz links to cloud
+- Mirror torrent and magnets links to cloud using qBittorrent.
 - Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
 - Zip/Unzip from Telegram to cloud
 - Leech files and folders from cloud to Telegram.
@@ -17,11 +17,11 @@
 
 ```
 mirror - mirror to selected cloud 
-mirrorset - select cloud/folder where to mirror
 qbmirror - mirror torrent to cloud
 unzipmirror - mirror and extract to cloud 
 zipmirror - mirror and zip to cloud 
 mirrorbatch - mirror files in batch to cloud 
+mirrorset - select cloud/folder where to mirror
 leech - leech from cloud to Telegram
 copy - copy from cloud to cloud
 myfiles - file manager
@@ -61,10 +61,12 @@ restart - restart bot
 
    - Non mandatory variables:
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
+        - `UPSTREAM_BRANCH`: Upstream branch for update.
         - `SESSION`: Pyrogram Session: To generate string session use this command `python3 session_pyro_gen.py` on repo folder. 
-        - `UPSTREAM_BRANCH`: Upstream branch for update. 
         - `TG_SPLIT_SIZE`: Telegram upload limit in bytes (max `2097151000` which is ~2GB), to automatically slice the file bigger that this size into small parts to upload to Telegram.
-        - `EDIT_SLEEP_SECS`: Seconds for update the progress message regulary. Default to 10.
+        - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10.
+        - `DEF_RCLONE_DRIVE`: set default drive from rclone.conf file
+        - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent.
 
    - MEGA
         - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from Mega SDK Page
