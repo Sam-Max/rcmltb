@@ -105,6 +105,27 @@ restart - restart bot
 
         sudo docker image prune -a
 
+4. **Deploying on VPS Using docker-compose**
+
+```
+sudo apt install docker-compose
+```
+- Build and run Docker image:
+```
+sudo docker-compose up
+```
+- After editing files with nano for example (nano start.sh):
+```
+sudo docker-compose up --build
+```
+- To stop the image:
+```
+sudo docker-compose stop
+```
+- To run the image:
+```
+sudo docker-compose start
+```
 
 ## Repositories used to develop this bot:
 
