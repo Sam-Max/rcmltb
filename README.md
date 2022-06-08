@@ -9,7 +9,8 @@
 - Zip/Unzip from Telegram to cloud
 - Leech files and folders from cloud to Telegram.
 - Copy from cloud to cloud.
-- Button panels to interact with clouds.
+- File manager for clouds (delete and calculate size)
+- Telegram button menus to interact with clouds.
 - Renaming of Telegram files.
 - Progress bar when downloading and uploading.
 
