@@ -40,7 +40,6 @@ async def handle_setting_leech_menu_callback(client, callback_query):
         path = get_val(cmd[2])
         rclone_dir +=  path + "/"
         set_val("BASE_DIR", rclone_dir)
-        print(get_val("BASE_DIR"))
         await settings_leech_menu(
             callback_query, 
             mmes, 

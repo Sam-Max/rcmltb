@@ -93,7 +93,6 @@ class AriaDownloader():
                     self._gid = download.followed_by_ids[0]
                 self._update_info = download
                 complete = download.is_complete
-                LOGGER.info("IS_DOWNLOAD_COMPLETE: {}".format(complete))
                 update_message1= ""
                 sleeps= False
                 if not complete:

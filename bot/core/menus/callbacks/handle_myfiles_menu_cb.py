@@ -33,7 +33,6 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
         rclone_drive = get_val("DEF_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
         path = get_val(cmd[2])
-        logging.info("path: {}".format(path))
         rclone_dir +=  path +"/"
         set_val("BASE_DIR", rclone_dir)
         await myfiles_menu(
