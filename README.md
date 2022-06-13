@@ -128,7 +128,11 @@ sudo docker-compose stop
 - To run the image:
 ```
 sudo docker-compose start
+
 ```
+## Bot Image: 
+
+<img src="./drive_dir.png" alt="button menu example">
 
 ## Repositories used to develop this bot:
 
