@@ -57,19 +57,17 @@ restart - restart bot
         - `API_ID`: get this from https://my.telegram.org. Don't put this in quotes.
         - `API_HASH`: get this from https://my.telegram.org
         - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot.
+        - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather)
         - `ALLOWED_USERS`: list of IDs of allowed users who can use this bot separated by spaces
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces
-        - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather) 
+        - `USER_SESSION_STRING`: to upload as an user for premium accounts and save files from restricted private chats . To generate string session use this command `python3 session_pyro_gen.py` on repo folder. 
         - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program.
 
    - Non mandatory variables:
-        - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
-        - `UPSTREAM_BRANCH`: Upstream branch for update.
-        - `SESSION`: Pyrogram Session: To generate string session use this command `python3 session_pyro_gen.py` on repo folder. 
-        - `TG_SPLIT_SIZE`: Telegram upload limit in bytes (max `2097151000` which is ~2GB), to automatically slice the file bigger that this size into small parts to upload to Telegram.
-        - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10.
-        - `DEF_RCLONE_DRIVE`: set default drive from rclone.conf file
-        - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent.
+        - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens) 
+        - `UPSTREAM_BRANCH`: Upstream branch for update. 
+        - `TG_SPLIT_SIZE`: Telegram upload limit in bytes (min `2097151000` which is ~2GB, max `4194304000` for premium users which is ~4GB), to automatically slice the file bigger that this size into small parts to upload to Telegram. By default the value is size of your telegram subscription.
+        - `EDIT_SLEEP_SECS`: Seconds for update the progress message regulary. Default to 10.
 
    - MEGA
         - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from Mega SDK Page

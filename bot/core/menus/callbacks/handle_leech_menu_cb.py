@@ -9,7 +9,10 @@ from bot.uploaders.rclone.rclone_leech import RcloneLeech
 log = logging.getLogger(__name__)
 
 async def handle_setting_leech_menu_callback(client, callback_query):
-    chat_id = callback_query.message.chat.id
+    if callback_query.message.chat.type.value == 'group':
+        chat_id = callback_query.message.chat.id
+    else:
+        chat_id = callback_query.message.from_user.id
     data = callback_query.data
     cmd = data.split("^")
     mmes = callback_query.message

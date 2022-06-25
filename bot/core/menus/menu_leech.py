@@ -2,7 +2,6 @@ from bot.utils.get_rclone_conf import get_config
 import os, configparser, logging
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.types import InlineKeyboardButton
-from pyrogram.types import InlineKeyboardButton
 import asyncio
 import json
 import logging
@@ -56,7 +55,7 @@ async def settings_leech_menu(
         )
 
         if edit:
-            await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
+           await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
         else:
            await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(menu))
 

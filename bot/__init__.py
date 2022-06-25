@@ -34,7 +34,7 @@ GLOBAL_QBIT= []
 SessionVars = VarHolder()
 
 load_dotenv('config.env', override=True)
-load_rclone()
+load_rclone('rclone.conf')
 
 srun(["qbittorrent-nox", "-d", "--profile=."])
 sleep(0.5)
@@ -69,9 +69,9 @@ if MEGA_KEY is not None:
                 LOGGER.error(e.message['message'])
                 exit(0)
         else:
-            LOGGER.info("Mega username and password not not provided. Starting mega in anonymous mode!")
+            LOGGER.info("Mega username and password not provided. Starting mega in anonymous mode!")
     except:
-            LOGGER.info("Mega username and password not not provided. Starting mega in anonymous mode!")
+            LOGGER.info("Mega username and password not provided. Starting mega in anonymous mode!")
 else:
     sleep(1.5)
 
@@ -85,36 +85,18 @@ except:
 
 #---------------------------
 
-bot = RcloneTgClient("bot", API_ID, API_HASH, timeout=20, retry_delay=3,
+bot = RcloneTgClient("telethon", API_ID, API_HASH, timeout=20, retry_delay=3,
                         request_retries=10, connection_retries=10)
-
-bot.start(bot_token=BOT_TOKEN)
-
-LOGGER.info("Telethon client created.")
-
-#---------------------------
-
 try:
-    SESSION = getConfig("SESSION")  
-    if len(SESSION) == 0:
-        raise KeyError 
-    userbot = Client("userbot", session_string=SESSION, api_hash=API_HASH, api_id=API_ID)
-    LOGGER.info("Pyro userbot client created.")
-except:
-    SESSION = None
-    userbot= None
-    print("Userbot Error ! Have you added SESSION while deploying??")
+    bot.start(bot_token=BOT_TOKEN)
+    LOGGER.info("Telethon client created.")
+except Exception as e:
+    print(e)
+    sys.exit(1)
 
-if userbot is not None:
-    try:
-        userbot.start()
-    except Exception as e:
-      print(e)
-      sys.exit(1)      
-        
 #---------------------------
 
-Bot = Client("pyrosession", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN, workers=20)
+Bot = Client(name="pyrogram", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 Conversation(Bot)  
 try:
     Bot.start()
@@ -123,6 +105,36 @@ try:
 except Exception as e:
     print(e)
     sys.exit(1)
+
+#---------------------------
+
+try:
+    USER_SESSION_STRING = getConfig("USER_SESSION_STRING")  
+    if len(USER_SESSION_STRING) == 0:
+        raise KeyError 
+    userbot = Client("userbot", session_string=USER_SESSION_STRING, api_hash=API_HASH, api_id=API_ID)
+    LOGGER.info("Pyro userbot client created.")
+except:
+    print("Userbot Error! USER_SESSION_STRING not provided!. Exiting now")
+    exit(1)
+
+try:
+    userbot.start()
+except Exception as e:
+    print(e)
+    sys.exit(1)      
+
+try:
+    TG_MAX_FILE_SIZE= 4194304000 if userbot.me.is_premium else 2097152000
+    TG_SPLIT_SIZE = getConfig('TG_SPLIT_SIZE')
+    if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > TG_MAX_FILE_SIZE:
+        raise KeyError
+    TG_SPLIT_SIZE = int(TG_SPLIT_SIZE)
+except:
+    TG_SPLIT_SIZE = TG_MAX_FILE_SIZE
+        
+#---------------------------
+
 
 
 

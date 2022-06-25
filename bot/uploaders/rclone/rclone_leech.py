@@ -6,6 +6,7 @@ import re
 import time
 from pyrogram.errors import FloodWait
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from bot import TG_SPLIT_SIZE
 from bot.core.get_vars import get_val
 from bot.uploaders.telegram.telegram_upload import upload_media_pyro
 from bot.utils.get_size_p import get_readable_size
@@ -43,7 +44,7 @@ class RcloneLeech:
     async def leech(self):
         await self.__user_msg.edit("Preparing for download...")
         origin_drive = get_val("DEF_RCLONE_DRIVE")
-        tg_split_size= get_readable_size(get_val("TG_SPLIT_SIZE")) 
+        tg_split_size= get_readable_size(TG_SPLIT_SIZE) 
         conf_path = await get_config()
         conf = ConfigParser()
         conf.read(conf_path)
@@ -92,9 +93,9 @@ class RcloneLeech:
                         timer = 25
                     f_path = os.path.join(dirpath, file)
                     f_size = os.path.getsize(f_path)
-                    if int(f_size) > get_val("TG_SPLIT_SIZE"):
+                    if int(f_size) > TG_SPLIT_SIZE:
                         message= await self.__client.send_message(self.__chat_id, f"File larger than {tg_split_size}, Splitting...")     
-                        split_dir= await split_in_zip(f_path, size=get_val("TG_SPLIT_SIZE")) 
+                        split_dir= await split_in_zip(f_path, size=TG_SPLIT_SIZE) 
                         os.remove(f_path) 
                         dir_list= os.listdir(split_dir)
                         dir_list.sort() 
@@ -118,9 +119,9 @@ class RcloneLeech:
         else:
             f_path = os.path.join(self.__dest_dir, self.__path)
             f_size = os.path.getsize(f_path)
-            if int(f_size) > get_val("TG_SPLIT_SIZE"):
+            if int(f_size) > TG_SPLIT_SIZE:
                 message= await self.__client.send_message(self.__chat_id, f"File larger than {tg_split_size}, Splitting...")     
-                split_dir= await split_in_zip(f_path, size=get_val("TG_SPLIT_SIZE")) 
+                split_dir= await split_in_zip(f_path, size=TG_SPLIT_SIZE) 
                 os.remove(f_path) 
                 dir_list= os.listdir(split_dir)
                 dir_list.sort() 

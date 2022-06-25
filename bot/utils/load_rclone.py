@@ -1,8 +1,8 @@
 import logging 
 import os
 
-def load_rclone():
-    path = os.path.join(os.getcwd(), "rclone.conf")
+def load_rclone(config_path):
+    path = os.path.join(os.getcwd(), config_path)
     rclone_config = os.environ.get('RCLONE_CONFIG', "")  
     if rclone_config:                                         
         rclone_config.strip()
