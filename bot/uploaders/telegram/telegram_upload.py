@@ -9,13 +9,13 @@ from bot.utils.g_vid_res import get_video_resolution
 from bot.utils.get_media_info import get_m_info
 from bot.utils.screenshot import screenshot
 from pyrogram import enums
-from bot import LOGGER, userbot
+
+log= logging.getLogger(__name__)
 
 VIDEO_SUFFIXES = ["mkv", "mp4", "mov", "wmv", "3gp", "mpg", "webm", "avi", "flv", "m4v", "gif"]
 
-
 async def upload_media_pyro(client, message, sender, file):
-        LOGGER.info("Uploading...")
+        log.info("Uploading...")
         c_time = time.time()
         try:
             if str(file).split(".")[-1] in VIDEO_SUFFIXES:
@@ -27,7 +27,7 @@ async def upload_media_pyro(client, message, sender, file):
                     duration= get_m_info(file)[0]
                     thumb_path = await screenshot(file, duration, sender)
                     width, height = get_video_resolution(thumb_path)
-                    await userbot.send_video(
+                    await client.send_video(
                         chat_id=sender,
                         video=file,
                         width=width,
@@ -47,7 +47,7 @@ async def upload_media_pyro(client, message, sender, file):
                     )
             else:
                 caption= str(file).split("/")[-1]  
-                await userbot.send_document(
+                await client.send_document(
                     chat_id= sender,
                     document= file, 
                     caption= f'`{caption}`',
@@ -62,7 +62,7 @@ async def upload_media_pyro(client, message, sender, file):
                 )
             await message.delete()    
         except Exception as e:
-            LOGGER.info(e)
+            log.info(e)
             await message.delete() 
             file_name= str(file).split("/")[-1]
             await client.send_message(sender, f"Failed to save: {file_name} - cause: {e}")  
