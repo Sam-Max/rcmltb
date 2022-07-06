@@ -51,7 +51,6 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
         chat = int('-100' + str(msg_link.split("/")[-2]))
         try:
             msg = await userbot.get_messages(chat, msg_id)
-            print(msg)
             if not msg.media:
                 if msg.text:
                     edit = await client.edit_message_text(sender, edit_id, "Cloning.")
@@ -85,7 +84,6 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
         chat =  msg_link.split("/")[-2]
         try:
             msg = await userbot.get_messages(chat, msg_id)
-            print(msg)
             if not msg.media:
                 if msg.text:
                     edit = await client.edit_message_text(sender, edit_id, "Cloning.")
