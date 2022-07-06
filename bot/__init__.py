@@ -69,9 +69,9 @@ if MEGA_KEY is not None:
                 LOGGER.error(e.message['message'])
                 exit(0)
         else:
-            LOGGER.info("Mega username and password not not provided. Starting mega in anonymous mode!")
+            LOGGER.info("Mega username and password not provided. Starting mega in anonymous mode!")
     except:
-            LOGGER.info("Mega username and password not not provided. Starting mega in anonymous mode!")
+            LOGGER.info("Mega username and password not provided. Starting mega in anonymous mode!")
 else:
     sleep(1.5)
 
@@ -95,15 +95,15 @@ LOGGER.info("Telethon client created.")
 #---------------------------
 
 try:
-    SESSION = getConfig("SESSION")  
-    if len(SESSION) == 0:
+    USER_SESSION_STRING = getConfig("USER_SESSION_STRING")  
+    if len(USER_SESSION_STRING) == 0:
         raise KeyError 
-    userbot = Client("userbot", session_string=SESSION, api_hash=API_HASH, api_id=API_ID)
+    userbot = Client("userbot", session_string=USER_SESSION_STRING, api_hash=API_HASH, api_id=API_ID)
     LOGGER.info("Pyro userbot client created.")
 except:
-    SESSION = None
+    USER_SESSION_STRING = None
     userbot= None
-    print("Userbot Error ! Have you added SESSION while deploying??")
+    LOGGER.error("Userbot Error! USER_SESSION_STRING not provided!")
 
 if userbot is not None:
     try:
