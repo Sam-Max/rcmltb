@@ -130,9 +130,9 @@ sudo docker-compose stop
 sudo docker-compose start
 
 ```
-## Bot Image: 
+## Bot Screenshot: 
 
-<img src="./drive_dir.png" alt="button menu example">
+<img src="./screenshot_01.png" alt="button menu example">
 
 ## Repositories used to develop this bot:
 
