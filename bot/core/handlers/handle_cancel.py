@@ -1,5 +1,5 @@
 
-from bot import GLOBAL_QBIT, GLOBAL_RCLONE, LOGGER
+from bot import GLOBAL_QBIT, GLOBAL_RCLONE, GLOBAL_TG_DOWNLOADER, LOGGER
 from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
 
@@ -24,8 +24,18 @@ async def handle_cancel(e):
                 dl.cancel_download()
                 break  
    if data[1] == "rclone":
-        id= data[2]
-        for rc_up in GLOBAL_RCLONE:
-            if rc_up.id == id:
-                rc_up.cancel = True
-                break  
+        ext_hash= data[2]
+        ext_hash = ext_hash.strip("'")
+        for dl in GLOBAL_RCLONE:
+            if dl.id == ext_hash:
+                dl.cancel = True
+                break 
+   if data[1] == "tgdown":
+     ext_hash = data[2]
+     ext_hash = ext_hash.strip("'")
+     for dl in GLOBAL_TG_DOWNLOADER:
+          if dl.id == ext_hash:
+               dl.cancel_download()
+               break 
+        
+ 

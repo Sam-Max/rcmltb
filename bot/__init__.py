@@ -29,8 +29,11 @@ def get_client():
     return qbitClient(host="localhost", port=8090)
 
 uptime = time.time()
-GLOBAL_RCLONE= []
-GLOBAL_QBIT= []
+
+GLOBAL_RCLONE= set()
+GLOBAL_TG_DOWNLOADER= set()
+GLOBAL_QBIT= set()
+
 SessionVars = VarHolder()
 
 load_dotenv('config.env', override=True)

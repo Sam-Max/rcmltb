@@ -5,7 +5,7 @@ import time
 from psutil import cpu_percent, virtual_memory
 from .. import uptime
 from bot.utils import human_format
-
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -20,11 +20,13 @@ async def progress_for_pyrogram(
         file_name,
         ud_type,
         message,
+        id, 
         start
 ):
     """ generic progress display for Telegram Upload / Download status """
     now = time.time()
     diff = now - start
+    
     if round(diff % 10.00) == 0 or current == total:
         percentage = current * 100 / total
         speed = current / diff
@@ -63,8 +65,11 @@ async def progress_for_pyrogram(
                     file_name,
                     ud_type,
                     tmp
-                )
-            )
+                ),
+                reply_markup=(InlineKeyboardMarkup([
+                            [InlineKeyboardButton('Cancel', callback_data=(f"cancel_tgdown_{id}".encode('UTF-8')))]
+                ]))
+            )                           
         except:
             pass
 

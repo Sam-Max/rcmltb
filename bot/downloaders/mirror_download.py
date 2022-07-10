@@ -1,11 +1,12 @@
 import os
 import time
 from subprocess import run
-from bot import GLOBAL_RCLONE, MEGA_KEY
+from bot import GLOBAL_RCLONE, GLOBAL_TG_DOWNLOADER, MEGA_KEY
 from bot.core.get_vars import get_val
 from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
 from bot.downloaders.qbit.qbit_downloader import QbDownloader
+from bot.downloaders.telegram.telegram_downloader import TelegramDownloader
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
 from bot.utils.bot_utils import is_mega_link
 from bot.utils.get_rclone_conf import get_config
@@ -67,18 +68,11 @@ async def handle_mirror_download(
             else:
                 await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
     else:
-        c_time = time.time()
         DOWNLOAD_DIR = os.path.join(os.getcwd(), "Downloads", "")
-        media_path = await client.download_media(
-            message=file,
-            file_name= DOWNLOAD_DIR,
-            progress=progress_for_pyrogram,
-            progress_args=(
-            "**Name**: `{}`".format(file.file_name),
-            "**Status:** Downloading...",
-            mess_age, 
-            c_time))
-            
+        tg_downloader= TelegramDownloader(file, client, mess_age, DOWNLOAD_DIR) 
+        media_path= await tg_downloader.download()
+        if media_path is None:
+            return
         if isZip:
             try:
                 m_path = media_path
