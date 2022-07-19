@@ -6,7 +6,7 @@ import re
 import time
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
-from .. import GLOBAL_RCLONE, LOGGER
+from .. import LOGGER
 
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 
@@ -70,9 +70,7 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
             )
             await edit.edit('Preparing to Upload!')
             rclone_mirror= RcloneMirror(file, edit, "", "", False)
-            GLOBAL_RCLONE.append(rclone_mirror)
             await rclone_mirror.mirror()
-            GLOBAL_RCLONE.remove(rclone_mirror)
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await client.edit_message_text(sender, edit_id, "Have you joined the channel?")
             #return 
@@ -103,9 +101,7 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
             )
             await edit.edit('Preparing to Upload!')
             rclone_mirror= RcloneMirror(file, edit, "", "", False)
-            GLOBAL_RCLONE.append(rclone_mirror)
             await rclone_mirror.download()
-            GLOBAL_RCLONE.remove(rclone_mirror)
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await client.edit_message_text(sender, edit_id, "Have you joined the channel?")
             return 

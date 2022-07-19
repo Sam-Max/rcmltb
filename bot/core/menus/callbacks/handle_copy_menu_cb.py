@@ -1,9 +1,7 @@
-from bot import GLOBAL_RCLONE
 from bot.core.get_vars import get_val
 from bot.core.set_vars import set_val
 from bot.core.menus.menu_copy import settings_copy_menu
 from bot.uploaders.rclone.rclone_copy import RcloneCopy
-
 
 
 async def handle_setting_copy_menu_callback(callback_query):
@@ -111,9 +109,7 @@ async def handle_setting_copy_menu_callback(callback_query):
         rclone_dir= get_val("DEST_DIR")
         set_val("DEST_DIR", rclone_dir + origin_dir)
         rclone_copy= RcloneCopy(callback_query)
-        GLOBAL_RCLONE.append(rclone_copy)
         await rclone_copy.copy()
-        GLOBAL_RCLONE.remove(rclone_copy)
 
     elif cmd[1] == "selfdest":
         await callback_query.answer("Closed")

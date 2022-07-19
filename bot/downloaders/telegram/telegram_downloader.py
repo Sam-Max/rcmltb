@@ -10,7 +10,7 @@ class TelegramDownloader:
     def __init__(self, file, client, mess_age, path) -> None:
         self.id = self.__create_id(8)
         self._client= client
-        self._message = file
+        self._file = file
         self._mess_age= mess_age 
         self._path= path
         self._cancelled= False
@@ -29,11 +29,11 @@ class TelegramDownloader:
         GLOBAL_TG_DOWNLOADER.add(self)
         try:
             media_path= await self._client.download_media(
-                message= self._message,
+                message= self._file,
                 file_name= self._path,
                 progress=self.__onDownloadProgress,
                 progress_args=(
-                "**Name**: `{}`".format(self._message.file_name),
+                "**Name**: `{}`".format(self._file.file_name),
                 "**Status:** Downloading...",
                 self._mess_age, 
                 self.id,
@@ -47,7 +47,7 @@ class TelegramDownloader:
     async def __onDownloadProgress(self, current, total, name, status, mess_age, id, c_time):
           if self._cancelled:
                await sleep(1.5)  
-               await mess_age.edit('Download cancelled') 
+               await mess_age.edit('Download cancelled!!') 
                Bot.stop_transmission()
           await progress_for_pyrogram(current, total, name, status , mess_age, id, c_time)
 

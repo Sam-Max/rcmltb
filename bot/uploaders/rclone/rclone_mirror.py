@@ -11,7 +11,7 @@ from bot.utils.drive_utils import get_glink
 from bot.utils.get_rclone_conf import get_config
 from bot.utils.misc_utils import clean_filepath, clean_path
 from bot.utils.rename_file import rename
-from bot import LOGGER
+from bot import GLOBAL_RCLONE, LOGGER
 
 class RcloneMirror:
     def __init__(self, path, user_msg, new_name, tag, is_rename=False) -> None:
@@ -72,7 +72,8 @@ class RcloneMirror:
           else:
                 rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
                                     f"{dest_drive}:{dest_base}", '-P']
-          
+
+          GLOBAL_RCLONE.add(self)
           self.__rclone_pr = subprocess.Popen(rclone_copy_cmd,
                 stdout=(subprocess.PIPE),
                 stderr=(subprocess.PIPE)
@@ -80,6 +81,7 @@ class RcloneMirror:
           
           LOGGER.info('Uploading...')
           rcres = await self.__rclone_update()
+          GLOBAL_RCLONE.remove(self)
           
           if rcres == False:
                self.__rclone_pr.kill()

@@ -4,6 +4,7 @@ import re
 import subprocess
 import logging
 import time
+from bot import GLOBAL_RCLONE
 from bot.core.get_vars import get_val
 from bot.utils.get_rclone_conf import get_config
 from telethon import Button
@@ -27,6 +28,7 @@ class RcloneCopy:
         return id
 
     async def copy(self):
+        GLOBAL_RCLONE.add(self)
         origin_drive = get_val("ORIGIN_DRIVE")
         origin_dir = get_val("ORIGIN_DIR")
         dest_drive = get_val("DEST_DRIVE")
@@ -45,7 +47,8 @@ class RcloneCopy:
             stderr=subprocess.PIPE
         )
         rcres = await self.__rclone_update()
-
+        GLOBAL_RCLONE.remove(self)
+        
         if rcres == False:
             self.__rclone_pr.kill()
             await self.__user_msg.edit("Copy cancelled")

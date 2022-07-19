@@ -1,7 +1,6 @@
 import os
-import time
 from subprocess import run
-from bot import GLOBAL_RCLONE, GLOBAL_TG_DOWNLOADER, MEGA_KEY
+from bot import MEGA_KEY
 from bot.core.get_vars import get_val
 from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
@@ -10,7 +9,6 @@ from bot.downloaders.telegram.telegram_downloader import TelegramDownloader
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
 from bot.utils.bot_utils import is_mega_link
 from bot.utils.get_rclone_conf import get_config
-from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
 from bot import LOGGER
 from bot.utils.misc_utils import clean_filepath, clean_path
 from bot.utils.zip_utils import extract_archive
@@ -49,9 +47,9 @@ async def handle_mirror_download(
                     await mess_age.edit(message)
                     clean_path(path)
                 else:
-                    await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
+                    await RcloneMirror(path, mess_age, new_name, tag, is_rename).mirror()
             else:
-                await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
+                await RcloneMirror(path, mess_age, new_name, tag, is_rename).mirror()
         elif isQbit:
              qbit_dl= QbDownloader(mess_age)
              state, message, path= await qbit_dl.add_qb_torrent(link)
@@ -59,18 +57,17 @@ async def handle_mirror_download(
                 await mess_age.edit(message)
                 clean_path(path)
              else:
-                await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
+                await RcloneMirror(path, mess_age, new_name, tag, is_rename).mirror()
         else:
             aria2= AriaDownloader(link, mess_age)   
             state, message, path= await aria2.execute()
             if not state:
                 await mess_age.edit(message)
             else:
-                await rclone_mirror(path, mess_age, new_name, tag, is_rename) 
+                await RcloneMirror(path, mess_age, new_name, tag, is_rename).mirror()     
     else:
         DOWNLOAD_DIR = os.path.join(os.getcwd(), "Downloads", "")
-        tg_downloader= TelegramDownloader(file, client, mess_age, DOWNLOAD_DIR) 
-        media_path= await tg_downloader.download()
+        media_path= await TelegramDownloader(file, client, mess_age, DOWNLOAD_DIR).download() 
         if media_path is None:
             return
         if isZip:
@@ -96,23 +93,17 @@ async def handle_mirror_download(
             except FileNotFoundError:
                 LOGGER.info('File to archive not found!')
                 return
-            await rclone_mirror(path, mess_age, new_name, tag, is_rename)
+            await RcloneMirror(path, mess_age, new_name, tag, is_rename).mirror()        
             clean_filepath(m_path)
         elif extract:
             m_path = media_path
             await mess_age.edit("Extracting...")
             extracted_path= await extract_archive(m_path, pswd)
             if extracted_path is not False:
-                await rclone_mirror(extracted_path, mess_age, new_name, tag, is_rename)
+                await RcloneMirror(extracted_path, mess_age, new_name, tag, is_rename).mirror()             
             else:
                 await mess_age.edit('Unable to extract archive!')
             clean_filepath(m_path)
         else:
-            await rclone_mirror(media_path, mess_age, new_name, tag, is_rename)
-
-async def rclone_mirror(path, mess_age, new_name, tag, is_rename):
-    rclone_mirror= RcloneMirror(path, mess_age, new_name, tag, is_rename)
-    GLOBAL_RCLONE.append(rclone_mirror)
-    await rclone_mirror.mirror()
-    GLOBAL_RCLONE.remove(rclone_mirror)
+            await RcloneMirror(media_path, mess_age, new_name, tag, is_rename).mirror()
 

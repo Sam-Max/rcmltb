@@ -1,6 +1,5 @@
 import logging
 import os
-from bot import GLOBAL_RCLONE
 from bot.core.get_vars import get_val
 from bot.core.menus.menu_leech import settings_leech_menu
 from bot.core.set_vars import set_val
@@ -58,17 +57,13 @@ async def handle_setting_leech_menu_callback(client, callback_query):
         origin_dir += path
         dest_dir = os.path.join(os.getcwd(), "Downloads", origin_dir)
         rclone_leech= RcloneLeech(client, mmes, chat_id, origin_dir, dest_dir, path=path)
-        GLOBAL_RCLONE.append(rclone_leech)
         await rclone_leech.leech()
-        GLOBAL_RCLONE.remove(rclone_leech)
 
     elif cmd[1] == "start_leech_folder":
         origin_dir= get_val("BASE_DIR")
         dest_dir = os.path.join(os.getcwd(), "Downloads", origin_dir)
         rclone_leech= RcloneLeech(client, mmes, chat_id, origin_dir, dest_dir, folder= True)
-        GLOBAL_RCLONE.append(rclone_leech)
         await rclone_leech.leech()
-        GLOBAL_RCLONE.remove(rclone_leech)
 
     elif cmd[1] == "back":
         data_b_cb= "back"

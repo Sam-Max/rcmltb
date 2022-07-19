@@ -77,7 +77,7 @@ class QbDownloader:
 
             LOGGER.info(f"QbitDownload started: {self.__name} - Hash: {self.ext_hash}")
             self.__periodic = setInterval(self.POLLING_INTERVAL, self.__qb_listener)
-            GLOBAL_QBIT.append(self) 
+            GLOBAL_QBIT.add(self) 
             status, msg= await self.qbit_progress_update()
             GLOBAL_QBIT.remove(self)  
             if not status:
