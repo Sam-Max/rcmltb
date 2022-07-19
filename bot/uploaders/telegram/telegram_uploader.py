@@ -5,7 +5,7 @@ from asyncio import sleep
 import os
 from random import randrange
 import time
-from bot import GLOBAL_TG_DOWNLOADER, Bot, LOGGER
+from bot import GLOBAL_TG_DOWNLOADER, Bot, app, LOGGER
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
 from bot.utils.g_vid_res import get_video_resolution
 from bot.utils.get_media_info import get_m_info
@@ -15,9 +15,9 @@ from pyrogram import enums
 VIDEO_SUFFIXES = ["mkv", "mp4", "mov", "wmv", "3gp", "mpg", "webm", "avi", "flv", "m4v", "gif"]
 
 class TelegramUploader():
-    def __init__(self, file, client, message, sender) -> None:
+    def __init__(self, file, message, sender) -> None:
         self.id = self.__create_id(8)
-        self._client= client
+        self._client= app if app is not None else Bot
         self._file = file
         self._message= message 
         self._sender= sender
@@ -60,7 +60,7 @@ class TelegramUploader():
                         progress=self.__onDownloadProgress,
                         progress_args=(
                             "Name: `{}`".format(caption),
-                            '**Uploading:**',
+                            '**Status:** Uploading...',
                             self._message,
                             self.id,
                             c_time

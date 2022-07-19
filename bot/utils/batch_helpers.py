@@ -7,7 +7,6 @@ import time
 from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
 from .. import LOGGER
-
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 
 VIDEO_SUFFIXES = ["mkv", "mp4", "mov", "wmv", "3gp", "mpg", "webm", "avi", "flv", "m4v", "gif"]
@@ -24,12 +23,12 @@ def get_link(string):
     except Exception:
         return False
 
-async def check(userbot, client, link):
+async def check(app, client, link):
     msg_id = int(link.split("/")[-1])
     if 't.me/c/' in link:
         try:
             chat = int('-100' + str(link.split("/")[-2]))
-            await userbot.get_messages(chat, msg_id)
+            await app.get_messages(chat, msg_id)
             return True, None
         except ValueError:
             return False, "**Invalid Link!**"
@@ -43,14 +42,14 @@ async def check(userbot, client, link):
         except Exception:
             return False, "Maybe bot is banned from the chat, or your link is invalid!"
 
-async def get_msg(userbot, client, sender, edit_id, msg_link, i):
+async def get_msg(app, client, sender, edit_id, msg_link, i):
     edit = ""
     chat = ""
     msg_id = int(msg_link.split("/")[-1]) + int(i)
     if 't.me/c/' in msg_link:
         chat = int('-100' + str(msg_link.split("/")[-2]))
         try:
-            msg = await userbot.get_messages(chat, msg_id)
+            msg = await app.get_messages(chat, msg_id)
             if not msg.media:
                 if msg.text:
                     edit = await client.edit_message_text(sender, edit_id, "Cloning.")
@@ -58,13 +57,14 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
                     await edit.delete()
                     return
             edit = await client.edit_message_text(sender, edit_id, "Trying to Download.")
-            file = await userbot.download_media(
+            file = await app.download_media(
                 msg,
                 progress=progress_for_pyrogram,
                 progress_args=(
                     "",
-                    "**DOWNLOADING:**",
+                    "**Status:** Downloading...",
                     edit,
+                    "",
                     time.time()
                 )
             )
@@ -81,7 +81,7 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
     else:
         chat =  msg_link.split("/")[-2]
         try:
-            msg = await userbot.get_messages(chat, msg_id)
+            msg = await app.get_messages(chat, msg_id)
             if not msg.media:
                 if msg.text:
                     edit = await client.edit_message_text(sender, edit_id, "Cloning.")
@@ -89,13 +89,14 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
                     await edit.delete()
                     return
             edit = await client.edit_message_text(sender, edit_id, "Trying to Download.")
-            file = await userbot.download_media(
+            file = await app.download_media(
                 msg,
                 progress=progress_for_pyrogram,
                 progress_args=(
                     "",
-                    "**DOWNLOADING:**",
+                   "**Status:** Downloading...",
                     edit,
+                    "",
                     time.time()
                 )
             )
@@ -110,6 +111,6 @@ async def get_msg(userbot, client, sender, edit_id, msg_link, i):
             await client.edit_message_text(sender, edit_id, f'Failed to save: `{e}`')
             return 
 
-async def get_bulk_msg(userbot, client, sender, msg_link, i):
+async def get_bulk_msg(app, client, sender, msg_link, i):
     x = await client.send_message(sender, "Processing!")
-    await get_msg(userbot, client, sender, x.id, msg_link, i) 
+    await get_msg(app, client, sender, x.id, msg_link, i) 

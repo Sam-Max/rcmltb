@@ -1,6 +1,6 @@
 import os
 from subprocess import run
-from bot import MEGA_KEY
+from bot import MEGA_KEY, TG_SPLIT_SIZE
 from bot.core.get_vars import get_val
 from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
@@ -79,7 +79,6 @@ async def handle_mirror_download(
                 path = os.path.join(os.getcwd(), "Downloads", file_name + ".zip")
                 LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
                 size = os.path.getsize(m_path)
-                TG_SPLIT_SIZE= get_val("TG_SPLIT_SIZE")
                 if pswd is not None:
                     LOGGER.info("Password: {}".format(pswd))     
                     if int(size) > TG_SPLIT_SIZE:

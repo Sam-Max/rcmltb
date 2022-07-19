@@ -91,41 +91,54 @@ except:
 bot = RcloneTgClient("bot", API_ID, API_HASH, timeout=20, retry_delay=3,
                         request_retries=10, connection_retries=10)
 
-bot.start(bot_token=BOT_TOKEN)
-
-LOGGER.info("Telethon client created.")
-
-#---------------------------
-
 try:
-    USER_SESSION_STRING = getConfig("USER_SESSION_STRING")  
-    if len(USER_SESSION_STRING) == 0:
-        raise KeyError 
-    userbot = Client("userbot", session_string=USER_SESSION_STRING, api_hash=API_HASH, api_id=API_ID)
-    LOGGER.info("Pyro userbot client created.")
-except:
-    USER_SESSION_STRING = None
-    userbot= None
-    LOGGER.error("Userbot Error! USER_SESSION_STRING not provided!")
-
-if userbot is not None:
-    try:
-        userbot.start()
-    except Exception as e:
-      print(e)
-      sys.exit(1)      
-        
-#---------------------------
-
-Bot = Client("pyrosession", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN, workers=20)
-Conversation(Bot)  
-try:
-    Bot.start()
-    bot.pyro = Bot
-    LOGGER.info("Pyro client created.")
+    bot.start(bot_token=BOT_TOKEN)
+    LOGGER.info("Telethon client created.")
 except Exception as e:
     print(e)
     sys.exit(1)
+
+#---------------------------
+
+Bot = Client(name="pyrogram", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+Conversation(Bot)  
+try:
+    Bot.start()
+    LOGGER.info("pyro Bot client created")
+    bot.pyro = Bot
+except Exception as e:
+    print(e)
+    sys.exit(1)
+
+#---------------------------
+
+try:
+    IS_PREMIUM_USER = False
+    USER_SESSION_STRING = getConfig('USER_SESSION_STRING')
+    if len(USER_SESSION_STRING) == 0:
+        raise KeyError
+    app = Client(name='pyrogram_session',api_id=API_ID, api_hash=API_HASH, session_string=USER_SESSION_STRING)
+    with app:
+        IS_PREMIUM_USER = app.get_me().is_premium
+except:
+    app = None
+
+if app is not None:
+    try:
+        app.start()
+        LOGGER.info("pyrogram_session client created")
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+
+try:
+    TG_MAX_FILE_SIZE= 4194304000 if IS_PREMIUM_USER else 2097152000
+    TG_SPLIT_SIZE = getConfig('TG_SPLIT_SIZE')
+    if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > TG_MAX_FILE_SIZE:
+        raise KeyError
+    TG_SPLIT_SIZE = int(TG_SPLIT_SIZE)
+except:
+    TG_SPLIT_SIZE = TG_MAX_FILE_SIZE
 
 
 

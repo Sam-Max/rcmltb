@@ -6,26 +6,22 @@ Plugin for both public & private channels!
 """
 
 import time, asyncio
-
 from ... import bot
-from ... import userbot, Bot
-
+from ... import Bot, app
 from bot.utils.batch_helpers import get_link, check, get_bulk_msg
-
 from telethon import events, Button
-
 from pyrogram.errors import FloodWait
 
 batch = []
 
 async def get_pvt_content(event, chat, id):
-    msg = await userbot.get_messages(chat, ids=id)
+    msg = await app.get_messages(chat, ids=id)
     await event.client.send_message(event.chat_id, msg) 
     
 @bot.on(events.NewMessage(incoming=True, pattern='/mirrorbatch'))
 async def _batch(event):
-    if userbot is None:
-         return await event.reply("You haven't set USER_SESSION_STRING variable to use this command!")
+    if app is None:
+         return await event.reply("You haven't set BATCH_SESSION_STRING variable to use this command!")
     else:
         if not event.is_private:
             return
@@ -54,12 +50,12 @@ async def _batch(event):
                         return await conv.send_message("You can only get upto 100 files in a single batch.")
                 except ValueError:
                     return await conv.send_message("Range must be an integer!")
-                s, r = await check(userbot, Bot, _link)
+                s, r = await check(app, Bot, _link)
                 if s != True:
                     await conv.send_message(r)
                     return
                 batch.append(f'{event.sender_id}')
-                await run_batch(userbot, Bot, event.sender_id, _link, value) 
+                await run_batch(app, Bot, event.sender_id, _link, value) 
                 conv.cancel()
                 batch.pop(0)
                 
