@@ -35,6 +35,7 @@ class TelegramUploader():
 
     async def upload(self):
         LOGGER.info("Uploading...")
+        LOGGER.info(self._client.name)
         GLOBAL_TG_DOWNLOADER.add(self)
         c_time = time.time()
         try:

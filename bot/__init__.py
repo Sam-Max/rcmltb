@@ -100,7 +100,7 @@ except Exception as e:
 
 #---------------------------
 
-Bot = Client(name="pyrogram", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+Bot = Client("pyrogram", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 Conversation(Bot)  
 try:
     Bot.start()
@@ -117,10 +117,11 @@ try:
     USER_SESSION_STRING = getConfig('USER_SESSION_STRING')
     if len(USER_SESSION_STRING) == 0:
         raise KeyError
-    app = Client(name='pyrogram_session',api_id=API_ID, api_hash=API_HASH, session_string=USER_SESSION_STRING)
+    app = Client(name="pyrogram_session", api_id=API_ID, api_hash=API_HASH, session_string=USER_SESSION_STRING)
     with app:
         IS_PREMIUM_USER = app.get_me().is_premium
-except:
+except Exception as e:
+    LOGGER.info(e)
     app = None
 
 if app is not None:
