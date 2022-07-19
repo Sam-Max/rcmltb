@@ -6,8 +6,9 @@ import re
 import time
 from pyrogram.errors import FloodWait
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from bot import GLOBAL_RCLONE
 from bot.core.get_vars import get_val
-from bot.uploaders.telegram.telegram_upload import upload_media_pyro
+from bot.uploaders.telegram.telegram_uploader import TelegramUploader
 from bot.utils.get_size_p import get_readable_size
 from bot.utils.misc_utils import clean_path
 from bot.utils.zip_utils import split_in_zip
@@ -41,6 +42,7 @@ class RcloneLeech:
         return id
 
     async def leech(self):
+        GLOBAL_RCLONE.add(self)
         await self.__user_msg.edit("Preparing for download...")
         origin_drive = get_val("DEF_RCLONE_DRIVE")
         tg_split_size= get_readable_size(get_val("TG_SPLIT_SIZE")) 
@@ -72,6 +74,7 @@ class RcloneLeech:
         if rcres == False:
             self.__rclone_pr.kill()
             await self.__user_msg.edit("Leech cancelled")
+            GLOBAL_RCLONE.remove(self)
             return 
 
         if self.__folder:
@@ -101,17 +104,17 @@ class RcloneLeech:
                         for file in dir_list :
                             f_path = os.path.join(split_dir, file)
                             try:
-                                await upload_media_pyro(self.__client, message, self.__chat_id, f_path)
+                                await TelegramUploader(f_path, self.__client, message, self.__chat_id).upload()
                             except FloodWait as fw:
                                 await asyncio.sleep(fw.seconds + 5)
-                                await upload_media_pyro(self.__client, message, self.__chat_id, f_path)     
+                                await TelegramUploader(f_path, self.__client, message, self.__chat_id).upload()
                             time.sleep(timer)
                     else:
                         try:
-                            await upload_media_pyro(self.__client, self.__user_msg, self.__chat_id, f_path)
+                            await TelegramUploader(f_path, self.__client, self.__user_msg, self.__chat_id).upload()
                         except FloodWait as fw:
                             await asyncio.sleep(fw.seconds + 5)
-                            await upload_media_pyro(self.__client, self.__user_msg, self.__chat_id, f_path)
+                            await TelegramUploader(f_path, self.__client, self.__user_msg, self.__chat_id).upload()
                         time.sleep(timer)
             clean_path(self.__dest_dir)
             await self.__client.send_message(self.__chat_id, "Nothing else to upload!")  
@@ -126,21 +129,22 @@ class RcloneLeech:
                 dir_list.sort() 
                 for file in dir_list :
                     timer = 5
-                    f_path = os.path.join(split_dir, file)
+                    f_path = os.path.join(split_dir, file, )
                     try:
-                        await upload_media_pyro(self.__client, message, self.__chat_id, f_path)
+                        await TelegramUploader(f_path, self.__client, message, self.__chat_id).upload()
                     except FloodWait as fw:
                         await asyncio.sleep(fw.seconds + 5)
-                        await upload_media_pyro(self.__client, message, self.__chat_id, f_path)
+                        await TelegramUploader(f_path, self.__client, message, self.__chat_id).upload()
                     time.sleep(timer)
                 await self.__client.send_message(self.__chat_id, "Nothing else to upload!")
             else:
                 try:    
-                    await upload_media_pyro(self.__client, self.__user_msg, self.__chat_id, f_path)
+                    await TelegramUploader(f_path, self.__client, self.__user_msg, self.__chat_id).upload()
                 except FloodWait as fw:
                     await asyncio.sleep(fw.seconds + 5)
-                    await upload_media_pyro(self.__client, self.__user_msg, self.__chat_id, f_path)
+                    await TelegramUploader(f_path, self.__client, message, self.__chat_id).upload()
             clean_path(self.__dest_dir)    
+        GLOBAL_RCLONE.remove(self)
 
     async def __rclone_update(self):
         blank = 0
@@ -173,9 +177,12 @@ class RcloneLeech:
                 if time.time() - start > edit_time:
                     if msg1 != msg:
                         start = time.time()
-                        await user_message.edit(text=msg, reply_markup=(InlineKeyboardMarkup([
+                        try:
+                            await user_message.edit(text=msg, reply_markup=(InlineKeyboardMarkup([
                             [InlineKeyboardButton('Cancel', callback_data=(f"cancel_rclone_{self.id}".encode('UTF-8')))]
-                            ])))                            
+                            ])))    
+                        except:
+                            pass                        
                         msg1 = msg
                 
             if data == '':
