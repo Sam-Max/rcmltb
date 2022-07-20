@@ -10,7 +10,7 @@ async def handle_setting_mirroset_callback(callback_query):
     cmd = data.split("^")
     mmes = await callback_query.get_message()
     base_dir= get_val("BASE_DIR")
-    rclone_drive = get_val("DEF_RCLONE_DRIVE")
+    rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
 
     if callback_query.data == "pages":
         await callback_query.answer()
@@ -18,7 +18,7 @@ async def handle_setting_mirroset_callback(callback_query):
     elif cmd[1] == "list_drive_mirrorset_menu":
         set_val("BASE_DIR", "")
         base_dir = get_val("BASE_DIR")
-        set_val("DEF_RCLONE_DRIVE", cmd[2])
+        set_val("DEFAULT_RCLONE_DRIVE", cmd[2])
         await settings_mirrorset_menu(
             callback_query, 
             mmes, 
@@ -31,7 +31,7 @@ async def handle_setting_mirroset_callback(callback_query):
             )     
 
     elif cmd[1] == "list_dir_mirrorset_menu":
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
         path = get_val(cmd[2])
         rclone_dir += path + "/"
@@ -50,7 +50,7 @@ async def handle_setting_mirroset_callback(callback_query):
 
     elif cmd[1] == "back":
         data_b_cb= "back"
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
         rclone_dir_split= rclone_dir.split("/")
         rclone_dir_split = rclone_dir_split[:-2]

@@ -1,10 +1,9 @@
 #https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/core/varholdern.py
 
-import os
 import logging
+import os
 from bot.consts.ExecVars import Constants
 
-LOGGER = logging.getLogger(__name__)
 
 class VarHolder:
     def __init__(self):
@@ -49,7 +48,6 @@ class VarHolder:
             if envval is not None:
                 ausers = envval.split(" ")
                 ausers_second= []
-                logging.info(ausers)
                 for user in ausers:
                     ausers_second.append(int(user))
                 val = ausers_second
@@ -66,14 +64,13 @@ class VarHolder:
             val = envval if envval is not None else val
 
         if val is None:
-            LOGGER.error("The variable was not found in either the constants or environment, variable is :- {}".format(variable))
+            logging.error("The variable was not found in either the constants or environment, variable is :- {}".format(variable))
             
         if isinstance(val, str):
             val = val.strip()
 
         self._var_dict[variable] = val
         return val
-
 
     def update_var(self, name, val):
         self._var_dict[name] = val

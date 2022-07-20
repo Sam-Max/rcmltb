@@ -21,7 +21,7 @@ async def get_pvt_content(event, chat, id):
 @bot.on(events.NewMessage(incoming=True, pattern='/mirrorbatch'))
 async def _batch(event):
     if app is None:
-         return await event.reply("You haven't set BATCH_SESSION_STRING variable to use this command!")
+         return await event.reply("You haven't set USER_SESSION_STRING variable to use this command!")
     else:
         if not event.is_private:
             return

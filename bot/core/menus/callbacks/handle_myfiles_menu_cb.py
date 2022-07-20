@@ -9,7 +9,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
     cmd = data.split("^")
     mmes = callback_query.message
     base_dir= get_val("BASE_DIR")
-    rclone_drive = get_val("DEF_RCLONE_DRIVE")
+    rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
 
     if callback_query.data == "pages":
         await callback_query.answer()
@@ -17,7 +17,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
     elif cmd[1] == "list_drive_myfiles_menu":
         set_val("BASE_DIR", "")     
         base_dir = get_val("BASE_DIR")
-        set_val("DEF_RCLONE_DRIVE", cmd[2])
+        set_val("DEFAULT_RCLONE_DRIVE", cmd[2])
         await myfiles_menu(
             callback_query, 
             mmes, 
@@ -30,7 +30,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
             )     
 
     elif cmd[1] == "list_dir_myfiles_menu":
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
         path = get_val(cmd[2])
         rclone_dir +=  path +"/"
@@ -48,7 +48,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
             )
 
     elif cmd[1] == "start_file_actions":
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
         path = get_val(cmd[2])
         base_dir = get_val("BASE_DIR")
         base_dir += path
@@ -64,7 +64,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
         )
 
     elif cmd[1] == "start_folder_actions":
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
         base_dir = get_val("BASE_DIR")
         await settings_myfiles_menu(
             client, 
@@ -81,7 +81,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
         pass
     
     elif cmd[1] == "delete_action":
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
         
         if cmd[2] == "folder":
@@ -101,7 +101,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
         )
 
     elif cmd[1] == "size_action":
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
         await settings_myfiles_menu(
             client= client, 
@@ -119,7 +119,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
 
     #Handling purge delete dialog
     elif cmd[1]== "yes":
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
 
         if cmd[2] == "folder":
@@ -139,7 +139,7 @@ async def handle_setting_myfiles_menu_callback(client, callback_query):
         )
 
     elif cmd[1]== "no":
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
         rclone_dir= get_val("BASE_DIR")
         await settings_myfiles_menu(
             client, 

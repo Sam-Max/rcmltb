@@ -43,7 +43,7 @@ class RcloneLeech:
     async def leech(self):
         GLOBAL_RCLONE.add(self)
         await self.__user_msg.edit("Preparing for download...")
-        origin_drive = get_val("DEF_RCLONE_DRIVE")
+        origin_drive = get_val("DEFAULT_RCLONE_DRIVE")
         tg_split_size= get_readable_size(TG_SPLIT_SIZE) 
         conf_path = await get_config()
         conf = ConfigParser()

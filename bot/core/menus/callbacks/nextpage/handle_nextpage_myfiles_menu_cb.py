@@ -61,7 +61,7 @@ async def next_page_myfiles(client, callback_query):
 
     try:
         mmes= callback_query.message
-        def_rc_drive= get_val("DEF_RCLONE_DRIVE")
+        def_rc_drive= get_val("DEFAULT_RCLONE_DRIVE")
         base_dir= get_val("BASE_DIR")
         await mmes.edit(f"Your drive files are listed below\n\nPath:`{def_rc_drive}:{base_dir}`", reply_markup= InlineKeyboardMarkup(btn))
     except MessageNotModifiedError:

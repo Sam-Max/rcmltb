@@ -62,7 +62,7 @@ async def next_page_leech(client, callback_query):
                 
     try:
         mmes= callback_query.message
-        def_rc_drive= get_val("DEF_RCLONE_DRIVE")
+        def_rc_drive= get_val("DEFAULT_RCLONE_DRIVE")
         base_dir= get_val("BASE_DIR")
         await mmes.edit(f"Select folder or file that you want to leech\n\nPath:`{def_rc_drive}:{base_dir}`", reply_markup= InlineKeyboardMarkup(btn))
     except MessageNotModifiedError:

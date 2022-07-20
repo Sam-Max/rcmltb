@@ -63,7 +63,7 @@ async def next_page_mirrorset(callback_query):
 
     try:
         mmes= await callback_query.get_message()
-        d_rclone_drive= get_val("DEF_RCLONE_DRIVE")
+        d_rclone_drive= get_val("DEFAULT_RCLONE_DRIVE")
         base_dir= get_val("BASE_DIR")
         await mmes.edit(f"Select folder where you want to store files\n\nPath:`{d_rclone_drive}:{base_dir}`", buttons=btn)
     except MessageNotModifiedError:

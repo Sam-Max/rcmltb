@@ -35,7 +35,7 @@ async def settings_mirrorset_menu(
         conf = configparser.ConfigParser()
         conf.read(path)
 
-        def_drive = get_val("DEF_RCLONE_DRIVE")
+        def_drive = get_val("DEFAULT_RCLONE_DRIVE")
 
         for j in conf.sections():
             prev = ""
@@ -62,7 +62,7 @@ async def settings_mirrorset_menu(
         )
 
         base_dir= get_val("BASE_DIR")
-        rclone_drive = get_val("DEF_RCLONE_DRIVE")
+        rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
         msg= f"Select cloud where you want to upload file\n\nPath:`{rclone_drive}:{base_dir}`"
 
         if edit:

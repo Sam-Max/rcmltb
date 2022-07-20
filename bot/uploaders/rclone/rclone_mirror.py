@@ -38,7 +38,7 @@ class RcloneMirror:
           dest_base = ''
           is_gdrive= False
           gen_drive_name = ''
-          dest_drive = get_val('DEF_RCLONE_DRIVE')
+          dest_drive = get_val('DEFAULT_RCLONE_DRIVE')
           conf_path = await get_config()
           conf = ConfigParser()
           conf.read(conf_path)

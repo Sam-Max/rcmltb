@@ -30,7 +30,7 @@ async def handle_mirror_download(
     if conf_path is None:
         return await message.reply_text("Rclone config file not found.")
         
-    if len(get_val("DEF_RCLONE_DRIVE")) == 0:
+    if len(get_val("DEFAULT_RCLONE_DRIVE")) == 0:
         return await message.reply_text("You need to select a cloud first, use /mirrorset")
     
     mess_age = await message.reply_text("Preparing for download...", quote=True)
