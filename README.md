@@ -65,8 +65,8 @@ restart - restart bot
    - Non mandatory variables:
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
         - `UPSTREAM_BRANCH`: Upstream branch for update.
-        - `USER_SESSION_STRING`: Pyrogram session string for using mirrorbatch command and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_pyro_gen.py` on cmd from repository folder. **NOTE**: you can't use bot, use it with group or channel.
-        - `TG_SPLIT_SIZE`: Telegram upload limit in bytes (max `2097151000` which is ~2GB), to automatically slice the file bigger that this size into small parts to upload to Telegram.
+        - `USER_SESSION_STRING`: Pyrogram session string for using mirrorbatch command and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_pyro_gen.py` on command line on your pc from repository folder. **NOTE**: when using string session you can't use bot, use it with group or channel.
+        - `TG_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium.
         - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10.
         - `DEF_RCLONE_DRIVE`: set default drive from rclone.conf file
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent.
