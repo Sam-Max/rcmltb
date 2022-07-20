@@ -1,6 +1,6 @@
 import os
 from subprocess import run
-from bot import MEGA_KEY, TG_SPLIT_SIZE
+from bot import LOGGER, MEGA_KEY, TG_SPLIT_SIZE
 from bot.core.get_vars import get_val
 from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
@@ -9,7 +9,6 @@ from bot.downloaders.telegram.telegram_downloader import TelegramDownloader
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
 from bot.utils.bot_utils import is_mega_link
 from bot.utils.get_rclone_conf import get_config
-from bot import LOGGER
 from bot.utils.misc_utils import clean_filepath, clean_path
 from bot.utils.zip_utils import extract_archive
 
@@ -26,18 +25,16 @@ async def handle_mirror_download(
     new_name="", 
     is_rename= False
     ):
-    mess_age = await message.reply_text("Preparing for download...", quote=True)
-    LOGGER.info("Preparing for download...")
 
     conf_path = await get_config()
     if conf_path is None:
-        await mess_age.edit("Rclone config file not found.")
-        return
-
-    if get_val("DEF_RCLONE_DRIVE") == "":
-        await mess_age.edit("Select a cloud first please")
-        return      
-
+        return await message.reply_text("Rclone config file not found.")
+        
+    if len(get_val("DEF_RCLONE_DRIVE")) == 0:
+        return await message.reply_text("You need to select a cloud first, use /mirrorset")
+    
+    mess_age = await message.reply_text("Preparing for download...", quote=True)
+          
     if file is None:
         if is_mega_link(link):
             if MEGA_KEY is not None:
@@ -49,7 +46,7 @@ async def handle_mirror_download(
                 else:
                     await RcloneMirror(path, mess_age, new_name, tag, is_rename).mirror()
             else:
-                await RcloneMirror(path, mess_age, new_name, tag, is_rename).mirror()
+                 await mess_age.edit("MEGA_API_KEY not provided!")
         elif isQbit:
              qbit_dl= QbDownloader(mess_age)
              state, message, path= await qbit_dl.add_qb_torrent(link)
