@@ -6,23 +6,22 @@ import re
 import time
 from pyrogram.errors import FloodWait
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot import GLOBAL_RCLONE, TG_SPLIT_SIZE
+from bot import GLOBAL_RCLONE, LOGGER, TG_SPLIT_SIZE, Bot, app
 from bot.core.get_vars import get_val
 from bot.uploaders.telegram.telegram_uploader import TelegramUploader
 from bot.utils.get_size_p import get_readable_size
 from bot.utils.misc_utils import clean_path
 from bot.utils.zip_utils import split_in_zip
 from bot.utils.get_rclone_conf import get_config
-import logging
 import subprocess
 import asyncio
 
-log = logging.getLogger(__name__)
+
 
 class RcloneLeech:
-    def __init__(self, client, user_msg, chat_id, origin_dir, dest_dir, folder= False, path= "") -> None:
+    def __init__(self, user_msg, chat_id, origin_dir, dest_dir, folder= False, path= "") -> None:
         self.id = self.__create_id(8)
-        self.__client = client
+        self.__client = app if app is not None else Bot
         self.__user_msg = user_msg
         self.__chat_id = chat_id
         self.__origin_dir = origin_dir
@@ -54,10 +53,10 @@ class RcloneLeech:
         for i in conf.sections():
             if origin_drive == str(i):
                 if conf[i]["type"] == "drive":
-                    log.info("Google Drive Download Detected.")
+                    LOGGER.info("G-Drive Download Detected.")
                 else:
                     drive_name = conf[i]["type"]
-                    log.info(f"{drive_name} Download Detected.")
+                    LOGGER.info(f"{drive_name} Download Detected.")
                 break
 
         rclone_copy_cmd = [
