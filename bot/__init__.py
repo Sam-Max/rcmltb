@@ -2,11 +2,13 @@ __version__ = "2.0"
 __author__ = "Sam-Max"
 
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
+import os
 from time import sleep, time
 import sys
 import time
 from os import environ
 from dotenv import load_dotenv
+from aria2p import API as ariaAPI, Client as ariaClient
 from qbittorrentapi import Client as qbitClient
 from bot.utils.load_rclone import load_rclone
 from subprocess import Popen, run as srun
@@ -40,7 +42,17 @@ load_dotenv('config.env', override=True)
 load_rclone()
 
 srun(["qbittorrent-nox", "-d", "--profile=."])
+srun(["chmod", "+x", "aria.sh"])
+srun("./aria.sh", shell=True)
 sleep(0.5)
+
+aria2 = ariaAPI(
+    ariaClient(
+        host="http://localhost",
+        port=6800,
+        secret="",
+    )
+)
 
 try:
     TORRENT_TIMEOUT = getConfig('TORRENT_TIMEOUT')
@@ -49,6 +61,20 @@ try:
     TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
 except:
     TORRENT_TIMEOUT = None
+
+try:
+    LOGGER.info("Initializing Aria2c")
+    link = "https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent"
+    dire = os.path.join(os.getcwd(), "Downloads")
+    aria2.add_uris([link], {'dir': dire})
+    sleep(3)
+    downloads = aria2.get_downloads()
+    sleep(20)
+    for download in downloads:
+        aria2.remove([download], force=True, files=True)
+except Exception as e:
+    LOGGER.error(f"Aria2c initializing error: {e}")
+sleep(1.5)
     
 try:
     MEGA_KEY = getConfig('MEGA_API_KEY')

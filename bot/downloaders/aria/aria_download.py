@@ -1,14 +1,13 @@
 #Modified from: (c) YashDK [yash-dk@github]
 
 import asyncio, os
-from aria2p import API, Client
 import time
 import shutil
 import aria2p
 from psutil import cpu_percent, virtual_memory
 from bot import LOGGER, uptime
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from functools import partial
+from bot import aria2
 from bot.utils import human_format
 from bot.utils.bot_utils import is_magnet
 from bot.utils.human_format import get_readable_file_size
@@ -17,41 +16,11 @@ class AriaDownloader():
     def __init__(self, dl_link, user_message, new_file_name=None):
         super().__init__()
         self._aloop = asyncio.get_event_loop()
-        self._client = None
         self._dl_link = dl_link
         self._new_file_name = new_file_name 
         self._gid = 0
         self._user_message= user_message
         self._update_info = None
-
-    async def get_client(self):
-        if self._client is not None:
-            return self._client
-
-        aria2_daemon_start_cmd = []
-        aria2_daemon_start_cmd.append("aria2c")
-        #aria2_daemon_start_cmd.append("--conf-path=aria2/aria2.conf")
-        aria2_daemon_start_cmd.append("--conf-path=/usr/src/app/aria2/aria2.conf")
-
-        process = await asyncio.create_subprocess_exec(
-            *aria2_daemon_start_cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        await process.communicate()
-        
-        arcli = await self._aloop.run_in_executor(
-            None, 
-            partial(
-                Client, 
-                host="http://localhost", 
-                port=8100, 
-                secret=""
-                )
-        )
-        aria2 = await self._aloop.run_in_executor(None, API, arcli)
-        self._client = aria2
-        return aria2
 
     async def add_url(self, aria_instance, text_url, path):
         download = await self._aloop.run_in_executor(None, aria_instance.add_uris, [text_url], {'dir': path})
@@ -62,16 +31,15 @@ class AriaDownloader():
             return True, "", download.gid
 
     async def execute(self):
-        aria_instance = await self.get_client()
         path= os.path.join(os.getcwd(), "Downloads", str(time.time()).replace(".","")) 
         if is_magnet(self._dl_link):
-            err_message= "Not supported magnet links"
+            err_message= "Not support for magnet links"
             return False, err_message, None  
         elif self._dl_link.lower().endswith(".torrent"):
-            err_message= "Not supported .torrent files"
+            err_message= "Not support for .torrent files"
             return False, err_message, None  
         else:
-            sagtus, err_message, gid = await self.add_url(aria_instance, self._dl_link, path)
+            sagtus, err_message, gid = await self.add_url(aria2, self._dl_link, path)
             if not sagtus:
                 return False, err_message, None 
             self._gid = gid
@@ -79,12 +47,11 @@ class AriaDownloader():
             if not statusr:
                return False, error_message, None
             else:
-                file = await self._aloop.run_in_executor(None, aria_instance.get_download, self._gid)
+                file = await self._aloop.run_in_executor(None, aria2.get_download, self._gid)
                 file_path = os.path.join(file.dir, file.name)
                 return True, error_message, file_path
 
     async def aria_progress_update(self):
-        aria2 = await self.get_client()
         user_msg= self._user_message
         while True:
             try:
@@ -193,7 +160,6 @@ class AriaDownloader():
     async def remove_dl(self, gid):
         if gid is None:
             gid = self._gid
-        aria2 = await self.get_client()
         try:
             download = await self._aloop.run_in_executor(None, aria2.get_download, gid)
             if download.is_waiting:
