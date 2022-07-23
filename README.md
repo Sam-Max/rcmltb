@@ -130,6 +130,10 @@ sudo docker-compose stop
 sudo docker-compose start
 
 ```
+
+## Deploying on Heroku
+<p><a href="https://github.com/Sam-Max/Rclone-Tg-Bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
+
 ## Bot Screenshot: 
 
 <img src="./screenshot_01.png" alt="button menu example">
