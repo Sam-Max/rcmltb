@@ -14,7 +14,7 @@ from bot.utils.rename_file import rename
 from bot import GLOBAL_RCLONE, LOGGER
 
 class RcloneMirror:
-    def __init__(self, path, user_msg, new_name, tag, is_rename=False) -> None:
+    def __init__(self, path, user_msg, tag, new_name="", is_rename=False) -> None:
         self.id = self.__create_id(8)
         self.__path = path
         self.__user_msg = user_msg

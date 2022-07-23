@@ -1,15 +1,20 @@
 from time import time
 from requests import get
-from bot import LOGGER
+from bot import LOGGER, MEGA_KEY
 from bot.core.get_vars import get_val
 from bot.core.set_vars import set_val
-from bot.downloaders.mirror_download import handle_mirror_download
+from bot.downloaders.aria.aria_download import AriaDownloader
+from bot.downloaders.mega.mega_download import MegaDownloader
+from bot.downloaders.qbit.qbit_downloader import QbDownloader
+from bot.uploaders.rclone.rclone_mirror import RcloneMirror
 from bot.utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_mega_link, is_url
 from re import match as re_match
 from bot.utils.direct_link_generator import direct_link_generator
 from bot.utils.exceptions import DirectDownloadLinkException
+from bot.utils.get_rclone_conf import get_config
 from bot.utils.get_size_p import get_readable_size
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from bot.utils.misc_utils import clean_path
 
 
 async def handle_mirror_command(client, message):
@@ -28,6 +33,10 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
     user_id= message.from_user.id
     chat_id = message.chat.id
     if user_id in get_val("ALLOWED_USERS") or chat_id in get_val("ALLOWED_CHATS") or user_id == get_val("OWNER_ID"):
+        if await get_config() is None:
+            return await message.reply_text("Rclone config file not found.")
+        if len(get_val("DEFAULT_RCLONE_DRIVE")) == 0:
+            return await message.reply_text("You need to select a cloud first, use /mirrorset")
         replied_message= message.reply_to_message
         if replied_message is not None :
             mesg = message.text
@@ -66,7 +75,14 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                         with open(file_name, "wb") as t:
                             t.write(f.read())
                     link = str(file_name)
-                    await handle_mirror_download(client, message, None, tag, pswd, link, isZip, extract, isQbit)
+                    mess_age= await message.reply_text('Qbit download started...')
+                    qbit_dl= QbDownloader(mess_age)
+                    state, message, path= await qbit_dl.add_qb_torrent(link)
+                    if not state:
+                        await mess_age.edit(message)
+                        clean_path(path)
+                    else:
+                        await RcloneMirror(path, mess_age, tag).mirror()
             else:
                 reply_text = replied_message.text     
                 if is_url(reply_text) or is_magnet(reply_text): 
@@ -101,9 +117,21 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                     else:
                         if is_magnet(link) or link.endswith('.torrent'):
                             return await message.reply_text("Use qbmirror command to mirror torrent or magnet link")
-                        if is_gdrive_link(link):
+                        elif is_gdrive_link(link):
                             return await message.reply_text("Not currently supported Google Drive links") 
-                        if not is_mega_link(link) and not is_magnet(link) and not is_gdrive_link(link) \
+                        elif is_mega_link(link):
+                            if MEGA_KEY is not None:
+                                mess_age= await message.reply_text('Mega download started...')     
+                                mega_dl= MegaDownloader(link, mess_age)   
+                                state, message, path= await mega_dl.execute()
+                                if not state:
+                                    await mess_age.edit(message)
+                                    clean_path(path)
+                                else:
+                                    await RcloneMirror(path, mess_age, tag).mirror()
+                            else:
+                                await mess_age.edit("MEGA_API_KEY not provided!")
+                        elif not is_mega_link(link) and not is_magnet(link) and not is_gdrive_link(link) \
                             and not link.endswith('.torrent'):
                             content_type = get_content_type(link)
                             if content_type is None or re_match(r'text/html|text/plain', content_type):
@@ -113,7 +141,13 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                                 except DirectDownloadLinkException as e:
                                     if str(e).startswith('ERROR:'):
                                         return await message.reply_text(str(e))
-                await handle_mirror_download(client, message, file, tag, pswd, link, isZip, extract, isQbit)
+                            mess_age= await message.reply_text('Starting Download...')     
+                            aria2= AriaDownloader(link, mess_age)   
+                            state, message, path= await aria2.execute()
+                            if not state:
+                                await mess_age.edit(message)
+                            else:
+                                await RcloneMirror(path, mess_age, tag).mirror()  
         else:
             if isZip or extract:
                 await message.reply_text("<b>Reply to a Telegram file</b>\n\n<b>For password use this format:</b>\n/zipmirror pswd: password", quote=True) 

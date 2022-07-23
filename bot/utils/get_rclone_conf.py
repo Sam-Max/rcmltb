@@ -6,5 +6,4 @@ async def get_config():
             if isinstance(config, str):
                 if os.path.exists(config):
                     return config
-
         return None
