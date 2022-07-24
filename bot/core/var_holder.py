@@ -32,7 +32,6 @@ class VarHolder:
         ]
 
         BOOLS = [
-            "UPLOAD_CANCEL",
             "IS_ZIP",
             "EXTRACT",
         ]

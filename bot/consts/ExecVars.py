@@ -7,5 +7,3 @@ class Constants:
      ORIGIN_DIR= "/"
 
      DEST_DIR= "/"
-
-     UPLOAD_CANCEL= False
