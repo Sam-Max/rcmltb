@@ -60,8 +60,7 @@ restart - restart bot
         - `ALLOWED_USERS`: list of IDs of allowed users who can use this bot separated by spaces
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces
         - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather) 
-        - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program.
-
+        - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program. Set this surrounded by single quotes.
    - Non mandatory variables:
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
         - `UPSTREAM_BRANCH`: Upstream branch for update.
