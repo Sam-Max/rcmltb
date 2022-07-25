@@ -1,7 +1,7 @@
 import asyncio
 import json
-import logging
 import re
+from bot import LOGGER
 
 
 async def get_glink(drive_name, drive_base, ent_name, conf_path, isdir=True):
@@ -28,4 +28,4 @@ async def get_glink(drive_name, drive_base, ent_name, conf_path, isdir=True):
             name = data[0]["Name"]
             return (id, name)
         except Exception:
-            logging.exception("Error Occured while getting id ::- {}".format(stdout))
+            LOGGER.error("Error Occured while getting id ::- {}".format(stdout))

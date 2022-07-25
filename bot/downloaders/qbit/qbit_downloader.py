@@ -47,7 +47,7 @@ class QbDownloader:
             tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
             if len(tor_info) > 0:
                 self.client.auth_log_out()
-                return False, "This Torrent already added!", None
+                return False, "This Torrent already added!", "", ""
             
             if link.startswith('magnet:'):
                 op = self.client.torrents_add(link, save_path=self.__path)
@@ -66,10 +66,10 @@ class QbDownloader:
                             msg = "Not a torrent. If something wrong please report."
                             self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
                             self.client.auth_log_out()
-                            return False, msg, None
+                            return False, msg, "", ""
             else:
                 self.client.auth_log_out()
-                return False, "This is an unsupported/invalid link.", None
+                return False, "This is an unsupported/invalid link.", "", ""
 
             tor_info = tor_info[0]
             self.__name = tor_info.name
@@ -81,9 +81,9 @@ class QbDownloader:
             status, msg= await self.qbit_progress_update()
             GLOBAL_QBIT.remove(self)  
             if not status:
-                return False, msg, self.__path
+                return False, msg, self.__path, self.__name
             else:
-                return True, msg, self.__path
+                return True, msg, self.__path, self.__name
 
         except Exception as e:
             await self.__message.edit(str(e))

@@ -14,11 +14,12 @@ from bot.utils.rename_file import rename
 from bot import GLOBAL_RCLONE, LOGGER
 
 class RcloneMirror:
-    def __init__(self, path, user_msg, tag, new_name="", is_rename=False) -> None:
+    def __init__(self, path, user_msg, tag, new_name="", is_rename=False, torrent_name="") -> None:
         self.id = self.__create_id(8)
         self.__path = path
         self.__user_msg = user_msg
         self.__new_name = new_name
+        self.torrent_name= torrent_name
         self.__tag = tag
         self.cancel = False
         self._is_rename = is_rename
@@ -37,7 +38,7 @@ class RcloneMirror:
           path = ''
           dest_base = ''
           is_gdrive= False
-          gen_drive_name = ''
+          general_drive_name = ''
           dest_drive = get_val('DEFAULT_RCLONE_DRIVE')
           conf_path = await get_config()
           conf = ConfigParser()
@@ -48,17 +49,16 @@ class RcloneMirror:
                     if conf[i]['type'] == 'drive':
                          is_gdrive = True
                          dest_base = get_val('BASE_DIR')
-                         LOGGER.info('Google Drive Upload Detected.')
+                         LOGGER.info('Google Drive Unit Detected...')
                     else:
                          is_gdrive = False
-                         gen_drive_name = conf[i]['type']
+                         general_drive_name = conf[i]['type']
                          dest_base = get_val('BASE_DIR')
-                         LOGGER.info(f"{gen_drive_name} Upload Detected.")
+                         LOGGER.info(f"{general_drive_name} Unit Detected...")
                     break
         
           if not os.path.exists(self.__path):
-               await self.__user_msg.reply('the path {path} not found')
-               return
+               return await self.__user_msg.reply('the path {path} not found')
                 
           if self._is_rename:
                 path = await rename(self.__path, self.__new_name)
@@ -66,9 +66,14 @@ class RcloneMirror:
                 path = self.__path
 
           if os.path.isdir(path):
-                new_dest_base = os.path.join(dest_base, os.path.basename(path))
+                if len(self.torrent_name) > 0:
+                    new_dest_base = os.path.join(dest_base, self.torrent_name)
+                else:
+                    new_dest_base = os.path.join(dest_base, os.path.basename(path))
+
                 rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
                                     f"{dest_drive}:{new_dest_base}", '-P']
+                LOGGER.info(rclone_copy_cmd)
           else:
                 rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
                                     f"{dest_drive}:{dest_base}", '-P']
@@ -94,13 +99,19 @@ class RcloneMirror:
 
           LOGGER.info('Successfully uploaded')
 
-          name = os.path.basename(path)
+          if len(self.torrent_name) > 0:
+            name = self.torrent_name
+          else:
+            name = os.path.basename(path)
           msg = 'Successfully uploaded ✅\n\n'
-          msg += f"<b>Name: </b><code>{escape(name)}</code><b>"
+          msg += f"<b>Name:</b><code>{escape(name)}</code>"
           
           if os.path.isdir(path):
-                if is_gdrive:
+                if len(self.torrent_name) > 0:
+                    gid = await get_glink(dest_drive, dest_base, self.torrent_name, conf_path)
+                else:
                     gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path)
+                if is_gdrive:
                     folder_link = f"https://drive.google.com/folderview?id={gid[0]}"
                     button = []
                     button.append([InlineKeyboardButton(text='Drive Link', url=folder_link)])
@@ -150,9 +161,12 @@ class RcloneMirror:
                 if time.time() - start > edit_time:
                     if msg1 != msg:
                         start = time.time()
-                        await user_message.edit(text=msg, reply_markup=(InlineKeyboardMarkup([
+                        try:
+                            await user_message.edit(text=msg, reply_markup=(InlineKeyboardMarkup([
                             [InlineKeyboardButton('Cancel', callback_data=(f"cancel_rclone_{self.id}".encode('UTF-8')))]
                             ])))                            
+                        except:
+                            pass
                         msg1 = msg
                 
             if data == '':
