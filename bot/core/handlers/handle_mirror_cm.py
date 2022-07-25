@@ -119,6 +119,7 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                         clean_path(path)
                     else:
                         await RcloneMirror(path, mess_age, tag, torrent_name= name).mirror()
+                
                 if is_magnet(link) or link.endswith('.torrent'):
                     return await message.reply_text("Use qbmirror command to mirror torrent or magnet link")
                 elif is_gdrive_link(link):
@@ -145,13 +146,13 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                         except DirectDownloadLinkException as e:
                             if str(e).startswith('ERROR:'):
                                 return await message.reply_text(str(e))
-                        mess_age= await message.reply_text('Starting Download...')     
-                        aria2= AriaDownloader(link, mess_age)   
-                        state, message, path= await aria2.execute()
-                        if not state:
-                            await mess_age.edit(message)
-                        else:
-                            await RcloneMirror(path, mess_age, tag).mirror()  
+                    mess_age= await message.reply_text('Starting Download...')     
+                    aria2= AriaDownloader(link, mess_age)   
+                    state, message, path= await aria2.execute()
+                    if not state:
+                        await mess_age.edit(message)
+                    else:
+                        await RcloneMirror(path, mess_age, tag).mirror()  
         else:
             if isZip or extract:
                 await message.reply_text("<b>Reply to a Telegram file</b>\n\n<b>For password use this format:</b>\n/zipmirror pswd: password", quote=True) 
