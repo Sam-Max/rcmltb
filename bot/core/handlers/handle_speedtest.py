@@ -1,5 +1,5 @@
-from bot.utils.admin_check import is_admin
-from bot.utils.speedtest import get_speed
+from bot.utils.bot_utils.admin_check import is_admin
+from bot.utils.bot_utils.speedtest import get_speed
 
 
 async def speed_handler(e):

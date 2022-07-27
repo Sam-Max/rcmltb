@@ -9,12 +9,11 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot import GLOBAL_RCLONE, LOGGER, TG_SPLIT_SIZE, Bot, app
 from bot.core.get_vars import get_val
 from bot.uploaders.telegram.telegram_uploader import TelegramUploader
-from bot.utils.get_size_p import get_readable_size
-from bot.utils.misc_utils import clean_path
-from bot.utils.zip_utils import split_in_zip
-from bot.utils.get_rclone_conf import get_config
+from bot.utils.bot_utils.misc_utils import clean_path, get_rclone_config, get_readable_size
+from bot.utils.bot_utils.zip_utils import split_in_zip
 import subprocess
 import asyncio
+from bot.utils.status_util.bottom_status import get_bottom_status
 
 
 
@@ -45,7 +44,7 @@ class RcloneLeech:
         await self.__user_msg.edit("Preparing for download...")
         origin_drive = get_val("DEFAULT_RCLONE_DRIVE")
         tg_split_size= get_readable_size(TG_SPLIT_SIZE) 
-        conf_path = await get_config()
+        conf_path = await get_rclone_config()
         conf = ConfigParser()
         conf.read(conf_path)
         drive_name = ""
@@ -171,7 +170,8 @@ class RcloneLeech:
                     percent = 0
                 prg = self.__progress_bar(percent)
                 
-                msg = '<b>{}...\n{} \n{} \nSpeed:- {} \nETA:- {}\n</b>'.format('Downloading...', nstr[0], prg, nstr[2], nstr[3].replace('ETA', ''))
+                msg = '**Name:** `{}`\n**Status:** {}\n{}\n**Downloaded:** {}\n**Speed:** {} | **ETA:** {}\n'.format(os.path.basename(self.__path), 'Downloading...', prg, nstr[0], nstr[2], nstr[3].replace('ETA', ''))
+                msg += get_bottom_status() 
                 
                 if time.time() - start > edit_time:
                     if msg1 != msg:

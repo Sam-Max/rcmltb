@@ -1,10 +1,8 @@
-from pyrogram.types import InlineKeyboardMarkup
-from pyrogram.types import InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
 import json
-import logging
-from bot.utils.get_rclone_conf import get_config
-from bot.utils.get_size_p import get_readable_size
+from bot import LOGGER
+from bot.utils.bot_utils.misc_utils import get_rclone_config, get_readable_size
 
 header= ""
 
@@ -42,8 +40,7 @@ async def settings_myfiles_menu(
                await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(menu))
 
      elif submenu == "rclone_size":
-        conf_path = await get_config()
-        logging.info(f"{drive_name}:{drive_base}")
+        conf_path = await get_rclone_config()
 
         files_count, total_size = await rclone_size(
             message,
@@ -79,7 +76,7 @@ async def settings_myfiles_menu(
           await message.edit(msg, reply_markup= InlineKeyboardMarkup(buttons))
 
      elif submenu == "yes":
-          conf_path = await get_config()
+          conf_path = await get_rclone_config()
           
           menu.append(
                [InlineKeyboardButton("✘ Close Menu", f"myfilesmenu^selfdest")]
@@ -126,14 +123,14 @@ async def rclone_size(
      stdout = stdout.decode().strip()
 
      if process.returncode != 0:
-          logging.info(stderr)
+          LOGGER.info(stderr)
 
      try:
           data = json.loads(stdout)
           files = data["count"]
           size = data["bytes"]
      except Exception as exc:
-          logging.info(exc)
+          LOGGER.info(exc)
 
      return files, size
 
@@ -154,8 +151,7 @@ async def rclone_purge (
      stdout = stdout.decode().strip()
 
      if process.returncode != 0:
-          logging.info(stderr)
-
+          LOGGER.info(stderr)
 
 async def rclone_delete (
      drive_base, 
@@ -174,5 +170,5 @@ async def rclone_delete (
      stdout = stdout.decode().strip()
 
      if process.returncode != 0:
-          logging.info(stderr)
+          LOGGER.info(stderr)
 

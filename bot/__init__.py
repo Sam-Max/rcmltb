@@ -10,7 +10,6 @@ from os import environ
 from dotenv import load_dotenv
 from aria2p import API as ariaAPI, Client as ariaClient
 from qbittorrentapi import Client as qbitClient
-from bot.utils.load_rclone import load_rclone
 from subprocess import Popen, run as srun
 from bot.client import RcloneTgClient
 from bot.core.var_holder import VarHolder
@@ -39,7 +38,18 @@ GLOBAL_QBIT= set()
 SessionVars = VarHolder()
 
 load_dotenv('config.env', override=True)
-load_rclone()
+
+try:
+    RCLONE_CONFIG = getConfig('RCLONE_CONFIG')
+    if len(RCLONE_CONFIG) == 0:
+        raise KeyError
+    RCLONE_CONFIG.strip()
+    with open(os.path.join(os.getcwd(), "rclone.conf"), "wb") as file:
+        file.write(bytes(RCLONE_CONFIG,'utf-8'))
+    LOGGER.info(f'Rclone file loaded!!') 
+except:
+    RCLONE_CONFIG = None
+    LOGGER.info(f'Failed to load rclone file.')     
 
 srun(["qbittorrent-nox", "-d", "--profile=."])
 srun(["chmod", "+x", "aria.sh"])

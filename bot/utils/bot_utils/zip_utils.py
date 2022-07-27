@@ -1,12 +1,9 @@
 #https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/functions/zip7_utils.py
 
-import logging
-import asyncio,shlex,os,logging,time
+import asyncio, shlex, os, time
 from typing import Union,List,Tuple
-
 from bot import LOGGER
 
-log= logging.getLogger(__name__)
 
 async def cli_call(cmd: Union[str,List[str]]) -> Tuple[str,str]:
     if isinstance(cmd,str):
@@ -32,7 +29,7 @@ async def cli_call(cmd: Union[str,List[str]]) -> Tuple[str,str]:
 async def split_in_zip(path, size=None):
     if os.path.exists(path):
         if os.path.isfile(path):
-            log.info("Starting the split for {}".format(path))
+            LOGGER.info("Starting the split for {}".format(path))
             fname = os.path.basename(path)
             bdir = os.path.dirname(path)
             bdir = os.path.join(bdir, str(time.time()).replace(".",""))
@@ -49,7 +46,7 @@ async def split_in_zip(path, size=None):
             _, err, _ = await cli_call(cmd)
             
             if err:
-                log.error(f"Error in zip split {err}")
+                LOGGER.error(f"Error in zip split {err}")
                 return None
             else:
                 return bdir

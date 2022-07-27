@@ -1,4 +1,4 @@
-from bot.utils.admin_check import is_admin
+from bot.utils.bot_utils.admin_check import is_admin
 
 
 async def get_logs_f(e):

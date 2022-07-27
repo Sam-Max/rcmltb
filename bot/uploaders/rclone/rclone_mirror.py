@@ -7,10 +7,9 @@ import subprocess, time
 from html import escape
 from bot.core.get_vars import get_val
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot.utils.drive_utils import get_glink
-from bot.utils.get_rclone_conf import get_config
-from bot.utils.misc_utils import clean_filepath, clean_path
-from bot.utils.rename_file import rename
+from bot.utils.status_util.bottom_status import get_bottom_status
+from bot.utils.bot_utils.drive_utils import get_glink
+from bot.utils.bot_utils.misc_utils import clean_filepath, clean_path, get_rclone_config, rename_file
 from bot import GLOBAL_RCLONE, LOGGER
 
 class RcloneMirror:
@@ -35,12 +34,11 @@ class RcloneMirror:
         return id
 
     async def mirror(self):
-          path = ''
           dest_base = ''
           is_gdrive= False
           general_drive_name = ''
           dest_drive = get_val('DEFAULT_RCLONE_DRIVE')
-          conf_path = await get_config()
+          conf_path = await get_rclone_config()
           conf = ConfigParser()
           conf.read(conf_path)
 
@@ -61,21 +59,19 @@ class RcloneMirror:
                return await self.__user_msg.reply('the path {path} not found')
                 
           if self._is_rename:
-                path = await rename(self.__path, self.__new_name)
-          else:
-                path = self.__path
+             self.__path = await rename_file(self.__path, self.__new_name)
 
-          if os.path.isdir(path):
+          if os.path.isdir(self.__path):
                 if len(self.torrent_name) > 0:
                     new_dest_base = os.path.join(dest_base, self.torrent_name)
                 else:
-                    new_dest_base = os.path.join(dest_base, os.path.basename(path))
+                    new_dest_base = os.path.join(dest_base, os.path.basename(self.__path))
 
-                rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
+                rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path),
                                     f"{dest_drive}:{new_dest_base}", '-P']
                 LOGGER.info(rclone_copy_cmd)
           else:
-                rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(path),
+                rclone_copy_cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path),
                                     f"{dest_drive}:{dest_base}", '-P']
 
           GLOBAL_RCLONE.add(self)
@@ -91,10 +87,10 @@ class RcloneMirror:
           if rcres == False:
                self.__rclone_pr.kill()
                await self.__user_msg.edit('Mirror cancelled')
-               if os.path.isdir(path):
-                    clean_path(path) 
+               if os.path.isdir(self.__path):
+                    clean_path(self.__path) 
                else:
-                    clean_filepath(path)   
+                    clean_filepath(self.__path)   
                return
 
           LOGGER.info('Successfully uploaded')
@@ -102,15 +98,15 @@ class RcloneMirror:
           if len(self.torrent_name) > 0:
             name = self.torrent_name
           else:
-            name = os.path.basename(path)
+            name = os.path.basename(self.__path)
           msg = 'Successfully uploaded ✅\n\n'
           msg += f"<b>Name:</b><code>{escape(name)}</code>"
           
-          if os.path.isdir(path):
+          if os.path.isdir(self.__path):
                 if len(self.torrent_name) > 0:
                     gid = await get_glink(dest_drive, dest_base, self.torrent_name, conf_path)
                 else:
-                    gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path)
+                    gid = await get_glink(dest_drive, dest_base, os.path.basename(self.__path), conf_path)
                 if is_gdrive:
                     folder_link = f"https://drive.google.com/folderview?id={gid[0]}"
                     button = []
@@ -118,17 +114,17 @@ class RcloneMirror:
                     await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
                 else:
                     await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
-                clean_path(path)
+                clean_path(self.__path)
           else:
                 if is_gdrive:
-                    gid = await get_glink(dest_drive, dest_base, os.path.basename(path), conf_path, False)
+                    gid = await get_glink(dest_drive, dest_base, os.path.basename(self.__path), conf_path, False)
                     link = f"https://drive.google.com/file/d/{gid[0]}/view"
                     button = []
                     button.append([InlineKeyboardButton(text='Drive Link', url=link)])
                     await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
                 else:
                     await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
-                clean_filepath(path)
+                clean_filepath(self.__path)
 
     async def __rclone_update(self):
         blank = 0
@@ -156,8 +152,9 @@ class RcloneMirror:
                     percent = 0
                 prg = self.__progress_bar(percent)
                 
-                msg = '<b>{}...\n{} \n{} \nSpeed:- {} \nETA:- {}\n</b>'.format('Uploading...', nstr[0], prg, nstr[2], nstr[3].replace('ETA', ''))
-                
+                msg = '**Name:** `{}`\n**Status:** {}\n{}\n**Uploaded:** {}\n**Speed:** {} | **ETA:** {}\n'.format(os.path.basename(self.__path), 'Uploading...', prg, nstr[0], nstr[2], nstr[3].replace('ETA', ''))
+                msg += get_bottom_status() 
+
                 if time.time() - start > edit_time:
                     if msg1 != msg:
                         start = time.time()

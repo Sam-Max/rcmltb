@@ -1,16 +1,10 @@
-from bot.utils.get_rclone_conf import get_config
-import os, configparser, logging
-from pyrogram.types import InlineKeyboardMarkup
-from pyrogram.types import InlineKeyboardButton
-from pyrogram.types import InlineKeyboardButton
+import os, configparser
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
 import json
-import logging
+from bot import LOGGER
 from bot.core.set_vars import set_val
-from bot.utils.get_size_p import get_readable_size
-from bot.utils.pairwise_row import pairwise
-
-torlog = logging.getLogger(__name__)
+from bot.utils.bot_utils.misc_utils import get_rclone_config, get_readable_size, pairwise
 
 header = ""
 folder_icon= "📁"
@@ -61,7 +55,7 @@ async def settings_leech_menu(
            await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(menu))
 
     elif submenu == "list_drive":
-        conf_path = await get_config()
+        conf_path = await get_rclone_config()
 
         await list_selected_drive_leech(
             drive_base, 
@@ -110,7 +104,7 @@ async def list_selected_drive_leech(
     try:
         data = json.loads(stdout)
     except Exception as e:
-        logging.info(e)
+        LOGGER.info(e)
         return
 
     if data == []:

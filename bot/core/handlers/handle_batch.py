@@ -8,7 +8,7 @@ Plugin for both public & private channels!
 import time, asyncio
 from ... import bot
 from ... import Bot, app
-from bot.utils.batch_helpers import get_link, check, get_bulk_msg
+from bot.utils.bot_utils.batch_helpers import get_link, check, get_bulk_msg
 from telethon import events, Button
 from pyrogram.errors import FloodWait
 

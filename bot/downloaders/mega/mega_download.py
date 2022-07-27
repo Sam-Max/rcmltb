@@ -6,8 +6,8 @@ import time
 from psutil import cpu_percent, virtual_memory
 from bot import LOGGER, uptime
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot.utils import human_format
-from bot.utils.human_format import human_readable_bytes
+from bot.utils.bot_utils import human_format
+from bot.utils.bot_utils.human_format import human_readable_bytes
 from megasdkrestclient import MegaSdkRestClient, errors, constants
 import asyncio
 import os

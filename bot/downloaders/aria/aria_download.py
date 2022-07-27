@@ -8,9 +8,9 @@ from psutil import cpu_percent, virtual_memory
 from bot import LOGGER, uptime
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot import aria2
-from bot.utils import human_format
-from bot.utils.bot_utils import is_magnet
-from bot.utils.human_format import get_readable_file_size
+from bot.utils.bot_utils import human_format
+from bot.utils.bot_utils.bot_utils import is_magnet
+from bot.utils.bot_utils.human_format import get_readable_file_size
 
 class AriaDownloader():
     def __init__(self, dl_link, user_message, new_file_name=None):

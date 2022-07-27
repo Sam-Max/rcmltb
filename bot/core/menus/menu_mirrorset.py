@@ -1,6 +1,5 @@
 from telethon.tl.types import KeyboardButtonCallback
-from bot.utils.get_rclone_conf import get_config
-from bot.utils.pairwise_row import pairwise
+from bot.utils.bot_utils.misc_utils import get_rclone_config, pairwise
 from ..get_vars import get_val
 import os, configparser, logging
 from telethon.tl.types import KeyboardButtonCallback
@@ -8,8 +7,6 @@ import asyncio
 import json
 import logging
 from bot.core.set_vars import set_val
-
-torlog = logging.getLogger(__name__)
 
 yes = "✅"
 folder_icon= "📁"
@@ -72,7 +69,7 @@ async def settings_mirrorset_menu(
 
 
     elif submenu == "list_drive":
-        conf_path = await get_config()
+        conf_path = await get_rclone_config()
 
         await list_selected_drive(
             query, 

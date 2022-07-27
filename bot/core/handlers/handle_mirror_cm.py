@@ -8,14 +8,12 @@ from bot.downloaders.aria.aria_download import AriaDownloader
 from bot.downloaders.mega.mega_download import MegaDownloader
 from bot.downloaders.qbit.qbit_downloader import QbDownloader
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
-from bot.utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_mega_link, is_url
+from bot.utils.bot_utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_mega_link, is_url
 from re import match as re_match
-from bot.utils.direct_link_generator import direct_link_generator
-from bot.utils.exceptions import DirectDownloadLinkException
-from bot.utils.get_rclone_conf import get_config
-from bot.utils.get_size_p import get_readable_size
+from bot.utils.bot_utils.direct_link_generator import direct_link_generator
+from bot.utils.bot_utils.exceptions import DirectDownloadLinkException
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot.utils.misc_utils import clean_path
+from bot.utils.bot_utils.misc_utils import clean_path, get_rclone_config, get_readable_size
 
 
 async def handle_mirror_command(client, message):
@@ -34,7 +32,7 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
     user_id= message.from_user.id
     chat_id = message.chat.id
     if user_id in get_val("ALLOWED_USERS") or chat_id in get_val("ALLOWED_CHATS") or user_id == get_val("OWNER_ID"):
-        if await get_config() is None:
+        if await get_rclone_config() is None:
             return await message.reply_text("Rclone config file not found.")
         if len(get_val("DEFAULT_RCLONE_DRIVE")) == 0:
             return await message.reply_text("You need to select a cloud first, use /mirrorset")

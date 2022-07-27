@@ -1,12 +1,11 @@
 #Tg:MaheshChauhan/DroneBots
 #Github.com/Vasusen-code
 
-
 import re
 import time
-from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
+from bot.utils.status_util.progress_for_pyrogram import progress_for_pyrogram
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
-from .. import LOGGER
+from ... import LOGGER
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 
 VIDEO_SUFFIXES = ["mkv", "mp4", "mov", "wmv", "3gp", "mpg", "webm", "avi", "flv", "m4v", "gif"]

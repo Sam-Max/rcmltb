@@ -1,5 +1,5 @@
 from bot.core.get_vars import get_val
-from bot.utils.admin_check import is_admin
+from bot.utils.bot_utils.admin_check import is_admin
 import asyncio as aio
 import os
 

@@ -2,14 +2,13 @@ import asyncio
 from random import randrange
 import re
 import subprocess
-import logging
 import time
 from bot import GLOBAL_RCLONE
 from bot.core.get_vars import get_val
-from bot.utils.get_rclone_conf import get_config
 from telethon import Button
+from bot.utils.bot_utils.misc_utils import get_rclone_config
+from bot.utils.status_util.bottom_status import get_bottom_status
 
-log = logging.getLogger(__name__)
 
 class RcloneCopy:
     def __init__(self, user_msg) -> None:
@@ -34,7 +33,7 @@ class RcloneCopy:
         dest_drive = get_val("DEST_DRIVE")
         dest_dir = get_val("DEST_DIR")
 
-        conf_path = await get_config()
+        conf_path = await get_rclone_config()
 
         rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
                        f'{dest_drive}:{dest_dir}', '-P']
@@ -83,8 +82,9 @@ class RcloneCopy:
                         percent = 0
                     prg = self.__progress_bar(percent)
 
-                    msg = '**Copying...\n{} \n{} \nSpeed:- {} \nETA:- {}\n**'.format(nstr[0], prg, nstr[2], nstr[3].replace("ETA", ""))
-                    
+                    msg = '**Status:** {}\n{}\n**Copied:** {}\n**Speed:** {} | **ETA:** {}\n'.format('Copying...', prg, nstr[0], nstr[2], nstr[3].replace('ETA', ''))
+                    msg += get_bottom_status() 
+
                     if time.time() - start > edit_time:
                         if msg1 != msg:
                             start = time.time()

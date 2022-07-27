@@ -3,7 +3,7 @@ from asyncio import sleep
 from random import randrange
 import time
 from bot import GLOBAL_TG_DOWNLOADER, LOGGER, Bot
-from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
+from bot.utils.status_util.progress_for_pyrogram import progress_for_pyrogram
 
 
 class TelegramDownloader:

@@ -6,10 +6,9 @@ import os
 from random import randrange
 import time
 from bot import GLOBAL_TG_DOWNLOADER, Bot, app, LOGGER
-from bot.downloaders.progress_for_pyrogram import progress_for_pyrogram
-from bot.utils.g_vid_res import get_video_resolution
-from bot.utils.get_media_info import get_m_info
-from bot.utils.screenshot import screenshot
+from bot.utils.bot_utils.fs_utils import get_media_info, get_video_resolution
+from bot.utils.status_util.progress_for_pyrogram import progress_for_pyrogram
+from bot.utils.bot_utils.screenshot import screenshot
 from pyrogram import enums
 
 VIDEO_SUFFIXES = ["mkv", "mp4", "mov", "wmv", "3gp", "mpg", "webm", "avi", "flv", "m4v", "gif"]
@@ -45,7 +44,7 @@ class TelegramUploader():
                         os.rename(self._file, path) 
                         self._file = str(self._file).split(".")[0] + ".mp4"
                     caption= str(self._file).split("/")[-1]  
-                    duration= get_m_info(self._file)[0]
+                    duration= get_media_info(self._file)[0]
                     thumb_path = await screenshot(self._file, duration, self._sender)
                     width, height = get_video_resolution(thumb_path)
                     await self._client.send_video(

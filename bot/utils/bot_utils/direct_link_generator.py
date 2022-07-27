@@ -13,7 +13,7 @@ from re import findall as re_findall, sub as re_sub, match as re_match, search a
 from urllib.parse import urlparse, unquote
 from json import loads as jsnloads
 from bot.core.get_vars import get_val
-from bot.utils.exceptions import DirectDownloadLinkException
+from bot.utils.bot_utils.exceptions import DirectDownloadLinkException
 from lk21 import Bypass
 from cfscrape import create_scraper
 from bs4 import BeautifulSoup

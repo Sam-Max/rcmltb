@@ -9,7 +9,7 @@ from telethon import events
 import time
 from bot.core.get_vars import get_val
 from ... import uptime
-from bot.utils import human_format
+from bot.utils.bot_utils import human_format
 
 
 async def handle_server_command(e):

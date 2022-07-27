@@ -6,8 +6,8 @@ from pyrogram import filters
 from subprocess import run
 from bot.downloaders.telegram.telegram_downloader import TelegramDownloader
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
-from bot.utils.misc_utils import clean_filepath
-from bot.utils.zip_utils import extract_archive
+from bot.utils.bot_utils.misc_utils import clean_filepath
+from bot.utils.bot_utils.zip_utils import extract_archive
 
 async def handle_mirror_menu_callback(client, query):
         list = query.data.split("_")

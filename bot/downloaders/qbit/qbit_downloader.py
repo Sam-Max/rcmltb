@@ -15,8 +15,8 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot import GLOBAL_QBIT, uptime
 from re import search as re_search
 from bot import get_client, TORRENT_TIMEOUT, LOGGER
-from bot.utils import human_format
-from bot.utils.bot_utils import get_readable_file_size, get_readable_time, setInterval
+from bot.utils.bot_utils import human_format
+from bot.utils.bot_utils.bot_utils import get_readable_file_size, get_readable_time, setInterval
 
 class QbDownloader:
     POLLING_INTERVAL = 3

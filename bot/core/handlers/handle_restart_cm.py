@@ -8,7 +8,7 @@ import signal
 from subprocess import run as srun
 from sys import executable
 from bot.core.get_vars import get_val
-from bot.utils.misc_utils import clean_path
+from bot.utils.bot_utils.misc_utils import clean_path
 
 log = logging.getLogger(__name__)
 
