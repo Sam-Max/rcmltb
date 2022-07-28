@@ -1,13 +1,13 @@
-cryptg==0.2.post2
-psutil==5.8.0
+cryptg
+psutil
 aria2p
 bencoding
 lk21
 cfscrape
 Telethon
-TgCrypto==1.2.3
-urllib3==1.26.5
+tgCrypto
 Pyrogram
+urllib3
 speedtest-cli
 python-dotenv
 requests
