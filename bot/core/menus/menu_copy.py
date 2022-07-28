@@ -3,6 +3,7 @@ import os, configparser
 from telethon.tl.types import KeyboardButtonCallback
 import asyncio
 import json
+from bot import LOGGER
 from bot.core.set_vars import set_val
 from bot.utils.bot_utils.misc_utils import get_rclone_config, get_readable_size, pairwise
 
@@ -57,7 +58,7 @@ async def settings_copy_menu(
             await query.reply(msg, buttons=menu)
 
     elif submenu == "list_drive":
-        conf_path = await get_rclone_config()
+        conf_path = get_rclone_config()
 
         await list_selected_drive_copy(
             query, 
@@ -116,7 +117,7 @@ async def list_selected_drive_copy(
     try:
         data = json.loads(stdout)
     except Exception as e:
-        logging.info(e)
+        LOGGER.info(e)
         return
 
     if data == []:

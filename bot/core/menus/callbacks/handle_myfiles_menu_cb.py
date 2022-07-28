@@ -1,4 +1,3 @@
-import logging
 from bot.core.get_vars import get_val
 from bot.core.menus.menu_myfiles import myfiles_menu
 from bot.core.menus.menu_myfiles_settings import settings_myfiles_menu

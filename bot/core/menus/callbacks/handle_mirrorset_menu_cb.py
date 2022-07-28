@@ -1,9 +1,7 @@
-import logging
 from bot.core.get_vars import get_val
 from bot.core.menus.menu_mirrorset import settings_mirrorset_menu
 from bot.core.set_vars import set_val
 
-log = logging.getLogger(__name__)
 
 async def handle_setting_mirroset_callback(callback_query):
     data = callback_query.data.decode()

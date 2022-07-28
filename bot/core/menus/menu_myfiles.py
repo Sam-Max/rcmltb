@@ -1,8 +1,9 @@
-import os, configparser, logging
+import os, configparser
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
 import json
 from json.decoder import JSONDecodeError
+from bot import LOGGER
 from bot.core.set_vars import set_val
 from bot.utils.bot_utils.misc_utils import get_rclone_config, get_readable_size, pairwise
 
@@ -55,7 +56,7 @@ async def myfiles_menu(
             await message.reply_text(msg, quote=True, reply_markup= InlineKeyboardMarkup(menu))
 
     elif submenu == "list_drive":
-        conf_path = await get_rclone_config()
+        conf_path = get_rclone_config()
 
         await list_selected_drive_myfiles(
             drive_base, 
@@ -104,7 +105,7 @@ async def list_selected_drive_myfiles(
     try:
         data = json.loads(stdout)
     except JSONDecodeError as e:
-        logging.info(e)
+        LOGGER.info(e)
 
     if data == []:
          menu.append(

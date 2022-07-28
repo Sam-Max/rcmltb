@@ -1,11 +1,11 @@
 from telethon.tl.types import KeyboardButtonCallback
+from bot import LOGGER
 from bot.utils.bot_utils.misc_utils import get_rclone_config, pairwise
 from ..get_vars import get_val
-import os, configparser, logging
+import os, configparser
 from telethon.tl.types import KeyboardButtonCallback
 import asyncio
 import json
-import logging
 from bot.core.set_vars import set_val
 
 yes = "✅"
@@ -69,7 +69,7 @@ async def settings_mirrorset_menu(
 
 
     elif submenu == "list_drive":
-        conf_path = await get_rclone_config()
+        conf_path = get_rclone_config()
 
         await list_selected_drive(
             query, 
@@ -120,7 +120,7 @@ async def list_selected_drive(
     try:
         data = json.loads(stdout)
     except Exception as e:
-        logging.info(e)
+        LOGGER.info(e)
         return
 
     if data == []:

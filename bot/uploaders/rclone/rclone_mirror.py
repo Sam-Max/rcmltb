@@ -7,7 +7,7 @@ import subprocess, time
 from html import escape
 from bot.core.get_vars import get_val
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot.utils.status_util.bottom_status import get_bottom_status
+from bot.utils.status_utils.bottom_status import get_bottom_status
 from bot.utils.bot_utils.drive_utils import get_glink
 from bot.utils.bot_utils.misc_utils import clean_filepath, clean_path, get_rclone_config, rename_file
 from bot import GLOBAL_RCLONE, LOGGER
@@ -38,7 +38,7 @@ class RcloneMirror:
           is_gdrive= False
           general_drive_name = ''
           dest_drive = get_val('DEFAULT_RCLONE_DRIVE')
-          conf_path = await get_rclone_config()
+          conf_path = get_rclone_config()
           conf = ConfigParser()
           conf.read(conf_path)
 
@@ -59,7 +59,7 @@ class RcloneMirror:
                return await self.__user_msg.reply('the path {path} not found')
                 
           if self._is_rename:
-             self.__path = await rename_file(self.__path, self.__new_name)
+             self.__path = rename_file(self.__path, self.__new_name)
 
           if os.path.isdir(self.__path):
                 if len(self.torrent_name) > 0:

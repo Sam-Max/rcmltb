@@ -1,4 +1,4 @@
-import re, logging
+import re
 from os import path as ospath, remove as osremove
 from telethon import events
 from bot.core.get_commands import get_command_pyro, get_command_tele
@@ -28,8 +28,6 @@ from bot.core.menus.callbacks.nextpage.handle_nextpage_copy_menu_cb import next_
 from bot.core.menus.callbacks.nextpage.handle_nextpage_leech_menu_cb import next_page_leech
 from bot.core.menus.callbacks.nextpage.handle_nextpage_mirrorset_menu_cb import next_page_mirrorset
 from bot.core.menus.callbacks.nextpage.handle_nextpage_myfiles_menu_cb import next_page_myfiles
-
-torlog = logging.getLogger(__name__)
 
 
 def add_handlers(bot):

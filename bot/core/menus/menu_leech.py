@@ -55,7 +55,7 @@ async def settings_leech_menu(
            await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(menu))
 
     elif submenu == "list_drive":
-        conf_path = await get_rclone_config()
+        conf_path = get_rclone_config()
 
         await list_selected_drive_leech(
             drive_base, 

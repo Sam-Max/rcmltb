@@ -7,7 +7,7 @@ from bot import GLOBAL_RCLONE
 from bot.core.get_vars import get_val
 from telethon import Button
 from bot.utils.bot_utils.misc_utils import get_rclone_config
-from bot.utils.status_util.bottom_status import get_bottom_status
+from bot.utils.status_utils.bottom_status import get_bottom_status
 
 
 class RcloneCopy:
@@ -33,7 +33,7 @@ class RcloneCopy:
         dest_drive = get_val("DEST_DRIVE")
         dest_dir = get_val("DEST_DIR")
 
-        conf_path = await get_rclone_config()
+        conf_path = get_rclone_config()
 
         rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
                        f'{dest_drive}:{dest_dir}', '-P']

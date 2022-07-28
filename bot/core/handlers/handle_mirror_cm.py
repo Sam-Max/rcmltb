@@ -32,7 +32,7 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
     user_id= message.from_user.id
     chat_id = message.chat.id
     if user_id in get_val("ALLOWED_USERS") or chat_id in get_val("ALLOWED_CHATS") or user_id == get_val("OWNER_ID"):
-        if await get_rclone_config() is None:
+        if get_rclone_config() is None:
             return await message.reply_text("Rclone config file not found.")
         if len(get_val("DEFAULT_RCLONE_DRIVE")) == 0:
             return await message.reply_text("You need to select a cloud first, use /mirrorset")

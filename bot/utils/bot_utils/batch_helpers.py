@@ -3,7 +3,7 @@
 
 import re
 import time
-from bot.utils.status_util.progress_for_pyrogram import progress_for_pyrogram
+from bot.utils.status_utils.progress_for_pyrogram import progress_for_pyrogram
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
 from ... import LOGGER
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid

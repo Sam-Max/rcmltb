@@ -40,7 +40,7 @@ async def settings_myfiles_menu(
                await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(menu))
 
      elif submenu == "rclone_size":
-        conf_path = await get_rclone_config()
+        conf_path = get_rclone_config()
 
         files_count, total_size = await rclone_size(
             message,
@@ -76,7 +76,7 @@ async def settings_myfiles_menu(
           await message.edit(msg, reply_markup= InlineKeyboardMarkup(buttons))
 
      elif submenu == "yes":
-          conf_path = await get_rclone_config()
+          conf_path = get_rclone_config()
           
           menu.append(
                [InlineKeyboardButton("✘ Close Menu", f"myfilesmenu^selfdest")]

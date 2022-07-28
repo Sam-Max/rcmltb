@@ -6,8 +6,8 @@ import os
 from random import randrange
 import time
 from bot import GLOBAL_TG_DOWNLOADER, Bot, app, LOGGER
-from bot.utils.bot_utils.fs_utils import get_media_info, get_video_resolution
-from bot.utils.status_util.progress_for_pyrogram import progress_for_pyrogram
+from bot.utils.bot_utils.misc_utils import get_media_info, get_video_resolution
+from bot.utils.status_utils.progress_for_pyrogram import progress_for_pyrogram
 from bot.utils.bot_utils.screenshot import screenshot
 from pyrogram import enums
 

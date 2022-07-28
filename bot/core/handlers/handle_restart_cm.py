@@ -1,16 +1,15 @@
 # Adapted from:
 # Repository: github.com/anasty17/mirror-leech-telegram-bot
 
-import logging
 from os import execl as osexecl
 import os
 import signal
 from subprocess import run as srun
 from sys import executable
+from bot import LOGGER
 from bot.core.get_vars import get_val
 from bot.utils.bot_utils.misc_utils import clean_path
 
-log = logging.getLogger(__name__)
 
 async def handle_restart(message):
         user_id= message.sender_id
@@ -24,7 +23,7 @@ async def handle_restart(message):
                     pid = fields[0]
                     os.kill(int(pid), signal.SIGKILL)
             except Exception as exc:
-                log.info(f"Error: {exc}")
+                LOGGER.info(f"Error: {exc}")
             with open(".updatemsg", "w") as f:
                 f.truncate(0)
                 f.write(f"{user_id}\n{update_message.id}\n")

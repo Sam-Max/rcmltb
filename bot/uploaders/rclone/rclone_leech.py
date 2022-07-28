@@ -13,7 +13,7 @@ from bot.utils.bot_utils.misc_utils import clean_path, get_rclone_config, get_re
 from bot.utils.bot_utils.zip_utils import split_in_zip
 import subprocess
 import asyncio
-from bot.utils.status_util.bottom_status import get_bottom_status
+from bot.utils.status_utils.bottom_status import get_bottom_status
 
 
 
@@ -44,7 +44,7 @@ class RcloneLeech:
         await self.__user_msg.edit("Preparing for download...")
         origin_drive = get_val("DEFAULT_RCLONE_DRIVE")
         tg_split_size= get_readable_size(TG_SPLIT_SIZE) 
-        conf_path = await get_rclone_config()
+        conf_path = get_rclone_config()
         conf = ConfigParser()
         conf.read(conf_path)
         drive_name = ""

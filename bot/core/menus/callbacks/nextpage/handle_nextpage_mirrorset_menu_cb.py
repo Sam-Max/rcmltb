@@ -3,14 +3,11 @@
 # Source: https://github.com/EvamariaTG/EvaMaria/blob/master/plugins/pm_filter.py
 #**************************************************/
 
-import logging 
 from bot.core.get_vars import get_val
 from telethon.tl.types import KeyboardButtonCallback
 from telethon.errors.rpcerrorlist import MessageNotModifiedError
 from bot.core.menus.menu_mirrorset import get_list_drive_results_mirrorset, list_drive_mirrorset
 
-
-botlog = logging.getLogger(__name__)
 
 async def next_page_mirrorset(callback_query):
     _, offset, data_back_cb = callback_query.data.decode().split(" ")
