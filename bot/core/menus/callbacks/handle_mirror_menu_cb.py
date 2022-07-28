@@ -47,7 +47,6 @@ async def mirror_file(client, message, file, tag, pswd, isZip, extract, new_name
         if isZip:
             try:
                 m_path = media_path
-                await mess_age.edit("Zipping file...")
                 base = os.path.basename(m_path)
                 file_name = base.rsplit('.', maxsplit=1)[0]
                 path = os.path.join(os.getcwd(), "Downloads", file_name + ".zip")
@@ -70,7 +69,6 @@ async def mirror_file(client, message, file, tag, pswd, isZip, extract, new_name
             clean_filepath(m_path)
         elif extract:
             m_path = media_path
-            await mess_age.edit("Extracting file...")
             extracted_path= await extract_archive(m_path, pswd)
             if extracted_path is not False:
                 await RcloneMirror(extracted_path, mess_age, tag, new_name, is_rename).mirror()             
