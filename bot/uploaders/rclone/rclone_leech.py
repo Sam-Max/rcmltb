@@ -1,47 +1,32 @@
 from configparser import ConfigParser
 from os import walk
 import os
-from random import randrange
-import re
 import time
 from pyrogram.errors import FloodWait
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot import GLOBAL_RCLONE, LOGGER, TG_SPLIT_SIZE, Bot, app
+from bot import LOGGER, TG_SPLIT_SIZE, Bot, app
 from bot.core.get_vars import get_val
+from bot.utils.status_utils.misc_utils import MirrorStatus
+from bot.utils.status_utils.rclone_status import RcloneStatus
 from bot.uploaders.telegram.telegram_uploader import TelegramUploader
 from bot.utils.bot_utils.misc_utils import clean_path, get_rclone_config, get_readable_size
 from bot.utils.bot_utils.zip_utils import split_in_zip
-import subprocess
+from subprocess import Popen, PIPE
 import asyncio
-from bot.utils.status_utils.bottom_status import get_bottom_status
 
 
 
 class RcloneLeech:
     def __init__(self, user_msg, chat_id, origin_dir, dest_dir, folder= False, path= "") -> None:
-        self.id = self.__create_id(8)
         self.__client = app if app is not None else Bot
+        self.__path= path
         self.__user_msg = user_msg
         self.__chat_id = chat_id
         self.__origin_dir = origin_dir
-        self.cancel = False
-        self.__folder= folder
-        self.__path= path
         self.__dest_dir = dest_dir
-
-    def __create_id(self, count):
-        map = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-        id = ''
-        i = 0
-        while i < count:
-            rnd = randrange(len(map))
-            id += map[rnd]
-            i += 1
-        return id
+        self.__folder= folder
 
     async def leech(self):
-        GLOBAL_RCLONE.add(self)
-        await self.__user_msg.edit("Preparing for download...")
+        await self.__user_msg.edit("Starting download...")
         origin_drive = get_val("DEFAULT_RCLONE_DRIVE")
         tg_split_size= get_readable_size(TG_SPLIT_SIZE) 
         conf_path = get_rclone_config()
@@ -58,22 +43,12 @@ class RcloneLeech:
                     LOGGER.info(f"{drive_name} Download Detected.")
                 break
 
-        rclone_copy_cmd = [
-            'rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{self.__origin_dir}', f'{self.__dest_dir}', '-P']
+        rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{self.__origin_dir}', f'{self.__dest_dir}', '-P']
+        self.__rclone_pr = Popen(rclone_copy_cmd, stdout=(PIPE),stderr=(PIPE))
+        rclone_status= RcloneStatus(self.__rclone_pr, self.__user_msg, self.__path)
+        status= await rclone_status.progress(status_type= MirrorStatus.STATUS_DOWNLOADING, client_type='pyrogram')
 
-        self.__rclone_pr = subprocess.Popen(
-            rclone_copy_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-
-        rcres= await self.__rclone_update()
-
-        if rcres == False:
-            self.__rclone_pr.kill()
-            await self.__user_msg.edit("Leech cancelled")
-            GLOBAL_RCLONE.remove(self)
-            return 
+        if status== False:return      
 
         if self.__folder:
             for dirpath, _, filenames in walk(self.__dest_dir):
@@ -142,75 +117,3 @@ class RcloneLeech:
                     await asyncio.sleep(fw.seconds + 5)
                     await TelegramUploader(f_path, message, self.__chat_id).upload()
             clean_path(self.__dest_dir)    
-        GLOBAL_RCLONE.remove(self)
-
-    async def __rclone_update(self):
-        blank = 0
-        process = self.__rclone_pr
-        user_message = self.__user_msg
-        sleeps = False
-        start = time.time()
-        edit_time = get_val('EDIT_SLEEP_SECS')
-        msg = ''
-        msg1 = ''
-        while True:
-            data = process.stdout.readline().decode()
-            data = data.strip()
-            mat = re.findall('Transferred:.*ETA.*', data)
-            
-            if mat is not None and len(mat) > 0:
-                sleeps = True
-                nstr = mat[0].replace('Transferred:', '')
-                nstr = nstr.strip()
-                nstr = nstr.split(',')
-                percent = nstr[1].strip('% ')
-                try:
-                    percent = int(percent)
-                except:
-                    percent = 0
-                prg = self.__progress_bar(percent)
-                
-                msg = '**Name:** `{}`\n**Status:** {}\n{}\n**Downloaded:** {}\n**Speed:** {} | **ETA:** {}\n'.format(os.path.basename(self.__path), 'Downloading...', prg, nstr[0], nstr[2], nstr[3].replace('ETA', ''))
-                msg += get_bottom_status() 
-                
-                if time.time() - start > edit_time:
-                    if msg1 != msg:
-                        start = time.time()
-                        try:
-                            await user_message.edit(text=msg, reply_markup=(InlineKeyboardMarkup([
-                            [InlineKeyboardButton('Cancel', callback_data=(f"cancel_rclone_{self.id}".encode('UTF-8')))]
-                            ])))    
-                        except:
-                            pass                        
-                        msg1 = msg
-                
-            if data == '':
-                blank += 1
-                if blank == 20:
-                    break
-            else:
-                blank = 0
-
-            if sleeps:
-                sleeps = False
-                if self.cancel:
-                    return False
-                await asyncio.sleep(2)
-                process.stdout.flush()
-    
-    def __progress_bar(self, percentage):
-        comp ="▪️"
-        ncomp ="▫️"
-        pr = ""
-
-        try:
-            percentage=int(percentage)
-        except:
-            percentage = 0
-
-        for i in range(1, 11):
-            if i <= int(percentage/10):
-                pr += comp
-            else:
-                pr += ncomp
-        return pr

@@ -73,6 +73,14 @@ except:
     TORRENT_TIMEOUT = None
 
 try:
+    EDIT_SLEEP_SECS = getConfig('EDIT_SLEEP_SECS')
+    if len(EDIT_SLEEP_SECS) == 0:
+        raise KeyError
+    EDIT_SLEEP_SECS = int(EDIT_SLEEP_SECS)
+except:
+    EDIT_SLEEP_SECS = 10
+
+try:
     LOGGER.info("Initializing Aria2c")
     link = "https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent"
     dire = os.path.join(os.getcwd(), "Downloads")

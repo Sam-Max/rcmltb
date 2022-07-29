@@ -12,4 +12,12 @@ def get_bottom_status():
      msg= f"\n**CPU:** {cpu_percent()}% | **FREE:** {free}"
      msg += f"\n**RAM:** {virtual_memory().percent}% | **UPTIME:** {diff}"
      return msg 
+
+class MirrorStatus:
+    STATUS_UPLOADING = "Uploading..."
+    STATUS_DOWNLOADING = "Downloading..."
+    STATUS_COPYING= "Copying..."
+    STATUS_ARCHIVING = "Archiving..."
+    STATUS_EXTRACTING = "Extracting..."
+    STATUS_SPLITTING = "Splitting..."
             

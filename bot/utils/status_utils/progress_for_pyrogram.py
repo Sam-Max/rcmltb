@@ -1,6 +1,6 @@
 import math
 import time
-from bot.utils.status_utils.bottom_status import get_bottom_status
+from bot.utils.status_utils.misc_utils import get_bottom_status
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 FINISHED_PROGRESS_STR = "■"

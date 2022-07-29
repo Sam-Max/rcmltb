@@ -28,7 +28,7 @@ async def handle_cancel(e):
         ext_hash = ext_hash.strip("'")
         for dl in GLOBAL_RCLONE:
             if dl.id == ext_hash:
-                dl.cancel = True
+                dl.cancelled = True
                 break 
    if data[1] == "tgdown":
      ext_hash = data[2]
