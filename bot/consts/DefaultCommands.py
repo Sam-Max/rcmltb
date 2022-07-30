@@ -6,6 +6,8 @@ class Commands:
     UNZIPMIRROR = "unzipmirror"
     QBMIRROR= "qbmirror"
     LEECH= "leech"
+    ZIPLEECH= "zipleech"
+    UNZIPLEECH= "unzipleech"
     COPY = "copy"
     MYFILES= "myfiles"
     EXEC = "exec"

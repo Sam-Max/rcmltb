@@ -8,7 +8,7 @@ from bot.core.handlers.handle_copy_cm import handle_copy_command
 from bot.core.handlers.handle_mirror_cm import handle_mirror_command, handle_qbit_mirror_command, handle_unzip_mirror_command, handle_zip_mirror_command
 from bot.core.handlers.handle_exec_cm import handle_exec_message_f
 from bot.core.handlers.handle_getlogs import get_logs_f
-from bot.core.handlers.handle_leech_cm import handle_leech_command
+from bot.core.handlers.handle_leech_cm import handle_leech_command, handle_unzip_leech_command, handle_zip_leech_command
 from bot.core.handlers.handle_myfiles_cm import handle_myfiles
 from bot.core.handlers.handle_restart_cm import handle_restart
 from bot.core.handlers.handle_server_cm import handle_server_command
@@ -57,12 +57,23 @@ def add_handlers(bot):
     )
     bot.pyro.add_handler(download_handlers)
 
-
     leech_handlers = MessageHandler(
         handle_leech_command,
         filters=filters.command([get_command_pyro("LEECH")]) 
     )
     bot.pyro.add_handler(leech_handlers)
+
+    download_handlers = MessageHandler(
+        handle_zip_leech_command,
+        filters=filters.command([get_command_pyro("ZIPLEECH")]) 
+    )
+    bot.pyro.add_handler(download_handlers)
+
+    download_handlers = MessageHandler(
+        handle_unzip_leech_command,
+        filters=filters.command([get_command_pyro("UNZIPLEECH")]) 
+    )
+    bot.pyro.add_handler(download_handlers)
 
     myfiles_handlers = MessageHandler(
         handle_myfiles,

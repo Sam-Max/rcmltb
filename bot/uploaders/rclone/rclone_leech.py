@@ -3,22 +3,25 @@ from os import walk
 import os
 import time
 from pyrogram.errors import FloodWait
+from subprocess import run
 from bot import LOGGER, TG_SPLIT_SIZE, Bot, app
 from bot.core.get_vars import get_val
 from bot.utils.status_utils.misc_utils import MirrorStatus
 from bot.utils.status_utils.rclone_status import RcloneStatus
 from bot.uploaders.telegram.telegram_uploader import TelegramUploader
-from bot.utils.bot_utils.misc_utils import clean_path, get_rclone_config, get_readable_size
-from bot.utils.bot_utils.zip_utils import split_in_zip
+from bot.utils.bot_utils.misc_utils import clean_filepath, clean_path, get_rclone_config, get_readable_size
+from bot.utils.bot_utils.zip_utils import extract_archive, split_in_zip
 from subprocess import Popen, PIPE
 import asyncio
 
 
 
 class RcloneLeech:
-    def __init__(self, user_msg, chat_id, origin_dir, dest_dir, folder= False, path= "") -> None:
+    def __init__(self, user_msg, chat_id, origin_dir, dest_dir, folder= False, path= "", is_Zip= False, extract= False) -> None:
         self.__client = app if app is not None else Bot
         self.__path= path
+        self.__is_Zip =is_Zip
+        self.__extract =extract
         self.__user_msg = user_msg
         self.__chat_id = chat_id
         self.__origin_dir = origin_dir
@@ -92,6 +95,7 @@ class RcloneLeech:
             clean_path(self.__dest_dir)
             await self.__client.send_message(self.__chat_id, "Nothing else to upload!")  
         else:
+            pswd = None     
             f_path = os.path.join(self.__dest_dir, self.__path)
             f_size = os.path.getsize(f_path)
             if int(f_size) > TG_SPLIT_SIZE:
@@ -111,9 +115,38 @@ class RcloneLeech:
                     time.sleep(timer)
                 await self.__client.send_message(self.__chat_id, "Nothing else to upload!")
             else:
-                try:    
-                    await TelegramUploader(f_path, self.__user_msg, self.__chat_id).upload()
-                except FloodWait as fw:
-                    await asyncio.sleep(fw.seconds + 5)
-                    await TelegramUploader(f_path, message, self.__chat_id).upload()
-            clean_path(self.__dest_dir)    
+                if self.__is_Zip:
+                    try:
+                        base = os.path.basename(f_path)
+                        file_name = base.rsplit('.', maxsplit=1)[0]
+                        path = os.path.join(os.getcwd(), "Downloads", file_name + ".zip")
+                        LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
+                        size = os.path.getsize(f_path)
+                        if pswd is not None:
+                            if int(size) > TG_SPLIT_SIZE:
+                                run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{pswd}", path, f_path])     
+                            else:
+                                run(["7z", "a", "-mx=0", f"-p{pswd}", path, f_path])
+                        elif int(size) > TG_SPLIT_SIZE:
+                            run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, f_path])
+                        else:
+                            run(["7z", "a", "-mx=0", path, f_path])
+                    except FileNotFoundError:
+                        LOGGER.info('File to archive not found!')
+                        return
+                    await TelegramUploader(path, self.__user_msg, self.__chat_id).upload()      
+                    clean_filepath(f_path) 
+                elif self.__extract:
+                    extracted_path= await extract_archive(f_path, pswd)
+                    if extracted_path is not False:
+                        await TelegramUploader(extracted_path, self.__user_msg, self.__chat_id).upload()           
+                    else:
+                        await self.__client.send_message(self.__chat_id, 'Unable to extract archive!')
+                    clean_filepath(f_path)
+                else:
+                    try:    
+                        await TelegramUploader(f_path, self.__user_msg, self.__chat_id).upload()
+                    except FloodWait as fw:
+                        await asyncio.sleep(fw.seconds + 5)
+                        await TelegramUploader(f_path, message, self.__chat_id).upload()
+                    clean_path(self.__dest_dir)    
