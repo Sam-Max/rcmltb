@@ -49,7 +49,7 @@ async def progress_for_pyrogram(
                     ud_type,
                     tmp
                 ),
-                reply_markup=(InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data=(f"cancel_tgdown_{id}".encode('UTF-8')))]
+                reply_markup=(InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data=(f"cancel_telegram_{id}".encode('UTF-8')))]
                 ]))
             )                           
         except:
