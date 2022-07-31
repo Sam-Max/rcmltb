@@ -17,6 +17,7 @@ class TelegramUploader():
         self._sender= sender
 
     async def upload(self):
+        c_time= time.time()
         status= TelegramStatus(self._message)
         GLOBAL_TG_DOWNLOADER.add(status)
         try:
@@ -39,11 +40,11 @@ class TelegramUploader():
                         thumb= thumb_path,
                         supports_streaming=True,
                         duration= duration,
-                        progress= await status.progress,
+                        progress= status.progress,
                         progress_args=(
                             "Name: `{}`".format(caption),
                             f'**Status:** {MirrorStatus.STATUS_UPLOADING}',
-                            time.time()
+                            c_time
                         )
                     )
             else:
@@ -53,12 +54,11 @@ class TelegramUploader():
                     document= self._file, 
                     caption= f'`{caption}`',
                     parse_mode= enums.ParseMode.MARKDOWN,
-                    progress= await status.progress,
+                    progress= status.progress,
                     progress_args=(
                         "**Name:** `{}`".format(caption),
                         "**Status:** Uploading...",
-                        self._message,
-                        time.time()
+                        c_time
                     )
                 )
             await self._message.delete() 
