@@ -1,4 +1,5 @@
 import os
+from re import I, split
 from shutil import rmtree
 from bot import LOGGER
 from itertools import zip_longest
@@ -7,6 +8,12 @@ import os
 from subprocess import check_output
 from subprocess import check_output
 from json import loads
+from bot.utils.bot_utils.exceptions import NotSupportedExtractionArchive
+
+ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".tgz", ".lzma2",
+                ".zip", ".7z", ".z", ".rar", ".iso", ".wim", ".cab", ".apm", ".arj", ".chm",
+                ".cpio", ".cramfs", ".deb", ".dmg", ".fat", ".hfs", ".lzh", ".lzma", ".mbr",
+                ".msi", ".mslz", ".nsis", ".ntfs", ".rpm", ".squashfs", ".udf", ".vhd", ".xar"]
 
 def pairwise(iterable):
     "s -> (s0, s1), (s2, s3), (s4, s5), ..."
@@ -88,4 +95,12 @@ def get_video_resolution(path):
     except Exception as e:
         LOGGER.error(f"get_video_resolution: {e}")
         return 480, 320
+
+def get_base_name(orig_path: str):
+    ext = [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]
+    if len(ext) > 0:
+        ext = ext[0]
+        return split(ext + '$', orig_path, maxsplit=1, flags=I)[0]
+    else:
+        raise NotSupportedExtractionArchive('File format not supported for extraction')
 

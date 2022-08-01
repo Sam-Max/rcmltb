@@ -6,10 +6,11 @@ from pyrogram.errors import FloodWait
 from subprocess import run
 from bot import LOGGER, TG_SPLIT_SIZE, Bot, app
 from bot.core.get_vars import get_val
+from bot.utils.bot_utils.exceptions import NotSupportedExtractionArchive
 from bot.utils.status_utils.misc_utils import MirrorStatus
 from bot.utils.status_utils.rclone_status import RcloneStatus
 from bot.uploaders.telegram.telegram_uploader import TelegramUploader
-from bot.utils.bot_utils.misc_utils import clean_filepath, clean_path, get_rclone_config, get_readable_size
+from bot.utils.bot_utils.misc_utils import clean_filepath, clean_path, get_base_name, get_rclone_config, get_readable_size
 from bot.utils.bot_utils.zip_utils import extract_archive, split_in_zip
 from subprocess import Popen, PIPE
 import asyncio
@@ -120,7 +121,6 @@ class RcloneLeech:
                         base = os.path.basename(f_path)
                         file_name = base.rsplit('.', maxsplit=1)[0]
                         path = os.path.join(os.getcwd(), "Downloads", file_name + ".zip")
-                        LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
                         size = os.path.getsize(f_path)
                         if pswd is not None:
                             if int(size) > TG_SPLIT_SIZE:
@@ -134,19 +134,31 @@ class RcloneLeech:
                     except FileNotFoundError:
                         LOGGER.info('File to archive not found!')
                         return
-                    await TelegramUploader(path, self.__user_msg, self.__chat_id).upload()      
-                    clean_filepath(f_path) 
                 elif self.__extract:
-                    extracted_path= await extract_archive(f_path, pswd)
-                    if extracted_path is not False:
-                        await TelegramUploader(extracted_path, self.__user_msg, self.__chat_id).upload()           
-                    else:
-                        await self.__client.send_message(self.__chat_id, 'Unable to extract archive!')
-                    clean_filepath(f_path)
+                    try:
+                        if os.path.isfile(f_path):
+                            path = get_base_name(f_path)
+                            LOGGER.info("Extracting...")
+                        if self.pswd is not None:
+                            self.suproc = Popen(["bash", "pextract", f_path, self.pswd])
+                        else:
+                            self.suproc = Popen(["bash", "extract", f_path])
+                        self.suproc.wait()
+                        if self.suproc.returncode == -9:
+                            return
+                        elif self.suproc.returncode == 0:
+                            LOGGER.info(f"Extracted Path: {path}")
+                            clean_filepath(f_path)
+                        else:
+                            LOGGER.error('Unable to extract archive!')
+                    except NotSupportedExtractionArchive:
+                        LOGGER.info("Not any valid archive.")
                 else:
                     try:    
                         await TelegramUploader(f_path, self.__user_msg, self.__chat_id).upload()
                     except FloodWait as fw:
                         await asyncio.sleep(fw.seconds + 5)
                         await TelegramUploader(f_path, message, self.__chat_id).upload()
-                    clean_path(self.__dest_dir)    
+                    clean_path(self.__dest_dir) 
+                await TelegramUploader(path, self.__user_msg, self.__chat_id).upload()      
+                clean_filepath(f_path)   
