@@ -96,11 +96,8 @@ def get_video_resolution(path):
         LOGGER.error(f"get_video_resolution: {e}")
         return 480, 320
 
-def get_base_name(orig_path: str):
+def check_format_for_extraction(orig_path: str):
     ext = [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]
-    if len(ext) > 0:
-        ext = ext[0]
-        return split(ext + '$', orig_path, maxsplit=1, flags=I)[0]
-    else:
+    if len(ext) == 0:
         raise NotSupportedExtractionArchive('File format not supported for extraction')
 

@@ -20,7 +20,7 @@ from bot.core.handlers import handle_batch
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from bot.core.menus.callbacks.handle_copy_menu_cb import handle_setting_copy_menu_callback
-from bot.core.menus.callbacks.handle_leech_menu_cb import handle_setting_leech_menu_callback
+from bot.core.menus.callbacks.handle_leech_menu_cb import handle_leech_menu_callback
 from bot.core.menus.callbacks.handle_mirror_menu_cb import handle_mirror_menu_callback
 from bot.core.menus.callbacks.handle_mirrorset_menu_cb import handle_setting_mirroset_callback
 from bot.core.menus.callbacks.handle_myfiles_menu_cb import handle_setting_myfiles_menu_callback
@@ -171,9 +171,9 @@ def add_handlers(bot):
     )
 
     bot.pyro.add_handler(
-    CallbackQueryHandler(
-    handle_setting_leech_menu_callback, 
-    filters= filters.regex("leechmenu"))
+        CallbackQueryHandler(
+        handle_leech_menu_callback, 
+        filters= filters.regex("leechmenu"))
     )
 
     bot.add_event_handler(

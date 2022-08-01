@@ -1,10 +1,11 @@
-import os, configparser
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import os
+from configparser import ConfigParser
 import asyncio
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import json
-from bot import LOGGER
 from bot.core.set_vars import set_val
-from bot.utils.bot_utils.misc_utils import get_rclone_config, get_readable_size, pairwise
+from bot.utils.bot_utils.menu_utils import menu_maker_for_rclone
+from bot.utils.bot_utils.misc_utils import get_rclone_config, pairwise
 
 header = ""
 folder_icon= "📁"
@@ -14,8 +15,6 @@ async def leech_menu(
     message, 
     msg="",
     edit=False, 
-    isZip=False, 
-    extract=False, 
     drive_base="", 
     drive_name="", 
     submenu="", 
@@ -28,7 +27,7 @@ async def leech_menu(
 
     if submenu == "list_drive":
         path= os.path.join(os.getcwd(), "rclone.conf")
-        conf = configparser.ConfigParser()
+        conf = ConfigParser()
         conf.read(path)
 
         for j in conf.sections():
@@ -56,40 +55,51 @@ async def leech_menu(
            await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(menu))
 
     elif submenu == "list_dir":
-        
-        max_results= 10
-        offset=0
-        conf_path = get_rclone_config()
+        path = get_rclone_config()
         
         menu.append([InlineKeyboardButton(f" ✅ Select this folder", callback_data= f"leechmenu^start_leech_folder")])
-        cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}" ] 
-        process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE)
-        stdout, _ = await process.communicate()
+        
+        cmd = ["rclone", "lsjson", f'--config={path}', f"{drive_name}:{drive_base}"]
+        process = await asyncio.create_subprocess_exec(*cmd, 
+                    stdout=asyncio.subprocess.PIPE, 
+                    stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await process.communicate()
         stdout = stdout.decode().strip()
+        return_code = await process.wait()
 
-        try:
-            dir_info = json.loads(stdout)
-            dir_info.sort(key=lambda x: x["Size"])
-            set_val("JSON_RESULT_DATA", dir_info)
-        except Exception as e:
-            return await message.reply_text(e, quote=True)
+        if return_code != 0:
+           stderr = stderr.decode().strip()
+           return await message.reply_text(f'Error: {stderr}', quote=True)
 
-        if len(dir_info) == 0:
-           return menu.append([InlineKeyboardButton("❌Nothing to show❌", callback_data="leechmenu^pages")])
+        list_info = json.loads(stdout)
+        list_info.sort(key=lambda x: x["Size"])
+        set_val("JSON_RESULT_DATA", list_info)
 
-        total = len(dir_info)
-        next_offset = offset + max_results
+        if len(list_info) == 0:
+            menu.append([InlineKeyboardButton("❌Nothing to show❌", callback_data="leechmenu^pages")])
+            menu.append([InlineKeyboardButton("⬅️ Back", callback_data=f"leechmenu^{data_back_cb}")])
+            menu.append([InlineKeyboardButton("✘ Close Menu", callback_data=f"leechmenu^selfdest")])
+           
+            if edit:
+                return await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
+            else:
+                return await message.reply(header, reply_markup= InlineKeyboardMarkup(menu))
+        
+        total = len(list_info)
+        max_results= 10
+        offset= 0
         start = offset
         end = max_results + start
-        
-        if end > len(dir_info):
-            dir_info[offset:]    
-        elif offset >= len(dir_info):
-            dir_info= []    
-        else:
-            dir_info[start:end]    
+        next_offset = offset + max_results
 
-        list_dir_info(dir_info, menu, data_cb, isZip= isZip, extract= extract)    
+        if end > total:
+            list_info= list_info[offset:]    
+        elif offset >= total:
+            list_info= []    
+        else:
+            list_info= list_info[start:end]  
+
+        menu_maker_for_rclone(list_info, menu, data_cb)    
 
         if offset == 0 and total <= 10:
             menu.append([InlineKeyboardButton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", callback_data="leechmenu^pages")]) 
@@ -106,21 +116,7 @@ async def leech_menu(
         else:
             await message.reply(header, reply_markup= InlineKeyboardMarkup(menu))
 
-def list_dir_info(dir_info, menu, data_callback, isZip, extract):
-    folder = ""
-    index= 0
-    for dir in dir_info:
-        path = dir["Path"]
-        index += 1
-        set_val(f"{index}", path)
-        size= dir['Size']
-        size= get_readable_size(size)
-        mime_type= dir['MimeType']
-        if mime_type == 'inode/directory': 
-            folder= "📁"
-            menu.append([InlineKeyboardButton(f"{folder} {path}", f"leechmenu^{data_callback}^{index}^{isZip}^{extract}")])
-        else:
-            menu.append([InlineKeyboardButton(f"[{size}] {path}", f"leechmenu^start_leech_file^{index}^{isZip}^{extract}")])
+
  
     
            

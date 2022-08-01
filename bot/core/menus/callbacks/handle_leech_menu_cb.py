@@ -1,11 +1,12 @@
 import os
+from bot import LOGGER
 from bot.core.get_vars import get_val
 from bot.core.menus.menu_leech import leech_menu
 from bot.core.set_vars import set_val
 from bot.uploaders.rclone.rclone_leech import RcloneLeech
 
 
-async def handle_setting_leech_menu_callback(client, callback_query):
+async def handle_leech_menu_callback(client, callback_query):
     chat_id = callback_query.message.chat.id
     data = callback_query.data
     cmd = data.split("^")
@@ -50,13 +51,14 @@ async def handle_setting_leech_menu_callback(client, callback_query):
             )
 
     elif cmd[1] == "start_leech_file":
-        path = get_val(cmd[2])
-        is_Zip= cmd[3]
-        extract= cmd[4]
+        file_name = get_val(cmd[2])
+        is_Zip= get_val('IS_ZIP')
+        extract= get_val('EXTRACT')
         origin_dir= get_val("BASE_DIR")
-        origin_dir += path
-        dest_dir = os.path.join(os.getcwd(), "Downloads", origin_dir)
-        rclone_leech= RcloneLeech(mmes, chat_id, origin_dir, dest_dir, path=path, is_Zip=is_Zip, extract=extract)
+        origin_dir += file_name
+        name, _= os.path.splitext(file_name)
+        dest_dir = os.path.join(os.getcwd(), "Downloads", name)
+        rclone_leech= RcloneLeech(mmes, chat_id, origin_dir, dest_dir, path=file_name, is_Zip=is_Zip, extract=extract)
         await rclone_leech.leech()
 
     elif cmd[1] == "start_leech_folder":

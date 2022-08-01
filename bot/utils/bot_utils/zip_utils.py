@@ -61,13 +61,13 @@ async def extract_archive(path, password=""):
         if os.path.isfile(path):
             valid_exts = (".zip", ".7z", ".tar", ".gzip2", ".iso", ".wim", ".rar", ".tar.gz",".tar.bz2")
             if str(path).endswith(valid_exts):
-                userpath = os.path.join(os.getcwd(), "Downloads", "userdata")
+                userpath = os.path.join(os.getcwd(), "Downloads", "user")
                 if not os.path.exists(userpath):
                     os.mkdir(userpath)
-
-                extpath = os.path.join(userpath,os.path.basename(path))
+                    
+                extpath = os.path.join(userpath, os.path.basename(path))
                 for i in valid_exts:
-                    li = extpath.rsplit(i, 1)
+                    li = extpath.rsplit(i, maxsplit=1)
                     extpath = "".join(li)
 
                 if not os.path.exists(extpath):
