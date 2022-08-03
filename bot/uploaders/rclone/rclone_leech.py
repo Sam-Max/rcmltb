@@ -154,5 +154,4 @@ class RcloneLeech:
                 except FloodWait as fw:
                     await asyncio.sleep(fw.seconds + 5)
                     await TelegramUploader(path, message, self.__chat_id).upload()
-                clean_path(self.__dest_dir) 
                 clean_filepath(path)   
