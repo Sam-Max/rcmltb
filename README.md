@@ -8,6 +8,7 @@
 - Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
 - Zip/Unzip from Telegram to cloud
 - Leech files and folders from cloud to Telegram.
+- Extract and Zip files for leech and mirror.
 - Copy from cloud to cloud.
 - File manager for clouds (delete and calculate size)
 - Telegram button menus to interact with clouds.
@@ -26,6 +27,8 @@ zipmirror - mirror and zip to cloud
 mirrorbatch - mirror files in batch to cloud 
 mirrorset - select cloud/folder where to mirror
 leech - leech from cloud to Telegram
+unzipleech - leech and extract to telegram 
+zipleech - leech and zip to telegram 
 copy - copy from cloud to cloud
 myfiles - file manager
 logs - get logs from server
