@@ -6,12 +6,11 @@
 - Mirror direct download links and Mega.nz links to cloud
 - Mirror torrent and magnets links to cloud using qBittorrent.
 - Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
-- Zip/Unzip from Telegram to cloud
 - Leech files and folders from cloud to Telegram.
 - Extract and Zip files for leech and mirror.
 - Copy from cloud to cloud.
-- File manager for clouds (delete and calculate size)
-- Telegram button menus to interact with clouds.
+- File manager for cloud (delete and calculate size)
+- Telegram button menus to interact with cloud.
 - Renaming of Telegram files.
 - Progress bar when downloading and uploading.
 - Direct links Supported:
