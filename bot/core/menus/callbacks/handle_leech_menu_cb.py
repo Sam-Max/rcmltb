@@ -1,5 +1,5 @@
 import os
-from bot import LOGGER
+from bot import DOWNLOAD_DIR
 from bot.core.get_vars import get_val
 from bot.core.menus.menu_leech import leech_menu
 from bot.core.set_vars import set_val
@@ -14,10 +14,16 @@ async def handle_leech_menu_callback(client, callback_query):
     base_dir= get_val("BASE_DIR")
     rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
 
-    if callback_query.data == "pages":
+    msg= 'Select folder or file that you want to leech\n'
+    if get_val('IS_ZIP'):
+        msg= 'Select file that you want to zip\n'     
+    if get_val('EXTRACT'):
+        msg= 'Select file that you want to extract\n'
+
+    if data == "pages":
         await callback_query.answer()
 
-    elif cmd[1] == "list_drive_leech_menu":
+    if cmd[1] == "list_drive_leech_menu":
         set_val("BASE_DIR", "")
         base_dir = get_val("BASE_DIR")
         set_val("DEFAULT_RCLONE_DRIVE", cmd[2])
@@ -25,7 +31,7 @@ async def handle_leech_menu_callback(client, callback_query):
             callback_query, 
             mmes, 
             edit=True,
-            msg=f"Select folder or file that you want to leech\n\nPath:`{cmd[2]}:{base_dir}`", 
+            msg=f"{msg}\nPath:`{cmd[2]}:{base_dir}`", 
             drive_name= cmd[2], 
             submenu="list_dir", 
             data_cb="list_dir_leech_menu", 
@@ -42,7 +48,7 @@ async def handle_leech_menu_callback(client, callback_query):
             callback_query, 
             mmes, 
             edit=True, 
-            msg=f"Select folder or file that you want to leech\n\nPath:`{rclone_drive}:{rclone_dir}`", 
+            msg=f"{msg}\nPath:`{rclone_drive}:{rclone_dir}`", 
             drive_base=rclone_dir, 
             drive_name= rclone_drive, 
             submenu="list_dir", 
@@ -57,13 +63,13 @@ async def handle_leech_menu_callback(client, callback_query):
         origin_dir= get_val("BASE_DIR")
         origin_dir += file_name
         name, _= os.path.splitext(file_name)
-        dest_dir = os.path.join(os.getcwd(), "Downloads", name)
+        dest_dir = f'{DOWNLOAD_DIR}{name}'
         rclone_leech= RcloneLeech(mmes, chat_id, origin_dir, dest_dir, path=file_name, is_Zip=is_Zip, extract=extract)
         await rclone_leech.leech()
 
     elif cmd[1] == "start_leech_folder":
         origin_dir= get_val("BASE_DIR")
-        dest_dir = os.path.join(os.getcwd(), "Downloads", origin_dir)
+        dest_dir = f'{DOWNLOAD_DIR}{origin_dir}'
         rclone_leech= RcloneLeech(mmes, chat_id, origin_dir, dest_dir, folder= True)
         await rclone_leech.leech()
 
@@ -85,7 +91,7 @@ async def handle_leech_menu_callback(client, callback_query):
             callback_query,
             mmes, 
             edit=True, 
-            msg=f"Select folder where you want to store files\n\nPath:`{rclone_drive}:{rclone_dir}`", 
+            msg=f"{msg}\nPath:`{rclone_drive}:{rclone_dir}`", 
             drive_base=rclone_dir, 
             drive_name= rclone_drive, 
             submenu="list_dir", 

@@ -78,9 +78,7 @@ class RcloneMirror:
                     clean_filepath(self.__path)   
                return
 
-          msg = 'Successfully uploaded ✅\n\n'
-          msg += f"<b>Name:</b><code>{escape(name)}</code>"
-          LOGGER.info(msg)
+          msg = f"<b>Name:</b><code>{escape(name)}</code>"
 
           if os.path.isdir(self.__path):
                 if len(self.torrent_name) > 0:

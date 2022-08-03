@@ -72,8 +72,8 @@ class RcloneStatus:
                                         f"cancel_rclone_{self.id}".encode('UTF-8')))]
                                    ])))
                               except FloodWait as fw:
-                                        LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
-                                        time.sleep(fw.value)
+                                    LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
+                                    await asyncio.sleep(fw.value)
                               except:
                                    pass
                         if client_type == 'telethon':
@@ -82,7 +82,7 @@ class RcloneStatus:
                                    buttons= [[Button.inline("Cancel", f"cancel_rclone_{self.id}".encode('UTF-8'))]])
                               except FloodWaitError as fw:
                                    LOGGER.warning(f"FloodWait : Sleeping {fw.seconds}s")
-                                   time.sleep(fw.seconds)
+                                   await asyncio.sleep(fw.value)
                               except:
                                    pass 
             if data == '':

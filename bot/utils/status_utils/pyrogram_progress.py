@@ -1,7 +1,10 @@
+import asyncio
 import math
 import time
+from bot import LOGGER
 from bot.utils.status_utils.misc_utils import get_bottom_status
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.errors.exceptions import FloodWait
 
 FINISHED_PROGRESS_STR = "■"
 UN_FINISHED_PROGRESS_STR = "□"
@@ -43,15 +46,13 @@ async def progress_for_pyrogram(
         )
        
         try:
-            await message.edit(
-               "{}\n{}\n{}".format(
-                    file_name,
-                    ud_type,
-                    tmp
-                ),
+            await message.edit("{}\n{}\n{}".format(file_name,ud_type,tmp),
                 reply_markup=(InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data=(f"cancel_telegram_{id}".encode('UTF-8')))]
                 ]))
-            )                           
+            )  
+        except FloodWait as fw:
+            LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
+            await asyncio.sleep(fw.value)
         except:
             pass
 

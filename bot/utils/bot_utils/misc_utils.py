@@ -1,7 +1,6 @@
 import os
-from re import I, split
 from shutil import rmtree
-from bot import LOGGER
+from bot import DOWNLOAD_DIR, LOGGER
 from itertools import zip_longest
 from json import loads as jsnloads
 import os
@@ -36,9 +35,9 @@ def clean_filepath(file_path):
         pass
 
 def rename_file(old_path, new_name):
-    _, file_extension = os.path.splitext(old_path)
-    new_name= new_name + file_extension
-    new_path= os.path.join(os.getcwd(), "Downloads", new_name)
+    pathname, ext = os.path.splitext(old_path)
+    new_name= new_name + ext
+    new_path= f'{DOWNLOAD_DIR}{new_name}'
     os.rename(old_path, new_path)
     return new_path
 

@@ -3,7 +3,6 @@ __author__ = "Sam-Max"
 
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 import os
-import runpy
 from time import sleep, time
 import sys
 import time
@@ -31,6 +30,7 @@ def get_client():
     return qbitClient(host="localhost", port=8090)
 
 uptime = time.time()
+DOWNLOAD_DIR = None
 
 GLOBAL_RCLONE= set()
 GLOBAL_TG_DOWNLOADER= set()
@@ -82,9 +82,21 @@ except:
     EDIT_SLEEP_SECS = 10
 
 try:
+    DOWNLOAD_DIR = getConfig('DOWNLOAD_DIR')
+    if not DOWNLOAD_DIR.endswith("/"):
+        DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
+    API_ID = int(getConfig("API_ID"))
+    API_HASH = getConfig("API_HASH")
+    BOT_TOKEN = getConfig("BOT_TOKEN")
+    
+except:
+    LOGGER.error("One or more env variables missing! Exiting now")
+    exit(1)
+
+try:
     LOGGER.info("Initializing Aria2c")
     link = "https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent"
-    dire = os.path.join(os.getcwd(), "Downloads")
+    dire = DOWNLOAD_DIR.rstrip("/")
     aria2.add_uris([link], {'dir': dire})
     sleep(3)
     downloads = aria2.get_downloads()
@@ -122,14 +134,6 @@ if MEGA_KEY is not None:
             LOGGER.info("Mega username and password not provided. Starting mega in anonymous mode!")
 else:
     sleep(1.5)
-
-try:
-    API_ID = int(getConfig("API_ID"))
-    API_HASH = getConfig("API_HASH")
-    BOT_TOKEN = getConfig("BOT_TOKEN")
-except:
-    LOGGER.error("One or more env variables missing! Exiting now")
-    exit(1)
 
 #---------------------------
 

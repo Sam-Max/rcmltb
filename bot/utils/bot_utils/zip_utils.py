@@ -2,7 +2,7 @@
 
 import asyncio, shlex, os, time
 from typing import Union,List,Tuple
-from bot import LOGGER
+from bot import DOWNLOAD_DIR, LOGGER
 
 
 async def cli_call(cmd: Union[str,List[str]]) -> Tuple[str,str]:
@@ -61,7 +61,8 @@ async def extract_archive(path, password=""):
         if os.path.isfile(path):
             valid_exts = (".zip", ".7z", ".tar", ".gzip2", ".iso", ".wim", ".rar", ".tar.gz",".tar.bz2")
             if str(path).endswith(valid_exts):
-                userpath = os.path.join(os.getcwd(), "Downloads", "user")
+                time_s= str(time.time()).replace(".","") 
+                userpath = f'{DOWNLOAD_DIR}{time_s}'
                 if not os.path.exists(userpath):
                     os.mkdir(userpath)
                     

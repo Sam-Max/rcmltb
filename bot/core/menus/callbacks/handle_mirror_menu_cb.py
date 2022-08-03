@@ -1,6 +1,6 @@
 import asyncio
 import os
-from bot import LOGGER, TG_SPLIT_SIZE
+from bot import DOWNLOAD_DIR, LOGGER, TG_SPLIT_SIZE
 from bot.core.get_vars import get_val
 from pyrogram import filters
 from subprocess import run
@@ -40,7 +40,6 @@ async def handle_mirror_menu_callback(client, query):
 
 async def mirror_file(client, message, file, tag, pswd, isZip, extract, new_name="", is_rename=False):
         mess_age= await message.reply_text('Starting download...', quote=True)
-        DOWNLOAD_DIR = os.path.join(os.getcwd(), "Downloads", "")
         media_path= await TelegramDownloader(file, client, mess_age, DOWNLOAD_DIR).download() 
         if media_path is None:
             return
@@ -49,7 +48,8 @@ async def mirror_file(client, message, file, tag, pswd, isZip, extract, new_name
                 m_path = media_path
                 base = os.path.basename(m_path)
                 file_name = base.rsplit('.', maxsplit=1)[0]
-                path = os.path.join(os.getcwd(), "Downloads", file_name + ".zip")
+                file_name = file_name + ".zip"
+                path = f'{DOWNLOAD_DIR}{file_name}'
                 LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
                 size = os.path.getsize(m_path)
                 if pswd is not None:

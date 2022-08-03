@@ -12,7 +12,8 @@ from time import sleep, time
 from psutil import cpu_percent, virtual_memory
 from bencoding import bencode, bdecode
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot import GLOBAL_QBIT, uptime
+from pyrogram.errors.exceptions import FloodWait
+from bot import DOWNLOAD_DIR, GLOBAL_QBIT, uptime
 from re import search as re_search
 from bot import get_client, TORRENT_TIMEOUT, LOGGER
 from bot.utils.bot_utils import human_format
@@ -35,7 +36,8 @@ class QbDownloader:
         self.__rechecked = False
 
     async def add_qb_torrent(self, link):
-        self.__path =  os.path.join(os.getcwd(), "Downloads", str(time()).replace(".",""))
+        time_s= str(time.time()).replace(".","") 
+        self.__path= f'{DOWNLOAD_DIR}{time_s}'
         self.client = get_client()
         try:
             if link.startswith('magnet:'):
@@ -101,6 +103,9 @@ class QbDownloader:
                     await self.__message.edit(text=update_message, reply_markup=(InlineKeyboardMarkup([
                                             [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
                                             ])))
+                except FloodWait as fw:
+                    LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
+                    await asyncio.sleep(fw.value)
                 except Exception:
                     pass
 

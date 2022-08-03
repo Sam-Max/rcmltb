@@ -5,8 +5,9 @@ import time
 import shutil
 import aria2p
 from psutil import cpu_percent, virtual_memory
-from bot import LOGGER, uptime
+from bot import DOWNLOAD_DIR, LOGGER, uptime
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.errors.exceptions import FloodWait
 from bot import aria2
 from bot.utils.bot_utils import human_format
 from bot.utils.bot_utils.bot_utils import is_magnet
@@ -31,7 +32,8 @@ class AriaDownloader():
             return True, "", download.gid
 
     async def execute(self):
-        path= os.path.join(os.getcwd(), "Downloads", str(time.time()).replace(".","")) 
+        time_s= str(time.time()).replace(".","") 
+        path= f'{DOWNLOAD_DIR}{time_s}'
         if is_magnet(self._dl_link):
             err_message= "Not support for magnet links"
             return False, err_message, None  
@@ -77,6 +79,9 @@ class AriaDownloader():
                                             [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
                                             ])))
                                     update_message1 = update_message
+                                except FloodWait as fw:
+                                    LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
+                                    await asyncio.sleep(fw.value)
                                 except Exception as e:
                                     pass
 

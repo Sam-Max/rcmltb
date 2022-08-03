@@ -4,8 +4,9 @@ import pathlib
 import shutil
 import time
 from psutil import cpu_percent, virtual_memory
-from bot import LOGGER, uptime
+from bot import DOWNLOAD_DIR, LOGGER, uptime
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.errors.exceptions import FloodWait
 from bot.utils.bot_utils import human_format
 from bot.utils.bot_utils.human_format import human_readable_bytes
 from megasdkrestclient import MegaSdkRestClient, errors, constants
@@ -28,7 +29,8 @@ class MegaDownloader():
         self._aloop = asyncio.get_event_loop()
 
     async def execute(self):
-        path= os.path.join(os.getcwd(), "Downloads", str(time.time()).replace(".","")) 
+        time_s= str(time.time()).replace(".","") 
+        path= f'{DOWNLOAD_DIR}{time_s}'
         pathlib.Path(path).mkdir(parents=True, exist_ok=True)
         
         try:
@@ -53,7 +55,7 @@ class MegaDownloader():
                 
                 try:
                     self._update_info = dl_info
-                    await self.aria_progress_update()
+                    await self.progress_update()
                 except Exception as e:
                     LOGGER.info(e)
             else:
@@ -64,7 +66,7 @@ class MegaDownloader():
                     error_reason = dl_info["error_string"]
                 return False, error_reason, None
 
-    async def aria_progress_update(self):
+    async def progress_update(self):
         update_message1= ""
         sleeps= False
         
@@ -77,6 +79,9 @@ class MegaDownloader():
                     await self._user_message.edit(text=update_message, reply_markup=(InlineKeyboardMarkup([
                                             [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
                                             ])))
+               except FloodWait as fw:
+                    LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
+                    await asyncio.sleep(fw.value)
                except Exception:
                     pass
                if sleeps:

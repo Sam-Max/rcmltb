@@ -4,7 +4,7 @@ import os
 import time
 from pyrogram.errors import FloodWait
 from subprocess import run
-from bot import LOGGER, TG_SPLIT_SIZE, Bot, app
+from bot import DOWNLOAD_DIR, LOGGER, TG_SPLIT_SIZE, Bot, app
 from bot.core.get_vars import get_val
 from bot.utils.bot_utils.exceptions import NotSupportedExtractionArchive
 from bot.utils.status_utils.misc_utils import MirrorStatus
@@ -118,7 +118,8 @@ class RcloneLeech:
                     try:
                         base = os.path.basename(f_path)
                         file_name = base.rsplit('.', maxsplit=1)[0]
-                        path = os.path.join(os.getcwd(), "Downloads", self.__dest_dir, file_name + ".zip")
+                        file_name = file_name + ".zip"
+                        path = f'{DOWNLOAD_DIR}{self.__dest_dir}/{file_name}'
                         size = os.path.getsize(f_path)
                         if self.__pswd is not None:
                             if int(size) > TG_SPLIT_SIZE:
