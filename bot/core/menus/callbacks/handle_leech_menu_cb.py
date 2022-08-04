@@ -16,9 +16,14 @@ async def handle_leech_menu_callback(client, callback_query):
 
     msg= 'Select folder or file that you want to leech\n'
     if get_val('IS_ZIP'):
-        msg= 'Select file that you want to zip\n'     
+        msg= 'Select file that you want to zip\n' 
+        global zip
+        zip = get_val('IS_ZIP')
+        
     if get_val('EXTRACT'):
         msg= 'Select file that you want to extract\n'
+        global ext
+        ext= get_val('EXTRACT')   
 
     if data == "pages":
         await callback_query.answer()
@@ -58,20 +63,18 @@ async def handle_leech_menu_callback(client, callback_query):
 
     elif cmd[1] == "start_leech_file":
         file_name = get_val(cmd[2])
-        is_Zip= get_val('IS_ZIP')
-        extract= get_val('EXTRACT')
         origin_dir= get_val("BASE_DIR")
         origin_dir += file_name
         name, _= os.path.splitext(file_name)
         dest_dir = f'{DOWNLOAD_DIR}{name}'
-        rclone_leech= RcloneLeech(mmes, chat_id, origin_dir, dest_dir, path=file_name, is_Zip=is_Zip, extract=extract)
-        await rclone_leech.leech()
+        rc_lch= RcloneLeech(mmes, chat_id, origin_dir, dest_dir, path=file_name, is_Zip=zip, extract=ext)
+        await rc_lch.leech()
 
     elif cmd[1] == "start_leech_folder":
         origin_dir= get_val("BASE_DIR")
         dest_dir = f'{DOWNLOAD_DIR}{origin_dir}'
-        rclone_leech= RcloneLeech(mmes, chat_id, origin_dir, dest_dir, folder= True)
-        await rclone_leech.leech()
+        rc_lch= RcloneLeech(mmes, chat_id, origin_dir, dest_dir, is_Zip=zip, extract=ext, folder=True)
+        await rc_lch.leech()
 
     elif cmd[1] == "back":
         data_b_cb= "back"

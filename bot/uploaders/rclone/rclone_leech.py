@@ -1,6 +1,7 @@
 from configparser import ConfigParser
 from os import walk
 import os
+from re import search
 import time
 from pyrogram.errors import FloodWait
 from subprocess import run
@@ -10,11 +11,10 @@ from bot.utils.bot_utils.exceptions import NotSupportedExtractionArchive
 from bot.utils.status_utils.misc_utils import MirrorStatus
 from bot.utils.status_utils.rclone_status import RcloneStatus
 from bot.uploaders.telegram.telegram_uploader import TelegramUploader
-from bot.utils.bot_utils.misc_utils import check_format_for_extraction, clean_filepath, clean_path, get_rclone_config, get_readable_size
+from bot.utils.bot_utils.misc_utils import check_extract_format, clean_filepath, clean_path, get_rclone_config, get_readable_size
 from bot.utils.bot_utils.zip_utils import extract_archive, split_in_zip
 from subprocess import Popen, PIPE
-import asyncio
-
+from asyncio import sleep
 
 
 class RcloneLeech:
@@ -26,14 +26,15 @@ class RcloneLeech:
         self.__pswd = pswd
         self.__user_msg = user_msg
         self.__chat_id = chat_id
-        self.__origin_dir = origin_dir
-        self.__dest_dir = dest_dir
+        self.__origin_path = origin_dir
+        self.__dest_path = dest_dir
         self.__folder= folder
+        self.__total_files= 0
+        self.suproc= None
 
     async def leech(self):
         await self.__user_msg.edit("Starting download...")
         origin_drive = get_val("DEFAULT_RCLONE_DRIVE")
-        tg_split_size= get_readable_size(TG_SPLIT_SIZE) 
         conf_path = get_rclone_config()
         conf = ConfigParser()
         conf.read(conf_path)
@@ -48,70 +49,93 @@ class RcloneLeech:
                     LOGGER.info(f"{drive_name} Download Detected.")
                 break
 
-        rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{self.__origin_dir}', f'{self.__dest_dir}', '-P']
+        rclone_copy_cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{self.__origin_path}', f'{self.__dest_path}', '-P']
         self.__rclone_pr = Popen(rclone_copy_cmd, stdout=(PIPE),stderr=(PIPE))
+        
         rclone_status= RcloneStatus(self.__rclone_pr, self.__user_msg, self.__path)
-        status= await rclone_status.progress(status_type= MirrorStatus.STATUS_DOWNLOADING, client_type='pyrogram')
-        if status== False:return      
+        status= await rclone_status.progress(
+            status_type= MirrorStatus.STATUS_DOWNLOADING, 
+            client_type='pyrogram')
+        if status== False:
+            return      
 
         if self.__folder:
-            for root, _, files in walk(self.__dest_dir):
-                if len(files) == 0:continue 
-                for i, file in enumerate(sorted(files)):  
-                    timer = 60  
-                    if i < 25:
-                        timer = 5
-                    if i < 50 and i > 25:
-                        timer = 10
-                    if i < 100 and i > 50:
-                        timer = 15
-                    if i < 150 and i > 100:
-                        timer = 20
-                    if i < 200 and i > 150:
-                        timer = 25
+            for root, _, files in walk(self.__dest_path):
+                if len(files) == 0:
+                    continue 
+                for file in sorted(files):  
+                    self.__total_files += 1    
                     f_path = os.path.join(root, file)
                     f_size = os.path.getsize(f_path)
+                    if f_size == 0:
+                        LOGGER.error(f"{f_size} size is zero, telegram don't upload zero size files")
+                        continue
                     if int(f_size) > TG_SPLIT_SIZE:
-                        message= await self.__client.send_message(self.__chat_id, f"File larger than {tg_split_size}, Splitting...")     
+                        message= await self.__client.send_message(self.__chat_id, f"Splitting...")     
                         split_dir= await split_in_zip(f_path, size=TG_SPLIT_SIZE) 
-                        clean_filepath(f_path)
                         dir_list= os.listdir(split_dir)
                         dir_list.sort() 
-                        for file in dir_list :
-                            f_path = os.path.join(split_dir, file)
+                        for file_ in dir_list :
+                            f_path = os.path.join(split_dir, file_)
                             try:
-                                await TelegramUploader(f_path, message, self.__chat_id).upload()
+                                tg_up= TelegramUploader(f_path, message, self.__chat_id)
+                                await tg_up.upload()
                             except FloodWait as fw:
-                                await asyncio.sleep(fw.seconds + 5)
-                                await TelegramUploader(f_path, message, self.__chat_id).upload()
-                            time.sleep(timer)
+                                await sleep(fw.seconds + 5)
+                                tg_up= TelegramUploader(f_path, message, self.__chat_id)
+                                await tg_up.upload()
+                            await sleep(1)
                     else:
-                        try:
-                            await TelegramUploader(f_path, self.__user_msg, self.__chat_id).upload()
-                        except FloodWait as fw:
-                            await asyncio.sleep(fw.seconds + 5)
-                            await TelegramUploader(f_path, self.__user_msg, self.__chat_id).upload()
-                        time.sleep(timer)
-            clean_path(self.__dest_dir)
-            await self.__client.send_message(self.__chat_id, "Nothing else to upload!")  
+                        if self.__is_Zip:
+                            pass
+                        if self.__extract:
+                           if os.path.isdir(self.__dest_path):
+                                if file.endswith((".zip", ".7z")) or search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$', file) \
+                                or (file.endswith(".rar") and not search(r'\.part\d+\.rar$', file)):
+                                    if self.__pswd is not None:
+                                        self.suproc = Popen(["7z", "x", f"-p{self.pswd}", f_path, f"-o{root}", "-aot"])
+                                    else:
+                                        self.suproc = Popen(["7z", "x", f_path, f"-o{root}", "-aot"])
+                                    self.suproc.wait()
+                                    if self.suproc.returncode == -9:
+                                        return
+                                    elif self.suproc.returncode != 0:
+                                        LOGGER.error('Unable to extract archive splits!')
+                                if self.suproc is not None and self.suproc.returncode == 0:
+                                    if file.endswith((".rar", ".zip", ".7z")) or search(r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$', file):
+                                        del_path = os.path.join(root, file)
+                                        os.remove(del_path)
+                        if os.path.exists(f_path):
+                            try:
+                                tg_up= TelegramUploader(f_path, self.__user_msg, self.__chat_id)
+                                await tg_up.upload()
+                            except FloodWait as fw:
+                                await sleep(fw.seconds + 5)
+                                tg_up= TelegramUploader(f_path, self.__user_msg, self.__chat_id)
+                                await tg_up.upload()
+                            await sleep(1)
+                clean_path(self.__dest_path)
+                msg= f'Leech completed!\nTotal: {self.__total_files}'
+                await self.__client.send_message(self.__chat_id, msg)  
         else:
-            f_path = os.path.join(self.__dest_dir, self.__path)
+            f_path = os.path.join(self.__dest_path, self.__path)
             f_size = os.path.getsize(f_path)
             if int(f_size) > TG_SPLIT_SIZE:
-                message= await self.__client.send_message(self.__chat_id, f"File larger than {tg_split_size}, Splitting...")     
+                message= await self.__client.send_message(self.__chat_id, f"Splitting...")     
                 split_dir= await split_in_zip(f_path, size=TG_SPLIT_SIZE) 
                 os.remove(f_path) 
                 dir_list= os.listdir(split_dir)
                 dir_list.sort() 
                 for file in dir_list :
-                    timer = 5
                     f_path = os.path.join(split_dir, file)
                     try:
-                        await TelegramUploader(f_path, message, self.__chat_id).upload()
+                        tg_up= TelegramUploader(f_path, message, self.__chat_id)
+                        await tg_up.upload()
                     except FloodWait as fw:
-                        await asyncio.sleep(fw.seconds + 5)
-                        await TelegramUploader(f_path, message, self.__chat_id).upload()
-                    time.sleep(timer)
+                        await sleep(fw.seconds + 5)
+                        tg_up= TelegramUploader(f_path, message, self.__chat_id)
+                        await tg_up.upload()
+                    await sleep(1)
                 await self.__client.send_message(self.__chat_id, "Nothing else to upload!")
             else:
                 if self.__is_Zip:
@@ -119,7 +143,7 @@ class RcloneLeech:
                         base = os.path.basename(f_path)
                         file_name = base.rsplit('.', maxsplit=1)[0]
                         file_name = file_name + ".zip"
-                        path = f'{DOWNLOAD_DIR}{self.__dest_dir}/{file_name}'
+                        path = f'{DOWNLOAD_DIR}{self.__dest_path}/{file_name}'
                         size = os.path.getsize(f_path)
                         if self.__pswd is not None:
                             if int(size) > TG_SPLIT_SIZE:
@@ -136,23 +160,26 @@ class RcloneLeech:
                 elif self.__extract:
                     try:
                         if os.path.isfile(f_path):
-                            check_format_for_extraction(f_path)
+                            check_extract_format(f_path)
                             LOGGER.info("Extracting...")
-                        ex_path= await extract_archive(f_path, self.__pswd)
-                        if ex_path is False:
-                            LOGGER.info('Unable to extract archive!')
                         else:
-                            files= os.listdir(ex_path)     
-                            for file in files:  
-                                path = os.path.join(ex_path, file)
+                            ex_path= await extract_archive(f_path, self.__pswd)
+                            if ex_path is False:
+                                LOGGER.info('Unable to extract archive!')
+                            else:
+                                files= os.listdir(ex_path)     
+                                for file in files:  
+                                    path = os.path.join(ex_path, file)
                     except NotSupportedExtractionArchive:
                         LOGGER.info("Not any valid archive.")
                         return 
                 else:
                     path= f_path
                 try:    
-                    await TelegramUploader(path, self.__user_msg, self.__chat_id).upload()
+                    tg_up= TelegramUploader(path, self.__user_msg, self.__chat_id)
+                    await tg_up.upload()
                 except FloodWait as fw:
-                    await asyncio.sleep(fw.seconds + 5)
-                    await TelegramUploader(path, message, self.__chat_id).upload()
+                    await sleep(fw.seconds + 5)
+                    tg_up= TelegramUploader(path, message, self.__chat_id)
+                    await tg_up.upload()
                 clean_filepath(path)   
