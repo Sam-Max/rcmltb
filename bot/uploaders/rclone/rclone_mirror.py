@@ -78,7 +78,7 @@ class RcloneMirror:
                     clean_filepath(self.__path)   
                return
 
-          msg = f"<b>Name:</b><code>{escape(name)}</code>"
+          msg = f"<b>Name: </b><code>{name}</code>"
 
           if os.path.isdir(self.__path):
                 if len(self.torrent_name) > 0:

@@ -1,5 +1,6 @@
 #Modified from: (c) YashDK [yash-dk@github]
 
+import math
 import pathlib
 import shutil
 import time
@@ -39,7 +40,7 @@ class MegaDownloader():
             error_reason = str(dict(e.message)["message"]).title()
             return False, error_reason, None
 
-        LOGGER.info("MegaDL Task Running....")
+        LOGGER.info("MegaDL Running....")
         self._gid  = dl_add_info["gid"]
         dl_info = await self._aloop.run_in_executor(None, partial(self.__mega_client.getDownloadInfo,dl_add_info["gid"]))
         self._path = os.path.join(dl_add_info["dir"], dl_info["name"])
@@ -99,7 +100,7 @@ class MegaDownloader():
 
         msg =  "<b>Name:</b> {}\n".format(update["name"])
         msg += "<b>Status:</b> Downloading...\n"
-        msg += "{}\n".format(self.progress_bar((update["completed_length"]/update["total_length"])))
+        msg += "{}\n".format(self.__get_progress_bar(update["completed_length"], update["total_length"]))
         msg += "<b>P:</b> {}%\n".format(round((update["completed_length"]/update["total_length"])*100, 2))
         msg += "<b>Downloaded:</b> {} of {}\n".format(human_readable_bytes(update["completed_length"]),
             human_readable_bytes(update["total_length"]))
@@ -107,20 +108,16 @@ class MegaDownloader():
         msg += bottom_status
         return msg
 
-    def progress_bar(self, percentage):
-        """Returns a progress bar for download
-        """
-        #percentage is on the scale of 0-1
-        comp ="▪️"
-        ncomp ="▫️"
-        pr = ""
-
-        for i in range(1,11):
-            if i <= int(percentage*10):
-                pr += comp
-            else:
-                pr += ncomp
-        return pr
+    def __get_progress_bar(self, completed_length, total_length):
+        completed = completed_length / 8
+        total = total_length / 8
+        p = 0 if total == 0 else round(completed * 100 / total)
+        p = min(max(p, 0), 100)
+        cFull = p // 8
+        p_str = '■' * cFull
+        p_str += '□' * (12 - cFull)
+        p_str = f"[{p_str}]"
+        return p_str
 
     async def remove_mega_dl(self, gid):
         await self._aloop.run_in_executor(None, partial(self.__mega_client.cancelDl, gid))

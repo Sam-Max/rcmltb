@@ -26,4 +26,4 @@ class RcloneCopy:
         status= await rclone_status.progress(status_type= MirrorStatus.STATUS_COPYING, client_type='telethon')
         
         if status== False:return
-        await self.__user_msg.edit("Copied Successfully ✅")
+        await self.__user_msg.edit("Copied Successfully!!")

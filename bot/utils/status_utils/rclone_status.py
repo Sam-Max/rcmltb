@@ -1,4 +1,5 @@
 import asyncio
+import math
 from os.path import basename
 from random import randrange
 import re
@@ -47,10 +48,10 @@ class RcloneStatus:
                 nstr = nstr.split(',')
                 percent = nstr[1].strip('% ')
                 try:
-                    percent = int(percent)
+                    percentage = int(percent)
                 except:
-                    percent = 0
-                prg = self.__progress_bar(percent)
+                    percentage = 0
+                prg = self.__get_progress_bar(percentage)
 
                 if status_type == MirrorStatus.STATUS_UPLOADING:
                     msg = '**Name:** `{}`\n**Status:** {}\n{}\n**Uploaded:** {}\n**Speed:** {} | **ETA:** {}\n'.format(
@@ -103,19 +104,10 @@ class RcloneStatus:
                 await asyncio.sleep(2)
                 self._process.stdout.flush()
 
-     def __progress_bar(self, percentage):
-        comp ="▪️"
-        ncomp ="▫️"
-        pr = ""
 
-        try:
-            percentage=int(percentage)
-        except:
-            percentage = 0
-
-        for i in range(1, 11):
-            if i <= int(percentage/10):
-                pr += comp
-            else:
-                pr += ncomp
-        return pr
+     def __get_progress_bar(self, percentage):
+        progress = "{0}{1}\n**P:** {2}%".format(
+            ''.join(['■' for i in range(math.floor(percentage / 10))]),
+            ''.join(['□' for i in range(10 - math.floor(percentage / 10))]),
+            round(percentage, 2))
+        return progress
