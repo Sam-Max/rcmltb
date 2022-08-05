@@ -64,16 +64,16 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                         return await message.reply_text(tag + " " + error)    
                     mess_age= await message.reply_text('Qbit download started...')
                     qbit_dl= QbDownloader(mess_age)
-                    state, message, path, name= await qbit_dl.add_qb_torrent(link)
+                    state, msg, path, name= await qbit_dl.add_qb_torrent(link)
                     if not state:
-                        await mess_age.edit(message)
+                        await mess_age.edit(msg)
                         clean_path(path)
                     else:
                         await RcloneMirror(path, mess_age, tag, torrent_name= name).mirror()
                 if file.mime_type != "application/x-bittorrent":
                         name= file.file_name
                         size= get_readable_size(file.file_size)
-                        msg = f"<b>Which name do you want to use?</b>\n\n<b>Name</b>: `{name}`\n\n<b>Size</b>: `{size}`"
+                        header_msg = f"<b>Which name do you want to use?</b>\n\n<b>Name</b>: `{name}`\n\n<b>Size</b>: `{size}`"
                         set_val("FILE", file)
                         set_val("IS_ZIP", isZip)
                         set_val("EXTRACT", extract)
@@ -81,7 +81,7 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                         keyboard = [[InlineKeyboardButton(f"📄 By default", callback_data= f'mirrormenu_default'),
                                 InlineKeyboardButton(f"📝 Rename", callback_data='mirrormenu_rename')],
                                 [InlineKeyboardButton("Close", callback_data= f"mirrorsetmenu^selfdest")]]
-                        return await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(keyboard))
+                        return await message.reply_text(header_msg, quote= True, reply_markup= InlineKeyboardMarkup(keyboard))
                 else:
                     return await message.reply_text("Use qbmirror command to mirror torrent file")   
             else:
@@ -111,9 +111,9 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                 if isQbit and (is_magnet(link) or os.path.exists(link)):
                     mess_age= await message.reply_text('Qbit download started...')
                     qbit_dl= QbDownloader(mess_age)
-                    state, message, path, name = await qbit_dl.add_qb_torrent(link)
+                    state, msg, path, name = await qbit_dl.add_qb_torrent(link)
                     if not state:
-                        await mess_age.edit(message)
+                        await mess_age.edit(msg)
                         clean_path(path)
                     else:
                         await RcloneMirror(path, mess_age, tag, torrent_name= name).mirror()
@@ -126,9 +126,9 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                     if MEGA_KEY is not None:
                         mess_age= await message.reply_text('Mega download started...')     
                         mega_dl= MegaDownloader(link, mess_age)   
-                        state, message, path= await mega_dl.execute()
+                        state, msg, path= await mega_dl.execute()
                         if not state:
-                            await mess_age.edit(message)
+                            await mess_age.edit(msg)
                             clean_path(path)
                         else:
                             await RcloneMirror(path, mess_age, tag).mirror()
@@ -146,9 +146,9 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                                 return await message.reply_text(str(e))
                     mess_age= await message.reply_text('Starting Download...')     
                     aria2= AriaDownloader(link, mess_age)   
-                    state, message, path= await aria2.execute()
+                    state, msg, path= await aria2.execute()
                     if not state:
-                        await mess_age.edit(message)
+                        await mess_age.edit(msg)
                     else:
                         await RcloneMirror(path, mess_age, tag).mirror()  
         else:

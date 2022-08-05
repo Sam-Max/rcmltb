@@ -6,7 +6,6 @@
 import asyncio
 from hashlib import sha1
 from base64 import b16encode, b32decode
-import os
 import shutil
 from time import sleep, time
 from psutil import cpu_percent, virtual_memory
@@ -36,7 +35,7 @@ class QbDownloader:
         self.__rechecked = False
 
     async def add_qb_torrent(self, link):
-        time_s= str(time.time()).replace(".","") 
+        time_s= str(time()).replace(".","") 
         self.__path= f'{DOWNLOAD_DIR}{time_s}'
         self.client = get_client()
         try:
@@ -52,7 +51,7 @@ class QbDownloader:
                 return False, "This Torrent already added!", "", ""
             
             if link.startswith('magnet:'):
-                op = self.client.torrents_add(link, save_path=self.__path)
+                op = self.client.torrents_add(urls=[link], save_path=self.__path)
             else:
                 op = self.client.torrents_add(torrent_files=[link], save_path=self.__path)
             sleep(0.3)
