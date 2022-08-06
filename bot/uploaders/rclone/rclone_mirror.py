@@ -2,7 +2,6 @@ from configparser import ConfigParser
 import os
 import subprocess
 from subprocess import Popen 
-from html import escape
 from bot.core.get_vars import get_val
 from bot.utils.status_utils.misc_utils import MirrorStatus
 from bot.utils.status_utils.rclone_status import RcloneStatus
@@ -69,7 +68,8 @@ class RcloneMirror:
 
           self.__rclone_pr = Popen(rclone_copy_cmd, stdout=(subprocess.PIPE),stderr=(subprocess.PIPE))
           rclone_status= RcloneStatus(self.__rclone_pr, self.__user_msg, name)
-          status= await rclone_status.progress(status_type=MirrorStatus.STATUS_UPLOADING, client_type='pyrogram')
+          status= await rclone_status.progress(status_type=MirrorStatus.STATUS_UPLOADING, 
+                                               client_type='pyrogram')
           
           if status == False:
                if os.path.isdir(self.__path):

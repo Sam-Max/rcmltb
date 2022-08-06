@@ -1,7 +1,7 @@
 from asyncio import sleep
 import os
 import time
-from bot import GLOBAL_TG_DOWNLOADER, Bot, app
+from bot import Bot, app, status_dict
 from bot.utils.bot_utils.misc_utils import get_media_info, get_video_resolution
 from bot.utils.bot_utils.screenshot import screenshot
 from pyrogram import enums
@@ -21,9 +21,7 @@ class TelegramUploader():
 
     async def upload(self):
         status= TelegramStatus(self._message)
-        GLOBAL_TG_DOWNLOADER.add(status)
         await self.__upload_file(self._path, status)
-        GLOBAL_TG_DOWNLOADER.remove(status)
 
     async def __upload_file(self, up_path, status):
         try:
@@ -67,6 +65,7 @@ class TelegramUploader():
                         self.current_time
                     )
                 )
+            del status_dict[status.id]
         except FloodWait as f:
             sleep(f.value)
         except Exception as e:

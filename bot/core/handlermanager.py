@@ -15,6 +15,7 @@ from bot.core.handlers.handle_server_cm import handle_server_command
 from bot.core.handlers.handle_mirrorset_cm import handle_mirrorset_command
 from bot.core.handlers.handle_speedtest import speed_handler
 from bot.core.handlers.handle_start import start_handler
+from bot.core.handlers.handle_status import status_handler
 from bot.core.handlers.handle_test_cm import handle_test_command
 from bot.core.handlers import handle_batch
 from pyrogram import filters
@@ -36,6 +37,12 @@ def add_handlers(bot):
     download_handlers = MessageHandler(
         handle_mirror_command,
         filters=filters.command([get_command_pyro("MIRROR")]) 
+    )
+    bot.pyro.add_handler(download_handlers)
+
+    download_handlers = MessageHandler(
+        status_handler,
+        filters=filters.command([get_command_pyro("STATUS")]) 
     )
     bot.pyro.add_handler(download_handlers)
 

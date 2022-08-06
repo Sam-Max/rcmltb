@@ -1,29 +1,69 @@
 from asyncio import sleep
-from random import randrange
-from bot import Bot
-from bot.utils.status_utils.pyrogram_progress import progress_for_pyrogram
+import math
+import time
+from bot import LOGGER, Bot, status_dict
+from bot.utils.status_utils.misc_utils import get_bottom_status, humanbytes, time_formatter
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.errors.exceptions import FloodWait, MessageNotModified
+
+FINISHED_PROGRESS_STR = "■"
+UN_FINISHED_PROGRESS_STR = "□"
 
 class TelegramStatus:
      def __init__(self, user_message):
-        self.id = self.__create_id(8)
         self._user_message = user_message
+        self.id = self._user_message.id
         self.cancelled = False
+        self._status_msg = ""
+        status_dict[self.id] = self
 
-     def __create_id(self, count):
-        map = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-        id = ''
-        i = 0
-        while i < count:
-            rnd = randrange(len(map))
-            id += map[rnd]
-            i += 1
-        return id
+     def get_status_msg(self):
+         return self._status_msg
 
      async def progress(self, current, total, name, status, current_time):
-        if self.cancelled:
-               await sleep(1.5)  
-               await self._user_message.edit('Process cancelled!.')
-               Bot.stop_transmission()
-        await progress_for_pyrogram(current, total, name, status, self._user_message, self.id, current_time) 
-             
+         now = time.time()
+         diff = now - current_time
+         
+         if self.cancelled:
+            await sleep(1.5) 
+            await self._user_message.edit('Process cancelled!')
+            Bot.stop_transmission()
+            del status_dict[self.id]
+         
+         if round(diff % 10.00) == 0 or current == total:
+            percentage = current * 100 / total
+            speed = current / diff
+            elapsed_time = round(diff) * 1000
+            time_to_completion = round((total - current) / speed) * 1000
+            estimated_total_time = elapsed_time + time_to_completion
+            elapsed_time = time_formatter(milliseconds=elapsed_time)
+            estimated_total_time = time_formatter(milliseconds=estimated_total_time)
+
+            progress = "{0}{1}\n**P:** {2}%".format(
+                  ''.join([FINISHED_PROGRESS_STR for i in range(math.floor(percentage / 10))]),
+                  ''.join([UN_FINISHED_PROGRESS_STR for i in range(10 - math.floor(percentage / 10))]),
+                  round(percentage, 2))
+
+            self._status_msg = "{0}\n{1}\n{2}\n**Downloaded:** {3} of {4}\n**Speed**: {5} | **ETA:** {6}\n {7}".format(
+                  name,
+                  status,
+                  progress,
+                  humanbytes(current),
+                  humanbytes(total),
+                  humanbytes(speed),
+                  estimated_total_time if estimated_total_time != '' else "0 s",
+                  get_bottom_status() 
+            )
+            
+            try:
+                  await self._user_message.edit(self._status_msg,
+                  reply_markup=(InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data=(f"cancel_telegram_{self.id}"))]]))
+                  )  
+            except FloodWait as fw:
+                  LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
+                  await sleep(fw.value)
+            except MessageNotModified:
+                  await sleep(1)
+
+
 

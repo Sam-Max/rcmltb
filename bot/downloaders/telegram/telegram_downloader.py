@@ -1,6 +1,6 @@
 
 import time
-from bot import GLOBAL_TG_DOWNLOADER, LOGGER
+from bot import status_dict, LOGGER
 from bot.utils.status_utils.misc_utils import MirrorStatus
 from bot.utils.status_utils.telegram_status import TelegramStatus
 
@@ -14,7 +14,6 @@ class TelegramDownloader:
 
     async def download(self):
         status= TelegramStatus(self._mess_age)
-        GLOBAL_TG_DOWNLOADER.add(status)
         try:
             media_path= await self._client.download_media(
                 message= self._file,
@@ -27,6 +26,6 @@ class TelegramDownloader:
                 ))
         except Exception as e:
             LOGGER.error(str(e))
-        GLOBAL_TG_DOWNLOADER.remove(status)
+        del status_dict[status.id]
         return media_path
 

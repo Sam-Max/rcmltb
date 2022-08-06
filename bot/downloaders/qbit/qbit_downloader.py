@@ -12,7 +12,7 @@ from psutil import cpu_percent, virtual_memory
 from bencoding import bencode, bdecode
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.errors.exceptions import FloodWait
-from bot import DOWNLOAD_DIR, GLOBAL_QBIT, uptime
+from bot import DOWNLOAD_DIR, uptime, status_dict
 from re import search as re_search
 from bot import get_client, TORRENT_TIMEOUT, LOGGER
 from bot.utils.bot_utils import human_format
@@ -25,6 +25,7 @@ class QbDownloader:
         self.__path = ''
         self.__name = ''
         self.__message= message
+        self.id= self.__message.id
         self.__error_message= ''
         self.client = None
         self.ext_hash = ''
@@ -41,9 +42,9 @@ class QbDownloader:
         try:
             if link.startswith('magnet:'):
                 LOGGER.info("_get_hash_magnet")     
-                self.ext_hash = _get_hash_magnet(link)
+                self.ext_hash = self._get_hash_magnet(link)
             else:
-                self.ext_hash = _get_hash_file(link)
+                self.ext_hash = self._get_hash_file(link)
             
             tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
             if len(tor_info) > 0:
@@ -78,9 +79,8 @@ class QbDownloader:
 
             LOGGER.info(f"QbitDownload started: {self.__name} - Hash: {self.ext_hash}")
             self.__periodic = setInterval(self.POLLING_INTERVAL, self.__qb_listener)
-            GLOBAL_QBIT.add(self) 
+            status_dict[self.id] = self
             status, msg= await self.qbit_progress_update()
-            GLOBAL_QBIT.remove(self)  
             if not status:
                 return False, msg, self.__path, self.__name
             else:
@@ -160,7 +160,8 @@ class QbDownloader:
                 return
             tor_info = tor_info[0]
             if tor_info.state_enum.is_complete:
-                LOGGER.info(f'Qbit download completed.')        
+                LOGGER.info(f'Qbit download completed.')  
+                del status_dict[self.id]      
                 self.__completed = True     
                 self.__periodic.cancel()
             elif tor_info.state == "metaDL":
@@ -198,17 +199,18 @@ class QbDownloader:
         self.__periodic.cancel()
 
     def cancel_download(self):
+        del status_dict[self.id] 
         self.__onDownloadError("Download stopped by user!")     
 
-def _get_hash_magnet(mgt: str):
-    hash_ = re_search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
-    if len(hash_) == 32:
-        hash_ = b16encode(b32decode(str(hash_))).decode()
-    return str(hash_)
+    def _get_hash_magnet(self, mgt: str):
+        hash_ = re_search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
+        if len(hash_) == 32:
+            hash_ = b16encode(b32decode(str(hash_))).decode()
+        return str(hash_)
 
-def _get_hash_file(path):
-    with open(path, "rb") as f:
-        decodedDict = bdecode(f.read())
-        hash_ = sha1(bencode(decodedDict[b'info'])).hexdigest()
-    return str(hash_)
+    def _get_hash_file(self, path):
+        with open(path, "rb") as f:
+            decodedDict = bdecode(f.read())
+            hash_ = sha1(bencode(decodedDict[b'info'])).hexdigest()
+        return str(hash_)
 

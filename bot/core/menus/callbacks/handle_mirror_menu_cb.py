@@ -40,12 +40,13 @@ async def handle_mirror_menu_callback(client, query):
 
 async def mirror_file(client, message, file, tag, pswd, isZip, extract, new_name="", is_rename=False):
         mess_age= await message.reply_text('Starting download...', quote=True)
-        media_path= await TelegramDownloader(file, client, mess_age, DOWNLOAD_DIR).download() 
+        tg_down= TelegramDownloader(file, client, mess_age, DOWNLOAD_DIR)
+        media_path= await tg_down.download() 
         if media_path is None:
             return
+        m_path = media_path
         if isZip:
             try:
-                m_path = media_path
                 base = os.path.basename(m_path)
                 file_name = base.rsplit('.', maxsplit=1)[0]
                 file_name = file_name + ".zip"
@@ -68,7 +69,6 @@ async def mirror_file(client, message, file, tag, pswd, isZip, extract, new_name
             await RcloneMirror(path, mess_age, tag, new_name, is_rename).mirror()        
             clean_filepath(m_path)
         elif extract:
-            m_path = media_path
             extracted_path= await extract_archive(m_path, pswd)
             if extracted_path is not False:
                 await RcloneMirror(extracted_path, mess_age, tag, new_name, is_rename).mirror()             
@@ -76,4 +76,4 @@ async def mirror_file(client, message, file, tag, pswd, isZip, extract, new_name
                 await mess_age.edit('Unable to extract archive!')
             clean_filepath(m_path)
         else:
-            await RcloneMirror(media_path, mess_age, tag, new_name, is_rename).mirror()
+            await RcloneMirror(m_path, mess_age, tag, new_name, is_rename).mirror()

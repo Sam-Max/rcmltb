@@ -10,6 +10,7 @@ class Commands:
     UNZIPLEECH= "unzipleech"
     COPY = "copy"
     MYFILES= "myfiles"
+    STATUS= "status"
     EXEC = "exec"
     GETLOGS = "logs"
     SERVER = "server"

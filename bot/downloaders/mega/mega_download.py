@@ -1,6 +1,5 @@
 #Modified from: (c) YashDK [yash-dk@github]
 
-import math
 import pathlib
 import shutil
 import time

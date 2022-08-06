@@ -10,6 +10,7 @@
 - Extract and Zip files for leech and mirror.
 - Copy from cloud to cloud.
 - File manager for cloud (delete and calculate size)
+- Status for tasks.
 - Telegram button menus to interact with cloud.
 - Renaming of Telegram files.
 - Progress bar when downloading and uploading.
@@ -20,9 +21,9 @@
 
 ```
 mirror - mirror to selected cloud 
-qbmirror - mirror torrent to cloud
 unzipmirror - mirror and extract to cloud 
 zipmirror - mirror and zip to cloud 
+qbmirror - mirror torrent to cloud
 mirrorbatch - mirror files in batch to cloud 
 mirrorset - select cloud/folder where to mirror
 leech - leech from cloud to Telegram
@@ -30,6 +31,7 @@ unzipleech - leech and extract to telegram
 zipleech - leech and zip to telegram 
 copy - copy from cloud to cloud
 myfiles - file manager
+status - Get status message of tasks
 logs - get logs from server
 server - get server info
 speedtest - test speed of server
