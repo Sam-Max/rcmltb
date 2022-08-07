@@ -7,7 +7,7 @@
 - Mirror torrent and magnets links to cloud using qBittorrent.
 - Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
 - Leech files and folders from cloud to Telegram.
-- Extract and Zip files for leech and mirror.
+- Extract and Zip files and folders (leech & mirror)
 - Copy from cloud to cloud.
 - File manager for cloud (delete and calculate size)
 - Status for tasks.
