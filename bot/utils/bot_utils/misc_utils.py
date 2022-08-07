@@ -1,6 +1,6 @@
 import os
 from shutil import rmtree
-from bot import DOWNLOAD_DIR, LOGGER
+from bot import DOWNLOAD_DIR, LOGGER, aria2, get_client
 from itertools import zip_longest
 from json import loads as jsnloads
 import os
@@ -26,6 +26,21 @@ def clean(path):
         rmtree(path)
     except:
         os.remove(path)
+
+def clean_all():
+    aria2.remove_all(True)
+    get_client().torrents_delete(torrent_hashes="all")
+    try:
+        rmtree(DOWNLOAD_DIR)
+    except:
+        pass
+
+def start_cleanup():
+    try:
+        rmtree(DOWNLOAD_DIR)
+    except:
+        pass
+    os.makedirs(DOWNLOAD_DIR)
 
 def rename_file(old_path, new_name):
     pathname, ext = os.path.splitext(old_path)
