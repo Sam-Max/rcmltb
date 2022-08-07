@@ -13,7 +13,7 @@ from re import match as re_match
 from bot.utils.bot_utils.direct_link_generator import direct_link_generator
 from bot.utils.bot_utils.exceptions import DirectDownloadLinkException
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot.utils.bot_utils.misc_utils import clean_path, get_rclone_config, get_readable_size
+from bot.utils.bot_utils.misc_utils import clean, get_rclone_config, get_readable_size
 
 
 async def handle_mirror_command(client, message):
@@ -67,7 +67,7 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                     state, msg, path, name= await qbit_dl.add_qb_torrent(link)
                     if not state:
                         await mess_age.edit(msg)
-                        clean_path(path)
+                        clean(path)
                     else:
                         await RcloneMirror(path, mess_age, tag, torrent_name= name).mirror()
                 if file.mime_type != "application/x-bittorrent":
@@ -114,7 +114,7 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                     state, msg, path, name = await qbit_dl.add_qb_torrent(link)
                     if not state:
                         await mess_age.edit(msg)
-                        clean_path(path)
+                        clean(path)
                     else:
                         await RcloneMirror(path, mess_age, tag, torrent_name= name).mirror()
                 
@@ -129,7 +129,7 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                         state, msg, path= await mega_dl.execute()
                         if not state:
                             await mess_age.edit(msg)
-                            clean_path(path)
+                            clean(path)
                         else:
                             await RcloneMirror(path, mess_age, tag).mirror()
                     else:

@@ -7,7 +7,7 @@ from bot.utils.status_utils.misc_utils import MirrorStatus
 from bot.utils.status_utils.rclone_status import RcloneStatus
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.utils.bot_utils.drive_utils import get_glink
-from bot.utils.bot_utils.misc_utils import clean_filepath, clean_path, get_rclone_config, rename_file
+from bot.utils.bot_utils.misc_utils import clean,get_rclone_config, rename_file
 from bot import LOGGER
 
 
@@ -72,11 +72,8 @@ class RcloneMirror:
                                                client_type='pyrogram')
           
           if status == False:
-               if os.path.isdir(self.__path):
-                    clean_path(self.__path) 
-               else:
-                    clean_filepath(self.__path)   
-               return
+            clean(self.__path) 
+            return
 
           msg = f"<b>Name: </b><code>{name}</code>"
 
@@ -92,7 +89,7 @@ class RcloneMirror:
                     await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
                 else:
                     await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
-                clean_path(self.__path)
+                clean(self.__path)
           else:
                 if is_gdrive:
                     gid = await get_glink(dest_drive, dest_base, os.path.basename(self.__path), conf_path, False)
@@ -102,6 +99,6 @@ class RcloneMirror:
                     await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
                 else:
                     await self.__user_msg.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
-                clean_filepath(self.__path)
+                clean(self.__path)
     
     

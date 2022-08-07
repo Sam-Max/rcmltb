@@ -1,7 +1,7 @@
 from asyncio import sleep
 import os
 import time
-from bot import Bot, app, status_dict
+from bot import LOGGER, Bot, app, status_dict
 from bot.utils.bot_utils.misc_utils import get_media_info, get_video_resolution
 from bot.utils.bot_utils.screenshot import screenshot
 from pyrogram import enums
@@ -66,7 +66,7 @@ class TelegramUploader():
                     )
                 )
             del status_dict[status.id]
-            self._message.delete()
+            await self._message.delete()
         except FloodWait as f:
             sleep(f.value)
         except Exception as e:

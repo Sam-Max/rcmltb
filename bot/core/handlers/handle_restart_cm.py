@@ -6,9 +6,9 @@ import os
 import signal
 from subprocess import run as srun
 from sys import executable
-from bot import LOGGER
+from bot import DOWNLOAD_DIR, LOGGER
 from bot.core.get_vars import get_val
-from bot.utils.bot_utils.misc_utils import clean_path
+from bot.utils.bot_utils.misc_utils import clean
 
 
 async def handle_restart(message):
@@ -27,7 +27,7 @@ async def handle_restart(message):
             with open(".updatemsg", "w") as f:
                 f.truncate(0)
                 f.write(f"{user_id}\n{update_message.id}\n")
-            clean_path("./Downloads")
+            clean(DOWNLOAD_DIR)
             srun(["pkill", "-f", "aria2c|megasdkrest|qbittorrent-nox"])
             srun(["python3", "update.py"])
             osexecl(executable, executable, "-m", "bot")

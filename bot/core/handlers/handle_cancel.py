@@ -18,7 +18,7 @@ async def handle_cancel(e):
         await mg_down.remove_mega_dl(hashid)
    if data[1] == "qbitdl":
         ext_hash = data[2]
-        ext_hash = int(ext_hash.strip())
+        ext_hash = ext_hash.strip()
         for dl in list(status_dict.values()):
            if dl.ext_hash == ext_hash:
                 dl.cancel_download()

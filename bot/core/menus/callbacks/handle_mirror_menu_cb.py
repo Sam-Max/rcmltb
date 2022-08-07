@@ -6,7 +6,7 @@ from pyrogram import filters
 from subprocess import run
 from bot.downloaders.telegram.telegram_downloader import TelegramDownloader
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
-from bot.utils.bot_utils.misc_utils import clean_filepath
+from bot.utils.bot_utils.misc_utils import clean
 from bot.utils.bot_utils.zip_utils import extract_archive
 
 async def handle_mirror_menu_callback(client, query):
@@ -39,7 +39,8 @@ async def handle_mirror_menu_callback(client, query):
                 await question.delete()
 
 async def mirror_file(client, message, file, tag, pswd, isZip, extract, new_name="", is_rename=False):
-        mess_age= await message.reply_text('Starting download...', quote=True)
+        mess_age= await message.reply_text('Starting download...')
+        await message.delete()
         tg_down= TelegramDownloader(file, client, mess_age, DOWNLOAD_DIR)
         media_path= await tg_down.download() 
         if media_path is None:
@@ -67,13 +68,13 @@ async def mirror_file(client, message, file, tag, pswd, isZip, extract, new_name
                 LOGGER.info('File to archive not found!')
                 return
             await RcloneMirror(path, mess_age, tag, new_name, is_rename).mirror()        
-            clean_filepath(m_path)
+            clean(m_path)
         elif extract:
             extracted_path= await extract_archive(m_path, pswd)
             if extracted_path is not False:
                 await RcloneMirror(extracted_path, mess_age, tag, new_name, is_rename).mirror()             
             else:
                 await mess_age.edit('Unable to extract archive!')
-            clean_filepath(m_path)
+            clean(m_path)
         else:
             await RcloneMirror(m_path, mess_age, tag, new_name, is_rename).mirror()

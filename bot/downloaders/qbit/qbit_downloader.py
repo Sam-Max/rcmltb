@@ -190,8 +190,8 @@ class QbDownloader:
     def __onDownloadError(self, err):
         LOGGER.info(f"Cancelling Download: {self.__name}")
         self.__error_message= err
-        self.__cancel= True
         LOGGER.info(err)
+        self.__cancel= True
         self.client.torrents_pause(torrent_hashes=self.ext_hash)
         sleep(0.3)
         self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)

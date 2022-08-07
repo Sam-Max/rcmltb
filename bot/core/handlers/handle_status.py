@@ -7,7 +7,7 @@ from pyrogram.errors.exceptions import FloodWait, MessageNotModified, MessageIdI
 
 
 async def status_handler(client, message):
-          to_edit =  await message.reply_text("**Getting Status...**", quote= True)
+          to_edit =  await message.reply_text("**Loading Status...**", quote= True)
 
           await delete_message(client, int(message.chat.id), int(to_edit.id))
 
