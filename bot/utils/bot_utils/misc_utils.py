@@ -7,32 +7,25 @@ import os
 from subprocess import check_output
 from subprocess import check_output
 from json import loads
-from bot.utils.bot_utils.exceptions import NotSupportedExtractionArchive
 
 ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".tgz", ".lzma2",
                 ".zip", ".7z", ".z", ".rar", ".iso", ".wim", ".cab", ".apm", ".arj", ".chm",
                 ".cpio", ".cramfs", ".deb", ".dmg", ".fat", ".hfs", ".lzh", ".lzma", ".mbr",
                 ".msi", ".mslz", ".nsis", ".ntfs", ".rpm", ".squashfs", ".udf", ".vhd", ".xar"]
 
+ZIP_EXT = (".zip", ".7z", ".gzip2", ".iso", ".wim", ".rar")
+
 def pairwise(iterable):
     "s -> (s0, s1), (s2, s3), (s4, s5), ..."
     a = iter(iterable)
     return zip_longest(a, a)
 
-def clean_path(path):
-    if os.path.exists(path):
-        LOGGER.info(f"Cleaning Download: {path}")
-        try:
-           rmtree(path)
-        except:
-            pass
-
-def clean_filepath(file_path):
-     LOGGER.info(f"Cleaning Download: {file_path}")
-     try:
-        os.remove(file_path)
-     except:
-        pass
+def clean(path):
+    LOGGER.info(f"Cleaning Download: {path}")
+    try:
+        rmtree(path)
+    except:
+        os.remove(path)
 
 def rename_file(old_path, new_name):
     pathname, ext = os.path.splitext(old_path)
@@ -95,8 +88,4 @@ def get_video_resolution(path):
         LOGGER.error(f"get_video_resolution: {e}")
         return 480, 320
 
-def check_extract_format(orig_path: str):
-    ext = [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]
-    if len(ext) == 0:
-        raise NotSupportedExtractionArchive('File format not supported for extraction')
 

@@ -66,6 +66,7 @@ class TelegramUploader():
                     )
                 )
             del status_dict[status.id]
+            self._message.delete()
         except FloodWait as f:
             sleep(f.value)
         except Exception as e:

@@ -2,8 +2,8 @@
 
 import asyncio, shlex, os, time
 from typing import Union,List,Tuple
-from bot import DOWNLOAD_DIR, LOGGER
-
+from bot import DOWNLOAD_DIR, LOGGER, TG_SPLIT_SIZE
+from subprocess import Popen
 
 async def cli_call(cmd: Union[str,List[str]]) -> Tuple[str,str]:
     if isinstance(cmd,str):
@@ -84,16 +84,22 @@ async def extract_archive(path, password=""):
                 if err:
                     if "Wrong password" in err:
                         LOGGER.error("Wrong Password")
-                        return False
                     else:
                         LOGGER.error(err)
                         LOGGER.error(out)
-                        return False
                 else:
                     return extpath
         else:
             LOGGER.info("Wrong file extension, can't extract")
-            return False
     else:
         LOGGER.info("Fatal Error")
-        return None 
+
+def get_path_size(path: str):
+    if os.path.isfile(path):
+        return os.path.getsize(path)
+    total_size = 0
+    for root, dirs, files in os.walk(path):
+        for f in files:
+            abs_path = os.path.join(root, f)
+            total_size += os.path.getsize(abs_path)
+    return total_size
