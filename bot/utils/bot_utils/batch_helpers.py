@@ -4,6 +4,7 @@
 import re
 import time
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror
+from bot.utils.status_utils.telegram_status import TelegramStatus
 from ... import LOGGER
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 
@@ -55,27 +56,25 @@ async def get_msg(app, client, sender, edit_id, msg_link, i):
                     await edit.delete()
                     return
             edit = await client.edit_message_text(sender, edit_id, "Trying to Download.")
+            tag = f"@{edit.chat.username}"
+            status= TelegramStatus(edit)
             file = await app.download_media(
                 msg,
-                progress=progress_for_pyrogram,
+                progress=status.progress,
                 progress_args=(
                     "",
                     "**Status:** Downloading...",
-                    edit,
-                    "",
                     time.time()
                 )
             )
             await edit.edit('Preparing to Upload!')
-            rclone_mirror= RcloneMirror(file, edit, "", "", False)
+            rclone_mirror= RcloneMirror(file, edit, tag)
             await rclone_mirror.mirror()
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await client.edit_message_text(sender, edit_id, "Have you joined the channel?")
-            #return 
         except Exception as e:
             LOGGER.info(str(e))
             await client.edit_message_text(sender, edit_id, f'Failed to save: `{e}`')
-            #return 
     else:
         chat =  msg_link.split("/")[-2]
         try:
@@ -87,20 +86,20 @@ async def get_msg(app, client, sender, edit_id, msg_link, i):
                     await edit.delete()
                     return
             edit = await client.edit_message_text(sender, edit_id, "Trying to Download.")
+            tag = f"@{edit.chat.username}"
+            status= TelegramStatus(edit)
             file = await app.download_media(
                 msg,
-                progress=progress_for_pyrogram,
+                progress=status.progress,
                 progress_args=(
                     "",
                    "**Status:** Downloading...",
-                    edit,
-                    "",
                     time.time()
                 )
             )
             await edit.edit('Preparing to Upload!')
-            rclone_mirror= RcloneMirror(file, edit, "", "", False)
-            await rclone_mirror.download()
+            rclone_mirror= RcloneMirror(file, edit, tag)
+            await rclone_mirror.mirror()
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await client.edit_message_text(sender, edit_id, "Have you joined the channel?")
             return 
