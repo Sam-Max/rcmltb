@@ -8,14 +8,15 @@ from pyrogram.errors.exceptions import FloodWait, MessageNotModified, MessageIdI
 
 async def status_handler(client, message):
           to_edit =  await message.reply_text("**Loading Status...**", quote= True)
-
-          await delete_message(client, int(message.chat.id), int(to_edit.id))
+          message_id= int(to_edit.id) 
+          chat_id= int(message.chat.id) 
+          await delete_message(client, chat_id, message_id)
 
           while True:
                     count = len(status_dict) 
                     status_msg = ""
                     if count == 0:
-                         status_msg = 'No Active Downloads !\n___________________________'
+                         status_msg += "**No Active Processes**\n"
                          status_msg += get_bottom_status()
                          await to_edit.edit(status_msg)
                          break
@@ -40,12 +41,13 @@ async def status_handler(client, message):
                               except MessageIdInvalid:
                                    break
                          
-async def delete_message(client, chat_id, msg_id):                        
-     if len(status_msg_dict) == 0:
-          status_msg_dict[chat_id]= msg_id
-     
-     if msg_id != status_msg_dict[chat_id]:
-          await client.delete_messages(chat_id, status_msg_dict[chat_id])
-          del status_msg_dict[chat_id]
-          status_msg_dict[chat_id]= msg_id                       
+async def delete_message(client, chat_id, msg_id):   
+     if len(status_msg_dict[chat_id]) == 0:
+            status_msg_dict[chat_id].append(msg_id)
+
+     if msg_id not in status_msg_dict[chat_id]:
+            await client.delete_messages(chat_id, status_msg_dict[chat_id])
+            status_msg_dict[chat_id].pop()
+            status_msg_dict[chat_id].append(msg_id)
+
                
