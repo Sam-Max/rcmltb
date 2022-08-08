@@ -3,15 +3,16 @@ from os import walk
 import os
 from re import search
 from pyrogram.errors import FloodWait
-from bot import DOWNLOAD_DIR, LOGGER, TG_SPLIT_SIZE, Bot, app
+from bot import DOWNLOAD_DIR, LOGGER, TG_SPLIT_SIZE, Bot, app, status_dict
 from bot.core.get_vars import get_val
-from bot.utils.status_utils.misc_utils import MirrorStatus
+from bot.utils.status_utils.misc_utils import MirrorStatus, TelegramClient
 from bot.utils.status_utils.rclone_status import RcloneStatus
 from bot.uploaders.telegram.telegram_uploader import TelegramUploader
 from bot.utils.bot_utils.misc_utils import clean,  get_rclone_config
 from bot.utils.bot_utils.zip_utils import get_path_size, split_in_zip
 from subprocess import Popen, PIPE
 from asyncio import sleep
+from bot.utils.status_utils.zip_status import ZipStatus
 
 
 class RcloneLeech:
@@ -22,6 +23,7 @@ class RcloneLeech:
         self.__extract=extract
         self.__pswd = pswd
         self.__user_msg = user_msg
+        self.id = self.__user_msg.id
         self.__chat_id = chat_id
         self.__origin_path = origin_dir
         self.__dest_path = dest_dir
@@ -51,20 +53,25 @@ class RcloneLeech:
         self.__rclone_pr = Popen(rclone_copy_cmd, stdout=(PIPE),stderr=(PIPE))
         
         rclone_status= RcloneStatus(self.__rclone_pr, self.__user_msg, self.__path)
+        
         status= await rclone_status.progress(
             status_type= MirrorStatus.STATUS_DOWNLOADING, 
-            client_type='pyrogram')
+            client_type= TelegramClient.PYROGRAM)
+
         if status== False:
             return      
 
         if self.__folder:
             if self.__is_Zip:
-                LOGGER.info("Zipping...")  
+                LOGGER.info("Archiving...")  
                 f_path = self.__dest_path
                 f_size = get_path_size(f_path)
+                f_name= f_path.split("/")[-2] + ".zip"
+                path = f'{DOWNLOAD_DIR}{f_name}'
+                zip_sts= ZipStatus(f_name, f_size, self.__user_msg, self)
+                await zip_sts.create_message()
+                status_dict[self.id]= zip_sts
                 self.__total_files += 1 
-                name= f_path.split("/")[-2]
-                path = f'{DOWNLOAD_DIR}{name}' + ".zip"
                 if self.__pswd is not None:
                     if int(f_size) > TG_SPLIT_SIZE:
                         LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
@@ -84,6 +91,7 @@ class RcloneLeech:
                 elif self.suproc.returncode != 0:
                     LOGGER.error('An error occurred while zipping!')
                 if self.suproc.returncode == 0:
+                    LOGGER.info('Process finished')
                     try:
                         tg_up= TelegramUploader(path, self.__user_msg, self.__chat_id)
                         await tg_up.upload()
@@ -92,6 +100,7 @@ class RcloneLeech:
                         tg_up= TelegramUploader(path, self.__user_msg, self.__chat_id)
                         await tg_up.upload()
                     await sleep(1)
+                    del status_dict[self.id]
                     clean(path)
             elif self.__extract:
                LOGGER.info(f"Extracting...")

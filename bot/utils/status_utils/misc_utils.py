@@ -17,9 +17,13 @@ class MirrorStatus:
     STATUS_UPLOADING = "Uploading..."
     STATUS_DOWNLOADING = "Downloading..."
     STATUS_COPYING= "Copying..."
-    STATUS_ARCHIVING = "Archiving..."
-    STATUS_EXTRACTING = "Extracting..."
-    STATUS_SPLITTING = "Splitting..."
+    STATUS_ARCHIVING = "Archiving...🔐"
+    STATUS_EXTRACTING = "Extracting...📂"
+    STATUS_SPLITTING = "Splitting...✂️"
+
+class TelegramClient:
+    PYROGRAM= "pyrogram"
+    TELETHON= "telethon"
 
 def humanbytes(size: int) -> str:
     """ converts bytes into human readable format """
