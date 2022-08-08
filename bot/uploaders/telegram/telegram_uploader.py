@@ -65,13 +65,12 @@ class TelegramUploader():
                         self.current_time
                     )
                 )
-            del status_dict[status.id]
-            await self._message.delete()
         except FloodWait as f:
             sleep(f.value)
         except Exception as e:
             file_name= os.path.basename(self._path)
-            await self._message.edit(f"Failed to save: {file_name} - cause: {e}")  
+            await self._message.edit(f"Failed to save: {file_name} - cause: {e}")
+        del status_dict[status.id]
         
 
    

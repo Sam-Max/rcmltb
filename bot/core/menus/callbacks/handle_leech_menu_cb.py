@@ -10,7 +10,7 @@ async def handle_leech_menu_callback(client, callback_query):
     chat_id = callback_query.message.chat.id
     data = callback_query.data
     cmd = data.split("^")
-    mmes = callback_query.message
+    user_message = callback_query.message
     base_dir= get_val("BASE_DIR")
     rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
     is_zip = False
@@ -34,7 +34,7 @@ async def handle_leech_menu_callback(client, callback_query):
         set_val("DEFAULT_RCLONE_DRIVE", cmd[2])
         await leech_menu(
             callback_query, 
-            mmes, 
+            user_message, 
             edit=True,
             msg=f"{msg}\nPath:`{cmd[2]}:{base_dir}`", 
             drive_name= cmd[2], 
@@ -51,7 +51,7 @@ async def handle_leech_menu_callback(client, callback_query):
         set_val("BASE_DIR", rclone_dir)
         await leech_menu(
             callback_query, 
-            mmes, 
+            user_message, 
             edit=True, 
             msg=f"{msg}\nPath:`{rclone_drive}:{rclone_dir}`", 
             drive_base=rclone_dir, 
@@ -67,14 +67,14 @@ async def handle_leech_menu_callback(client, callback_query):
         origin_dir += file_name
         name, _= os.path.splitext(file_name)
         dest_dir = f'{DOWNLOAD_DIR}{name}'
-        rc_lch= RcloneLeech(mmes, chat_id, origin_dir, dest_dir, path=file_name, is_Zip=is_zip, extract=extract)
-        await rc_lch.leech()
+        rclone_leech= RcloneLeech(user_message, chat_id, origin_dir, dest_dir, file_name, isZip=is_zip, extract=extract)
+        await rclone_leech.leech()
 
     elif cmd[1] == "start_leech_folder":
         origin_dir= get_val("BASE_DIR")
         dest_dir = f'{DOWNLOAD_DIR}{origin_dir}'
-        rc_lch= RcloneLeech(mmes, chat_id, origin_dir, dest_dir, is_Zip=is_zip, extract=extract, folder=True)
-        await rc_lch.leech()
+        rclone_leech= RcloneLeech(user_message, chat_id, origin_dir, dest_dir, isZip=is_zip, extract=extract, folder=True)
+        await rclone_leech.leech()
 
     elif cmd[1] == "back":
         data_b_cb= "back"
@@ -92,7 +92,7 @@ async def handle_leech_menu_callback(client, callback_query):
 
         await leech_menu(
             callback_query,
-            mmes, 
+            user_message, 
             edit=True, 
             msg=f"{msg}\nPath:`{rclone_drive}:{rclone_dir}`", 
             drive_base=rclone_dir, 
@@ -105,7 +105,7 @@ async def handle_leech_menu_callback(client, callback_query):
     elif cmd[1]== "lchmenu":
         await leech_menu(
             callback_query, 
-            mmes, 
+            user_message, 
             msg= "Select cloud where your files are stored",
             submenu= "list_drive",
             data_cb="list_drive_leech_menu",
@@ -114,4 +114,4 @@ async def handle_leech_menu_callback(client, callback_query):
 
     elif cmd[1] == "selfdest":
         await callback_query.answer("Closed")
-        await mmes.delete()
+        await user_message.delete()

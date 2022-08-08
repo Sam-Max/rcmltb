@@ -85,7 +85,7 @@ class RcloneStatus:
                 blank += 1
                 if blank == 20:
                     del status_dict[self.id]   
-                    break
+                    return True
             else:
                 blank = 0
 
