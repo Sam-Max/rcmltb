@@ -1,9 +1,9 @@
-import asyncio
+from asyncio import sleep
 import math
 from os.path import basename
 import re
 import time
-from pyrogram.errors.exceptions import FloodWait
+from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from telethon.errors import FloodWaitError
 from bot import EDIT_SLEEP_SECS, LOGGER, status_dict
 from bot.utils.status_utils.misc_utils import MirrorStatus, get_bottom_status
@@ -62,24 +62,25 @@ class RcloneStatus:
                         start = time.time()
                         if client_type == 'pyrogram':
                               try:
-                                   await self._user_message.edit(text=self.status_msg, reply_markup=(InlineKeyboardMarkup([
+                                   await self._user_message.edit(text=self._status_msg, reply_markup=(InlineKeyboardMarkup([
                                    [InlineKeyboardButton('Cancel', callback_data=(
                                         f"cancel_rclone_{self.id}".encode('UTF-8')))]
                                    ])))
                               except FloodWait as fw:
                                     LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
-                                    await asyncio.sleep(fw.value)
-                              except:
-                                   pass
+                                    await sleep(fw.value)
+                              except MessageNotModified:
+                                   await sleep(1)
                         if client_type == 'telethon':
                               try:
                                    await self._user_message.edit(text=self.status_msg, 
                                    buttons= [[Button.inline("Cancel", f"cancel_rclone_{self.id}".encode('UTF-8'))]])
                               except FloodWaitError as fw:
                                    LOGGER.warning(f"FloodWait : Sleeping {fw.seconds}s")
-                                   await asyncio.sleep(fw.value)
+                                   await sleep(fw.value)
                               except:
-                                   pass 
+                                  await sleep(1)
+            
             if data == '':
                 blank += 1
                 if blank == 20:
@@ -95,7 +96,7 @@ class RcloneStatus:
                     await self._user_message.edit('Process cancelled!.')  
                     del status_dict[self.id]   
                     return False
-                await asyncio.sleep(2)
+                await sleep(2)
                 self._process.stdout.flush()
 
 
