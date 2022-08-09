@@ -67,14 +67,11 @@ async def mirror_file(client, message, file, tag, pswd, isZip, extract, new_name
             except FileNotFoundError:
                 LOGGER.info('File to archive not found!')
                 return
-            await RcloneMirror(path, mess_age, tag, new_name, is_rename).mirror()        
-            clean(m_path)
         elif extract:
-            extracted_path= await extract_archive(m_path, pswd)
-            if extracted_path is not False:
-                await RcloneMirror(extracted_path, mess_age, tag, new_name, is_rename).mirror()             
-            else:
-                await mess_age.edit('Unable to extract archive!')
-            clean(m_path)
+            path, msg= await extract_archive(m_path, pswd)
+            if path == False:
+                return await mess_age.edit(msg)
         else:
-            await RcloneMirror(m_path, mess_age, tag, new_name, is_rename).mirror()
+            path= m_path
+        rc_mirror= RcloneMirror(path, mess_age, tag, new_name, is_rename= is_rename)
+        await rc_mirror.mirror()   
