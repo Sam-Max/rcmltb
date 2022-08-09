@@ -21,8 +21,21 @@ class TelegramUploader():
 
     async def upload(self):
         status= TelegramStatus(self._message)
-        await self.__upload_file(self._path, status)
-
+        if os.path.isdir(self._path):
+            for dirpath, _, files in os.walk(self._path):
+                for file in sorted(files):
+                    f_path = os.path.join(dirpath, file)
+                    f_size = os.path.getsize(f_path)
+                    if f_size == 0:
+                        LOGGER.error(f"{f_size} size is zero, telegram don't upload zero size files")
+                        continue
+                    await self.__upload_file(f_path, status)
+                    await sleep(1)
+        else:
+           await self.__upload_file(self._path, status)
+           await sleep(1)  
+        del status_dict[status.id] 
+            
     async def __upload_file(self, up_path, status):
         try:
             if str(up_path).split(".")[-1] in VIDEO_SUFFIXES:
@@ -68,9 +81,7 @@ class TelegramUploader():
         except FloodWait as f:
             sleep(f.value)
         except Exception as e:
-            file_name= os.path.basename(self._path)
-            await self._message.edit(f"Failed to save: {file_name} - cause: {e}")
-        del status_dict[status.id]
+            await self._message.edit(f"Failed to save: {self._path}")
         
 
    

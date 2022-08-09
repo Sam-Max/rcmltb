@@ -92,8 +92,6 @@ class RcloneStatus:
             if sleeps:
                 sleeps = False
                 if self.cancelled:
-                    self._process.kill()
-                    await self._user_message.edit('Process cancelled!.')  
                     del status_dict[self.id]   
                     return False
                 await sleep(2)

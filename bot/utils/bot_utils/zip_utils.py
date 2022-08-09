@@ -60,6 +60,7 @@ async def extract_archive(path, password=""):
     if os.path.exists(path):
         if os.path.isfile(path):
             valid_exts = (".zip", ".7z", ".tar", ".gzip2", ".iso", ".wim", ".rar", ".tar.gz",".tar.bz2")
+            
             if str(path).endswith(valid_exts):
                 time_s= str(time.time()).replace(".","") 
                 userpath = f'{DOWNLOAD_DIR}{time_s}'
@@ -83,16 +84,19 @@ async def extract_archive(path, password=""):
                 
                 if err:
                     if "Wrong password" in err:
-                        LOGGER.error("Wrong Password")
+                        msg= "Wrong Password"
                     else:
                         LOGGER.error(err)
                         LOGGER.error(out)
+                    return False, msg
                 else:
-                    return extpath
+                    return extpath, ""
         else:
-            LOGGER.info("Wrong file extension, can't extract")
+            msg= "Wrong file extension, can't extract"
+            return False, msg
     else:
-        LOGGER.info("Fatal Error")
+        msg= "Fatal Error"
+        return False, msg
 
 def get_path_size(path: str):
     if os.path.isfile(path):

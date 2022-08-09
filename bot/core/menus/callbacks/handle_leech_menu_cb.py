@@ -73,7 +73,7 @@ async def handle_leech_menu_callback(client, callback_query):
     elif cmd[1] == "start_leech_folder":
         origin_dir= get_val("BASE_DIR")
         dest_dir = f'{DOWNLOAD_DIR}{origin_dir}'
-        rclone_leech= RcloneLeech(user_message, chat_id, origin_dir, dest_dir, isZip=is_zip, extract=extract, folder=True)
+        rclone_leech= RcloneLeech(user_message, chat_id, origin_dir, dest_dir, folder=True, isZip=is_zip, extract=extract)
         await rclone_leech.leech()
 
     elif cmd[1] == "back":
