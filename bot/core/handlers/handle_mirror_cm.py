@@ -13,7 +13,7 @@ from re import match as re_match
 from bot.utils.bot_utils.direct_link_generator import direct_link_generator
 from bot.utils.bot_utils.exceptions import DirectDownloadLinkException
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot.utils.bot_utils.misc_utils import clean, get_rclone_config, get_readable_size
+from bot.utils.bot_utils.misc_utils import get_rclone_config, get_readable_size
 
 
 async def handle_mirror_command(client, message):
@@ -67,9 +67,9 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                     state, msg, path, name= await qbit_dl.add_qb_torrent(link)
                     if not state:
                         await mess_age.edit(msg)
-                        clean(path)
                     else:
-                        await RcloneMirror(path, mess_age, tag, torrent_name= name).mirror()
+                        rclone_mirror= RcloneMirror(path, mess_age, tag, torrent_name= name)
+                        await rclone_mirror.mirror()
                 if file.mime_type != "application/x-bittorrent":
                         name= file.file_name
                         size= get_readable_size(file.file_size)
@@ -82,11 +82,45 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                                 InlineKeyboardButton(f"📝 Rename", callback_data='mirrormenu_rename')],
                                 [InlineKeyboardButton("Close", callback_data= f"mirrorsetmenu^selfdest")]]
                         return await message.reply_text(header_msg, quote= True, reply_markup= InlineKeyboardMarkup(keyboard))
-                else:
+                if not isQbit:
                     return await message.reply_text("Use qbmirror command to mirror torrent file")   
             else:
                 reply_text = replied_message.text     
                 link = reply_text.strip()
+                if not isQbit and (is_magnet(link) or link.endswith('.torrent')):
+                    return await message.reply_text("Use qbmirror command to mirror torrent or magnet link")
+                if is_gdrive_link(link):
+                    return await message.reply_text("Not currently supported Google Drive links") 
+                elif is_mega_link(link):
+                    if MEGA_KEY is not None:
+                        mess_age= await message.reply_text('Mega download started...')     
+                        mega_dl= MegaDownloader(link, mess_age)   
+                        state, msg, path= await mega_dl.execute()
+                        if not state:
+                            await mess_age.edit(msg)
+                        else:
+                            rclone_mirror = RcloneMirror(path, mess_age, tag)
+                            await rclone_mirror.mirror()
+                    else:
+                        await mess_age.edit("MEGA_API_KEY not provided!")
+                if not is_mega_link(link) and not is_magnet(link) and not is_gdrive_link(link) \
+                    and not link.endswith('.torrent'):
+                    content_type = get_content_type(link)
+                    if content_type is None or re_match(r'text/html|text/plain', content_type):
+                        try:
+                            link = direct_link_generator(link)
+                            LOGGER.info(f"Generated link: {link}")
+                        except DirectDownloadLinkException as e:
+                            if str(e).startswith('ERROR:'):
+                                return await message.reply_text(str(e))
+                    mess_age= await message.reply_text('Starting Download...')     
+                    aria2= AriaDownloader(link, mess_age)   
+                    state, msg, path= await aria2.execute()
+                    if not state:
+                        await mess_age.edit(msg)
+                    else:
+                        rclone_mirror= RcloneMirror(path, mess_age, tag)
+                        await rclone_mirror.mirror()
                 if isQbit and not is_magnet(reply_text):
                     if link.endswith('.torrent'):
                         content_type = None
@@ -114,43 +148,9 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False):
                     state, msg, path, name = await qbit_dl.add_qb_torrent(link)
                     if not state:
                         await mess_age.edit(msg)
-                        clean(path)
                     else:
-                        await RcloneMirror(path, mess_age, tag, torrent_name= name).mirror()
-                
-                if is_magnet(link) or link.endswith('.torrent'):
-                    return await message.reply_text("Use qbmirror command to mirror torrent or magnet link")
-                elif is_gdrive_link(link):
-                    return await message.reply_text("Not currently supported Google Drive links") 
-                elif is_mega_link(link):
-                    if MEGA_KEY is not None:
-                        mess_age= await message.reply_text('Mega download started...')     
-                        mega_dl= MegaDownloader(link, mess_age)   
-                        state, msg, path= await mega_dl.execute()
-                        if not state:
-                            await mess_age.edit(msg)
-                            clean(path)
-                        else:
-                            await RcloneMirror(path, mess_age, tag).mirror()
-                    else:
-                        await mess_age.edit("MEGA_API_KEY not provided!")
-                elif not is_mega_link(link) and not is_magnet(link) and not is_gdrive_link(link) \
-                    and not link.endswith('.torrent'):
-                    content_type = get_content_type(link)
-                    if content_type is None or re_match(r'text/html|text/plain', content_type):
-                        try:
-                            link = direct_link_generator(link)
-                            LOGGER.info(f"Generated link: {link}")
-                        except DirectDownloadLinkException as e:
-                            if str(e).startswith('ERROR:'):
-                                return await message.reply_text(str(e))
-                    mess_age= await message.reply_text('Starting Download...')     
-                    aria2= AriaDownloader(link, mess_age)   
-                    state, msg, path= await aria2.execute()
-                    if not state:
-                        await mess_age.edit(msg)
-                    else:
-                        await RcloneMirror(path, mess_age, tag).mirror()  
+                        rclone_mirror = RcloneMirror(path, mess_age, tag, torrent_name= name)
+                        await rclone_mirror.mirror()
         else:
             if isZip or extract:
                 await message.reply_text("<b>Reply to a Telegram file</b>\n\n<b>For password use this format:</b>\n/zipmirror pswd: password", quote=True) 
