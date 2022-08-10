@@ -135,6 +135,15 @@ sudo docker-compose start
 
 ```
 
+## How to create rclone.conf
+
+**Check this youtube video (not mine, credits to author):** 
+<p><a href="https://www.youtube.com/watch?v=Sp9lG_BYlSg"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
+
+**Some points to notice**:
+- When you create rclone.conf file add at least two accounts if you want to copy from cloud to cloud. 
+- For those on android phone, you can use [RCX app](https://play.google.com/store/apps/details?id=io.github.x0b.rcx&hl=en_IN&gl=US) app to create rclone.conf file. Use "Export rclone config" option in app menu to get config file.
+
 ## Deploying on Heroku
 <p><a href="https://github.com/Sam-Max/Rclone-Tg-Bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
 
