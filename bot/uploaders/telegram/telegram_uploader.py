@@ -39,10 +39,10 @@ class TelegramUploader():
     async def __upload_file(self, up_path, status):
         try:
             if str(up_path).split(".")[-1] in VIDEO_SUFFIXES:
-                    if not str(self._file).split(".")[-1] in ['mp4', 'mkv']:
+                    if not str(up_path).split(".")[-1] in ['mp4', 'mkv']:
                         path = str(up_path).split(".")[0] + ".mp4"
-                        os.rename(self._file, path) 
-                        self._file = str(up_path).split(".")[0] + ".mp4"
+                        os.rename(up_path, path) 
+                        up_path = path
                     caption= str(up_path).split("/")[-1]  
                     duration= get_media_info(up_path)[0]
                     thumb_path = await screenshot(up_path, duration, self._sender)
@@ -53,7 +53,7 @@ class TelegramUploader():
                         width=width,
                         height=height,
                         caption= f'`{caption}`',
-                        parse_mode= enums.ParseMode.MARKDOWN ,
+                        parse_mode= enums.ParseMode.MARKDOWN,
                         thumb= thumb_path,
                         supports_streaming=True,
                         duration= duration,
