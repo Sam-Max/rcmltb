@@ -17,6 +17,7 @@
 - Direct links Supported:
   > letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
 
+
 ## Commands for bot(set through @BotFather)
 
 ```
@@ -135,14 +136,16 @@ sudo docker-compose start
 
 ```
 
-## How to create rclone.conf
+## How to create rclone config file
 
 **Check this youtube video (not mine, credits to author):** 
 <p><a href="https://www.youtube.com/watch?v=Sp9lG_BYlSg"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
-**Some points to notice**:
+**Notes**:
 - When you create rclone.conf file add at least two accounts if you want to copy from cloud to cloud. 
 - For those on android phone, you can use [RCX app](https://play.google.com/store/apps/details?id=io.github.x0b.rcx&hl=en_IN&gl=US) app to create rclone.conf file. Use "Export rclone config" option in app menu to get config file.
+- Rclone supported providers:
+  > 1Fichier, Amazon Drive, Amazon S3, Backblaze B2, Box, Ceph, DigitalOcean Spaces, Dreamhost, **Dropbox**,   Enterprise File Fabric, FTP, GetSky, Google Cloud Storage, **Google Drive**, Google Photos, HDFS, HTTP, Hubic, IBM COS S3, Koofr, Mail.ru Cloud, **Mega**, Microsoft Azure Blob Storage, **Microsoft OneDrive**, **Nextcloud**, OVH, OpenDrive, Oracle Cloud Storage, ownCloud, pCloud, premiumize.me, put.io, Scaleway, Seafile, SFTP, **WebDAV**, Yandex Disk, etc. **Check all providers on official site**: [Click here](https://rclone.org/#providers).
 
 ## Deploying on Heroku
 <p><a href="https://github.com/Sam-Max/Rclone-Tg-Bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
@@ -158,7 +161,5 @@ sudo docker-compose start
 2- [Rclone](https://github.com/rclone/rclone)
 
 3- [Telethon]() and [Pyrogram]()
-
-4- [Conversation-Pyrogram](https://github.com/Ripeey/Conversation-Pyrogram/)
 
 5- and others referenced in the code.
