@@ -15,7 +15,7 @@ from bot.client import RcloneTgClient
 from bot.core.var_holder import VarHolder
 from megasdkrestclient import MegaSdkRestClient, errors
 from pyrogram import Client
-from convopyro import Conversation
+from bot.conversation_pyrogram import Conversation
 
 basicConfig(level= INFO,
     format= "%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s",

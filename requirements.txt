@@ -13,5 +13,4 @@ python-dotenv
 requests
 megasdkrestclient
 qbittorrent-api
-https://github.com/Ripeey/Conversation-Pyrogram/archive/refs/heads/main.zip
 
