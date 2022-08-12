@@ -4,6 +4,7 @@ __author__ = "Sam-Max"
 from collections import defaultdict
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 import os
+from threading import Thread
 from time import sleep, time
 import sys
 from os import environ
@@ -90,18 +91,20 @@ except:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
 
-try:
-    LOGGER.info("Initializing Aria2c")
-    link = "https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent"
-    dire = DOWNLOAD_DIR.rstrip("/")
-    aria2.add_uris([link], {'dir': dire})
-    sleep(3)
-    downloads = aria2.get_downloads()
-    sleep(20)
-    for download in downloads:
-        aria2.remove([download], force=True, files=True)
-except Exception as e:
-    LOGGER.error(f"Aria2c initializing error: {e}")
+def aria2c_init():
+    try:
+        LOGGER.info("Initializing Aria2c")
+        link = "https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent"
+        dire = DOWNLOAD_DIR.rstrip("/")
+        aria2.add_uris([link], {'dir': dire})
+        sleep(3)
+        downloads = aria2.get_downloads()
+        sleep(20)
+        for download in downloads:
+            aria2.remove([download], force=True, files=True)
+    except Exception as e:
+        LOGGER.error(f"Aria2c initializing error: {e}")
+Thread(target=aria2c_init).start()
 sleep(1.5)
     
 try:
