@@ -3,24 +3,27 @@ import json
 import re
 from bot import LOGGER
 
-
-async def get_glink(drive_name, drive_base, ent_name, conf_path, isdir=True):
-        ent_name = re.escape(ent_name)
-
+async def get_gid(drive_name, drive_base, ent_name, conf_path, isdir=True):
+        name = re.escape(ent_name)
         if isdir:
-            get_id_cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only",
-                            "-f", f"+ {ent_name}/", "-f", "- *"]
+            cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only",
+                            "-f", f"+ {name}/", "-f", "- *"]
         else:
-            get_id_cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--files-only",
-                            "-f", f"+ {ent_name}", "-f", "- *"]
+            cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--files-only",
+                            "-f", f"+ {name}", "-f", "- *"]
 
         process = await asyncio.create_subprocess_exec(
-            *get_id_cmd,
-            stdout=asyncio.subprocess.PIPE
-        )
+            *cmd,
+            stdout= asyncio.subprocess.PIPE,
+            stderr= asyncio.subprocess.PIPE)
 
-        stdout, _ = await process.communicate()
+        stdout, stderr = await process.communicate()
+        return_code = await process.wait()
         stdout = stdout.decode().strip()
+
+        if return_code != 0:
+           err = stderr.decode().strip()
+           LOGGER.error(f'Error: {err}') 
 
         try:
             data = json.loads(stdout)
@@ -28,4 +31,5 @@ async def get_glink(drive_name, drive_base, ent_name, conf_path, isdir=True):
             name = data[0]["Name"]
             return (id, name)
         except Exception:
-            LOGGER.error("Error Occured while getting id ::- {}".format(stdout))
+            LOGGER.error("Error while getting id ::- {}".format(stdout))
+            

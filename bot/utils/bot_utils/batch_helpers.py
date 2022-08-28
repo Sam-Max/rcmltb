@@ -55,7 +55,7 @@ async def get_msg(app, client, sender, edit_id, msg_link, i):
                     await client.send_message(sender, msg.text.markdown)
                     await edit.delete()
                     return
-            edit = await client.edit_message_text(sender, edit_id, "Trying to Download.")
+            edit = await client.edit_message_text(sender, edit_id, "Starting Download")
             tag = f"@{edit.chat.username}"
             status= TelegramStatus(edit)
             file = await app.download_media(
@@ -67,7 +67,7 @@ async def get_msg(app, client, sender, edit_id, msg_link, i):
                     time.time()
                 )
             )
-            await edit.edit('Preparing to Upload!')
+            await edit.edit('Preparing to Upload')
             rclone_mirror= RcloneMirror(file, edit, tag)
             await rclone_mirror.mirror()
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
@@ -85,7 +85,7 @@ async def get_msg(app, client, sender, edit_id, msg_link, i):
                     await client.send_message(sender, msg.text.markdown)
                     await edit.delete()
                     return
-            edit = await client.edit_message_text(sender, edit_id, "Trying to Download.")
+            edit = await client.edit_message_text(sender, edit_id, "Starting Download")
             tag = f"@{edit.chat.username}"
             status= TelegramStatus(edit)
             file = await app.download_media(
@@ -97,7 +97,7 @@ async def get_msg(app, client, sender, edit_id, msg_link, i):
                     time.time()
                 )
             )
-            await edit.edit('Preparing to Upload!')
+            await edit.edit('Preparing to Upload')
             rclone_mirror= RcloneMirror(file, edit, tag)
             await rclone_mirror.mirror()
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):

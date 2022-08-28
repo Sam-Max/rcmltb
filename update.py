@@ -1,6 +1,5 @@
 #**************************************************
 # Based on:
-# Repository:  https://github.com/anasty17/mirror-leech-telegram-bot/
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/update.py
 #**************************************************/
 

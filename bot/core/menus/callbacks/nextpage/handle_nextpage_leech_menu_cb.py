@@ -3,56 +3,52 @@
 # Source: https://github.com/EvamariaTG/EvaMaria/blob/master/plugins/pm_filter.py
 #**************************************************/
 
-from pyrogram.types import InlineKeyboardButton
-from bot.core.get_vars import get_val
 from pyrogram.types import InlineKeyboardMarkup
-from bot.utils.bot_utils.menu_utils import menu_maker_for_rclone, next_page_results
+from bot.core.varholderwrap import get_val
+from bot.utils.bot_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
+from bot.utils.bot_utils.message_utils import editMessage
+from bot.utils.bot_utils.misc_utils import ButtonMaker
+
 
 async def next_page_leech(client, callback_query):
-    _, next_offset, data_back_cb= callback_query.data.split(" ")
-    list_info = get_val("JSON_RESULT_DATA")
-    btn= []
+    data = callback_query.data
+    message= callback_query.message
+    _, next_offset, data_back_cb= data.split()
+    list_info = get_val("list_info")
     total = len(list_info)
     next_offset = int(next_offset)
     prev_offset = next_offset - 10 
 
-    list_info, _next_offset= next_page_results(list_info, next_offset)
-    
-    btn.append([InlineKeyboardButton(f" ✅ Select this folder", callback_data= f"leechmenu^start_leech_folder")])
-    
-    menu_maker_for_rclone(list_info, btn, data_callback="list_dir_leech_menu")
+    buttons = ButtonMaker()
+    buttons.cbl_buildbutton(f"✅ Select this folder", data= f"leechmenu^start_leech_folder")
+
+    next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset)
+
+    rcloneListButtonMaker(result_list= next_list_info,
+        buttons=buttons,
+        menu_type= Menus.LEECH, 
+        callback = "list_dir_leech_menu")
 
     if next_offset == 0:
-        btn.append(
-            [InlineKeyboardButton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", callback_data="setting pages"),
-             InlineKeyboardButton("NEXT ⏩", callback_data= f"n_leech {_next_offset} {data_back_cb}")
-            ])
+        buttons.dbuildbutton(first_text = f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", first_callback="setting pages", 
+                            second_text= "NEXT ⏩", second_callback= f"n_leech {_next_offset} {data_back_cb}" )
+    
     elif next_offset >= total:
-        btn.append(
-             [InlineKeyboardButton("⏪ BACK", callback_data=f"n_leech {prev_offset} {data_back_cb}"),
-              InlineKeyboardButton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}",
-                                   callback_data="setting pages")])
+        buttons.dbuildbutton(first_text="⏪ BACK", first_callback= f"n_leech {prev_offset} {data_back_cb}", 
+                        second_text=f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", second_callback="setting pages")
+   
     elif next_offset + 10 > total:
-        btn.append(
-             [InlineKeyboardButton("⏪ BACK", callback_data=f"n_leech {prev_offset} {data_back_cb}"),
-              InlineKeyboardButton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}",
-                                   callback_data="setting pages")])                               
+        buttons.dbuildbutton(first_text="⏪ BACK", first_callback= f"n_leech {prev_offset} {data_back_cb}", 
+                        second_text= f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", second_callback="setting pages")                               
     else:
-        btn.append([InlineKeyboardButton("⏪ BACK", callback_data=f"n_leech {prev_offset} {data_back_cb}"),
-             InlineKeyboardButton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", callback_data="setting pages"),
-             InlineKeyboardButton("NEXT ⏩", callback_data=f"n_leech {_next_offset} {data_back_cb}")
-            ])
+        buttons.tbuildbutton(first_text="⏪ BACK", first_callback= f"n_leech {prev_offset} {data_back_cb}", 
+                            second_text= f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", second_callback="setting pages",
+                            third_text="NEXT ⏩", third_callback=f"n_leech {_next_offset} {data_back_cb}")
 
-    btn.append(
-            [InlineKeyboardButton("⬅️ Back", f"leechmenu^{data_back_cb}")]
-        ) 
-    btn.append(
-            [InlineKeyboardButton("✘ Close Menu", f"leechmenu^selfdest")]
-        )
+    buttons.cbl_buildbutton("⬅️ Back", f"leechmenu^{data_back_cb}")
+    buttons.cbl_buildbutton("✘ Close Menu", f"leechmenu^selfdest")
 
-    message= callback_query.message
-    default_drive= get_val("DEFAULT_RCLONE_DRIVE")
-    base_dir= get_val("BASE_DIR")
-    await message.edit(
-        f"Select folder or file that you want to leech\n\nPath:`{default_drive}:{base_dir}`", 
-        reply_markup= InlineKeyboardMarkup(btn))
+    default_drive= get_val("RCLONE_DRIVE")
+    base_dir= get_val("LEECH_BASE_DIR")
+    await editMessage(f"Select folder or file that you want to leech\n\nPath:`{default_drive}:{base_dir}`", message, 
+                        reply_markup= InlineKeyboardMarkup(buttons.first_button))

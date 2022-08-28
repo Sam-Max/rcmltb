@@ -1,9 +1,10 @@
 import os
 from shutil import rmtree
-from bot import DOWNLOAD_DIR, LOGGER, aria2, get_client
+from bot import BASE_URL, DOWNLOAD_DIR, LOGGER, WEB_PINCODE, aria2, get_client, status_dict, status_dict_lock
 from itertools import zip_longest
 from json import loads as jsnloads
-import os
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telethon.tl.types import KeyboardButtonCallback
 from subprocess import check_output
 from subprocess import check_output
 from json import loads
@@ -102,5 +103,102 @@ def get_video_resolution(path):
     except Exception as e:
         LOGGER.error(f"get_video_resolution: {e}")
         return 480, 320
+
+
+def bt_selection_buttons(id_: str):
+    if len(id_) > 20:
+        gid = id_[:12]
+    else:
+        gid = id_
+
+    LOGGER.info(gid)
+
+    pincode = ""
+    for n in id_:
+        if n.isdigit():
+            pincode += str(n)
+        if len(pincode) == 4:
+            break
+
+    buttons = ButtonMaker()
+    if WEB_PINCODE:
+        buttons.url_buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}")
+        buttons.cb_buildbutton("Pincode", f"btsel pin {gid} {pincode}")
+    else:
+        buttons.url_buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}")
+    buttons.cb_buildbutton("Done Selecting", f"btsel done {gid} {id_}")
+    return InlineKeyboardMarkup(buttons.build_menu(2))
+
+async def getDownloadByGid(gid):
+    async with status_dict_lock:
+        LOGGER.info(status_dict.values())
+        for dl in list(status_dict.values()):
+            if dl.gid() == gid:
+                return dl
+    return None
+
+class ButtonMaker:
+    def __init__(self):
+        self.first_button = []
+        self.second_button= []
+
+    def url_buildbutton(self, key, link):
+        self.first_button.append(InlineKeyboardButton(text = key, url = link))
+
+    def cb_buildbutton(self, key, data):
+        self.first_button.append(InlineKeyboardButton(text = key, callback_data = data))
+
+    def cbl_buildbutton(self, key, data):
+        self.first_button.append([InlineKeyboardButton(text = key, callback_data = data)])
+
+    def ap_buildbutton(self, data):
+        self.first_button.append(data)
+
+    def cb_buildsecbutton(self, key, data):
+        self.second_button.append(InlineKeyboardButton(text = key, callback_data = data))
+
+    def dbuildbutton(self, first_text, first_callback, second_text, second_callback):
+        self.first_button.append([InlineKeyboardButton(text = first_text, callback_data = first_callback), 
+                            InlineKeyboardButton(text = second_text, callback_data = second_callback)])
+    
+    def tbuildbutton(self, first_text, first_callback, second_text, second_callback, third_text, third_callback):
+        self.first_button.append([InlineKeyboardButton(text = first_text, callback_data = first_callback), 
+                    InlineKeyboardButton(text = second_text, callback_data = second_callback),
+                    InlineKeyboardButton(text = third_text, callback_data = third_callback)])
+
+    def build_menu(self, n_cols):
+        menu = [self.first_button[i:i + n_cols] for i in range(0, len(self.first_button), n_cols)]
+        return menu
+
+class TelethonButtonMaker:
+    def __init__(self):
+        self.first_button = []
+        self.second_button= []
+
+    def cb_buildbutton(self, key, data):
+        self.first_button.append(KeyboardButtonCallback(text = key, data = data))
+
+    def cbl_buildbutton(self, key, data):
+        self.first_button.append([KeyboardButtonCallback(text = key, data = data)])
+
+    def ap_buildbutton(self, data):
+        self.first_button.append(data)
+
+    def cb_buildsecbutton(self, key, data):
+        self.second_button.append(KeyboardButtonCallback(text = key, data = data))
+
+    def dbuildbutton(self, first_text, first_callback, second_text, second_callback):
+        self.first_button.append([KeyboardButtonCallback(text = first_text, data = first_callback), 
+                            KeyboardButtonCallback(text = second_text, data = second_callback)])
+
+    def tbuildbutton(self, first_text, first_callback, second_text, second_callback, third_text, third_callback):
+        self.first_button.append([KeyboardButtonCallback(text = first_text, data = first_callback), 
+                                KeyboardButtonCallback(text = second_text, data = second_callback),
+                                KeyboardButtonCallback(text = third_text, data = third_callback)])
+
+    def build_menu(self, n_cols):
+        menu = [self.first_button[i:i + n_cols] for i in range(0, len(self.first_button), n_cols)]
+        return menu
+
 
 

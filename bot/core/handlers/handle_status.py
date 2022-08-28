@@ -1,53 +1,84 @@
 
 from asyncio import sleep
-from bot import status_dict, status_msg_dict
-from bot.utils.status_utils.misc_utils import get_bottom_status
-from pyrogram.errors.exceptions import FloodWait, MessageNotModified, MessageIdInvalid
+from bot import status_dict, status_reply_dict, status_dict_lock, status_reply_dict_lock
+from bot.utils.bot_utils.message_utils import deleteMessage, editMessage, sendMessage
+from bot.utils.status_utils.status_utils import get_bottom_status
 
-
+UP_MSG_LOOP= []
 
 async def status_handler(client, message):
-          to_edit =  await message.reply_text("**Loading Status...**", quote= True)
-          message_id= int(to_edit.id) 
-          chat_id= int(message.chat.id) 
-          await delete_message(client, chat_id, message_id)
+          chat_id= message.chat.id
+          async with status_dict_lock:
+               count = len(status_dict)
+          if count == 0:
+               status_msg = "**No Active Processes**\n"
+               status_msg += get_bottom_status()
+               return await sendMessage(status_msg, message)
+          else:
+               async with status_dict_lock:
+                    status_msg= ""
+                    for download in list(status_dict.values()):
+                         status_msg += download.get_status_msg()
+                         status_msg += "_"
+                         status_msg += "\n\n"
+               
+               if len(status_msg) == 0:
+                    return
+               elif len(status_msg) > 3900:
+                    return
 
+               async with status_reply_dict_lock:
+                    if chat_id in status_reply_dict:
+                         await deleteMessage(status_reply_dict[chat_id][0])
+                         del status_reply_dict[chat_id] 
+                    
+                    try:
+                         if UP_MSG_LOOP:
+                              UP_MSG_LOOP[0].cancel()
+                              UP_MSG_LOOP.clear()
+                    except:
+                         pass
+
+                    edit_message = await sendMessage(status_msg, message)
+                    status_reply_dict[chat_id] = [edit_message]
+
+               up_msg = UpdateMessageLoop(chat_id, edit_message)
+               if not UP_MSG_LOOP:
+                    UP_MSG_LOOP.append(up_msg)
+               await up_msg.update()
+               
+class UpdateMessageLoop:
+     def __init__(self, chat_id, message):
+          self.chat_id= chat_id
+          self.message= message
+          self.stop_loop= False
+
+     async def update(self):
           while True:
-                    count = len(status_dict) 
-                    status_msg = ""
-                    if count == 0:
-                         status_msg += "**No Active Processes**\n"
-                         status_msg += get_bottom_status()
-                         await to_edit.edit(status_msg)
-                         break
-                    else:
-                         status_dict_cp = status_dict.copy()
-                         for status in list(status_dict_cp.values()):
-                              status_msg += status.get_status_msg()
-                              status_msg += "_______"
-                              status_msg += "\n\n"
+               async with status_reply_dict_lock:
+                    if not status_reply_dict or not UP_MSG_LOOP:
+                         return
+               async with status_dict_lock:
+                    count = len(status_dict)
+               if count == 0:
+                    await deleteMessage(self.message)
+                    return 
+               if self.stop_loop:
+                    return 
+               async with status_dict_lock:
+                    status_msg= ""
+                    for download in list(status_dict.values()):
+                         status_msg += download.get_status_msg()
+                         status_msg += "_"
+                         status_msg += "\n\n"
+               async with status_reply_dict_lock:
+                    if status_reply_dict[self.chat_id] and status_msg != status_reply_dict[self.chat_id][0].text:
+                         await editMessage(status_msg, status_reply_dict[self.chat_id][0])
+                         status_reply_dict[self.chat_id][0].text = status_msg
+               await sleep(2)
 
-                         if len(status_msg) > 3900:
-                              await message.reply_text("Message too large to show, try again")
-                              await sleep(1)
-                         else:
-                              try:
-                                   await to_edit.edit(status_msg)
-                                   await sleep(3)
-                              except MessageNotModified:
-                                   await sleep(1)
-                              except FloodWait as fw:
-                                   await sleep(fw.value)
-                              except MessageIdInvalid:
-                                   break
+     def cancel(self):
+          self.stop_loop= True
                          
-async def delete_message(client, chat_id, msg_id):   
-     if len(status_msg_dict[chat_id]) == 0:
-            status_msg_dict[chat_id].append(msg_id)
-
-     if msg_id not in status_msg_dict[chat_id]:
-            await client.delete_messages(chat_id, status_msg_dict[chat_id])
-            status_msg_dict[chat_id].pop()
-            status_msg_dict[chat_id].append(msg_id)
 
                

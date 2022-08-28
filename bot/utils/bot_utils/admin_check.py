@@ -1,8 +1,8 @@
-from bot.core.get_vars import get_val
+from bot import OWNER_ID
 
 
 async def is_admin(user_id):
-    if user_id == get_val("OWNER_ID"):
+    if user_id == OWNER_ID:
         return True
     else:
         return False

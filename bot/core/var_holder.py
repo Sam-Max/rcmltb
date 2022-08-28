@@ -1,74 +1,35 @@
-#https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/core/varholdern.py
+# Adapted from:
+# https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/core/varholdern.py
+
 
 import logging
-import os
-from bot.consts.ExecVars import Constants
-
+from bot.core.DefaultVariables import DefaultVars
 
 class VarHolder:
     def __init__(self):
         self._var_dict = dict()
 
-    def get_var(self, variable):
+    def get_var(self, var):
 
-        if variable in self._var_dict.keys():
-            return self._var_dict[variable]
+        #Get the variable from dictionary
+        if var in self._var_dict.keys():
+            return self._var_dict[var]
 
+        #Get the variable from the default variables
         val = None
-
-        #Get the variable from the constants supplied
         try:
-            val = getattr(Constants, variable)
-        except AttributeError:pass
-
-        # Get the variable form the env [overlap]
-        envval = os.environ.get(variable)
-
-        INTS = [
-            "API_ID",
-            "OWNER_ID",
-            "TG_SPLIT_SIZE",
-        ]
-
-        BOOLS = [
-            "IS_ZIP",
-            "EXTRACT",
-        ]
-        
-        if variable == "ALLOWED_CHATS":
-            if envval is not None:
-                achats= envval.split(" ")
-                achats_second= []
-                for chat in achats:
-                    achats_second.append(int(chat))
-                val = achats_second
-        elif variable == "ALLOWED_USERS":
-            if envval is not None:
-                ausers = envval.split(" ")
-                ausers_second= []
-                for user in ausers:
-                    ausers_second.append(int(user))
-                val = ausers_second
-        elif variable in INTS:
-            val = int(envval) if envval is not None else val
-        elif variable in BOOLS:
-            if envval is not None:
-                if not isinstance(envval, bool):
-                    if "true" in envval.lower():
-                        val = True
-                    else:
-                        val = False
-        else:
-            val = envval if envval is not None else val
+            val = getattr(DefaultVars, var)
+        except AttributeError:
+            pass
 
         if val is None:
-            logging.error("The variable was not found in either the constants or environment, variable is :- {}".format(variable))
+            logging.info("Variable not found :- {}".format(var))
             
         if isinstance(val, str):
             val = val.strip()
 
-        self._var_dict[variable] = val
+        self._var_dict[var] = val
         return val
 
-    def update_var(self, name, val):
+    def set_var(self, name, val):
         self._var_dict[name] = val

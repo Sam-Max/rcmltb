@@ -2,21 +2,42 @@
 
 ## Features:
 
-- Mirror from Telegram to cloud.
-- Mirror direct download links and Mega.nz links to cloud
-- Mirror torrent and magnets links to cloud using qBittorrent.
-- Mirror batch up to 100 files at once from Telegram to cloud (private or public channel)
-- Leech files and folders from cloud to Telegram.
-- Extract and Zip files and folders (leech & mirror)
-- Copy from cloud to cloud.
-- File manager for cloud (delete and calculate size)
-- Status for tasks.
-- Telegram button menus to interact with cloud.
-- Renaming of Telegram files.
-- Progress bar when downloading and uploading.
+### qBittorrent
+- Qbittorrent support for torrent and magnets
+- Files selection before downloading
+
+### Aria2c
+- Aria support for direct download links
+
+### Mirror
+- Mirror from Telegram to cloud
+- Mirror torrent/magnets links to cloud using qBittorrent
+- Mirror directs links to cloud using Aria2
+- Mirror Mega.nz links to cloud
+- Mirror up to 100 files at once from Telegram to cloud (private & public channels)
+
+### Leech
+- Leech files/folders from cloud to Telegram
+
+### Copy
+- Copy files/folders from cloud to cloud
+- File manager for cloud (delete and calculate size options)
+
+### Clone
+- Clone G-Drive files/folders from link to cloud using gclone
+
+### Status
+- Progress bar for download and upload
+- Status for tasks
+
+### Others
+- Telegram Navigation Bottom Menus (leech, copy, myfiles) to interact with cloud
+- Renaming of Telegram files
+- Zip file/folder from cloud to Telegram
+- Extract file from cloud to Telegram
+- Extract and Zip file from Telegram to cloud
 - Direct links Supported:
   > letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
-
 
 ## Commands for bot(set through @BotFather)
 
@@ -31,6 +52,7 @@ leech - leech from cloud to Telegram
 unzipleech - leech and extract to telegram 
 zipleech - leech and zip to telegram 
 copy - copy from cloud to cloud
+gclone - clone gdrive files/folder to cloud
 myfiles - file manager
 status - Get status message of tasks
 logs - get logs from server
@@ -59,27 +81,32 @@ restart - restart bot
 - Fill up variables:
 
    - Mandatory variables:
-        - `API_ID`: get this from https://my.telegram.org. Don't put this in quotes.
+        - `API_ID`: get this from https://my.telegram.org. Don't put this in quotes
         - `API_HASH`: get this from https://my.telegram.org
-        - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot.
-        - `ALLOWED_USERS`: list of IDs of allowed users who can use this bot separated by spaces
-        - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces
-        - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather) 
-        - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go.
-        - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program. Set this surrounded by single quotes.
+        - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather)
+        - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot
+        - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
+        - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program. Set this surrounded by single quotes
    - Non mandatory variables:
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
-        - `UPSTREAM_BRANCH`: Upstream branch for update.
-        - `USER_SESSION_STRING`: Pyrogram session string for using mirrorbatch command and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: when using string session you can't use bot, use it with group or channel.
-        - `TG_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium.
-        - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10.
-        - `DEFAULT_RCLONE_DRIVE`: select a default drive from your rclone.conf file.
-        - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent.
+        - `UPSTREAM_BRANCH`: Upstream branch for update
+        - `USER_SESSION_STRING`: Pyrogram session string for using mirrorbatch command and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: when using string session you can't use bot, use it with group or channel
+        - `TG_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
+        - `ALLOWED_USERS`: list of IDs of allowed users who can use this bot separated by spaces
+        - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces
+        - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10
+        - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
 
    - MEGA
         - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from Mega SDK Page
-        - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account.
-        - `MEGA_PASSWORD`: Password for mega.nz account.
+        - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account
+        - `MEGA_PASSWORD`: Password for mega.nz account
+
+   - qBittorrent
+        - `BASE_URL_OF_BOT`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https). Str
+        - `SERVER_PORT`: Port. Str
+        - `WEB_PINCODE`: If empty or False means no more pincode required while qbit web selection. Bool
+        Qbittorrent NOTE: If your facing ram exceeded issue then set limit for MaxConnecs, decrease AsyncIOThreadsCount in qbittorrent config and set limit of DiskWriteCacheSize to 32
  
 3. **Deploying on VPS Using Docker**
 
@@ -156,10 +183,10 @@ sudo docker-compose start
 
 ## Repositories used to develop this bot:
 
-1- [TorToolkit-Telegram](https://github.com/yash-dk/TorToolkit-Telegram)
+1- [TorToolkit-Telegram](https://github.com/yash-dk/TorToolkit-Telegram). Base repository.
 
 2- [Rclone](https://github.com/rclone/rclone)
 
-3- [Telethon]() and [Pyrogram]()
+3- [Telethon](https://github.com/LonamiWebs/Telethon) and [Pyrogram](https://github.com/pyrogram/pyrogram)
 
-5- and others referenced in the code.
+4- and many others referenced in code.

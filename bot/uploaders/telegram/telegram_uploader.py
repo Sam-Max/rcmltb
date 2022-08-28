@@ -1,12 +1,12 @@
 from asyncio import sleep
-import os
+from os import walk, rename, path as ospath
 import time
-from bot import LOGGER, Bot, app, status_dict
+from bot import LOGGER, Bot, app, status_dict, status_dict_lock
 from bot.utils.bot_utils.misc_utils import get_media_info, get_video_resolution
 from bot.utils.bot_utils.screenshot import screenshot
 from pyrogram import enums
 from pyrogram.errors import FloodWait
-from bot.utils.status_utils.misc_utils import MirrorStatus
+from bot.utils.status_utils.status_utils import MirrorStatus
 from bot.utils.status_utils.telegram_status import TelegramStatus
 
 VIDEO_SUFFIXES = ["mkv", "mp4", "mov", "wmv", "3gp", "mpg", "webm", "avi", "flv", "m4v", "gif"]
@@ -16,16 +16,19 @@ class TelegramUploader():
         self._client= app if app is not None else Bot
         self._path = path
         self._message= message 
+        self.id= self._message.id
         self._sender= sender
         self.current_time= time.time()
 
     async def upload(self):
+        async with status_dict_lock:
+            status_dict[self.id] = self
         status= TelegramStatus(self._message)
-        if os.path.isdir(self._path):
-            for dirpath, _, files in os.walk(self._path):
+        if ospath.isdir(self._path):
+            for dirpath, _, files in walk(self._path):
                 for file in sorted(files):
-                    f_path = os.path.join(dirpath, file)
-                    f_size = os.path.getsize(f_path)
+                    f_path = ospath.join(dirpath, file)
+                    f_size = ospath.getsize(f_path)
                     if f_size == 0:
                         LOGGER.error(f"{f_size} size is zero, telegram don't upload zero size files")
                         continue
@@ -34,14 +37,15 @@ class TelegramUploader():
         else:
            await self.__upload_file(self._path, status)
            await sleep(1)  
-        del status_dict[status.id] 
+        async with status_dict_lock:   
+            del status_dict[self.id] 
             
     async def __upload_file(self, up_path, status):
         try:
             if str(up_path).split(".")[-1] in VIDEO_SUFFIXES:
                     if not str(up_path).split(".")[-1] in ['mp4', 'mkv']:
                         path = str(up_path).split(".")[0] + ".mp4"
-                        os.rename(up_path, path) 
+                        rename(up_path, path) 
                         up_path = path
                     caption= str(up_path).split("/")[-1]  
                     duration= get_media_info(up_path)[0]

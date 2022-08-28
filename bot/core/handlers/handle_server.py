@@ -7,15 +7,14 @@ from psutil import net_io_counters
 from telethon.tl.types import KeyboardButtonCallback
 from telethon import events
 import time
-from bot.core.get_vars import get_val
-from ... import uptime
+from ... import ALLOWED_CHATS, ALLOWED_USERS, OWNER_ID, botUptime
 from bot.utils.bot_utils import human_format
 
 
 async def handle_server_command(e):
         user_id= e.sender_id
         chat_id= e.chat_id
-        if user_id in get_val("ALLOWED_USERS") or chat_id in get_val("ALLOWED_CHATS") or user_id == get_val("OWNER_ID"):
+        if user_id in ALLOWED_USERS or chat_id in ALLOWED_CHATS or user_id == OWNER_ID:
             print(type(e))
             if isinstance(e, events.CallbackQuery.Event):
                 callbk = True
@@ -71,7 +70,7 @@ async def handle_server_command(e):
                 recv = "N/A"
                 sent = "N/A"
 
-            diff = time.time() - uptime
+            diff = time.time() - botUptime
             diff = human_format.human_readable_timedelta(diff)
 
             if callbk:

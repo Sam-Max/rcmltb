@@ -9,6 +9,7 @@ class Commands:
     ZIPLEECH= "zipleech"
     UNZIPLEECH= "unzipleech"
     COPY = "copy"
+    CLONE= "gclone"
     MYFILES= "myfiles"
     STATUS= "status"
     EXEC = "exec"
@@ -17,3 +18,7 @@ class Commands:
     SPEEDTEST = "speedtest"
     RESTART= "restart"
     TEST= "test"
+
+
+
+   

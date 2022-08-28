@@ -5,7 +5,7 @@
 Plugin for both public & private channels!
 """
 
-import time, asyncio
+import asyncio
 from ... import bot
 from ... import Bot, app
 from bot.utils.bot_utils.batch_helpers import get_link, check, get_bulk_msg
@@ -79,7 +79,7 @@ async def run_batch(userbot, client, sender, link, _range):
         except FloodWait as fw:
             await asyncio.sleep(fw.seconds + 5)
             await get_bulk_msg(userbot, client, sender, link, i)
-        time.sleep(timer)
+        await asyncio.sleep(timer)
             
                 
 

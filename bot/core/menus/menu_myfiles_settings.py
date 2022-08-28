@@ -1,174 +1,125 @@
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup
 import asyncio
-import json
-from bot import LOGGER
-from bot.utils.bot_utils.misc_utils import get_rclone_config, get_readable_size
+from json import loads as jsonloads
+from bot.utils.bot_utils.message_utils import editMessage, sendMessage
+from bot.utils.bot_utils.misc_utils import ButtonMaker, get_rclone_config, get_readable_size
 
-header= ""
 
 async def settings_myfiles_menu(
     client,
     message, 
-    drive_base="", 
     msg="", 
+    drive_base="", 
     drive_name="", 
-    submenu=None, 
+    submenu="", 
     edit=False,
     is_folder= True,
     ):
     
-     menu = []
+     buttons= ButtonMaker()
 
-     if submenu is None:
+     if submenu == "myfiles_menu_setting":
           if drive_base == "":
-               menu = [[InlineKeyboardButton(text= "📁 Calculate Size", callback_data= "myfilesmenu^size_action")]]
+               buttons.cbl_buildbutton("📁 Calculate Size", "myfilesmenu^size_action")
           else:
                if is_folder:
-                    menu = [[InlineKeyboardButton(text= "📁 Calculate Size", callback_data= "myfilesmenu^size_action"),
-                         InlineKeyboardButton(text= "🗑 Delete", callback_data= "myfilesmenu^delete_action^folder")],
-                         ]
+                    buttons.dbuildbutton("📁 Calculate Size", "myfilesmenu^size_action",
+                                         "🗑 Delete", "myfilesmenu^delete_action^folder")
                else:
-                    menu = [[InlineKeyboardButton(text= "🗑 Delete", callback_data= "myfilesmenu^delete_action^file")]]
+                    buttons.cbl_buildbutton ("🗑 Delete", "myfilesmenu^delete_action^file")
           
-          menu.append(
-               [InlineKeyboardButton("✘ Close Menu", f"myfilesmenu^selfdest")]
-          )
+          buttons.cbl_buildbutton("✘ Close Menu", f"myfilesmenu^close")
 
           if edit:
-               await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
+               await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
           else:
-               await message.reply_text(msg, quote= True, reply_markup= InlineKeyboardMarkup(menu))
+               await sendMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
      elif submenu == "rclone_size":
-        conf_path = get_rclone_config()
-
-        files_count, total_size = await rclone_size(
-            message,
-            drive_base, 
-            drive_name, 
-            conf_path, 
-        )
-
+        path = get_rclone_config()
+        files_count, total_size = await rclone_size(message, drive_base,drive_name, path)
         total_size = get_readable_size(total_size)
         msg= f"Total Files: {files_count}\nFolder Size: {total_size}"
-
-        menu.append(
-               [InlineKeyboardButton("✘ Close Menu", f"myfilesmenu^selfdest")]
-          )
+        
+        buttons.cbl_buildbutton("✘ Close Menu", f"myfilesmenu^close")
 
         if edit:
-            await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
+            await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
         else:
-            await message.reply(header, reply_markup= InlineKeyboardMarkup(menu))  
+            await sendMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
      elif submenu == "rclone_delete":
           if is_folder:
-               buttons = [[InlineKeyboardButton(text= "Yes", callback_data= "myfilesmenu^yes^folder"),
-               InlineKeyboardButton(text= "No", callback_data= "myfilesmenu^no^folder")]]
-
+               buttons.dbuildbutton("Yes", "myfilesmenu^yes^folder",
+                                    "No", "myfilesmenu^no^folder")
                msg= f"Are you sure you want to delete this folder permanently?"
           else:
-               buttons = [[InlineKeyboardButton(text= "Yes", callback_data= "myfilesmenu^yes^file"),
-               InlineKeyboardButton(text= "No", callback_data= "myfilesmenu^no^file")]]
-
+               buttons.dbuildbutton("Yes", "myfilesmenu^yes^file",
+                                    "No", "myfilesmenu^no^file")
                msg= f"Are you sure you want to delete this file permanently?"
 
-          await message.edit(msg, reply_markup= InlineKeyboardMarkup(buttons))
+          await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
      elif submenu == "yes":
           conf_path = get_rclone_config()
-          
-          menu.append(
-               [InlineKeyboardButton("✘ Close Menu", f"myfilesmenu^selfdest")]
-          )
-
           if is_folder:
-               await rclone_purge(
-                    drive_base, 
-                    drive_name, 
-                    conf_path
-               )    
+               await rclone_purge(message, drive_base, drive_name, conf_path)    
                msg= f"The folder has been deleted successfully!!"
-
           else:
-               await rclone_delete(
-                    drive_base, 
-                    drive_name, 
-                    conf_path
-               )  
+               await rclone_delete(message, drive_base, drive_name, conf_path)  
                msg= f"The file has been deleted successfully!!"
-
+     
+          buttons.cbl_buildbutton("✘ Close Menu", f"myfilesmenu^close")
+          
           if edit:
-               await message.edit(msg, reply_markup= InlineKeyboardMarkup(menu))
+               await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
           else:
-               await message.reply(header, reply_markup= InlineKeyboardMarkup(menu)) 
+               await sendMessage.reply(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button)) 
 
-async def rclone_size(
-     message,
-     drive_base, 
-     drive_name, 
-     conf_path
-     ):
-
-     await message.edit("**Calculating Folder Size...**\n\nPlease wait, it will take some time depending on number of files.")
-
+async def rclone_size(message, drive_base, drive_name, conf_path):
+     await editMessage("**Calculating Folder Size...**\n\nPlease wait, it will take some time depending on number of files", message)
+    
      cmd = ["rclone", "size", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--json"] 
-
-     process = await asyncio.create_subprocess_exec(
-     *cmd,
-     stdout=asyncio.subprocess.PIPE
-     )
-
+     process = await asyncio.create_subprocess_exec(*cmd,
+                stdout=asyncio.subprocess.PIPE, 
+                stderr=asyncio.subprocess.PIPE)
      stdout, stderr = await process.communicate()
      stdout = stdout.decode().strip()
+     return_code = await process.wait()
 
-     if process.returncode != 0:
-          LOGGER.info(stderr)
+     if return_code != 0:
+          err = stderr.decode().strip()
+          return await sendMessage(f'Error: {err}', message)
 
-     try:
-          data = json.loads(stdout)
-          files = data["count"]
-          size = data["bytes"]
-     except Exception as exc:
-          LOGGER.info(exc)
+     data = jsonloads(stdout)
+     files = data["count"]
+     size = data["bytes"]
 
      return files, size
 
-async def rclone_purge (
-     drive_base, 
-     drive_name, 
-     conf_path
-     ):
-
+async def rclone_purge(message,drive_base, drive_name, conf_path):
      cmd = ["rclone", "purge", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
-
-     process = await asyncio.create_subprocess_exec(
-     *cmd,
-     stdout=asyncio.subprocess.PIPE
-     )
-
+     process = await asyncio.create_subprocess_exec(*cmd,
+                stdout=asyncio.subprocess.PIPE, 
+                stderr=asyncio.subprocess.PIPE)
      stdout, stderr = await process.communicate()
      stdout = stdout.decode().strip()
+     return_code = await process.wait()
 
-     if process.returncode != 0:
-          LOGGER.info(stderr)
+     if return_code != 0:
+          err = stderr.decode().strip()
+          return await sendMessage(f'Error: {err}', message)
 
-async def rclone_delete (
-     drive_base, 
-     drive_name, 
-     conf_path, 
-     ):
-
+async def rclone_delete(message, drive_base, drive_name, conf_path):
      cmd = ["rclone", "delete", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
-
-     process = await asyncio.create_subprocess_exec(
-     *cmd,
-     stdout=asyncio.subprocess.PIPE
-     )
-
+     process = await asyncio.create_subprocess_exec(*cmd,
+                stdout=asyncio.subprocess.PIPE, 
+                stderr=asyncio.subprocess.PIPE)
      stdout, stderr = await process.communicate()
      stdout = stdout.decode().strip()
+     return_code = await process.wait()
 
-     if process.returncode != 0:
-          LOGGER.info(stderr)
+     if return_code != 0:
+          err = stderr.decode().strip()
+          return await sendMessage(f'Error: {err}', message)
 

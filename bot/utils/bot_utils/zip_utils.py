@@ -5,6 +5,8 @@ from typing import Union,List,Tuple
 from bot import DOWNLOAD_DIR, LOGGER, TG_SPLIT_SIZE
 from subprocess import Popen
 
+from bot.utils.bot_utils.message_utils import editMessage
+
 async def cli_call(cmd: Union[str,List[str]]) -> Tuple[str,str]:
     if isinstance(cmd,str):
         cmd = shlex.split(cmd)
@@ -56,14 +58,13 @@ async def split_in_zip(path, size=None):
     else:
         return None
 
-async def extract_archive(path, password=""):
+async def extract_archive(path, message, password=""):
     if os.path.exists(path):
         if os.path.isfile(path):
             valid_exts = (".zip", ".7z", ".tar", ".gzip2", ".iso", ".wim", ".rar", ".tar.gz",".tar.bz2")
             
             if str(path).endswith(valid_exts):
-                time_s= str(time.time()).replace(".","") 
-                userpath = f'{DOWNLOAD_DIR}{time_s}'
+                userpath = f'{DOWNLOAD_DIR}{message.id}'
                 if not os.path.exists(userpath):
                     os.mkdir(userpath)
                     
@@ -85,18 +86,21 @@ async def extract_archive(path, password=""):
                 if err:
                     if "Wrong password" in err:
                         msg= "Wrong Password"
+                        await editMessage(msg, message)
                     else:
                         LOGGER.error(err)
                         LOGGER.error(out)
-                    return False, msg
+                    return False
                 else:
-                    return extpath, ""
+                    return extpath
         else:
             msg= "Wrong file extension, can't extract"
-            return False, msg
+            await editMessage(msg, message)
+            return False
     else:
         msg= "Fatal Error"
-        return False, msg
+        await editMessage(msg, message)
+        return False
 
 def get_path_size(path: str):
     if os.path.isfile(path):

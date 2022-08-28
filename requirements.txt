@@ -2,7 +2,11 @@ cryptg
 psutil
 aria2p
 bencoding
+flask
+gunicorn
+anytree
 lk21
+lxml
 cfscrape
 Telethon
 tgCrypto

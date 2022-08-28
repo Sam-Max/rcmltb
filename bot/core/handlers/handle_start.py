@@ -1,14 +1,14 @@
-from bot.core.get_vars import get_val
+from bot import ALLOWED_CHATS, ALLOWED_USERS, OWNER_ID
 
 
 async def start_handler(message):
     user_id= message.sender_id
     chat_id= message.chat_id
-    if user_id in get_val("ALLOWED_USERS") or chat_id in get_val("ALLOWED_CHATS") or user_id == get_val("OWNER_ID"):
-        msg = '''**Hello, ¡Welcome to Rclone-Tg-Bot!\n\n
-I can help you transfer files from one cloud to another.\n
-Can also mirror files from telegram to cloud and leech from cloud to telegram**\n\n
-Made by: https://github.com/Sam-Max
+    if user_id in ALLOWED_USERS or chat_id in ALLOWED_CHATS or user_id == OWNER_ID:
+        msg = '''**Hello, ¡Welcome to Rclone-Tg-Bot!\n
+I can help you copy files from one cloud to another.
+Also can mirror files from Telegram to cloud and leech from cloud to Telegram**\n\n
+Repository: https://github.com/Sam-Max/Rclone-Tg-Bot
 '''
         await message.reply(msg)
     else:

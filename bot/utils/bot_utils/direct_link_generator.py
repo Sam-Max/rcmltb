@@ -12,17 +12,15 @@ from requests import get as rget, head as rhead, post as rpost, Session as rsess
 from re import findall as re_findall, sub as re_sub, match as re_match, search as re_search
 from urllib.parse import urlparse, unquote
 from json import loads as jsnloads
-from bot.core.get_vars import get_val
 from bot.utils.bot_utils.exceptions import DirectDownloadLinkException
 from lk21 import Bypass
 from cfscrape import create_scraper
 from bs4 import BeautifulSoup
 from base64 import standard_b64encode
-from bot import LOGGER
+from bot import LOGGER, UPTOBOX_TOKEN
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
              'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
 
-UPTOBOX_TOKEN = get_val('UPTOBOX_TOKEN')
 
 def direct_link_generator(link: str):
     """ direct links generator """

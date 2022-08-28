@@ -1,8 +1,8 @@
 from asyncio import sleep
-import math
+from math import floor
 import time
-from bot import LOGGER, Bot, status_dict
-from bot.utils.status_utils.misc_utils import get_bottom_status, humanbytes, time_formatter
+from bot import LOGGER, Bot, status_dict, status_dict_lock
+from bot.utils.status_utils.status_utils import get_bottom_status, humanbytes, time_formatter
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 
@@ -15,7 +15,6 @@ class TelegramStatus:
         self.id = self._user_message.id
         self.cancelled = False
         self._status_msg = ""
-        status_dict[self.id] = self
 
      def get_status_msg(self):
          return self._status_msg
@@ -25,11 +24,12 @@ class TelegramStatus:
          diff = now - current_time
          
          if self.cancelled:
+            await self._user_message.edit('Download cancelled')   
             await sleep(1.5) 
-            await self._user_message.edit('Process cancelled!')
+            async with status_dict_lock:
+                del status_dict[self.id]
             Bot.stop_transmission()
-            del status_dict[self.id]
-         
+           
          if round(diff % 10.00) == 0 or current == total:
             percentage = current * 100 / total
             speed = current / diff
@@ -40,8 +40,8 @@ class TelegramStatus:
             estimated_total_time = time_formatter(milliseconds=estimated_total_time)
 
             progress = "{0}{1}\n**P:** {2}%".format(
-                  ''.join([FINISHED_PROGRESS_STR for i in range(math.floor(percentage / 10))]),
-                  ''.join([UN_FINISHED_PROGRESS_STR for i in range(10 - math.floor(percentage / 10))]),
+                  ''.join([FINISHED_PROGRESS_STR for i in range(floor(percentage / 10))]),
+                  ''.join([UN_FINISHED_PROGRESS_STR for i in range(10 - floor(percentage / 10))]),
                   round(percentage, 2))
 
             self._status_msg = "{0}\n{1}\n{2}\n**Downloaded:** {3} of {4}\n**Speed**: {5} | **ETA:** {6}\n {7}".format(

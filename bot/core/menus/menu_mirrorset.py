@@ -1,180 +1,118 @@
-from telethon.tl.types import KeyboardButtonCallback
 from bot import LOGGER
-from bot.utils.bot_utils.misc_utils import get_rclone_config, pairwise
-from ..get_vars import get_val
+from bot.core.varholderwrap import get_val, set_val
+from bot.utils.bot_utils.menu_utils import Menus, rcloneListButtonMaker
+from bot.utils.bot_utils.misc_utils import TelethonButtonMaker, get_rclone_config, pairwise
 import os, configparser
-from telethon.tl.types import KeyboardButtonCallback
 import asyncio
-import json
-from bot.core.set_vars import set_val
+from json import loads as jsonloads
 
 yes = "✅"
 folder_icon= "📁"
-header = ""
 
-async def settings_mirrorset_menu(
+async def mirrorset_menu(
     query, 
-    mmes="", 
-    drive_base="", 
-    edit=False, 
+    message, 
     msg="", 
+    submenu="", 
+    drive_base="", 
     drive_name="", 
+    edit=False, 
     data_cb="", 
-    submenu=None, 
     data_back_cb= ""
     ):
-   
-    menu = []
-    btns= []
+    
+    buttons = TelethonButtonMaker()
 
-    if submenu is None:
+    if submenu == "list_drive":
         path= os.path.join(os.getcwd(), "rclone.conf")
         conf = configparser.ConfigParser()
         conf.read(path)
 
-        def_drive = get_val("DEFAULT_RCLONE_DRIVE")
-
         for j in conf.sections():
             prev = ""
-            if j == def_drive:
+            if j == get_val("RCLONE_MIRRORSET_DRIVE"):
                 prev = yes
-
             if "team_drive" in list(conf[j]):
-                btns.append(KeyboardButtonCallback(f"{prev} {folder_icon} {j}", f"mirrorsetmenu^list_drive_mirrorset_menu^{j}"))
+                buttons.cb_buildsecbutton(f"{prev} {folder_icon} {j}", f"mirrorsetmenu^list_drive_mirrorset_menu^{j}")
             else:
-                btns.append(KeyboardButtonCallback(f"{prev} {folder_icon} {j}", f"mirrorsetmenu^list_drive_mirrorset_menu^{j}"))
+                buttons.cb_buildsecbutton(f"{prev} {folder_icon} {j}", f"mirrorsetmenu^list_drive_mirrorset_menu^{j}")
         
-        for a, b in pairwise(btns):
+        for a, b in pairwise(buttons.second_button):
             row= [] 
             if b == None:
                 row.append(a)  
-                menu.append(row)
+                buttons.ap_buildbutton(row)
                 break
             row.append(a)
             row.append(b)
-            menu.append(row)
+            buttons.ap_buildbutton(row)
 
-        menu.append(
-            [KeyboardButtonCallback("✘ Close Menu", f"mirrorsetmenu^selfdest")]
-        )
-
-        base_dir= get_val("BASE_DIR")
-        rclone_drive = get_val("DEFAULT_RCLONE_DRIVE")
-        msg= f"Select cloud where you want to upload file\n\nPath:`{rclone_drive}:{base_dir}`"
+        buttons.cbl_buildbutton("✘ Close Menu", f"mirrorsetmenu^close")
 
         if edit:
-            await mmes.edit(msg, buttons=menu)
+            await message.edit(msg, buttons=buttons.first_button)
         else:
-            await query.reply(header + msg, buttons=menu)
+            await message.reply(msg, buttons=buttons.first_button)
 
 
-    elif submenu == "list_drive":
+    elif submenu == "list_dir":
         conf_path = get_rclone_config()
 
-        await list_selected_drive(
-            query, 
-            drive_base, 
-            drive_name, 
-            conf_path, 
-            data_cb, 
-            menu,
-            data_back_cb 
-            )
+        buttons.cbl_buildbutton(f"✅ Select this folder", f"mirrorsetmenu^close")
 
-        menu.append(
-            [KeyboardButtonCallback("⬅️ Back", f"mirrorsetmenu^{data_back_cb}")]
+        cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only"] 
+
+        process = await asyncio.create_subprocess_exec(*cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
         )
 
-        menu.append(
-            [KeyboardButtonCallback("✘ Close Menu", f"mirrorsetmenu^selfdest")]
-        )
+        out, err = await process.communicate()
+        out = out.decode().strip()
+        return_code = await process.wait()
+        
+        if return_code != 0:
+           err = err.decode().strip()
+           return await message.reply(f'Error: {err}')  
+
+        list_info = jsonloads(out)
+        list_info.sort(key=lambda x: x["Name"])  
+        set_val("list_info", list_info)
+
+        if len(list_info) == 0:
+            buttons.cbl_buildbutton("❌Nothing to show❌", "mirrorsetmenu^pages")
+        else:    
+            total = len(list_info)
+            max_results= 10
+            offset= 0
+            start = offset
+            end = max_results + start
+            next_offset = offset + max_results
+
+            if end > total:
+                list_info= list_info[offset:]    
+            elif offset >= total:
+                list_info= []    
+            else:
+                list_info= list_info[start:end] 
+  
+
+            rcloneListButtonMaker(result_list=list_info, 
+                buttons= buttons, 
+                menu_type= Menus.MIRRORSET,
+                callback= data_cb   
+             )
+
+            if offset == 0 and total <= 10:
+                buttons.cbl_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="mirrorsetmenu^pages") 
+            else: 
+                buttons.dbuildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages",
+                                    "NEXT ⏩", f"n_mirrorset {next_offset} {data_back_cb}")
+
+        buttons.cbl_buildbutton("⬅️ Back", f"mirrorsetmenu^{data_back_cb}")
+        buttons.cbl_buildbutton("✘ Close Menu", f"mirrorsetmenu^close")
 
         if edit:
-            await mmes.edit(msg, buttons=menu)
+            await message.edit(msg, buttons=buttons.first_button)
         else:
-            await query.reply(header, buttons=menu)
-
-##########################################
-async def list_selected_drive(
-    query, 
-    drive_base, 
-    drive_name, 
-    conf_path, 
-    data_cb, 
-    menu, 
-    data_back_cb="",
-    offset= 0
-    ):
-    menu.append([KeyboardButtonCallback(f" ✅ Select this folder", f"mirrorsetmenu^selfdest")])
-
-    cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only" ] 
-
-    process = await asyncio.create_subprocess_exec(
-    *cmd,
-    stdout=asyncio.subprocess.PIPE
-    )
-
-    stdout, _ = await process.communicate()
-    stdout = stdout.decode().strip()
-
-    try:
-        data = json.loads(stdout)
-    except Exception as e:
-        LOGGER.info(e)
-        return
-
-    if data == []:
-         menu.append(
-            [KeyboardButtonCallback("❌Nothing to show❌", data="mirrorsetmenu^pages")])
-         return     
-
-    data.sort(key=lambda x: x["Name"])  
-    set_val("JSON_RESULT_DATA", data)
-    data, next_offset, total= get_list_drive_results_mirrorset(data)
-    list_drive_mirrorset(data, menu, data_cb)
-
-    if offset == 0 and total <= 10:
-        menu.append(
-            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="mirrorsetmenu^pages")]) 
-            
-    else: 
-        menu.append(
-            [KeyboardButtonCallback(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data="mirrorsetmenu^pages"),
-             KeyboardButtonCallback("NEXT ⏩", data= f"n_mirrorset {next_offset} {data_back_cb}")
-            ])
-
-           
-def get_list_drive_results_mirrorset(data, max_results=10, offset=0):
-    total = len(data)
-    next_offset = offset + max_results
-    data = list_range(offset, max_results, data)
-    return data, next_offset, total    
-
-def list_range(offset, max_results, data):
-    start = offset
-    end = max_results + start
-    
-    if end > len(data):
-        return data[offset:]    
-
-    if offset >= len(data):
-        return []    
-    
-    return data[start:end]             
-
-def list_drive_mirrorset(result, menu=[], data_cb=""):
-     folder = ""
-     file= ""
-     index= 0
-     for i in result:
-        path = i["Path"]
-        path == path.strip()
-        index= index + 1
-        set_val(f"{index}", path)
-        mime_type= i['MimeType']
-        if mime_type == 'inode/directory': 
-            file= "" 
-            folder= "📁"
-        menu.append(        
-        [KeyboardButtonCallback(f"{folder} {file} {path}", f"mirrorsetmenu^{data_cb}^{index}")]
-     )
+            await message.reply(msg, buttons=buttons.first_button)

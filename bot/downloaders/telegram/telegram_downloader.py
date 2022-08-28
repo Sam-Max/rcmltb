@@ -1,19 +1,22 @@
 
 import time
-from bot import status_dict, LOGGER
-from bot.utils.status_utils.misc_utils import MirrorStatus
+from bot import status_dict, status_dict_lock, LOGGER
+from bot.utils.status_utils.status_utils import MirrorStatus
 from bot.utils.status_utils.telegram_status import TelegramStatus
 
 
 class TelegramDownloader:
-    def __init__(self, file, client, mess_age, path) -> None:
+    def __init__(self, file, client, message, path) -> None:
         self._client= client
         self._file = file
-        self._mess_age= mess_age 
+        self._message= message 
+        self.id= self._message.id
         self._path= path
 
     async def download(self):
-        status= TelegramStatus(self._mess_age)
+        status= TelegramStatus(self._message)
+        async with status_dict_lock:
+            status_dict[self.id] = status
         try:
             media_path= await self._client.download_media(
                 message= self._file,
@@ -26,6 +29,10 @@ class TelegramDownloader:
                 ))
         except Exception as e:
             LOGGER.error(str(e))
-        del status_dict[status.id]
+        async with status_dict_lock: 
+            try:  
+                del status_dict[self.id]
+            except:
+                pass
         return media_path
 
