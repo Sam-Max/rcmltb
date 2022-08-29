@@ -23,7 +23,7 @@ async def handle_config(client, message):
           if response:
                try:
                     await client.download_media(response, file_name= "./rclone.conf")
-                    msg = "**Rclone file loaded successfully!**\n\n"
+                    msg = "**Rclone file loaded!**\n"
                     msg += "Use /mirrorset` to select a drive"
                     await sendMessage(msg, message)
                except Exception as ex:

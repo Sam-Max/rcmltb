@@ -32,194 +32,160 @@ from bot.core.menus.callbacks.nextpage.handle_nextpage_myfiles_menu_cb import ne
 
 
 def add_handlers(bot):
-
     # PYROGRAM HANDLERS
 
-    download_handlers = MessageHandler(
+    mirror_handler = MessageHandler(
         handle_mirror_command,
-        filters=filters.command(Commands.MIRROR)
-    )
-    bot.pyro.add_handler(download_handlers)
+        filters=filters.command(Commands.MIRROR))
+    bot.pyro.add_handler(mirror_handler)
 
-    download_handlers = MessageHandler(
+    config_handler = MessageHandler(
         handle_config,
-        filters=filters.command(Commands.CONFIG)
-    )
-    bot.pyro.add_handler(download_handlers)
+        filters=filters.command(Commands.CONFIG))
+    bot.pyro.add_handler(config_handler)
 
-    download_handlers = MessageHandler(
+    status_handlers = MessageHandler(
         status_handler,
-        filters=filters.command(Commands.STATUS)
-    )
-    bot.pyro.add_handler(download_handlers)
+        filters=filters.command(Commands.STATUS))
+    bot.pyro.add_handler(status_handlers)
 
-    download_handlers = MessageHandler(
+    zip_mirror_handler = MessageHandler(
         handle_zip_mirror_command,
-        filters=filters.command(Commands.ZIPMIRROR)
-    )
-    bot.pyro.add_handler(download_handlers)
+        filters=filters.command(Commands.ZIPMIRROR))
+    bot.pyro.add_handler(zip_mirror_handler)
 
-    download_handlers = MessageHandler(
+    unzip_mirror_handler = MessageHandler(
         handle_unzip_mirror_command,
-        filters=filters.command(Commands.UNZIPMIRROR)
-    )
-    bot.pyro.add_handler(download_handlers)
+        filters=filters.command(Commands.UNZIPMIRROR))
+    bot.pyro.add_handler(unzip_mirror_handler)
 
-    download_handlers = MessageHandler(
+    clone_handler = MessageHandler(
         handle_clone_command,
-        filters=filters.command(Commands.CLONE)
-    )
-    bot.pyro.add_handler(download_handlers)
+        filters=filters.command(Commands.CLONE))
+    bot.pyro.add_handler(clone_handler)
 
-    download_handlers = MessageHandler(
+    qbit_handler = MessageHandler(
         handle_qbit_mirror_command,
-        filters=filters.command(Commands.QBMIRROR)
-    )
-    bot.pyro.add_handler(download_handlers)
+        filters=filters.command(Commands.QBMIRROR))
+    bot.pyro.add_handler(qbit_handler)
 
-    leech_handlers = MessageHandler(
+    leech_handler = MessageHandler(
         handle_leech_command,
-        filters=filters.command(Commands.LEECH)
-    )
-    bot.pyro.add_handler(leech_handlers)
+        filters=filters.command(Commands.LEECH))
+    bot.pyro.add_handler(leech_handler)
 
-    download_handlers = MessageHandler(
+    zip_leech_handler = MessageHandler(
         handle_zip_leech_command,
-        filters=filters.command(Commands.ZIPLEECH)
-    )
-    bot.pyro.add_handler(download_handlers)
+        filters=filters.command(Commands.ZIPLEECH))
+    bot.pyro.add_handler(zip_leech_handler)
 
-    download_handlers = MessageHandler(
+    unzip_leech_handler = MessageHandler(
         handle_unzip_leech_command,
-        filters=filters.command(Commands.UNZIPLEECH)
-    )
-    bot.pyro.add_handler(download_handlers)
+        filters=filters.command(Commands.UNZIPLEECH))
+    bot.pyro.add_handler(unzip_leech_handler)
 
-    myfiles_handlers = MessageHandler(
+    myfiles_handler = MessageHandler(
         handle_myfiles,
-        filters=filters.command(Commands.MYFILES)
-    )
-    bot.pyro.add_handler(myfiles_handlers)
+        filters=filters.command(Commands.MYFILES))
+    bot.pyro.add_handler(myfiles_handler)
 
-    test_handlers = MessageHandler(
+    test_handler = MessageHandler(
         handle_test_command,
-        filters=filters.command(Commands.TEST)
-    )
-
-    bot.pyro.add_handler(test_handlers)
+        filters=filters.command(Commands.TEST))
+    bot.pyro.add_handler(test_handler)
 
     # TELETHON HANDLERS
 
     bot.add_event_handler(
         handle_copy_command,
-        events.NewMessage(pattern=command_process(f"/{Commands.COPY}"))
-    )
+        events.NewMessage(pattern=command_process(f"/{Commands.COPY}")))
 
     bot.add_event_handler(
         handle_exec_message_f,
-        events.NewMessage(pattern=command_process(f"/{Commands.EXEC}"))
-    )
+        events.NewMessage(pattern=command_process(f"/{Commands.EXEC}")))
 
     bot.add_event_handler(
         handle_restart,
-        events.NewMessage(pattern=command_process(f"/{Commands.RESTART}"))
-    )
+        events.NewMessage(pattern=command_process(f"/{Commands.RESTART}")))
 
     bot.add_event_handler(
         get_logs,
-        events.NewMessage(pattern=command_process(f"/{Commands.GETLOGS}"))
-    )
+        events.NewMessage(pattern=command_process(f"/{Commands.GETLOGS}")))
 
     bot.add_event_handler(
         handle_server_command,
-        events.NewMessage(pattern=command_process(f"/{Commands.SERVER}"))
-    )
+        events.NewMessage(pattern=command_process(f"/{Commands.SERVER}")))
 
     bot.add_event_handler(
         start_handler,
-        events.NewMessage(pattern=command_process(f"/{Commands.START}"))
-    )
+        events.NewMessage(pattern=command_process(f"/{Commands.START}")))
 
     bot.add_event_handler(
         speed_handler,
-        events.NewMessage(pattern=command_process(f"/{Commands.SPEEDTEST}"))
-    )
+        events.NewMessage(pattern=command_process(f"/{Commands.SPEEDTEST}")))
 
     bot.add_event_handler(
         handle_mirrorset_command,
-        events.NewMessage(pattern=command_process(f"/{Commands.MIRRORSET}"))
-    )
+        events.NewMessage(pattern=command_process(f"/{Commands.MIRRORSET}")))
 
     # Callback Handlers
 
     # next
     bot.add_event_handler(
         next_page_mirrorset,
-        events.CallbackQuery(pattern="n_mirrorset")
-    )
+        events.CallbackQuery(pattern="n_mirrorset"))
 
     bot.add_event_handler(
         next_page_copy,
-        events.CallbackQuery(pattern="n_copy")
-    )
+        events.CallbackQuery(pattern="n_copy"))
 
     bot.pyro.add_handler(
         CallbackQueryHandler(
             next_page_myfiles,
-            filters=filters.regex("n_myfiles"))
-    )
+            filters=filters.regex("n_myfiles")))
 
     bot.pyro.add_handler(
         CallbackQueryHandler(
             next_page_leech,
-            filters=filters.regex("n_leech"))
-    )
+            filters=filters.regex("n_leech")))
 
     bot.pyro.add_handler(
         CallbackQueryHandler(
             get_confirm,
-            filters=filters.regex("btsel"))
-    )
+            filters=filters.regex("btsel")))
 
     # MENUS
     bot.pyro.add_handler(
         CallbackQueryHandler(
             handle_setting_myfiles_menu_callback,
-            filters=filters.regex("myfilesmenu"))
-    )
+            filters=filters.regex("myfilesmenu")))
 
     bot.pyro.add_handler(
         CallbackQueryHandler(
             handle_leech_menu_callback,
-            filters=filters.regex("leechmenu"))
-    )
+            filters=filters.regex("leechmenu")))
 
     bot.pyro.add_handler(
         CallbackQueryHandler(
             handle_mirror_menu_callback,
-            filters=filters.regex("mirrormenu"))
-    )
+            filters=filters.regex("mirrormenu")))
 
     bot.add_event_handler(
         handle_setting_copy_menu_callback,
-        events.CallbackQuery(pattern="copymenu")
-    )
+        events.CallbackQuery(pattern="copymenu"))
 
     bot.add_event_handler(
         handle_setting_mirroset_callback,
-        events.CallbackQuery(pattern="mirrorsetmenu")
-    )
+        events.CallbackQuery(pattern="mirrorsetmenu"))
     
     # others
     bot.add_event_handler(
         handle_cancel,
-        events.CallbackQuery(pattern="cancel")
-    )
+        events.CallbackQuery(pattern="cancel"))
 
     bot.add_event_handler(
         handle_server_command,
-        events.CallbackQuery(pattern="fullserver")
-    )
+        events.CallbackQuery(pattern="fullserver"))
 
 def command_process(cmd):
     return compile(cmd, IGNORECASE)
