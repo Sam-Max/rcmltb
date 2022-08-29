@@ -3,7 +3,7 @@ import os
 from bot import DOWNLOAD_DIR, LOGGER, TG_SPLIT_SIZE
 from pyrogram import filters
 from subprocess import run
-from bot.utils.bot_utils.message_utils import editMessage, sendMessage
+from bot.utils.bot_utils.message_utils import editMessage
 from bot.core.varholderwrap import get_val
 from bot.downloaders.telegram.telegram_downloader import TelegramDownloader
 from bot.uploaders.rclone.rclone_mirror import RcloneMirror

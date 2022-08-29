@@ -2,6 +2,7 @@ from re import IGNORECASE, compile
 from telethon import events
 from bot.core.Commands import Commands
 from bot.core.handlers.handle_cancel import handle_cancel
+from bot.core.handlers.handle_config import handle_config
 from bot.core.handlers.handle_copy import handle_copy_command
 from bot.core.handlers.handle_mirror import handle_clone_command, handle_mirror_command, handle_qbit_mirror_command, handle_unzip_mirror_command, handle_zip_mirror_command
 from bot.core.handlers.handle_exec import handle_exec_message_f
@@ -37,6 +38,12 @@ def add_handlers(bot):
     download_handlers = MessageHandler(
         handle_mirror_command,
         filters=filters.command(Commands.MIRROR)
+    )
+    bot.pyro.add_handler(download_handlers)
+
+    download_handlers = MessageHandler(
+        handle_config,
+        filters=filters.command(Commands.CONFIG)
     )
     bot.pyro.add_handler(download_handlers)
 

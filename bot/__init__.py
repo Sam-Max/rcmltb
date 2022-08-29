@@ -54,13 +54,12 @@ try:
     if len(RCLONE_CONFIG) == 0:
         raise KeyError
     RCLONE_CONFIG.strip()
-    with open(ospath.join(getcwd(), "rclone.conf"), "wb") as file:
-        file.write(bytes(RCLONE_CONFIG,'utf-8'))
+    with open("rclone.conf", "wb") as file:
+        file.write(bytes(RCLONE_CONFIG, 'utf-8'))
     LOGGER.info(f'Rclone file loaded!') 
 except:
-    LOGGER.info(f'Failed to load rclone file!')  
-    LOGGER.error("One or more env variables missing! Exiting now")
-    exit(1)
+    LOGGER.info(f'Rclone file not loaded!')  
+    pass
 
 try:
     EDIT_SLEEP_SECS = getConfig('EDIT_SLEEP_SECS')

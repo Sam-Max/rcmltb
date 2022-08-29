@@ -53,6 +53,7 @@ unzipleech - leech and extract to telegram
 zipleech - leech and zip to telegram 
 copy - copy from cloud to cloud
 gclone - clone gdrive files/folder to cloud
+config - load rclone config file from Telegram
 myfiles - file manager
 status - Get status message of tasks
 logs - get logs from server
@@ -86,8 +87,8 @@ restart - restart bot
         - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather)
         - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot
         - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
-        - `RCLONE_CONFIG`: content of the rclone.conf file generated with rclone command-line program. Set this surrounded by single quotes
    - Non mandatory variables:
+        - `RCLONE_CONFIG`: content of the rclone.conf file. Set this surrounded by single quotes. You can also skip this and load rclone.conf file from bot with /config cmd
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
         - `UPSTREAM_BRANCH`: Upstream branch for update
         - `USER_SESSION_STRING`: Pyrogram session string for using mirrorbatch command and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: when using string session you can't use bot, use it with group or channel

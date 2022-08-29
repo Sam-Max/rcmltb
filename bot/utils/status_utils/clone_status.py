@@ -56,12 +56,12 @@ class CloneStatus:
                     file_name = name[0][2].strip()
                     return True, file_name 
                else:
-                    return True, "" 
+                    return True, ""
           except IndexError:
-               await editMessage(f"**ERROR**\n\nTry Any Other URL or Try Again", self._message)
-               return True, "" 
+               await editMessage(f"Try another url or check if you sent folder name", self._message)
+               return False, ""
           except Exception as err:
                LOGGER.info(err)
-               await editMessage(f"**ERROR**\n\n`{err}`", self._message)
-               return True, "" 
+               await editMessage(f"**ERROR**\n`{err}`", self._message)
+               return False, "" 
                     

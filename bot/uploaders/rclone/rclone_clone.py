@@ -24,7 +24,7 @@ class GDriveClone:
         self.edit_msg= ""
         self.name = ""
         self.file_name= ""
-        self.drive_name = get_val("RCLONE_DRIVE")
+        self.drive_name = get_val("RCLONE_MIRRORSET_DRIVE")
         self.base_dir= get_val("MIRRORSET_BASE_DIR")
 
     async def execute(self):
@@ -57,20 +57,20 @@ class GDriveClone:
             await self.__onCloningComplete(file_name)
 
     async def __onCloningComplete(self, file_name):    
-            if file_name:
+            if len(file_name) > 0:
                 self.name= file_name
                 _type = "File"
                 _flag = "--files-only"
                 _dir= ""
             
-            if self.name:
+            if len(self.name) > 0:
                 _flag = "--dirs-only"
                 _type = "Folder"
                 _dir= "/"
 
             g_name= escape(self.name)
             with open("filter.txt", "w+", encoding="utf-8") as filter:
-                 print(f"+ {g_name}{_dir}\n- *", file= filter)
+                 print(f"+ {g_name}{_dir}\n- *", file=filter)
 
             cmd = ["rclone", "lsf", "--config=./rclone.conf", "-F", "i", "--filter-from=./filter.txt", 
                     f"{_flag}", f"{self.drive_name}:{self.base_dir}"]

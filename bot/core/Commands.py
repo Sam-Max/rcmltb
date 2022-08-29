@@ -1,6 +1,7 @@
 class Commands:
     START = "start"
     MIRROR = "mirror"
+    CONFIG= "config"
     MIRRORSET = "mirrorset"
     ZIPMIRROR = "zipmirror"
     UNZIPMIRROR = "unzipmirror"

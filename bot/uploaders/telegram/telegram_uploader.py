@@ -21,9 +21,9 @@ class TelegramUploader():
         self.current_time= time.time()
 
     async def upload(self):
-        async with status_dict_lock:
-            status_dict[self.id] = self
         status= TelegramStatus(self._message)
+        async with status_dict_lock:
+            status_dict[self.id] = status
         if ospath.isdir(self._path):
             for dirpath, _, files in walk(self._path):
                 for file in sorted(files):
@@ -37,8 +37,11 @@ class TelegramUploader():
         else:
            await self.__upload_file(self._path, status)
            await sleep(1)  
-        async with status_dict_lock:   
-            del status_dict[self.id] 
+        async with status_dict_lock: 
+            try:  
+                del status_dict[self.id]
+            except:
+                pass 
             
     async def __upload_file(self, up_path, status):
         try:

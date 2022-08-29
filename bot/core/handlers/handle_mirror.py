@@ -59,7 +59,9 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False, isGc
             if file is None:
                 reply_text= reply_message.text.strip()      
                 if is_url(reply_text) or is_magnet(reply_text):     
-                     link = reply_text         
+                     link = reply_text
+                else:
+                    return        
             elif file.mime_type != "application/x-bittorrent":
                     name= file.file_name
                     size= get_readable_size(file.file_size)
@@ -123,11 +125,8 @@ async def mirror(client, message, isZip=False, extract=False, isQbit=False, isGc
                 else:
                     await sendMessage("MEGA_API_KEY not provided!", message)
             elif isGclone:
-                try:
                     gd_clone = GDriveClone(message, link)
                     await gd_clone.execute()
-                except Exception as ex:
-                    await sendMessage(f'GClone Error : {ex}', message)
             elif is_magnet(link) or ospath.exists(link):
                 qbit_dl= QbDownloader(message)
                 path = f'{DOWNLOAD_DIR}{message.id}'
