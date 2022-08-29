@@ -143,6 +143,8 @@ restart - restart bot
 
 4. **Deploying on VPS Using docker-compose**
 
+**NOTE**: If you want to use port other than 80, change it in docker-compose.yml
+
 ```
 sudo apt install docker-compose
 ```
