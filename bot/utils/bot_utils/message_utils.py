@@ -1,21 +1,29 @@
 from asyncio import sleep
+from os import remove
 from bot import LOGGER, Bot
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified
+from pyrogram.enums.parse_mode import ParseMode
 
 async def sendMessage(text: str, message):
     try:
         return await Bot.send_message(message.chat.id,
                             reply_to_message_id=message.id,
                             text=text)
+    except FloodWait as fw:
+        await sleep(fw.value)
+        return await sendMessage(text, message)
     except Exception as e:
         LOGGER.error(str(e))
 
 async def sendMarkup(text: str, message, reply_markup):
     try:
-        await Bot.send_message(message.chat.id,
+        return await Bot.send_message(message.chat.id,
                             reply_to_message_id=message.id,
                             text=text, 
                             reply_markup=reply_markup)
+    except FloodWait as fw:
+        await sleep(fw.value)
+        return await sendMarkup(text, message, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
 
@@ -25,6 +33,9 @@ async def editMarkup(text: str, message, reply_markup):
                                     message.id,
                                     text=text, 
                                     reply_markup=reply_markup)
+    except FloodWait as fw:
+        await sleep(fw.value)
+        return await editMarkup(text, message, reply_markup)                                
     except Exception as e:
         LOGGER.error(str(e))
 
@@ -48,3 +59,25 @@ async def deleteMessage(message):
     except Exception as e:
         LOGGER.error(str(e))
 
+async def sendFile(message, name: str, caption=""):
+    try:
+        with open(name, 'rb') as f:
+            await Bot.send_document(document=f, file_name=f.name, reply_to_message_id=message.id,
+                             caption=caption, parse_mode=ParseMode.HTML, chat_id=message.chat.id)
+        remove(name)
+        return
+    except FloodWait as fw:
+        await sleep(fw.value)
+        return await sendFile(message, name, caption)
+    except Exception as e:
+        LOGGER.error(str(e))
+        return
+
+async def auto_delete_message(cmd_message, bot_message):
+        await sleep(20)
+        try:
+            # Skip if None is passed meaning we don't want to delete bot xor cmd message
+            await deleteMessage(cmd_message)
+            await deleteMessage(bot_message)
+        except AttributeError:
+            pass

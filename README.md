@@ -4,7 +4,6 @@
 
 ### qBittorrent
 - Qbittorrent support for torrent and magnets
-- Files selection before downloading
 
 ### Aria2c
 - Aria support for direct download links
@@ -14,28 +13,35 @@
 - Mirror torrent/magnets links to cloud using qBittorrent
 - Mirror directs links to cloud using Aria2
 - Mirror Mega.nz links to cloud
-- Mirror up to 100 files at once from Telegram to cloud (private & public channels)
+- Mirror batch files from Telegram to cloud
 
 ### Leech
 - Leech files/folders from cloud to Telegram
+- Leech 4gb file with premium account
 
 ### Copy
 - Copy files/folders from cloud to cloud
-- File manager for cloud (delete and calculate size options)
-
-### Clone
-- Clone G-Drive files/folders from link to cloud using gclone
 
 ### Status
 - Progress bar for download and upload
 - Status for tasks
 
 ### Others
-- Telegram Navigation Bottom Menus (leech, copy, myfiles) to interact with cloud
+- Telegram Navigation Bottom Menus to interact with cloud
 - Renaming of Telegram files
+- Change rclone config file from bot.
 - Zip file/folder from cloud to Telegram
 - Extract file from cloud to Telegram
 - Extract and Zip file from Telegram to cloud
+
+### From Other Repositories (with some changes)
+- Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
+- Select files from Torrent before downloading 
+- Get restricted messages from private channels.
+- Clone Google Drive files/folders from link to cloud using gclone
+- Thumbnail support
+- Set upload as document or as media 
+- Update bot at startup and with restart command using UPSTREAM_REPO
 - Direct links Supported:
   > letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
 
@@ -49,16 +55,18 @@ qbmirror - mirror torrent to cloud
 mirrorbatch - mirror files in batch to cloud 
 mirrorset - select cloud/folder where to mirror
 leech - leech from cloud to Telegram
-unzipleech - leech and extract to telegram 
-zipleech - leech and zip to telegram 
+unzipleech - leech and extract to Telegram 
+zipleech - leech and zip to Telegram 
+leechset - leech settings
 copy - copy from cloud to cloud
 gclone - clone gdrive files/folder to cloud
-config - load rclone config file from Telegram
+config - change rclone config file
 myfiles - file manager
-status - Get status message of tasks
+search - search for torrents
+status - get status message of tasks
 logs - get logs from server
 server - get server info
-speedtest - test speed of server
+speedtest - test server speed
 restart - restart bot
 ```
 
@@ -87,16 +95,20 @@ restart - restart bot
         - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather)
         - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot
         - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
+
    - Non mandatory variables:
         - `RCLONE_CONFIG`: content of the rclone.conf file. Set this surrounded by single quotes. You can also skip this and load rclone.conf file from bot with /config cmd
+        - `ALLOWED_USERS`: list of IDs of allowed users who can use this bot separated by spaces
+        - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
         - `UPSTREAM_BRANCH`: Upstream branch for update
         - `USER_SESSION_STRING`: Pyrogram session string for using mirrorbatch command and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: when using string session you can't use bot, use it with group or channel
-        - `TG_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
-        - `ALLOWED_USERS`: list of IDs of allowed users who can use this bot separated by spaces
-        - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces
         - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
+   
+   - LEECH
+        - `TG_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
+        - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
 
    - MEGA
         - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from Mega SDK Page
@@ -108,6 +120,13 @@ restart - restart bot
         - `SERVER_PORT`: Port. Str
         - `WEB_PINCODE`: If empty or False means no more pincode required while qbit web selection. Bool
         Qbittorrent NOTE: If your facing ram exceeded issue then set limit for MaxConnecs, decrease AsyncIOThreadsCount in qbittorrent config and set limit of DiskWriteCacheSize to 32
+
+   - Torrent Search
+        - `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrent-Api-py). `Str`
+        - `SEARCH_LIMIT`: Search limit for search api, limit for each site. Default is zero. `Str`
+        - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). `Str`
+        - Supported Sites:
+        >1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooqle, Kickass, Bitsearch, MagnetDL, Libgen, YTS, Limetorrent, TorrentFunk, Glodls, TorrentProject and YourBittorrent
  
 3. **Deploying on VPS Using Docker**
 
@@ -190,6 +209,8 @@ sudo docker-compose start
 
 2- [Rclone](https://github.com/rclone/rclone)
 
-3- [Telethon](https://github.com/LonamiWebs/Telethon) and [Pyrogram](https://github.com/pyrogram/pyrogram)
+3- [Telethon](https://github.com/LonamiWebs/Telethon) 
+
+4- [Pyrogram](https://github.com/pyrogram/pyrogram)
 
 4- and many others referenced in code.

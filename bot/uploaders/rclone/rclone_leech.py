@@ -5,7 +5,7 @@ from shutil import rmtree
 from pyrogram.errors import FloodWait
 from bot import LOGGER, TG_SPLIT_SIZE
 from bot.core.varholderwrap import get_val
-from bot.utils.bot_utils.message_utils import editMessage, sendMessage
+from bot.utils.bot_utils.message_utils import deleteMessage, editMessage, sendMessage
 from bot.utils.status_utils.extract_status import ExtractStatus
 from bot.utils.status_utils.status_utils import MirrorStatus, TelegramClient
 from bot.utils.status_utils.rclone_status import RcloneStatus
@@ -132,10 +132,12 @@ class RcloneLeech:
                         else:
                             await tgUpload(f_path, self.__message, self.__chat_id)
             self.clean(self.__dest_path)
-            msg = f'**Leech completed**\n'
+            await deleteMessage(self.__message)
+            msg = ""
             if self.__total_files > 0:
-                msg += f'**Total Files:** {self.__total_files}'
-            await editMessage(msg, self.__message)   
+                msg += f'**Total Files:** {self.__total_files}\n'
+            msg += f'cc: {self.tag}\n'
+            await sendMessage(msg, self.__message)   
     
     async def __onDownloadCancel(self):
         self.__rclone_pr.kill()

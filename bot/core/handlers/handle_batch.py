@@ -6,8 +6,9 @@ Plugin for both public & private channels!
 """
 
 import asyncio
-from ... import bot
-from ... import Bot, app
+from re import IGNORECASE, compile
+from bot.core.Commands import Commands
+from ... import Bot, bot, app
 from bot.utils.bot_utils.batch_helpers import get_link, check, get_bulk_msg
 from telethon import events, Button
 from pyrogram.errors import FloodWait
@@ -18,7 +19,6 @@ async def get_pvt_content(event, chat, id):
     msg = await app.get_messages(chat, ids=id)
     await event.client.send_message(event.chat_id, msg) 
     
-@bot.on(events.NewMessage(incoming=True, pattern='/mirrorbatch'))
 async def _batch(event):
     if app is None:
          return await event.reply("You haven't set USER_SESSION_STRING variable to use this command!")
@@ -80,6 +80,10 @@ async def run_batch(userbot, client, sender, link, _range):
             await asyncio.sleep(fw.seconds + 5)
             await get_bulk_msg(userbot, client, sender, link, i)
         await asyncio.sleep(timer)
-            
-                
+        
+def command_process(cmd):
+    return compile(cmd, IGNORECASE)
+
+mirrorbatch_event= events.NewMessage(incoming=True, pattern= command_process(f"/{Commands.MIRRORBATCH}"))
+bot.add_event_handler(_batch, event= mirrorbatch_event)                
 

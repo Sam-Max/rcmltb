@@ -1,5 +1,4 @@
-import os
-from bot import DOWNLOAD_DIR, LOGGER
+from bot import DOWNLOAD_DIR
 from bot.core.menus.menu_leech import leech_menu
 from bot.core.varholderwrap import get_val, set_val
 from bot.uploaders.rclone.rclone_leech import RcloneLeech
@@ -44,8 +43,7 @@ async def handle_leech_menu_callback(client, callback_query):
             submenu="list_dir", 
             data_cb="list_dir_leech_menu",
             edit=True, 
-            data_back_cb= "leech_menu_back"
-            )     
+            data_back_cb= "leech_menu_back")     
 
     elif cmd[1] == "list_dir_leech_menu":
         path = get_val(cmd[2])
@@ -60,19 +58,27 @@ async def handle_leech_menu_callback(client, callback_query):
             drive_name= rclone_drive, 
             submenu="list_dir", 
             data_cb="list_dir_leech_menu", 
-            data_back_cb= "leech_back"
-            )
+            data_back_cb= "leech_back")
 
     elif cmd[1] == "start_leech_file":
         path = get_val(cmd[2])
         base_dir += path
         dest_dir = f'{DOWNLOAD_DIR}{path}'
-        rclone_leech= RcloneLeech(message, chat_id, base_dir, dest_dir, path, isZip=is_zip, extract=extract)
+        if message.reply_to_message.from_user.username:
+            tag = f"@{message.reply_to_message.from_user.username}"
+        else:
+            tag = f"@{message.reply_to_message.chat.username}" 
+        message.reply_to_message.from_user
+        rclone_leech= RcloneLeech(message, chat_id, base_dir, dest_dir, path, tag= tag, isZip=is_zip, extract=extract)
         await rclone_leech.execute()
 
     elif cmd[1] == "start_leech_folder":
         dest_dir = f'{DOWNLOAD_DIR}{base_dir}'
-        rclone_leech= RcloneLeech(message, chat_id, base_dir, dest_dir, isZip=is_zip, extract=extract, folder=True)
+        if message.reply_to_message.from_user.username:
+            tag = f"@{message.reply_to_message.from_user.username}"
+        else:
+            tag = f"@{message.reply_to_message.chat.username}" 
+        rclone_leech= RcloneLeech(message, chat_id, base_dir, dest_dir, tag= tag, isZip=is_zip, extract=extract, folder=True)
         await rclone_leech.execute()
 
     elif cmd[1] == "leech_back":
@@ -97,8 +103,7 @@ async def handle_leech_menu_callback(client, callback_query):
             drive_name= rclone_drive, 
             submenu="list_dir", 
             data_cb="list_dir_leech_menu", 
-            data_back_cb= data_b_cb
-            )   
+            data_back_cb= data_b_cb)   
 
     elif cmd[1]== "leech_menu_back":
         await leech_menu(

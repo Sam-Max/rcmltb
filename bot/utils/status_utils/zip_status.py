@@ -1,7 +1,7 @@
 from asyncio import sleep
 from time import time
 from bot import DOWNLOAD_DIR, LOGGER
-from bot.utils.bot_utils.bot_utils import get_readable_file_size
+from bot.utils.bot_utils.human_format import get_readable_file_size
 from bot.utils.bot_utils.zip_utils import get_path_size
 from bot.utils.status_utils.status_utils import MirrorStatus, get_bottom_status
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified

@@ -1,5 +1,5 @@
 
-from bot import EDIT_SLEEP_SECS, LOGGER, status_dict, status_dict_lock
+from bot import EDIT_SLEEP_SECS, status_dict, status_dict_lock
 from time import time
 from asyncio import sleep
 from bot.utils.bot_utils.bot_utils import get_readable_time

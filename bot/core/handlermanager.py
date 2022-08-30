@@ -1,5 +1,7 @@
 from re import IGNORECASE, compile
 from telethon import events
+from pyrogram import filters
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from bot.core.Commands import Commands
 from bot.core.handlers.handle_cancel import handle_cancel
 from bot.core.handlers.handle_config import handle_config
@@ -16,9 +18,6 @@ from bot.core.handlers.handle_speedtest import speed_handler
 from bot.core.handlers.handle_start import start_handler
 from bot.core.handlers.handle_status import status_handler
 from bot.core.handlers.handle_test import handle_test_command
-from bot.core.handlers import handle_batch
-from pyrogram import filters
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from bot.core.menus.callbacks.copy_menu_callback import handle_setting_copy_menu_callback
 from bot.core.menus.callbacks.leech_menu_callback import handle_leech_menu_callback
 from bot.core.menus.callbacks.mirror_menu_callback import handle_mirror_menu_callback
@@ -29,6 +28,7 @@ from bot.core.menus.callbacks.nextpage.handle_nextpage_copy_menu_cb import next_
 from bot.core.menus.callbacks.nextpage.handle_nextpage_leech_menu_cb import next_page_leech
 from bot.core.menus.callbacks.nextpage.handle_nextpage_mirrorset_menu_cb import next_page_mirrorset
 from bot.core.menus.callbacks.nextpage.handle_nextpage_myfiles_menu_cb import next_page_myfiles
+from bot.core.handlers import handle_batch, handle_search, handle_leech_st
 
 
 def add_handlers(bot):

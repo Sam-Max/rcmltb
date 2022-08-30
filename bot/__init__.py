@@ -3,7 +3,8 @@ __author__ = "Sam-Max"
 
 from asyncio import Lock
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
-from os import path as ospath, getcwd, environ
+from os import environ
+from json import loads as jsonloads
 from threading import Thread
 from time import sleep, time
 from sys import exit
@@ -47,6 +48,9 @@ status_dict = {}
 # Value: telegram.Message
 status_reply_dict = {}
 
+AS_DOC_USERS = set()
+AS_MEDIA_USERS = set()
+
 load_dotenv('config.env', override=True)
 
 try:
@@ -70,11 +74,39 @@ except:
     EDIT_SLEEP_SECS = 10
 
 try:
+    AS_DOCUMENT = getConfig('AS_DOCUMENT')
+    AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
+except:
+    AS_DOCUMENT = False
+
+try:
     UPTOBOX_TOKEN = getConfig('UPTOBOX_TOKEN')
     if len(UPTOBOX_TOKEN) == 0:
         raise KeyError
 except:
     UPTOBOX_TOKEN = None
+
+try:
+    SEARCH_API_LINK = getConfig('SEARCH_API_LINK').rstrip("/")
+    if len(SEARCH_API_LINK) == 0:
+        raise KeyError
+except:
+    SEARCH_API_LINK = None
+try:
+    SEARCH_LIMIT = getConfig('SEARCH_LIMIT')
+    if len(SEARCH_LIMIT) == 0:
+        raise KeyError
+    SEARCH_LIMIT = int(SEARCH_LIMIT)
+except:
+    SEARCH_LIMIT = 0
+    
+try:
+    SEARCH_PLUGINS = getConfig('SEARCH_PLUGINS')
+    if len(SEARCH_PLUGINS) == 0:
+        raise KeyError
+    SEARCH_PLUGINS = jsonloads(SEARCH_PLUGINS)
+except:
+    SEARCH_PLUGINS = None    
 
 try:
     TORRENT_TIMEOUT = getConfig('TORRENT_TIMEOUT')
@@ -91,7 +123,7 @@ except:
     WEB_PINCODE = False
 
 try:
-    BASE_URL = getConfig('BASE_URL_OF_BOT').rstrip("/")
+    BASE_URL = getConfig('BASE_URL_OF_BOT')
     if len(BASE_URL) == 0:
         raise KeyError
 except:

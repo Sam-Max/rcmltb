@@ -1,4 +1,3 @@
-from bot import LOGGER
 from bot.core.varholderwrap import set_val
 from bot.utils.bot_utils.human_format import get_readable_file_size
 

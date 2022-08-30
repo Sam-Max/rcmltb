@@ -12,6 +12,7 @@ Telethon
 tgCrypto
 Pyrogram
 urllib3
+pillow
 speedtest-cli
 python-dotenv
 requests

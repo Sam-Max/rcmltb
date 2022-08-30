@@ -168,7 +168,7 @@ class ButtonMaker:
 
     def build_menu(self, n_cols):
         menu = [self.first_button[i:i + n_cols] for i in range(0, len(self.first_button), n_cols)]
-        return menu
+        return InlineKeyboardMarkup(menu)
 
 class TelethonButtonMaker:
     def __init__(self):
@@ -198,7 +198,7 @@ class TelethonButtonMaker:
 
     def build_menu(self, n_cols):
         menu = [self.first_button[i:i + n_cols] for i in range(0, len(self.first_button), n_cols)]
-        return menu
+        return InlineKeyboardMarkup(menu)
 
 
 

@@ -13,7 +13,7 @@ async def handle_config(client, message):
      button = InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data= 'stop')]])
      question= await client.send_message(message.chat.id, 
                reply_to_message_id=message.id,
-               text= "Send an Rclone config file (rclone.conf)", 
+               text= "Send an Rclone config file", 
                reply_markup= button)
      try:
           response = await client.listen.Message(filters.document, id= filters.user(message.from_user.id), timeout = 30)
