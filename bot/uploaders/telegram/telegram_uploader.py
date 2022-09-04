@@ -2,7 +2,7 @@ from asyncio import sleep
 from os import walk, rename, path as ospath
 import time
 from bot import AS_DOC_USERS, AS_DOCUMENT, AS_MEDIA_USERS, LOGGER, Bot, app, status_dict, status_dict_lock
-from bot.utils.bot_utils.message_utils import sendMessage
+from bot.utils.bot_utils.message_utils import deleteMessage, sendMessage
 from bot.utils.bot_utils.misc_utils import get_media_info, get_video_resolution
 from bot.utils.bot_utils.screenshot import take_ss
 from pyrogram.enums.parse_mode import ParseMode
@@ -14,12 +14,12 @@ from bot.utils.status_utils.telegram_status import TelegramStatus
 VIDEO_SUFFIXES = ["mkv", "mp4", "mov", "wmv", "3gp", "mpg", "webm", "avi", "flv", "m4v", "gif"]
 
 class TelegramUploader():
-    def __init__(self, path, message, sender) -> None:
+    def __init__(self, path, message) -> None:
         self._client= app if app is not None else Bot
         self._path = path
         self._message= message 
         self.id= self._message.id
-        self._sender= sender
+        self._chat_id= self._message.chat.id
         self.__as_doc = AS_DOCUMENT
         self.__thumb = f"Thumbnails/{self._message.chat.id}.jpg"
         self.current_time= time.time()
@@ -42,6 +42,7 @@ class TelegramUploader():
         else:
            await self.__upload_file(self._path, status)
            await sleep(1)  
+        await deleteMessage(self._message)
         async with status_dict_lock: 
             try:  
                 del status_dict[self.id]
@@ -69,7 +70,7 @@ class TelegramUploader():
                              width = 480
                              height = 320
                         await self._client.send_video(
-                            chat_id= self._sender,
+                            chat_id= self._chat_id,
                             video= up_path,
                             width= width,
                             height= height,
@@ -89,7 +90,7 @@ class TelegramUploader():
                 if str(up_path).split(".")[-1] in VIDEO_SUFFIXES and thumb_path is None:
                     thumb_path = take_ss(up_path, None)
                 await self._client.send_document(
-                    chat_id= self._sender,
+                    chat_id= self._chat_id,
                     document= up_path, 
                     caption= f'`{caption}`',
                     parse_mode= ParseMode.MARKDOWN,

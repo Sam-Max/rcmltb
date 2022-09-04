@@ -13,7 +13,6 @@ from aria2p import API as ariaAPI, Client as ariaClient
 from qbittorrentapi import Client as qbitClient
 from subprocess import Popen, run as srun
 from bot.client import RcloneTgClient
-from bot.core.var_holder import VarHolder
 from megasdkrestclient import MegaSdkRestClient, errors
 from pyrogram import Client
 from bot.conv_pyrogram import Conversation
@@ -36,7 +35,6 @@ DOWNLOAD_DIR = None
 ALLOWED_CHATS= set()
 ALLOWED_USERS= set()
 
-var_holder = VarHolder()
 status_dict_lock = Lock()
 status_reply_dict_lock = Lock()
 
@@ -123,6 +121,13 @@ except:
     WEB_PINCODE = False
 
 try:
+    CMD_INDEX = getConfig('CMD_INDEX')
+    if len(CMD_INDEX) == 0:
+        raise KeyError
+except:
+    CMD_INDEX = ''
+
+try:
     BASE_URL = getConfig('BASE_URL_OF_BOT')
     if len(BASE_URL) == 0:
         raise KeyError
@@ -163,7 +168,7 @@ try:
     aid = getConfig('ALLOWED_USERS')
     aid = aid.split()
     for _id in aid:
-        ALLOWED_CHATS.add(int(_id.strip()))
+        ALLOWED_USERS.add(int(_id.strip()))
 except:
     pass
 

@@ -76,7 +76,7 @@ async def sendFile(message, name: str, caption=""):
 async def auto_delete_message(cmd_message, bot_message):
         await sleep(20)
         try:
-            # Skip if None is passed meaning we don't want to delete bot xor cmd message
+            # Skip if None is passed meaning we don't want to delete bot or cmd message
             await deleteMessage(cmd_message)
             await deleteMessage(bot_message)
         except AttributeError:

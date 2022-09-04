@@ -1,6 +1,6 @@
 from pyrogram import Client
 
-print('Required pyrogram V2 or greater.')
+print('Required pyrogram V2 or greater')
 
 API_ID = int(input("Enter API_ID: "))
 API_HASH = input("Enter API_HASH: ")

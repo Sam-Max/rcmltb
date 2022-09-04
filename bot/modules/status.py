@@ -1,8 +1,11 @@
 
 from asyncio import sleep
-from bot import status_dict, status_reply_dict, status_dict_lock, status_reply_dict_lock
-from bot.utils.bot_utils.message_utils import deleteMessage, editMessage, sendMessage
+from bot import Bot, status_dict, status_reply_dict, status_dict_lock, status_reply_dict_lock
+from bot.utils.bot_utils.message_utils import auto_delete_message, deleteMessage, editMessage, sendMessage
 from bot.utils.status_utils.status_utils import get_bottom_status
+from pyrogram.handlers import MessageHandler
+from pyrogram import filters
+from bot.utils.bot_commands import BotCommands
 
 UP_MSG_LOOP= []
 
@@ -13,7 +16,8 @@ async def status_handler(client, message):
           if count == 0:
                status_msg = "**No Active Processes**\n"
                status_msg += get_bottom_status()
-               return await sendMessage(status_msg, message)
+               msg= await sendMessage(status_msg, message)
+               await auto_delete_message(msg, message)
           else:
                async with status_dict_lock:
                     status_msg= ""
@@ -81,4 +85,7 @@ class UpdateMessageLoop:
           self.stop_loop= True
                          
 
-               
+status_handlers = MessageHandler(
+        status_handler,
+        filters= filters.command(BotCommands.StatusCommand))
+Bot.add_handler(status_handlers)    

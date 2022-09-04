@@ -25,8 +25,7 @@ class TelegramDownloader:
                 progress_args=(
                 "**Name**: `{}`".format(self._file.file_name),
                 f'**Status:** {MirrorStatus.STATUS_DOWNLOADING}',
-                time.time()
-                ))
+                time.time()))
         except Exception as e:
             LOGGER.error(str(e))
         async with status_dict_lock: 

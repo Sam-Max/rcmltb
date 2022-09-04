@@ -7,7 +7,7 @@ async def get_gid(drive_name, drive_base, ent_name, conf_path, isdir=True):
         name = re.escape(ent_name)
         if isdir:
             cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only",
-                            "-f", f"+ {name}/", "-f", "- *"]
+                            "-f", f"+ {name}", "-f", "- *"]
         else:
             cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--files-only",
                             "-f", f"+ {name}", "-f", "- *"]

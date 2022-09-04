@@ -4,7 +4,6 @@ from re import search
 from shutil import rmtree
 from pyrogram.errors import FloodWait
 from bot import LOGGER, TG_SPLIT_SIZE
-from bot.core.varholderwrap import get_val
 from bot.utils.bot_utils.message_utils import deleteMessage, editMessage, sendMessage
 from bot.utils.status_utils.extract_status import ExtractStatus
 from bot.utils.status_utils.status_utils import MirrorStatus, TelegramClient
@@ -15,15 +14,16 @@ from bot.utils.bot_utils.zip_utils import extract_archive, get_path_size, split_
 from subprocess import Popen, PIPE
 from asyncio import sleep
 from bot.utils.status_utils.zip_status import ZipStatus
+from bot.utils.var_holder import get_rclone_var
 
 class RcloneLeech:
-    def __init__(self, message, chat_id, origin_dir, dest_dir, file_name="", isZip=False, extract=False, pswd=None, tag=None, folder= False):
+    def __init__(self, message, user_id, origin_dir, dest_dir, file_name="", isZip=False, extract=False, pswd=None, tag=None, folder= False):
         self.__message = message
         self.id = self.__message.id
+        self._user_id= user_id
         self.__file_name= file_name
         self.__is_Zip = isZip
         self.__extract = extract
-        self.__chat_id = chat_id
         self.__origin_path = origin_dir
         self.__dest_path = dest_dir
         self.__folder= folder
@@ -34,21 +34,23 @@ class RcloneLeech:
         self.__rclone_pr= None
 
     def clean(self, path):
-        LOGGER.info(f"Cleaning Download: {path}")
         try:
             rmtree(path)
         except:
             os.remove(path)
 
-    async def execute(self):
-        origin_drive = get_val("RCLONE_DRIVE")
-        conf_path = get_rclone_config()
+    async def leech(self):
+        conf_path = get_rclone_config(self._user_id)
+        origin_drive = get_rclone_var("LEECH_DRIVE", self._user_id)
+
         await editMessage("Starting download...", self.__message)
         cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{self.__origin_path}', 
                           f'{self.__dest_path}', '-P']
         self.__rclone_pr = Popen(cmd, stdout=(PIPE),stderr=(PIPE))
+        
         rclone_status= RcloneStatus(self.__rclone_pr, self.__message, self.__file_name)
         status= await rclone_status.progress(MirrorStatus.STATUS_DOWNLOADING, TelegramClient.PYROGRAM)
+
         if status:
             await self.__onDownloadComplete()
         else:
@@ -84,7 +86,7 @@ class RcloneLeech:
                 self.suproc.wait()
                 if self.suproc.returncode == -9:
                     return
-                await tgUpload(path, self.__message, self.__chat_id) 
+                await tgUpload(path, self.__message) 
             elif self.__extract:
                LOGGER.info(f"Extracting...")
                ext_sts = ExtractStatus(f_name, f_size, self.__message, self)
@@ -110,12 +112,12 @@ class RcloneLeech:
                                 if file_.endswith((".rar", ".zip", ".7z")) or search(r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$', file_):
                                     del_path = os.path.join(dirpath, file_)
                                     os.remove(del_path)
-                            await tgUpload(self.__dest_path, self.__message, self.__chat_id) 
+                            await tgUpload(self.__dest_path, self.__message) 
                else:
                     path, msg= await extract_archive(path, self.__message, self.pswd)
                     if path == False:
                         return await sendMessage(msg, self.__message)
-                    await tgUpload(path, self.__message, self.__chat_id) 
+                    await tgUpload(path, self.__message) 
             else:
                 for dirpath, _, files in walk(self.__dest_path):
                     for file in sorted(files):  
@@ -128,11 +130,10 @@ class RcloneLeech:
                         if int(f_size) > TG_SPLIT_SIZE:
                             LOGGER.info(f"Splitting...")   
                             path= await split_in_zip(f_path, size=TG_SPLIT_SIZE) 
-                            await tgUpload(path, self.__message, self.__chat_id)
+                            await tgUpload(path, self.__message)
                         else:
-                            await tgUpload(f_path, self.__message, self.__chat_id)
+                            await tgUpload(f_path, self.__message)
             self.clean(self.__dest_path)
-            await deleteMessage(self.__message)
             msg = ""
             if self.__total_files > 0:
                 msg += f'**Total Files:** {self.__total_files}\n'
@@ -143,13 +144,13 @@ class RcloneLeech:
         self.__rclone_pr.kill()
         await self.__message.edit('Download cancelled')  
 
-async def tgUpload(path, user_msg, chat_id):
+async def tgUpload(path, user_msg):
     try:    
-        tg_up= TelegramUploader(path, user_msg, chat_id)
+        tg_up= TelegramUploader(path, user_msg)
         await tg_up.upload()
     except FloodWait as fw:
         await sleep(fw.seconds + 5)
-        tg_up= TelegramUploader(path, user_msg, chat_id)
+        tg_up= TelegramUploader(path, user_msg)
         await tg_up.upload()
     
 

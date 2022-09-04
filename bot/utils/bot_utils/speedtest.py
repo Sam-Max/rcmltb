@@ -13,7 +13,6 @@ async def get_speed(message):
     test.upload()
     test.results.share()
     result = test.results.dict()
-    path = (result['share'])
     string_speed = f'''
     **Speedtest Result:-**
 Server Name: `{result["server"]["name"]}`

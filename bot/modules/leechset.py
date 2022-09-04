@@ -3,7 +3,7 @@
 import asyncio
 from os import remove as osremove, path as ospath, mkdir
 from PIL import Image
-from bot.core.Commands import Commands
+from bot.utils.bot_commands import BotCommands
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
 from bot.utils.bot_utils.misc_utils import ButtonMaker
@@ -56,7 +56,7 @@ async def handle_leech_set_type(client, callback_query):
     data = query.data
     data = data.split()
     if user_id != int(data[1]):
-        query.answer(text="Not Yours!", show_alert=True)
+        await query.answer(text="This menu is not for you!", show_alert=True)
     elif data[2] == "doc":
         if user_id in AS_MEDIA_USERS:
             AS_MEDIA_USERS.remove(user_id)
@@ -102,7 +102,7 @@ async def handle_leech_set_type(client, callback_query):
             pass
 
 leech_set_handler = MessageHandler(handle_leech_set,
-                    filters= filters.command(Commands.LEECHSET))
+                    filters= filters.command(BotCommands.LeechSetCommand))
 
 but_set_handler = CallbackQueryHandler(handle_leech_set_type,
                   filters= filters.regex("leechset"))

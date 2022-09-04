@@ -5,9 +5,11 @@ import shutil
 import psutil
 from psutil import net_io_counters
 from telethon.tl.types import KeyboardButtonCallback
-from telethon import events
-import time
-from ... import ALLOWED_CHATS, ALLOWED_USERS, OWNER_ID, botUptime
+from telethon.events import NewMessage, CallbackQuery
+from time import time
+from bot.utils.bot_commands import BotCommands
+from bot.utils.bot_utils.bot_utils import command_process
+from bot import ALLOWED_CHATS, ALLOWED_USERS, OWNER_ID, bot, botUptime
 from bot.utils.bot_utils import human_format
 
 
@@ -15,12 +17,10 @@ async def handle_server_command(e):
         user_id= e.sender_id
         chat_id= e.chat_id
         if user_id in ALLOWED_USERS or chat_id in ALLOWED_CHATS or user_id == OWNER_ID:
-            print(type(e))
-            if isinstance(e, events.CallbackQuery.Event):
+            if isinstance(e, CallbackQuery.Event):
                 callbk = True
             else:
                 callbk = False
-
             try:
                 mem = psutil.virtual_memory()
                 memavailable = human_format.human_readable_bytes(mem.available)
@@ -62,7 +62,6 @@ async def handle_server_command(e):
                 totaldsk = "N/A"
                 useddsk = "N/A"
                 freedsk = "N/A"
-
             try:
                 recv = human_format.human_readable_bytes(net_io_counters().bytes_recv)
                 sent = human_format.human_readable_bytes(net_io_counters().bytes_sent)
@@ -70,7 +69,7 @@ async def handle_server_command(e):
                 recv = "N/A"
                 sent = "N/A"
 
-            diff = time.time() - botUptime
+            diff = time() - botUptime
             diff = human_format.human_readable_timedelta(diff)
 
             if callbk:
@@ -111,8 +110,8 @@ async def handle_server_command(e):
                     f"Memory used:- {progress_bar(mempercent)} - {mempercent}%\n"
                     f"Total: {memtotal} Free: {memfree}\n\n"
                     f"Download:- {recv}\n"
-                    f"Upload:- {sent}\n"
-                )
+                    f"Upload:- {sent}\n")
+                
                 await e.reply(msg, parse_mode="html",
                                     buttons=[[KeyboardButtonCallback("Get detailed stats.", "fullserver")]])
         else:
@@ -124,10 +123,8 @@ def progress_bar(percentage):
     comp = "▰"
     ncomp = "▱"
     pr = ""
-
     if isinstance(percentage, str):
         return "NaN"
-
     try:
         percentage = int(percentage)
     except:
@@ -138,4 +135,7 @@ def progress_bar(percentage):
             pr += comp
         else:
             pr += ncomp
-    return pr                            
+    return pr    
+
+bot.add_event_handler(handle_server_command, NewMessage(pattern=command_process(f"/{BotCommands.ServerCommand}")))     
+bot.add_event_handler( handle_server_command, CallbackQuery(pattern="fullserver"))

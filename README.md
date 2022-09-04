@@ -10,17 +10,18 @@
 
 ### Mirror
 - Mirror from Telegram to cloud
-- Mirror torrent/magnets links to cloud using qBittorrent
+- Mirror torrent/magnets to cloud using qBittorrent
 - Mirror directs links to cloud using Aria2
 - Mirror Mega.nz links to cloud
 - Mirror batch files from Telegram to cloud
 
 ### Leech
-- Leech files/folders from cloud to Telegram
+- Leech file/folder from cloud to Telegram
 - Leech 4gb file with premium account
+- Leech torrent/magnets to Telegram using qBittorrent
 
 ### Copy
-- Copy files/folders from cloud to cloud
+- Copy file/folder from cloud to cloud
 
 ### Status
 - Progress bar for download and upload
@@ -42,6 +43,7 @@
 - Thumbnail support
 - Set upload as document or as media 
 - Update bot at startup and with restart command using UPSTREAM_REPO
+- Own users settings when using bot or added to supergroup (thumbnail, as document/as media, rclone.conf)
 - Direct links Supported:
   > letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
 
@@ -57,6 +59,7 @@ mirrorset - select cloud/folder where to mirror
 leech - leech from cloud to Telegram
 unzipleech - leech and extract to Telegram 
 zipleech - leech and zip to Telegram 
+qbleech - leech torrent to Telegram
 leechset - leech settings
 copy - copy from cloud to cloud
 gclone - clone gdrive files/folder to cloud
@@ -101,6 +104,7 @@ restart - restart bot
         - `ALLOWED_USERS`: list of IDs of allowed users who can use this bot separated by spaces
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
+        - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `UPSTREAM_BRANCH`: Upstream branch for update
         - `USER_SESSION_STRING`: Pyrogram session string for using mirrorbatch command and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: when using string session you can't use bot, use it with group or channel
         - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10
@@ -213,4 +217,4 @@ sudo docker-compose start
 
 4- [Pyrogram](https://github.com/pyrogram/pyrogram)
 
-4- and many others referenced in code.
+4- and many others mentioned in code.

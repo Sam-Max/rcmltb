@@ -1,5 +1,5 @@
 import asyncio
-from bot import DOWNLOAD_DIR, LOGGER
+from bot import LOGGER
 from bot import aria2, status_dict, status_dict_lock
 from bot.utils.bot_utils.bot_utils import is_magnet
 from bot.utils.bot_utils.message_utils import editMessage, sendMessage

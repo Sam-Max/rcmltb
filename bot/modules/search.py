@@ -1,10 +1,10 @@
-# Modified from:
+# Source:
 # https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/search.py
 
 from html import escape
 from urllib.parse import quote
 from bot import LOGGER, SEARCH_API_LINK, SEARCH_LIMIT, SEARCH_PLUGINS, Bot, get_client
-from bot.core.Commands import Commands
+from bot.utils.bot_commands import BotCommands
 from bot.utils.bot_utils.misc_utils import ButtonMaker
 from bot.utils.bot_utils.human_format import get_readable_file_size
 from bot.utils.bot_utils.message_utils import deleteMessage, editMessage, sendFile, sendMarkup, sendMessage
@@ -91,7 +91,7 @@ async def torrent_search_but(client, callback_query):
     data = query.data
     data = data.split()
     if user_id != int(data[1]):
-        await query.answer(text="Not Yours!", show_alert=True)
+        await query.answer(text="This menu is not for you!", show_alert=True)
     elif data[2].startswith('api'):
         await query.answer()
         button = _api_buttons(user_id, data[2])
@@ -235,7 +235,7 @@ def _getResult(search_results, key, method):
 
 torrent_search_handler = MessageHandler(
                handle_torrent_search,
-               filters= filters.command(Commands.SEARCH))
+               filters= filters.command(BotCommands.SearchCommand))
 
 torrent_search_but_handler = CallbackQueryHandler(
                torrent_search_but,

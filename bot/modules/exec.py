@@ -1,6 +1,6 @@
 from bot.utils.bot_utils.admin_check import is_admin
 import asyncio as aio
-import os
+from os import remove
 
 async def handle_exec_message_f(e):
     message = e
@@ -38,9 +38,9 @@ async def handle_exec_message_f(e):
                 caption=cmd,
                 reply_to=reply_to_id
             )
-            os.remove("exec.text")
+            remove("exec.text")
             await message.delete()
         else:
             await message.reply(OUTPUT)
     else:
-        await message.reply('Not Authorized')  
+        await message.reply('Only for owner')  

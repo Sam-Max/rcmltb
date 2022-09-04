@@ -1,55 +1,39 @@
 #Modified from: https://github.com/5MysterySD/Tele-LeechX
 
-from asyncio import create_subprocess_exec
+from asyncio import create_subprocess_exec as exec
 from asyncio.subprocess import PIPE
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from bot.core.varholderwrap import get_val
-from bot.utils.bot_utils.bot_utils import is_gdrive_link
-from bot.utils.bot_utils.message_utils import editMessage,sendMessage
+from bot.utils.bot_utils.message_utils import editMessage, sendMessage
 from bot import LOGGER
 from re import search, escape
 from urllib.parse import parse_qs, urlparse
+from bot.utils.bot_utils.misc_utils import get_rclone_config
 from bot.utils.status_utils.clone_status import CloneStatus
 from bot.utils.status_utils.status_utils import MirrorStatus, TelegramClient
+from bot.utils.var_holder import get_rclone_var
 
 
 class GDriveClone:
-    def __init__(self, message, text):
-        self.text= text
-        self.link= ""
-        self.link_id = ""
+    def __init__(self, message, user_id, link, name):
+        self.link= link
         self.message = message
-        self.user_id= self.message.from_user.id
-        self.user_mention = self.message.from_user.mention
+        self.user_id= user_id
         self.edit_msg= ""
-        self.name = ""
+        self.name = name
+        self.link_id = ""
         self.file_name= ""
-        self.drive_name = get_val("RCLONE_MIRRORSET_DRIVE")
-        self.base_dir= get_val("MIRRORSET_BASE_DIR")
+        self.drive_name = get_rclone_var("MIRRORSET_DRIVE", self.user_id)
+        self.base_dir= get_rclone_var("MIRRORSET_BASE_DIR", self.user_id)
 
-    async def execute(self):
-        args = self.text.split("|", maxsplit=1)
-        if len(args) > 1:
-            self.link = args[0].strip()
-            self.name = args[1].strip()
-            if is_gdrive_link(self.link):
-                self.link_id = self.getIdFromUrl(self.link)
-            else:
-                return await sendMessage("Not a Gdrive link", self.message)
-        else:
-            self.link = self.text
-            self.name = "" 
-            if is_gdrive_link(self.link):
-                self.link_id = self.getIdFromUrl(self.link)
-            else:
-                return await sendMessage("Not a Gdrive link", self.message)
-
+    async def clone(self):
+        conf_path = get_rclone_config(self.user_id)
+        self.link_id = self.getIdFromUrl(self.link)
         self.edit_msg = await sendMessage("Cloning Started...", self.message)
         id = "{"f"{self.link_id}""}"
-        cmd = ["gclone", "copy", "--config=rclone.conf", f"{self.drive_name}:{id}",
+        cmd = ["gclone", "copy", f'--config={conf_path}', f"{self.drive_name}:{id}",
               f"{self.drive_name}:{self.base_dir}{self.name}", "-v", "--drive-server-side-across-configs", 
               "--transfers=16", "--checkers=20",]
-        process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+        process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
         rclone_status= CloneStatus(process, self.edit_msg, self.name)
         status, file_name = await rclone_status.progress(status_type=MirrorStatus.STATUS_CLONING, 
                 client_type=TelegramClient.PYROGRAM)
@@ -75,7 +59,7 @@ class GDriveClone:
             cmd = ["rclone", "lsf", "--config=./rclone.conf", "-F", "i", "--filter-from=./filter.txt", 
                     f"{_flag}", f"{self.drive_name}:{self.base_dir}"]
 
-            process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+            process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
             out, err = await process.communicate()
             out = out.decode("utf-8")
             LOGGER.info(err.decode("utf-8"))
@@ -89,7 +73,7 @@ class GDriveClone:
 
             #Calculate Size
             cmd = ["rclone", "size", "--config=rclone.conf", f"{self.drive_name}:{self.base_dir}{self.name}"]
-            process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+            process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
             out, err = await process.communicate()
             output = out.decode("utf-8")
             

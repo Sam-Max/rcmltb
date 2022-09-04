@@ -50,12 +50,11 @@ def rename_file(old_path, new_name):
     os.rename(old_path, new_path)
     return new_path
 
-def get_rclone_config():
-    rclone_conf = os.path.join(os.getcwd(), 'rclone.conf')
-    if rclone_conf is not None:
-        if isinstance(rclone_conf, str):
-            if os.path.exists(rclone_conf):
-                return rclone_conf
+def get_rclone_config(user_id):
+    path = os.path.join(os.getcwd(), "users", str(user_id), "rclone.conf")      
+    if path is not None:
+        if os.path.exists(path):
+            return path
     return None
 
 def get_readable_size(size):
@@ -111,8 +110,6 @@ def bt_selection_buttons(id_: str):
     else:
         gid = id_
 
-    LOGGER.info(gid)
-
     pincode = ""
     for n in id_:
         if n.isdigit():
@@ -127,13 +124,19 @@ def bt_selection_buttons(id_: str):
     else:
         buttons.url_buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}")
     buttons.cb_buildbutton("Done Selecting", f"btsel done {gid} {id_}")
-    return InlineKeyboardMarkup(buttons.build_menu(2))
+    return buttons.build_menu(2)
 
 async def getDownloadByGid(gid):
     async with status_dict_lock:
-        LOGGER.info(status_dict.values())
         for dl in list(status_dict.values()):
             if dl.gid() == gid:
+                return dl
+    return None
+
+async def getDownloadById(id):
+    async with status_dict_lock:
+        for dl in list(status_dict.values()):
+            if dl.id == id:
                 return dl
     return None
 

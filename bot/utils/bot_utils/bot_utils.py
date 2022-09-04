@@ -1,4 +1,4 @@
-from re import match as re_match, findall as re_findall
+from re import match as re_match, findall as re_findall, IGNORECASE, compile
 from time import time
 from requests import head as rhead
 from threading import Thread, Event
@@ -82,4 +82,9 @@ class setInterval:
 
     def cancel(self):
         self.stopEvent.set()
+
+def command_process(cmd):
+    return compile(cmd, IGNORECASE)
+
+
 

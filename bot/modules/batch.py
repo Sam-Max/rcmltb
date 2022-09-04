@@ -1,14 +1,10 @@
 #Tg:MaheshChauhan/DroneBots
 #Github.com/Vasusen-code
 
-"""
-Plugin for both public & private channels!
-"""
-
 import asyncio
-from re import IGNORECASE, compile
-from bot.core.Commands import Commands
-from ... import Bot, bot, app
+from bot.utils.bot_commands import BotCommands
+from bot.utils.bot_utils.bot_utils import command_process
+from bot import Bot, bot, app
 from bot.utils.bot_utils.batch_helpers import get_link, check, get_bulk_msg
 from telethon import events, Button
 from pyrogram.errors import FloodWait
@@ -21,7 +17,7 @@ async def get_pvt_content(event, chat, id):
     
 async def _batch(event):
     if app is None:
-         return await event.reply("You haven't set USER_SESSION_STRING variable to use this command!")
+         return await event.reply("Set USER_SESSION_STRING variable to use this command!")
     else:
         if not event.is_private:
             return
@@ -81,9 +77,7 @@ async def run_batch(userbot, client, sender, link, _range):
             await get_bulk_msg(userbot, client, sender, link, i)
         await asyncio.sleep(timer)
         
-def command_process(cmd):
-    return compile(cmd, IGNORECASE)
 
-mirrorbatch_event= events.NewMessage(incoming=True, pattern= command_process(f"/{Commands.MIRRORBATCH}"))
+mirrorbatch_event= events.NewMessage(incoming=True, pattern= command_process(f"/{BotCommands.MirrorBatchCommand}"))
 bot.add_event_handler(_batch, event= mirrorbatch_event)                
 

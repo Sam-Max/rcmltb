@@ -52,13 +52,11 @@ class TelegramStatus:
                   humanbytes(total),
                   humanbytes(speed),
                   estimated_total_time if estimated_total_time != '' else "0 s",
-                  get_bottom_status() 
-            )
+                  get_bottom_status())
             
             try:
                   await self._user_message.edit(self._status_msg,
-                  reply_markup=(InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data=(f"cancel_telegram_{self.id}"))]]))
-                  )  
+                  reply_markup=(InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data=(f"cancel_telegram_{self.id}"))]])))  
             except FloodWait as fw:
                   LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
                   await sleep(fw.value)
