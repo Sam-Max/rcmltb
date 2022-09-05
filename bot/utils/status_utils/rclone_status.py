@@ -5,18 +5,19 @@ import re
 import time
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from telethon.errors import FloodWaitError
-from bot import EDIT_SLEEP_SECS, LOGGER, status_dict, status_dict_lock
-from bot.utils.status_utils.status_utils import MirrorStatus, get_bottom_status
 from telethon import Button
+from bot import EDIT_SLEEP_SECS, LOGGER, status_dict, status_dict_lock
+from bot.utils.bot_utils.message_utils import editMessage
+from bot.utils.status_utils.status_utils import MirrorStatus, get_bottom_status
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 
 class RcloneStatus:
-     def __init__(self, process, user_message, path=""):
+     def __init__(self, process, message, path=""):
         self._process = process
-        self._user_message = user_message
-        self.id = self._user_message.id
+        self._message = message
+        self.id = self._message.id
         self._path= path
         self._status_msg= ""
         self.cancelled = False
@@ -65,18 +66,12 @@ class RcloneStatus:
                 if time.time() - start > EDIT_SLEEP_SECS:
                         start = time.time()
                         if client_type == 'pyrogram':
-                              try:
-                                   await self._user_message.edit(text=self._status_msg, reply_markup=(InlineKeyboardMarkup([
-                                   [InlineKeyboardButton('Cancel', callback_data=(f"cancel_rclone_{self.id}".encode('UTF-8')))]
-                                   ])))
-                              except FloodWait as fw:
-                                    LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
-                                    await sleep(fw.value)
-                              except MessageNotModified:
-                                   await sleep(1)
+                            await editMessage(self._status_msg, self._message, reply_markup= InlineKeyboardMarkup([
+                            [InlineKeyboardButton('Cancel', callback_data=(f"cancel_rclone_{self.id}".encode('UTF-8')))]
+                            ]))
                         if client_type == 'telethon':
                               try:
-                                   await self._user_message.edit(text=self._status_msg, 
+                                   await self._message.edit(text=self._status_msg, 
                                    buttons= [[Button.inline("Cancel", f"cancel_rclone_{self.id}".encode('UTF-8'))]])
                               except FloodWaitError as fw:
                                    LOGGER.warning(f"FloodWait : Sleeping {fw.seconds}s")

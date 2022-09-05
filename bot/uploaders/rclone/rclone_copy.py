@@ -18,7 +18,7 @@ class RcloneCopy:
 
     async def copy(self):
         conf_path = get_rclone_config(self._user_id)
-        await editMessage("Starting copy...", self.__message)
+        await editMessage("Starting Download", self.__message)
         origin_drive = get_rclone_var("COPY_ORIGIN_DRIVE", self._user_id)
         origin_dir = get_rclone_var("COPY_ORIGIN_DIR", self._user_id)
         dest_drive = get_rclone_var("COPY_DESTINATION_DRIVE", self._user_id)
@@ -30,7 +30,7 @@ class RcloneCopy:
         self.__rclone_pr = Popen(cmd, stdout=(PIPE),stderr=(PIPE))
         rc_status= RcloneStatus(self.__rclone_pr, self.__message)
         status= await rc_status.progress(status_type= MirrorStatus.STATUS_COPYING, 
-                            client_type=TelegramClient.TELETHON)
+                            client_type=TelegramClient.PYROGRAM)
         if status:
             gid = await get_gid(dest_drive, dest_dir, origin_dir, conf_path)
             folder_link = f"https://drive.google.com/folderview?id={gid[0]}"

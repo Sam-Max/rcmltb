@@ -5,8 +5,8 @@ from configparser import ConfigParser
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.filters import regex, command
-from bot import ALLOWED_CHATS, ALLOWED_USERS, DOWNLOAD_DIR, OWNER_ID, Bot
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
+from bot import ALLOWED_CHATS, ALLOWED_USERS, DOWNLOAD_DIR, OWNER_ID, Bot
 from bot.utils.var_holder import get_rclone_var, get_val, set_rclone_var, set_val
 from bot.uploaders.rclone.rclone_leech import RcloneLeech
 from bot.utils.bot_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
@@ -30,10 +30,10 @@ async def leech(client, message, isZip=False, extract=False):
     if user_id in ALLOWED_USERS or chat_id in ALLOWED_CHATS or user_id == OWNER_ID:
         set_val('IS_ZIP', isZip)   
         set_val('EXTRACT', extract)    
-        await leech_menu(client, message,msg= "Select cloud where your files are stored",
+        await leech_menu(client, message, msg= "Select cloud where your files are stored",
                 submenu= "list_drive",data_cb="list_drive_leech_menu") 
     else:
-        await message.reply('Not Authorized user', quote= True)
+        await sendMessage('Not Authorized user', message) 
 
 async def leech_menu(client, message, msg="",edit=False, drive_base="", drive_name="", submenu="", 
                     data_cb="", data_back_cb=""):

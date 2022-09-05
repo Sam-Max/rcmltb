@@ -1,25 +1,29 @@
 import configparser
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from json import loads as jsonloads
-from bot import ALLOWED_CHATS, ALLOWED_USERS, bot
-from bot import bot, ALLOWED_CHATS, ALLOWED_USERS, OWNER_ID
+from bot import ALLOWED_CHATS, ALLOWED_USERS, OWNER_ID, Bot
 from bot.utils.bot_commands import BotCommands
-from telethon.events import NewMessage
+from pyrogram.filters import regex, command
+from pyrogram.handlers import CallbackQueryHandler, MessageHandler
+from pyrogram.types import InlineKeyboardMarkup
+from bot.utils.bot_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.utils.var_holder import get_rclone_var, get_val, set_rclone_var, set_val
 from os import path as ospath, getcwd
 from bot.uploaders.rclone.rclone_copy import RcloneCopy
-from bot.utils.bot_utils.bot_utils import command_process
-from telethon.events import CallbackQuery
 from bot.utils.bot_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
-from bot.utils.bot_utils.misc_utils import TelethonButtonMaker, get_rclone_config, pairwise
+from bot.utils.bot_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
 
 folder_icon= "📁"
 
-async def copy_menu(query, msg="", submenu="", drive_base="", drive_name="", data_cb="", data_back_cb="",
+async def copy_menu(client, message, msg="", submenu="", drive_base="", drive_name="", data_cb="", data_back_cb="",
                      edit=False, is_second_menu= False):
     
-    user_id= query.sender_id
-    buttons = TelethonButtonMaker()
+    if message.reply_to_message:
+       user_id= message.reply_to_message.from_user.id
+    else:
+       user_id= message.from_user.id
+
+    buttons = ButtonMaker()
 
     if submenu == "list_drive":
         path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
@@ -45,9 +49,9 @@ async def copy_menu(query, msg="", submenu="", drive_base="", drive_name="", dat
         buttons.cbl_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}")
 
         if edit:
-            await query.edit(msg, buttons= buttons.first_button)
+            await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
         else:
-            await query.reply(msg, buttons= buttons.first_button)
+            await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
     elif submenu == "list_dir":
         conf_path = get_rclone_config(user_id)
@@ -66,7 +70,7 @@ async def copy_menu(query, msg="", submenu="", drive_base="", drive_name="", dat
 
         if return_code != 0:
            err = err.decode().strip()
-           return await query.reply(f'Error: {err}')  
+           return await sendMessage(f'Error: {err}', message)
 
         list_info = jsonloads(out)
         if is_second_menu:
@@ -109,22 +113,22 @@ async def copy_menu(query, msg="", submenu="", drive_base="", drive_name="", dat
         buttons.cbl_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}")
 
         if edit:
-            await query.edit(msg, buttons=buttons.first_button)
+            await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
         else:
-            await query.reply(msg, buttons=buttons.first_button)
+            await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
-async def setting_copy_menu(callback_query):
+async def copy_menu_settings(client, callback_query):
     query= callback_query
-    data = query.data.decode()
+    data = query.data
     cmd = data.split("^")
-    message = await query.get_message()
-    user_id= str(callback_query.sender_id)
+    message = query.message
+    user_id= str(query.from_user.id)
     origin_drive = get_rclone_var("COPY_ORIGIN_DRIVE", user_id)
     origin_dir= get_rclone_var("COPY_ORIGIN_DIR", user_id)
     dest_drive= get_rclone_var("COPY_DESTINATION_DRIVE", user_id)
     dest_dir= get_rclone_var("COPY_DESTINATION_DIR", user_id)
 
-    if query.data == "pages":
+    if data == "pages":
         await query.answer()
 
     if cmd[-1] != user_id:
@@ -141,7 +145,8 @@ async def setting_copy_menu(callback_query):
         
         set_rclone_var("COPY_ORIGIN_DRIVE", origin_drive, user_id)
         await copy_menu(
-            query= query, 
+            client, 
+            message,  
             msg= f'Select file or folder which you want to copy\n\nPath: `{origin_drive}:{origin_dir}`', 
             drive_name= origin_drive,
             submenu="list_dir", 
@@ -154,7 +159,8 @@ async def setting_copy_menu(callback_query):
         origin_dir_= origin_dir + path  + "/"
         set_rclone_var("COPY_ORIGIN_DIR", origin_dir_, user_id)
         await copy_menu(
-             query,
+             client, 
+             message, 
              msg=f"Select file or folder which you want to copy\n\nPath:`{origin_drive}:{origin_dir_}`", 
              drive_base= origin_dir_, 
              drive_name= origin_drive,
@@ -170,7 +176,8 @@ async def setting_copy_menu(callback_query):
             origin_dir_= origin_dir + path  
             set_rclone_var("COPY_ORIGIN_DIR", origin_dir_, user_id)    
         await copy_menu(
-            query, 
+            client, 
+            message, 
             msg=f'Select folder where you want to copy\n', 
             submenu="list_drive", 
             data_cb="list_drive_dest",
@@ -186,7 +193,8 @@ async def setting_copy_menu(callback_query):
 
         set_rclone_var("COPY_DESTINATION_DRIVE", dest_drive, user_id)
         await copy_menu(
-            query, 
+            client, 
+            message,  
             edit=True, 
             msg=f'Select folder where you want to copy\n\nPath:`{dest_drive}:{dest_dir}`',
             drive_name= dest_drive,
@@ -200,7 +208,8 @@ async def setting_copy_menu(callback_query):
         dest_dir_= f"{dest_dir}{path}/"
         set_rclone_var("COPY_DESTINATION_DIR", dest_dir_, user_id)
         await copy_menu(
-             query,
+             client, 
+             message, 
              edit=True, 
              msg=f"Select folder where you want to copy\n\nPath:`{dest_drive}:{dest_dir_}`", 
              drive_name= dest_drive,
@@ -234,7 +243,8 @@ async def setting_copy_menu(callback_query):
             data_b_cb= "origin_menu_back"
 
         await copy_menu(
-             query,
+             client, 
+             message, 
              msg=f"Select file or folder which you want to copy\n\nPath:`{origin_drive}:{origin_dir}`", 
              drive_base=origin_dir, 
              drive_name= origin_drive,
@@ -246,7 +256,8 @@ async def setting_copy_menu(callback_query):
     
     elif cmd[1]== "origin_menu_back":
         await copy_menu(
-            query, 
+            client, 
+            message,  
             msg= "Select cloud where your files are stored",
             submenu= "list_drive",
             data_cb="list_drive_origin",
@@ -268,7 +279,8 @@ async def setting_copy_menu(callback_query):
             data_b_cb= "dest_menu_back"
 
         await copy_menu(
-             query,
+             client, 
+             message, 
              msg=f"Select folder where you want to copy\n\nPath:`{dest_drive}:{dest_dir}`", 
              drive_base= dest_dir, 
              drive_name= dest_drive,
@@ -280,24 +292,25 @@ async def setting_copy_menu(callback_query):
 
     elif cmd[1]== "dest_menu_back":
         await copy_menu(
-            query, 
+            client, 
+            message,  
             msg= f"Select cloud where to copy files", 
             submenu= "list_drive",
             data_cb="list_drive_dest",
             edit=True)          
 
-async def next_page_copy(callback_query):
+async def next_page_copy(client, callback_query):
     data= callback_query.data
-    message= await callback_query.get_message()
-    user_id= callback_query.sender_id
-    _, next_offset, is_second_menu, data_back_cb = data.decode().split()
+    message= callback_query.message
+    user_id= message.reply_to_message.from_user.id
+    _, next_offset, is_second_menu, data_back_cb = data.split()
     is_second_menu = is_second_menu.lower() == 'true'
     list_info = get_val("list_info")
     total = len(list_info)
     next_offset = int(next_offset)
     prev_offset = next_offset - 10 
     
-    buttons = TelethonButtonMaker()
+    buttons = ButtonMaker()
     next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset) 
 
     if is_second_menu:
@@ -343,27 +356,34 @@ async def next_page_copy(callback_query):
     if is_second_menu:
         dest_drive= get_rclone_var("COPY_DESTINATION_DRIVE", user_id)
         dest_dir= get_rclone_var("COPY_DESTINATION_DIR", user_id)
-        await message.edit(f"Select folder where you want to copy\n\nPath:`{dest_drive}:{dest_dir}`", buttons=buttons.first_button)
+        await editMessage(f"Select folder where you want to copy\n\nPath:`{dest_drive}:{dest_dir}`", message, 
+                        reply_markup= InlineKeyboardMarkup(buttons.first_button))
     else:
         origin_drive= get_rclone_var("COPY_ORIGIN_DRIVE", user_id)
         origin_dir= get_rclone_var("COPY_ORIGIN_DIR", user_id)
-        await message.edit(f"Select file or folder which you want to copy\n\nPath:`{origin_drive}:{origin_dir}`", buttons=buttons.first_button)
+        await editMessage(f"Select file or folder which you want to copy\n\nPath:`{origin_drive}:{origin_dir}`", message, 
+                        reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
-async def handle_copy(event):
-    user_id= event.sender_id
-    if user_id in ALLOWED_USERS or event.chat_id in ALLOWED_CHATS or user_id == OWNER_ID:
+async def handle_copy(client, message):
+    user_id= message.from_user.id
+    chat_id = message.chat.id
+    if user_id in ALLOWED_USERS or chat_id in ALLOWED_CHATS or user_id == OWNER_ID:
         path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
         if not ospath.exists(path):
             msg= f"Load an rclone config file, use /config"
-            await event.reply(msg)
+            await sendMessage(msg, message)
         else:
             origin_dir= get_rclone_var("COPY_ORIGIN_DIR", user_id)
             origin_drive = get_rclone_var("COPY_ORIGIN_DRIVE", user_id)     
-            await copy_menu(event, msg= f"Select cloud where your files are stored\n\nPath:`{origin_drive}:{origin_dir}`", 
+            await copy_menu(client, message, msg= f"Select cloud where your files are stored\n\nPath:`{origin_drive}:{origin_dir}`", 
                     submenu= "list_drive", data_cb= "list_drive_origin")
     else:
-        await event.reply('Not Authorized user')      
+        await sendMessage('Not Authorized user', message)     
 
-bot.add_event_handler(handle_copy, NewMessage(pattern= command_process(f"/{BotCommands.CopyCommand}")))
-bot.add_event_handler(next_page_copy, CallbackQuery(pattern="next_copy"))
-bot.add_event_handler(setting_copy_menu, CallbackQuery(pattern="copymenu"))
+copy_handler = MessageHandler(handle_copy, filters= command(BotCommands.CopyCommand))
+next_page_cb= CallbackQueryHandler(next_page_copy, filters= regex("next_copy"))
+copy_menu_cb= CallbackQueryHandler(copy_menu_settings, filters= regex("copymenu"))
+
+Bot.add_handler(copy_handler)
+Bot.add_handler(next_page_cb)
+Bot.add_handler(copy_menu_cb)
