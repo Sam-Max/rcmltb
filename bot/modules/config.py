@@ -4,9 +4,9 @@ from pyrogram import filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from bot import Bot
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot.utils.bot_commands import BotCommands
-from bot.utils.bot_utils.message_utils import sendMessage
 from os import path as ospath, getcwd
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.message_utils import sendMessage
 
 async def _(client, query):
      await query.answer("Closed")

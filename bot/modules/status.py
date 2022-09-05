@@ -1,11 +1,12 @@
 
 from asyncio import sleep
 from bot import Bot, status_dict, status_reply_dict, status_dict_lock, status_reply_dict_lock
-from bot.utils.bot_utils.message_utils import auto_delete_message, deleteMessage, editMessage, sendMessage
-from bot.utils.status_utils.status_utils import get_bottom_status
 from pyrogram.handlers import MessageHandler
 from pyrogram import filters
-from bot.utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.message_utils import auto_delete_message, deleteMessage, editMessage, sendMessage
+
+from bot.helper.mirror_leech_utils.status_utils.status_utils import get_bottom_status
 
 UP_MSG_LOOP= []
 

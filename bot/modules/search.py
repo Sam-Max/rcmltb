@@ -4,14 +4,14 @@
 from html import escape
 from urllib.parse import quote
 from bot import LOGGER, SEARCH_API_LINK, SEARCH_LIMIT, SEARCH_PLUGINS, Bot, get_client
-from bot.utils.bot_commands import BotCommands
-from bot.utils.bot_utils.misc_utils import ButtonMaker
-from bot.utils.bot_utils.human_format import get_readable_file_size
-from bot.utils.bot_utils.message_utils import deleteMessage, editMessage, sendFile, sendMarkup, sendMessage
 from requests import get as rget
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
-from bot.utils.bot_utils.html_helper import html_template
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.human_format import get_readable_file_size
+from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendFile, sendMarkup, sendMessage
+from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.html_helper import html_template
 
 if SEARCH_PLUGINS is not None:
     PLUGINS = []

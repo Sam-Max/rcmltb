@@ -1,13 +1,16 @@
 from pyrogram.handlers import MessageHandler
 from pyrogram import filters
-from bot.uploaders.rclone.rclone_clone import GDriveClone
-from bot.utils.bot_commands import BotCommands
-from bot.utils.bot_utils.message_utils import sendMessage
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import is_gdrive_link
+from bot.helper.ext_utils.message_utils import sendMessage
 from bot import Bot
-from bot.utils.bot_utils.bot_utils import is_gdrive_link
+from bot.helper.ext_utils.rclone_utils import check_drive_selected
+from bot.helper.mirror_leech_utils.download_utils.rclone.rclone_clone import GDriveClone
 
 async def _clone(client, message):
      user_id= message.from_user.id
+     if await check_drive_selected(user_id, message):
+          return
      reply_to = message.reply_to_message
      args = message.text.split("|", maxsplit=1)
      if len(args) > 1:

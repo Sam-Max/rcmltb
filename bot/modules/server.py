@@ -7,10 +7,10 @@ from psutil import net_io_counters
 from telethon.tl.types import KeyboardButtonCallback
 from telethon.events import NewMessage, CallbackQuery
 from time import time
-from bot.utils.bot_commands import BotCommands
-from bot.utils.bot_utils.bot_utils import command_process
 from bot import ALLOWED_CHATS, ALLOWED_USERS, OWNER_ID, bot, botUptime
-from bot.utils.bot_utils import human_format
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import command_process
+from bot.helper.ext_utils.human_format import human_readable_bytes, human_readable_timedelta
 
 
 async def handle_server_command(e):
@@ -23,10 +23,10 @@ async def handle_server_command(e):
                 callbk = False
             try:
                 mem = psutil.virtual_memory()
-                memavailable = human_format.human_readable_bytes(mem.available)
-                memtotal = human_format.human_readable_bytes(mem.total)
+                memavailable = human_readable_bytes(mem.available)
+                memtotal = human_readable_bytes(mem.total)
                 mempercent = mem.percent
-                memfree = human_format.human_readable_bytes(mem.free)
+                memfree = human_readable_bytes(mem.free)
             except:
                 memavailable = "N/A"
                 memtotal = "N/A"
@@ -55,22 +55,22 @@ async def handle_server_command(e):
 
             try:
                 usage = shutil.disk_usage("/")
-                totaldsk = human_format.human_readable_bytes(usage.total)
-                useddsk = human_format.human_readable_bytes(usage.used)
-                freedsk = human_format.human_readable_bytes(usage.free)
+                totaldsk = human_readable_bytes(usage.total)
+                useddsk = human_readable_bytes(usage.used)
+                freedsk = human_readable_bytes(usage.free)
             except:
                 totaldsk = "N/A"
                 useddsk = "N/A"
                 freedsk = "N/A"
             try:
-                recv = human_format.human_readable_bytes(net_io_counters().bytes_recv)
-                sent = human_format.human_readable_bytes(net_io_counters().bytes_sent)
+                recv = human_readable_bytes(net_io_counters().bytes_recv)
+                sent = human_readable_bytes(net_io_counters().bytes_sent)
             except:
                 recv = "N/A"
                 sent = "N/A"
 
             diff = time() - botUptime
-            diff = human_format.human_readable_timedelta(diff)
+            diff = human_readable_timedelta(diff)
 
             if callbk:
                 msg = (

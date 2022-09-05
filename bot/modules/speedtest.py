@@ -1,8 +1,8 @@
-from bot.utils.bot_commands import BotCommands
 from bot import ALLOWED_CHATS, ALLOWED_USERS, OWNER_ID, bot
-from bot.utils.bot_utils.bot_utils import command_process
-from bot.utils.bot_utils.speedtest import get_speed
 from telethon.events import NewMessage
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import command_process
+from bot.helper.ext_utils.speedtest import get_speed
 
 async def speed_handler(e):
     user_id= e.sender_id

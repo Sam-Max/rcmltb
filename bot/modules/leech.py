@@ -1,17 +1,17 @@
 from json import loads as jsonloads
 from os import path as ospath, getcwd
-from bot.utils.bot_commands import BotCommands
 from configparser import ConfigParser
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from bot import ALLOWED_CHATS, ALLOWED_USERS, DOWNLOAD_DIR, OWNER_ID, Bot
-from bot.utils.var_holder import get_rclone_var, get_val, set_rclone_var, set_val
-from bot.uploaders.rclone.rclone_leech import RcloneLeech
-from bot.utils.bot_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
-from bot.utils.bot_utils.message_utils import editMessage, sendMarkup, sendMessage
-from bot.utils.bot_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
+from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
+from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
+from bot.helper.ext_utils.var_holder import get_rclone_var, get_val, set_rclone_var, set_val
+from bot.helper.mirror_leech_utils.upload_utils.rclone.rclone_leech import RcloneLeech
 
 folder_icon= "📁"
 

@@ -1,8 +1,8 @@
 from pyrogram.types import InlineKeyboardMarkup
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from json import loads as jsonloads
-from bot.utils.bot_utils.message_utils import editMessage, sendMessage
-from bot.utils.bot_utils.misc_utils import ButtonMaker, get_rclone_config, get_readable_size
+from bot.helper.ext_utils.message_utils import editMessage, sendMessage
+from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, get_readable_size
 
 
 async def settings_myfiles_menu(client, message, msg="", drive_base="", drive_name="", submenu="", 

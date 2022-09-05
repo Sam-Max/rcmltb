@@ -1,3 +1,4 @@
+from itertools import pairwise
 from os import path as ospath, getcwd
 from configparser import ConfigParser
 from pyrogram.types import InlineKeyboardMarkup
@@ -7,12 +8,12 @@ from pyrogram import filters
 from bot import Bot, ALLOWED_CHATS, ALLOWED_USERS, OWNER_ID
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from json import loads as jsonloads
-from bot.utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
+from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
+from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
+from bot.helper.ext_utils.var_holder import get_rclone_var, get_val, set_rclone_var, set_val
 from bot.modules.myfiles_settings import settings_myfiles_menu
-from bot.utils.var_holder import get_rclone_var, get_val, set_rclone_var, set_val
-from bot.utils.bot_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
-from bot.utils.bot_utils.message_utils import editMessage, sendMarkup, sendMessage
-from bot.utils.bot_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
 
 folder_icon= "📁"
 

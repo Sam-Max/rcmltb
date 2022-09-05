@@ -1,14 +1,14 @@
-#Modified from: Anasty
+#From: Anasty
 
 import asyncio
 from os import remove as osremove, path as ospath, mkdir
 from PIL import Image
-from bot.utils.bot_commands import BotCommands
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
-from bot.utils.bot_utils.misc_utils import ButtonMaker
-from bot.utils.bot_utils.message_utils import auto_delete_message, editMessage, sendMarkup
 from bot import AS_DOC_USERS, AS_MEDIA_USERS, AS_DOCUMENT, Bot
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.message_utils import auto_delete_message, editMessage, sendMarkup
+from bot.helper.ext_utils.misc_utils import ButtonMaker
 
 def getleechinfo(from_user):
     user_id = from_user.id

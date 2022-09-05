@@ -1,13 +1,12 @@
-from bot.utils.bot_commands import BotCommands
-from bot.utils.bot_utils.admin_check import is_admin
-from bot.utils.bot_utils.bot_utils import command_process
-from bot.utils.bot_utils.misc_utils import clean_all, start_cleanup
 from bot import OWNER_ID, ALLOWED_CHATS, ALLOWED_USERS, LOGGER, bot, Bot
 from os import path as ospath, remove as osremove, execl as osexecl, kill, popen
 from telethon.events import NewMessage
 from signal import SIGKILL
 from sys import executable
 from subprocess import run as srun
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import command_process
+from bot.helper.ext_utils.misc_utils import clean_all, start_cleanup
 from bot.modules import batch, cancel, config, copy, leech, leechset, mirror, mirrorset, search, myfiles, myfiles_settings, server, speedtest, status, gclone 
 
 print("Successfully deployed!")
@@ -48,7 +47,7 @@ async def handle_restart(message):
             await message.reply('Not Authorized user')  
 
 async def get_logs(e):
-    if await is_admin(e.sender_id):
+    if e.sender_id == OWNER_ID:
         await e.client.send_file(entity= e.chat_id,
             file= "botlog.txt",
             reply_to= e.message.id)

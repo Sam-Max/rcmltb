@@ -1,7 +1,7 @@
 
 from bot import bot
-from bot.utils.bot_utils.misc_utils import getDownloadByGid, getDownloadById
 from telethon.events import CallbackQuery
+from bot.helper.ext_utils.misc_utils import getDownloadByGid, getDownloadById
 
 async def handle_cancel(e):
    data = e.data.decode("UTF-8").split("_")

@@ -2,12 +2,12 @@
 #Github.com/Vasusen-code
 
 import asyncio
-from bot.utils.bot_commands import BotCommands
-from bot.utils.bot_utils.bot_utils import command_process
 from bot import Bot, bot, app
-from bot.utils.bot_utils.batch_helpers import get_link, check, get_bulk_msg
 from telethon import events, Button
 from pyrogram.errors import FloodWait
+from bot.helper.ext_utils.batch_helper import check, get_bulk_msg, get_link
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import command_process
 
 batch = []
 

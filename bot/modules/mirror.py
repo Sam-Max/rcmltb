@@ -2,30 +2,30 @@ from os import listdir, path as ospath
 from time import time
 from requests import get
 from bot import ALLOWED_CHATS, ALLOWED_USERS, DOWNLOAD_DIR, LOGGER, MEGA_KEY, OWNER_ID, Bot
-from bot.utils.bot_commands import BotCommands
 from asyncio import TimeoutError
 from bot import Bot, DOWNLOAD_DIR, LOGGER, TG_SPLIT_SIZE
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler
 from subprocess import run
-from bot.utils.var_holder import get_rclone_var, get_val, set_val
-from bot.utils.bot_utils.message_utils import editMessage
-from bot.downloaders.telegram.telegram_downloader import TelegramDownloader
-from bot.uploaders.rclone.rclone_mirror import RcloneMirror
-from bot.utils.bot_utils.zip_utils import extract_archive
-from bot.downloaders.aria.aria2_download import Aria2Downloader
-from bot.downloaders.mega.mega_download import MegaDownloader
-from bot.downloaders.qbit.qbit_downloader import QbDownloader
-from bot.uploaders.telegram.telegram_uploader import TelegramUploader
-from bot.utils.bot_utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_mega_link, is_url
 from re import match as re_match
-from bot.utils.bot_utils.direct_link_generator import direct_link_generator
-from bot.utils.bot_utils.exceptions import DirectDownloadLinkException
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
-from bot.utils.bot_utils.message_utils import sendMarkup, sendMessage
-from bot.utils.bot_utils.misc_utils import get_readable_size
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_mega_link, is_url
+from bot.helper.ext_utils.direct_link_generator import direct_link_generator
+from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
+from bot.helper.ext_utils.misc_utils import get_readable_size
+from bot.helper.ext_utils.rclone_utils import check_drive_selected
+from bot.helper.ext_utils.var_holder import get_val, set_val
+from bot.helper.ext_utils.zip_utils import extract_archive
+from bot.helper.mirror_leech_utils.download_utils.aria.aria2_download import Aria2Downloader
+from bot.helper.mirror_leech_utils.download_utils.mega.mega_download import MegaDownloader
+from bot.helper.mirror_leech_utils.download_utils.qbit.qbit_downloader import QbDownloader
+from bot.helper.mirror_leech_utils.download_utils.rclone.rclone_mirror import RcloneMirror
+from bot.helper.mirror_leech_utils.download_utils.telegram.telegram_downloader import TelegramDownloader
+from bot.helper.mirror_leech_utils.upload_utils.telegram.telegram_uploader import TelegramUploader
 
 
 async def handle_mirror(client, message):
@@ -70,8 +70,8 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
         else:
             tag = message.from_user.first_name
 
-        if len(get_rclone_var("MIRRORSET_DRIVE", user_id)) == 0:
-            return await sendMessage("Select a cloud first, use /mirrorset", message)
+        if await check_drive_selected(user_id, message):
+            return
 
         if reply_message is not None:
             file = reply_message.document or reply_message.video or reply_message.audio or reply_message.photo or None

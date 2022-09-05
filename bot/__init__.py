@@ -12,9 +12,9 @@ from dotenv import load_dotenv
 from aria2p import API as ariaAPI, Client as ariaClient
 from qbittorrentapi import Client as qbitClient
 from subprocess import Popen, run as srun
-from bot.client import RcloneTgClient
 from megasdkrestclient import MegaSdkRestClient, errors
 from pyrogram import Client
+from telethon import TelegramClient
 from bot.conv_pyrogram import Conversation
 
 basicConfig(level= INFO,
@@ -230,7 +230,7 @@ else:
 
 #---------------------------
 
-bot = RcloneTgClient("bot", API_ID, API_HASH, timeout=20, retry_delay=3,
+bot = TelegramClient("telethon", API_ID, API_HASH, timeout=20, retry_delay=3,
                         request_retries=10, connection_retries=10)
 
 try:
@@ -246,7 +246,7 @@ Bot = Client("pyrogram", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 Conversation(Bot)  
 try:
     Bot.start()
-    LOGGER.info("pyro Bot client created")
+    LOGGER.info("Pyrogram client created")
     bot.pyro = Bot
 except Exception as e:
     print(e)
@@ -269,7 +269,7 @@ except Exception as e:
 if app is not None:
     try:
         app.start()
-        LOGGER.info("pyrogram_session client created")
+        LOGGER.info("Pyrogram session client created")
     except Exception as e:
         print(e)
         exit(1)

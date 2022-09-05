@@ -1,11 +1,11 @@
-from bot.utils.bot_utils.admin_check import is_admin
 import asyncio as aio
 from os import remove
+from bot import OWNER_ID
 
 async def handle_exec_message_f(e):
     message = e
     client = e.client
-    if await is_admin(message.sender_id):
+    if message.sender_id == OWNER_ID:
         cmd = message.text.split(" ", maxsplit=1)[1]
 
         reply_to_id = message.id
