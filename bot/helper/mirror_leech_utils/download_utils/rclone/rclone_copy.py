@@ -40,7 +40,7 @@ class RcloneCopy:
             url = search(r"(?P<url>https?://[^\s]+)", folder_link).group("url")
            
             #Calculate Size
-            cmd = ["rclone", "size", "--config=rclone.conf", "--json", f"{dest_drive}:{dest_dir}{origin_dir}"]
+            cmd = ["rclone", "size", f'--config={conf_path}', "--json", f"{dest_drive}:{dest_dir}{origin_dir}"]
             process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
             out, _ = await process.communicate()
             output = out.decode().strip()
