@@ -33,17 +33,10 @@ class MegaDownloadStatus:
                     sleeps = True
                     self._status_msg = await self.create_update_message()
                     if time() - start > EDIT_SLEEP_SECS:
-                         try:
-                              data = "cancel_megadl_{}".format(self.gid())
-                              await editMarkup(self._status_msg, rmsg, reply_markup=(InlineKeyboardMarkup([
-                                                  [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
-                                                  ]))) 
-                         except FloodWait as fw:
-                              LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
-                              await sleep(fw.value)
-                         except MessageNotModified:
-                              await sleep(1)
-
+                         data = "cancel_megadl_{}".format(self.gid())
+                         await editMarkup(self._status_msg, rmsg, reply_markup=(InlineKeyboardMarkup([
+                                             [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
+                                             ]))) 
                          if sleeps:
                               if self._obj.cancelled:
                                    await editMessage("Download Cancelled", rmsg)

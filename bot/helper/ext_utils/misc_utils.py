@@ -4,7 +4,6 @@ from bot import BASE_URL, DOWNLOAD_DIR, LOGGER, WEB_PINCODE, aria2, get_client, 
 from itertools import zip_longest
 from json import loads as jsnloads
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from telethon.tl.types import KeyboardButtonCallback
 from subprocess import check_output
 from subprocess import check_output
 from json import loads
@@ -173,35 +172,6 @@ class ButtonMaker:
         menu = [self.first_button[i:i + n_cols] for i in range(0, len(self.first_button), n_cols)]
         return InlineKeyboardMarkup(menu)
 
-class TelethonButtonMaker:
-    def __init__(self):
-        self.first_button = []
-        self.second_button= []
-
-    def cb_buildbutton(self, key, data):
-        self.first_button.append(KeyboardButtonCallback(text = key, data = data))
-
-    def cbl_buildbutton(self, key, data):
-        self.first_button.append([KeyboardButtonCallback(text = key, data = data)])
-
-    def ap_buildbutton(self, data):
-        self.first_button.append(data)
-
-    def cb_buildsecbutton(self, key, data):
-        self.second_button.append(KeyboardButtonCallback(text = key, data = data))
-
-    def dbuildbutton(self, first_text, first_callback, second_text, second_callback):
-        self.first_button.append([KeyboardButtonCallback(text = first_text, data = first_callback), 
-                            KeyboardButtonCallback(text = second_text, data = second_callback)])
-
-    def tbuildbutton(self, first_text, first_callback, second_text, second_callback, third_text, third_callback):
-        self.first_button.append([KeyboardButtonCallback(text = first_text, data = first_callback), 
-                                KeyboardButtonCallback(text = second_text, data = second_callback),
-                                KeyboardButtonCallback(text = third_text, data = third_callback)])
-
-    def build_menu(self, n_cols):
-        menu = [self.first_button[i:i + n_cols] for i in range(0, len(self.first_button), n_cols)]
-        return InlineKeyboardMarkup(menu)
 
 
 

@@ -63,7 +63,7 @@ qbleech - leech torrent to Telegram
 leechset - leech settings
 copy - copy from cloud to cloud
 gclone - clone gdrive files/folder to cloud
-config - change rclone config file
+config - load/change rclone config file
 myfiles - file manager
 search - search for torrents
 status - get status message of tasks
@@ -100,7 +100,6 @@ restart - restart bot
         - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
 
    - Non mandatory variables:
-        - `RCLONE_CONFIG`: content of the rclone.conf file. Set this surrounded by single quotes. You can also skip this and load rclone.conf file from bot with /config cmd
         - `ALLOWED_USERS`: list of IDs of allowed users who can use this bot separated by spaces
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)

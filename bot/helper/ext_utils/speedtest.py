@@ -1,12 +1,12 @@
 #https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/core/speedtest.py
 
-from bot import LOGGER
 from bot.helper.ext_utils.human_format import human_readable_bytes
+from bot.helper.ext_utils.message_utils import sendMessage
 from speedtest import Speedtest
 
 
-async def get_speed(message):
-    imspd = await message.reply("Running speedtest...")
+async def get_speed(client, message):
+    imspd = await sendMessage("Running speedtest...", message)    
     test = Speedtest()
     test.get_best_server()
     test.download()
@@ -24,5 +24,4 @@ Ping: `{result["ping"]} ms`
 ISP: `{result["client"]["isp"]}`
     '''
     await imspd.delete()
-    await message.reply(string_speed, parse_mode="markdown")
-    LOGGER.info(f'Server Speed result:-\nDL: {human_readable_bytes(result["download"] / 8)}/s UL: {human_readable_bytes(result["upload"] / 8)}/s')
+    await sendMessage(string_speed, message)

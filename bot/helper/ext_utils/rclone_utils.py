@@ -1,5 +1,6 @@
 import asyncio
 import json
+from os import getcwd, path as ospath
 import re
 from bot import LOGGER
 from bot.helper.ext_utils.message_utils import sendMessage
@@ -35,9 +36,13 @@ async def get_gid(drive_name, drive_base, ent_name, conf_path, isdir=True):
     except Exception:
         LOGGER.error("Error while getting id ::- {}".format(stdout))
             
-async def check_drive_selected(user_id, message):
-    if len(get_rclone_var("MIRRORSET_DRIVE", user_id)) == 0:
+async def is_not_drive(user_id, message):
+    if len(get_rclone_var("MIRRORSET_DRIVE", str(user_id))) == 0:
         await sendMessage("Select a cloud first, use /mirrorset", message)
         return True
-    else:
-        return False
+
+async def is_not_config(user_id, message):
+    path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
+    if not ospath.exists(path):
+        await sendMessage("Send an rclone config file, use /config", message)
+        return True

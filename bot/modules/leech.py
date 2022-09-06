@@ -5,12 +5,14 @@ from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
-from bot import ALLOWED_CHATS, ALLOWED_USERS, DOWNLOAD_DIR, OWNER_ID, Bot
+from bot import DOWNLOAD_DIR, Bot
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
-from bot.helper.ext_utils.var_holder import get_rclone_var, get_val, set_rclone_var, set_val
+from bot.helper.ext_utils.rclone_utils import is_not_config
+from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
 from bot.helper.mirror_leech_utils.upload_utils.rclone.rclone_leech import RcloneLeech
 
 folder_icon= "📁"
@@ -26,107 +28,109 @@ async def handle_leech(client, message):
 
 async def leech(client, message, isZip=False, extract=False):
     user_id= message.from_user.id
-    chat_id = message.chat.id
-    if user_id in ALLOWED_USERS or chat_id in ALLOWED_CHATS or user_id == OWNER_ID:
-        set_val('IS_ZIP', isZip)   
-        set_val('EXTRACT', extract)    
-        await leech_menu(client, message, msg= "Select cloud where your files are stored",
-                submenu= "list_drive",data_cb="list_drive_leech_menu") 
-    else:
-        await sendMessage('Not Authorized user', message) 
+    if await is_not_config(user_id, message):
+        return
+    set_rclone_var('IS_ZIP', isZip, user_id)   
+    set_rclone_var('EXTRACT', extract, user_id)    
+    await list_drive(message)
 
-async def leech_menu(client, message, msg="",edit=False, drive_base="", drive_name="", submenu="", 
-                    data_cb="", data_back_cb=""):
-
+async def list_drive(message, edit=False):
     if message.reply_to_message:
-       user_id= message.reply_to_message.from_user.id
+        user_id= message.reply_to_message.from_user.id
     else:
-       user_id= message.from_user.id
+        user_id= message.from_user.id
 
     buttons = ButtonMaker()
 
-    if submenu == "list_drive":
-        path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")     
-        conf = ConfigParser()
-        conf.read(path)
+    path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
+    conf = ConfigParser()
+    conf.read(path)
 
-        for j in conf.sections():
-            if "team_drive" in list(conf[j]):
-                buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"leechmenu^{data_cb}^{j}^{user_id}")     
-            else:
-                buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"leechmenu^{data_cb}^{j}^{user_id}")          
-        
-        for a, b in pairwise(buttons.second_button):
-            row= []
-            if b == None:
-                row.append(a)     
-                buttons.ap_buildbutton(row)
-                break
-            row.append(a)
-            row.append(b)
+    for j in conf.sections():
+        if "team_drive" in list(conf[j]):
+            buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"leechmenu^drive^{j}^{user_id}")     
+        else:
+                 buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"leechmenu^drive^{j}^{user_id}") 
+
+    for a, b in pairwise(buttons.second_button):
+        row= [] 
+        if b == None:
+            row.append(a)  
             buttons.ap_buildbutton(row)
-            
-        buttons.cbl_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}")
+            break
+        row.append(a)
+        row.append(b)
+        buttons.ap_buildbutton(row)
 
-        if edit:
-            await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+    buttons.cbl_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}")
+
+    if edit:
+        await editMessage("Select cloud where your files are stored", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+    else:
+        await sendMarkup("Select cloud where your files are stored", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+
+async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
+    user_id= message.reply_to_message.from_user.id
+    buttons = ButtonMaker()
+    path = get_rclone_config(user_id)
+    buttons.cbl_buildbutton("✅ Select this folder", f"leechmenu^leech_folder^{user_id}")
+
+    cmd = ["rclone", "lsjson", f'--config={path}', f"{drive_name}:{drive_base}" ] 
+    process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
+    out, err = await process.communicate()
+    out = out.decode().strip()
+    return_code = await process.wait()
+
+    if return_code != 0:
+        err = err.decode().strip()
+        return await sendMessage(f'Error: {err}', message)
+
+    list_info = jsonloads(out)
+    list_info.sort(key=lambda x: x["Size"])
+    set_rclone_var("driveInfo", list_info, user_id)
+
+    if len(list_info) == 0:
+        buttons.cbl_buildbutton("❌Nothing to show❌", data=f"leechmenu^pages^{user_id}")
+    else:
+        total = len(list_info)
+        max_results= 10
+        offset= 0
+        start = offset
+        end = max_results + start
+        next_offset = offset + max_results
+
+        if end > total:
+            list_info= list_info[offset:]    
+        elif offset >= total:
+            list_info= []    
         else:
-            await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
-
-    elif submenu == "list_dir":
-        path = get_rclone_config(user_id)
-        buttons.cbl_buildbutton("✅ Select this folder", data=f"leechmenu^start_leech_folder^{user_id}")
+            list_info= list_info[start:end]       
         
-        cmd = ["rclone", "lsjson", f'--config={path}', f"{drive_name}:{drive_base}"]
-        process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
-        out, err = await process.communicate()
-        out = out.decode().strip()
-        return_code = await process.wait()
-
-        if return_code != 0:
-           err = err.decode().strip()
-           return await sendMessage(f'Error: {err}', message)
-
-        list_info = jsonloads(out)
-        list_info.sort(key=lambda x: x["Size"])
-        set_val("list_info", list_info)
-
-        if len(list_info) == 0:
-            buttons.cbl_buildbutton("❌Nothing to show❌", data=f"leechmenu^pages^{user_id}")   
-        else:
-            total = len(list_info)
-            max_results= 10
-            offset= 0
-            start = offset
-            end = max_results + start
-            next_offset = offset + max_results
-
-            if end > total:
-                list_info= list_info[offset:]    
-            elif offset >= total:
-                list_info= []    
-            else:
-                list_info= list_info[start:end]  
-
-            rcloneListButtonMaker(result_list= list_info,
+        rcloneListButtonMaker(result_list= list_info,
                 buttons=buttons,
                 menu_type= Menus.LEECH, 
-                callback = data_cb,
+                callback = "dir",
                 user_id= user_id)
 
-            if offset == 0 and total <= 10:
-                buttons.cbl_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data=f"leechmenu^pages^{user_id}")        
-            else: 
-                buttons.dbuildbutton(first_text= f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", first_callback=f"leechmenu^pages^{user_id}",
-                                second_text= "NEXT ⏩", second_callback= f"next_leech {next_offset} {data_back_cb}")
-    
-        buttons.cbl_buildbutton("⬅️ Back", data= f"leechmenu^{data_back_cb}^{user_id}")
-        buttons.cbl_buildbutton("✘ Close Menu", data=f"leechmenu^close^{user_id}")
+        if offset == 0 and total <= 10:
+            buttons.cbl_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", data=f"leechmenu^pages^{user_id}")        
+        else: 
+             buttons.dbuildbutton(first_text= f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", first_callback=f"leechmenu^pages^{user_id}",
+                                second_text= "NEXT ⏩", second_callback= f"next_leech {next_offset} {back}")
 
-        if edit:
-            await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
-        else:
-            await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+    buttons.cbl_buildbutton("⬅️ Back", data= f"leechmenu^{back}^{user_id}")
+    buttons.cbl_buildbutton("✘ Close Menu", data=f"leechmenu^close^{user_id}")
+
+    msg= 'Select folder or file that you want to leech\n'
+    if get_rclone_var('IS_ZIP', user_id):
+        msg= 'Select file that you want to zip\n' 
+    if get_rclone_var('EXTRACT', user_id):
+        msg= 'Select file that you want to extract\n'
+
+    if edit:
+        await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+    else:
+        await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 async def leech_menu_cb(client, callback_query):
     query= callback_query
@@ -140,68 +144,51 @@ async def leech_menu_cb(client, callback_query):
     is_zip = False
     extract = False
 
-    msg= 'Select folder or file that you want to leech\n'
-    if get_val('IS_ZIP'):
-        msg= 'Select file that you want to zip\n' 
+    if get_rclone_var('IS_ZIP', user_id):
         is_zip= True
         
-    if get_val('EXTRACT'):
-        msg= 'Select file that you want to extract\n'
+    if get_rclone_var('EXTRACT', user_id):
         extract= True
 
     if data == "pages":
         await query.answer()
 
     if cmd[-1] != user_id:
-        await query.answer("This menu is not for you!", show_alert=True)
-        return
+        return await query.answer("This menu is not for you!", show_alert=True)
 
-    if cmd[1] == "list_drive_leech_menu":
-        drive_name= cmd[2]
-
-        #reset menu
+    if cmd[1] == "drive":
+        await query.answer()          
+        #Reset menu
         set_rclone_var("LEECH_BASE_DIR", "", user_id)
         base_dir= get_rclone_var("LEECH_BASE_DIR", user_id)
 
+        drive_name= cmd[2]
         set_rclone_var("LEECH_DRIVE", drive_name, user_id)
-        await leech_menu(
-            client, 
-            message, 
-            msg=f"{msg}\nPath:`{drive_name}:{base_dir}`", 
-            drive_name= drive_name, 
-            submenu="list_dir", 
-            data_cb="list_dir_leech_menu",
-            edit=True, 
-            data_back_cb= "leech_menu_back")     
+        await list_dir(message, drive_name= drive_name, drive_base=base_dir, edit=True)
 
-    elif cmd[1] == "list_dir_leech_menu":
-        path = get_val(cmd[2])
+    elif cmd[1] == "dir":
+        await query.answer()     
+        path = get_rclone_var(cmd[2], user_id)
         base_dir += path + "/"
         set_rclone_var("LEECH_BASE_DIR", base_dir, user_id)
-        await leech_menu(
-            client, 
-            message, 
-            edit=True, 
-            msg=f"{msg}\nPath:`{rclone_drive}:{base_dir}`", 
-            drive_base= base_dir, 
-            drive_name= rclone_drive, 
-            submenu="list_dir", 
-            data_cb="list_dir_leech_menu", 
-            data_back_cb= "leech_back")
+        await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
 
-    elif cmd[1] == "start_leech_file":
-        path = get_val(cmd[2])
+    elif cmd[1] == "leech_file":
+        await query.answer()      
+        path = get_rclone_var(cmd[2], user_id)
         base_dir += path
         dest_dir = f'{DOWNLOAD_DIR}{path}'
-        rclone_leech= RcloneLeech(message, user_id, base_dir, dest_dir, path, tag= tag, isZip=is_zip, extract=extract)
-        await rclone_leech.leech()
+        rc_leech= RcloneLeech(message, user_id, base_dir, dest_dir, path, tag= tag, isZip=is_zip, extract=extract)
+        await rc_leech.leech()
 
-    elif cmd[1] == "start_leech_folder":
+    elif cmd[1] == "leech_folder":
+        await query.answer()      
         dest_dir = f'{DOWNLOAD_DIR}{base_dir}'
-        rclone_leech= RcloneLeech(message, user_id, base_dir, dest_dir, tag= tag, isZip=is_zip, extract=extract, folder=True)
-        await rclone_leech.leech()
+        rc_leech= RcloneLeech(message, user_id, base_dir, dest_dir, tag= tag, isZip=is_zip, extract=extract, folder=True)
+        await rc_leech.leech()
 
-    elif cmd[1] == "leech_back":
+    elif cmd[1] == "back":
+        await query.answer()      
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
         for dir in base_dir_split: 
@@ -210,33 +197,16 @@ async def leech_menu_cb(client, callback_query):
         set_rclone_var("LEECH_BASE_DIR", base_dir, user_id)
         
         if len(base_dir) > 0: 
-            data_b_cb= cmd[1]  
+            await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
         else:
-            data_b_cb= "leech_menu_back"
-
-        await leech_menu(
-            client,
-            message, 
-            edit=True, 
-            msg=f"{msg}\nPath:`{rclone_drive}:{base_dir}`", 
-            drive_base= base_dir, 
-            drive_name= rclone_drive, 
-            submenu="list_dir", 
-            data_cb="list_dir_leech_menu", 
-            data_back_cb= data_b_cb)   
-
-    elif cmd[1]== "leech_menu_back":
-        await leech_menu(
-            client, 
-            message, 
-            msg= "Select cloud where your files are stored",
-            submenu= "list_drive",
-            data_cb="list_drive_leech_menu",
-            edit=True)     
+            await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, back= "back_drive", edit=True)     
+            
+    elif cmd[1] == "back_drive":
+        await query.answer()
+        await list_drive(message, edit=True)
 
     elif cmd[1] == "close":
         await query.answer("Closed")
-        set_rclone_var("LEECH_BASE_DIR", "", user_id)
         await message.delete()
  
 async def next_page_leech(client, callback_query):
@@ -244,20 +214,20 @@ async def next_page_leech(client, callback_query):
     message= callback_query.message
     user_id= message.reply_to_message.from_user.id
     _, next_offset, data_back_cb= data.split()
-    list_info = get_val("list_info")
+    list_info = get_rclone_var("driveInfo", user_id)
     total = len(list_info)
     next_offset = int(next_offset)
     prev_offset = next_offset - 10 
 
     buttons = ButtonMaker()
-    buttons.cbl_buildbutton(f"✅ Select this folder", data= f"leechmenu^start_leech_folder^{user_id}")
+    buttons.cbl_buildbutton(f"✅ Select this folder", f"leechmenu^leech_folder^{user_id}")
 
     next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset)
 
     rcloneListButtonMaker(result_list= next_list_info,
         buttons=buttons,
         menu_type= Menus.LEECH, 
-        callback = "list_dir_leech_menu",
+        callback = "dir",
         user_id= user_id)
 
     if next_offset == 0:
@@ -279,20 +249,20 @@ async def next_page_leech(client, callback_query):
     buttons.cbl_buildbutton("⬅️ Back", f"leechmenu^{data_back_cb}^{user_id}")
     buttons.cbl_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}")
 
-    default_drive= get_rclone_var("LEECH_DRIVE", user_id)
+    leech_drive= get_rclone_var("LEECH_DRIVE", user_id)
     base_dir= get_rclone_var("LEECH_BASE_DIR", user_id)
-    await editMessage(f"Select folder or file that you want to leech\n\nPath:`{default_drive}:{base_dir}`", message, 
+    await editMessage(f"Select folder or file that you want to leech\n\nPath:`{leech_drive}:{base_dir}`", message, 
                         reply_markup= InlineKeyboardMarkup(buttons.first_button))    
            
 
-next_page_cbq= CallbackQueryHandler(next_page_leech,filters= regex("next_leech"))
-leech_menu_cbq= CallbackQueryHandler(leech_menu_cb,filters= regex("leechmenu"))
-leech_handler = MessageHandler(handle_leech,filters= command(BotCommands.LeechCommand))
-zip_leech_handler = MessageHandler(handle_zip_leech_command,filters= command(BotCommands.ZipLeechCommand))
-unzip_leech_handler = MessageHandler(handle_unzip_leech_command,filters= command(BotCommands.UnzipLeechCommand))
+next_page_cb= CallbackQueryHandler(next_page_leech, filters= regex("next_leech"))
+leech_callback= CallbackQueryHandler(leech_menu_cb, filters= regex("leechmenu"))
+leech_handler = MessageHandler(handle_leech, filters= command(BotCommands.LeechCommand))
+zip_leech_handler = MessageHandler(handle_zip_leech_command, filters= command(BotCommands.ZipLeechCommand))
+unzip_leech_handler = MessageHandler(handle_unzip_leech_command, filters= command(BotCommands.UnzipLeechCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 
-Bot.add_handler(next_page_cbq)
-Bot.add_handler(leech_menu_cbq)
+Bot.add_handler(next_page_cb)
+Bot.add_handler(leech_callback)
 Bot.add_handler(leech_handler)
 Bot.add_handler(zip_leech_handler)
 Bot.add_handler(unzip_leech_handler)

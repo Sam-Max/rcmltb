@@ -1,7 +1,7 @@
 from os import listdir, path as ospath
 from time import time
 from requests import get
-from bot import ALLOWED_CHATS, ALLOWED_USERS, DOWNLOAD_DIR, LOGGER, MEGA_KEY, OWNER_ID, Bot
+from bot import DOWNLOAD_DIR, LOGGER, MEGA_KEY, Bot
 from asyncio import TimeoutError
 from bot import Bot, DOWNLOAD_DIR, LOGGER, TG_SPLIT_SIZE
 from pyrogram import filters
@@ -15,10 +15,11 @@ from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_mega_link, is_url
 from bot.helper.ext_utils.direct_link_generator import direct_link_generator
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import get_readable_size
-from bot.helper.ext_utils.rclone_utils import check_drive_selected
-from bot.helper.ext_utils.var_holder import get_val, set_val
+from bot.helper.ext_utils.rclone_utils import is_not_config, is_not_drive
+from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
 from bot.helper.ext_utils.zip_utils import extract_archive
 from bot.helper.mirror_leech_utils.download_utils.aria.aria2_download import Aria2Downloader
 from bot.helper.mirror_leech_utils.download_utils.mega.mega_download import MegaDownloader
@@ -44,13 +45,15 @@ async def handle_qbit_leech(client, message):
     await mirror_leech(client, message, isLeech=True)
 
 async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False, isLeech= False):
-    user_id= message.from_user.id
-    chat_id = message.chat.id
-    reply_message= message.reply_to_message
-    select = False
-    pswd= None  
-    link= ''
-    if user_id in ALLOWED_USERS or chat_id in ALLOWED_CHATS or user_id == OWNER_ID:
+        user_id= message.from_user.id
+        if await is_not_config(user_id, message):
+            return
+        if await is_not_drive(user_id, message):
+            return
+        reply_message= message.reply_to_message
+        select = False
+        pswd= None  
+        link= ''
         msg = message.text.split(maxsplit=1)
         if len(msg) > 1:
             msgArgs = msg[1].split(maxsplit=1)
@@ -70,9 +73,6 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
         else:
             tag = message.from_user.first_name
 
-        if await check_drive_selected(user_id, message):
-            return
-
         if reply_message is not None:
             file = reply_message.document or reply_message.video or reply_message.audio or reply_message.photo or None
             if reply_message.from_user.username:
@@ -87,10 +87,10 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
                     name= file.file_name
                     size= get_readable_size(file.file_size)
                     header_msg = f"<b>Which name do you want to use?</b>\n\n<b>Name</b>: `{name}`\n\n<b>Size</b>: `{size}`"
-                    set_val("FILE", file)
-                    set_val("IS_ZIP", isZip)
-                    set_val("EXTRACT", extract)
-                    set_val("PSWD", pswd)
+                    set_rclone_var("FILE", file, user_id)
+                    set_rclone_var("IS_ZIP", isZip, user_id)
+                    set_rclone_var("EXTRACT", extract, user_id)
+                    set_rclone_var("PSWD", pswd, user_id)
                     keyboard = [[InlineKeyboardButton(f"📄 By default", callback_data= f'mirrormenu_default'),
                             InlineKeyboardButton(f"📝 Rename", callback_data='mirrormenu_rename')],
                             [InlineKeyboardButton("Close", callback_data= f"mirrorsetmenu^close")]]
@@ -182,8 +182,6 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
                     path= f'{path}/{name}'      
                 rclone_mirror= RcloneMirror(path, rmsg, tag, user_id)
                 await rclone_mirror.mirror() 
-    else:
-        await sendMessage('Not Authorized user', message)
 
 async def mirror_menu(client, query):
     list = query.data.split("_")
@@ -191,10 +189,10 @@ async def mirror_menu(client, query):
     user_id= str(query.from_user.id)
     tag = f"@{message.reply_to_message.from_user.username}"
     
-    file= get_val("FILE")
-    isZip = get_val("IS_ZIP")
-    extract = get_val("EXTRACT")
-    pswd = get_val("PSWD") 
+    file= get_rclone_var("FILE", user_id)
+    isZip = get_rclone_var("IS_ZIP", user_id)
+    extract = get_rclone_var("EXTRACT", user_id)
+    pswd = get_rclone_var("PSWD", user_id) 
 
     if "default" in list[1]:
         await mirror_file(client, message, file, tag, user_id, pswd, isZip=isZip, extract=extract)
@@ -248,37 +246,28 @@ async def mirror_file(client, message, file, tag, user_id, pswd, isZip, extract,
     rc_mirror= RcloneMirror(path, msg, tag, user_id, new_name= new_name, is_rename= is_rename)
     await rc_mirror.mirror()   
 
-mirror_handler = MessageHandler(
-        handle_mirror,
-        filters=filters.command(BotCommands.MirrorCommand))
+mirror_handler = MessageHandler(handle_mirror,
+        filters=filters.command(BotCommands.MirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+
+zip_mirror_handler = MessageHandler(handle_zip_mirror,
+        filters=filters.command(BotCommands.ZipMirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+
+unzip_mirror_handler = MessageHandler(handle_unzip_mirror,
+        filters=filters.command(BotCommands.UnzipMirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+
+qbit_mirror_handler = MessageHandler(handle_qbit_mirror,
+        filters=filters.command(BotCommands.QbMirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+
+qbit_leech_handler = MessageHandler(handle_qbit_leech,
+        filters=filters.command(BotCommands.QbLeechCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+
+mirror_menu_cb = CallbackQueryHandler(mirror_menu,
+        filters=filters.regex("mirrormenu"))
 
 Bot.add_handler(mirror_handler)   
-
-zip_mirror_handler = MessageHandler(
-        handle_zip_mirror,
-        filters=filters.command(BotCommands.ZipMirrorCommand))
-
 Bot.add_handler(zip_mirror_handler)
-
-unzip_mirror_handler = MessageHandler(
-        handle_unzip_mirror,
-        filters=filters.command(BotCommands.UnzipMirrorCommand))
-
 Bot.add_handler(unzip_mirror_handler)
-
-qbit_mirror_handler = MessageHandler(
-        handle_qbit_mirror,
-        filters=filters.command(BotCommands.QbMirrorCommand))
-
 Bot.add_handler(qbit_mirror_handler)
-
-qbit_leech_handler = MessageHandler(
-        handle_qbit_leech,
-        filters=filters.command(BotCommands.QbLeechCommand))
-
 Bot.add_handler(qbit_leech_handler)
-
-mirror_menu_cb = CallbackQueryHandler(
-        mirror_menu,
-        filters=filters.regex("mirrormenu"))
 Bot.add_handler(mirror_menu_cb)
+

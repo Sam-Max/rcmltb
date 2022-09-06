@@ -3,7 +3,6 @@ import json
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from re import search
 from subprocess import Popen, PIPE
-from bot import LOGGER
 from bot.helper.ext_utils.human_format import human_readable_bytes
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import get_rclone_config

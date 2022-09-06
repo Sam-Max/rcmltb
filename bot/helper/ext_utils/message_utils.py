@@ -35,7 +35,9 @@ async def editMarkup(text: str, message, reply_markup):
                                     reply_markup=reply_markup)
     except FloodWait as fw:
         await sleep(fw.value)
-        return await editMarkup(text, message, reply_markup)                                
+        return await editMarkup(text, message, reply_markup) 
+    except MessageNotModified:
+        await sleep(1)                               
     except Exception as e:
         LOGGER.error(str(e))
 

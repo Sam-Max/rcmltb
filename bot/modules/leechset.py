@@ -7,6 +7,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
 from bot import AS_DOC_USERS, AS_MEDIA_USERS, AS_DOCUMENT, Bot
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import auto_delete_message, editMessage, sendMarkup
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 
@@ -102,7 +103,7 @@ async def handle_leech_set_type(client, callback_query):
             pass
 
 leech_set_handler = MessageHandler(handle_leech_set,
-                    filters= filters.command(BotCommands.LeechSetCommand))
+                    filters= filters.command(BotCommands.LeechSetCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 
 but_set_handler = CallbackQueryHandler(handle_leech_set_type,
                   filters= filters.regex("leechset"))

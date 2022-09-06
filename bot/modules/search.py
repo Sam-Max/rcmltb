@@ -8,6 +8,7 @@ from requests import get as rget
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendFile, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker
@@ -233,12 +234,10 @@ def _getResult(search_results, key, method):
         msg += '</span>'
     return msg
 
-torrent_search_handler = MessageHandler(
-               handle_torrent_search,
-               filters= filters.command(BotCommands.SearchCommand))
+torrent_search_handler = MessageHandler(handle_torrent_search,
+               filters= filters.command(BotCommands.SearchCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 
-torrent_search_but_handler = CallbackQueryHandler(
-               torrent_search_but,
+torrent_search_but_handler = CallbackQueryHandler(torrent_search_but,
                filters= filters.regex("torser"))
 
 Bot.add_handler(torrent_search_handler)

@@ -6,6 +6,7 @@ from bot import Bot
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from os import path as ospath, getcwd
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import sendMessage
 
 async def _(client, query):
@@ -35,7 +36,7 @@ async def handle_config(client, message):
      finally:
           await question.delete()
 
-config_handler = MessageHandler(handle_config, filters= command(BotCommands.ConfigCommand))
+config_handler = MessageHandler(handle_config, filters= command(BotCommands.ConfigCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 but_set_handler = CallbackQueryHandler(_, filters= regex(r'stop'))
 
 Bot.add_handler(config_handler)

@@ -1,7 +1,6 @@
 
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.var_holder import set_val
-
+from bot.helper.ext_utils.var_holder import set_rclone_var
 
 folder_icon= "📁"
 
@@ -28,27 +27,22 @@ def rcloneListNextPage(list_info, offset= 0, max_results=10):
 def rcloneListButtonMaker(result_list, buttons, menu_type, callback, user_id, is_second_menu= False):
     for index, dir in enumerate(result_list):
         path = dir["Path"]
-        key = f'{index}{user_id}'
-        set_val(key, path)
+        set_rclone_var(str(index), path, user_id)
         size= dir['Size']
         size= get_readable_file_size(size)
         mime_type= dir['MimeType']
 
         if menu_type == Menus.LEECH:
-           file_action= "start_leech_file"  
-        elif menu_type == Menus.COPY:
-           if is_second_menu:
-                file_action= "start_copy"   
-           else:
-                file_action= "list_drive_second_menu"   
-        elif menu_type == Menus.MIRRORSET:
-            if mime_type == 'inode/directory': 
-                buttons.cbl_buildbutton(f"{folder_icon} {path}", data= f"{menu_type}^{callback}^{key}^{user_id}") 
-                continue
+            file_action= "leech_file"  
         elif menu_type == Menus.MYFILES:
-            file_action= "start_file_actions"   
-
+            file_action= "file_actions"  
+        elif menu_type == Menus.COPY:
+            if is_second_menu:
+                file_action= "copy"   
+            else:
+                file_action= "drive_second"   
+         
         if mime_type == 'inode/directory': 
-            buttons.cbl_buildbutton(f"{folder_icon} {path}", data= f"{menu_type}^{callback}^{key}^{user_id}") 
+            buttons.cbl_buildbutton(f"{folder_icon} {path}", data= f"{menu_type}^{callback}^{index}^{user_id}") 
         else:
-            buttons.cbl_buildbutton(f"[{size}] {path}", data= f"{menu_type}^{file_action}^{key}^True^{user_id}")
+            buttons.cbl_buildbutton(f"[{size}] {path}", data= f"{menu_type}^{file_action}^{index}^True^{user_id}")

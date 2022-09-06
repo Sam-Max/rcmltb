@@ -2,14 +2,17 @@ from pyrogram.handlers import MessageHandler
 from pyrogram import filters
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import is_gdrive_link
+from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import sendMessage
 from bot import Bot
-from bot.helper.ext_utils.rclone_utils import check_drive_selected
+from bot.helper.ext_utils.rclone_utils import is_not_config, is_not_drive
 from bot.helper.mirror_leech_utils.download_utils.rclone.rclone_clone import GDriveClone
 
 async def _clone(client, message):
      user_id= message.from_user.id
-     if await check_drive_selected(user_id, message):
+     if await is_not_config(user_id, message):
+          return
+     if await is_not_drive(user_id, message):
           return
      reply_to = message.reply_to_message
      args = message.text.split("|", maxsplit=1)
@@ -36,7 +39,7 @@ async def _clone(client, message):
           msg += "For file: <code>/gdrive</code> link"
           await sendMessage(msg, message) 
 
-clone_handler = MessageHandler(
-     _clone,
-     filters= filters.command(BotCommands.GcloneCommand))
+clone_handler = MessageHandler(_clone,
+     filters= filters.command(BotCommands.GcloneCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+     
 Bot.add_handler(clone_handler)

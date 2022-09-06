@@ -52,18 +52,6 @@ AS_MEDIA_USERS = set()
 load_dotenv('config.env', override=True)
 
 try:
-    RCLONE_CONFIG = getConfig('RCLONE_CONFIG')
-    if len(RCLONE_CONFIG) == 0:
-        raise KeyError
-    RCLONE_CONFIG.strip()
-    with open("rclone.conf", "wb") as file:
-        file.write(bytes(RCLONE_CONFIG, 'utf-8'))
-    LOGGER.info(f'Rclone file loaded!') 
-except:
-    LOGGER.info(f'Rclone file not loaded!')  
-    pass
-
-try:
     EDIT_SLEEP_SECS = getConfig('EDIT_SLEEP_SECS')
     if len(EDIT_SLEEP_SECS) == 0:
         raise KeyError
