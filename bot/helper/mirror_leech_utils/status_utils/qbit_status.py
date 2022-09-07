@@ -4,6 +4,7 @@ from time import time
 from asyncio import sleep
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified
+from bot.helper.ext_utils.bot_utils import get_readable_time
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMessage
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
