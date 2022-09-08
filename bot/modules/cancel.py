@@ -1,10 +1,11 @@
 
-from bot import bot
-from telethon.events import CallbackQuery
+from pyrogram.filters import regex
+from pyrogram.handlers import CallbackQueryHandler
+from bot import Bot
 from bot.helper.ext_utils.misc_utils import getDownloadByGid, getDownloadById
 
-async def handle_cancel(e):
-   data = e.data.decode("UTF-8").split("_")
+async def handle_cancel(client, callback_query):
+   data = callback_query.data.split("_")
    if data[1] == "aria2":
         gid = data[2]
         gid = gid.strip()
@@ -19,20 +20,19 @@ async def handle_cancel(e):
         gid = data[2]
         gid = gid.strip()
         dl = await getDownloadByGid(gid)
-        await dl.cancel_download("Download stopped by user!!") 
+        dl.cancel_download() 
    if data[1] == "rclone":
         id= data[2]
         id = int(id.strip())
         dl = await getDownloadById(id)
-        dl.cancelled = True
+        dl.is_cancelled = True
    if data[1] == "telegram":
         id = data[2]
         id = int(id.strip())
         dl = await getDownloadById(id)
-        dl.cancelled = True
+        dl.is_cancelled = True
 
-bot.add_event_handler(
-        handle_cancel,
-        CallbackQuery(pattern="cancel"))
+cancel= CallbackQueryHandler(handle_cancel, filters= regex("cancel"))
+Bot.add_handler(cancel)        
         
  

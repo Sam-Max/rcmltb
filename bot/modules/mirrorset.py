@@ -141,7 +141,6 @@ async def mirrorset_callback(client, callback_query):
         return await query.answer("This menu is not for you!", alert=True)
         
     elif cmd[1] == "drive":
-        await query.answer()       
         #Reset Menu
         set_rclone_var("MIRRORSET_BASE_DIR", "", user_id)
         base_dir= get_rclone_var("MIRRORSET_BASE_DIR", user_id)
@@ -149,16 +148,16 @@ async def mirrorset_callback(client, callback_query):
         drive_name= cmd[2]
         set_rclone_var("MIRRORSET_DRIVE", drive_name, user_id)
         await list_dir(message, drive_name= drive_name, drive_base=base_dir, edit=True)
+        await query.answer()
 
     elif cmd[1] == "dir":
-        await query.answer()     
         path = get_rclone_var(cmd[2], user_id)
         base_dir += path + "/"
         set_rclone_var("MIRRORSET_BASE_DIR", base_dir, user_id)
         await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
+        await query.answer()
 
     elif cmd[1] == "back":
-        await query.answer()     
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
         for dir in base_dir_split: 
@@ -170,10 +169,11 @@ async def mirrorset_callback(client, callback_query):
             await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
         else:
             await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, back= "back_drive", edit=True)     
-            
+        await query.answer() 
+
     elif cmd[1] == "back_drive":   
-        await query.answer()
         await list_drive(message, edit=True)
+        await query.answer()
         
     elif cmd[1] == "close":
         await query.answer("Closed")

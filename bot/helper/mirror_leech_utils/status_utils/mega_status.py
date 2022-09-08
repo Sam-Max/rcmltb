@@ -1,13 +1,16 @@
 from time import time
 from asyncio import sleep
-from bot import EDIT_SLEEP_SECS, LOGGER, status_dict, status_dict_lock
+from bot import EDIT_SLEEP_SECS, status_dict, status_dict_lock
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from os import path as ospath
-from functools import partial
 from bot.helper.ext_utils.human_format import human_readable_bytes
 from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMessage
 from bot.helper.mirror_leech_utils.status_utils.status_utils import get_bottom_status
+
+
+def get_download_info(mega_client, gid):
+    dl_info = mega_client.getDownloadInfo(gid) 
+    return dl_info
 
 class MegaDownloadStatus:
      def __init__(self, gid, message, obj):
@@ -16,7 +19,8 @@ class MegaDownloadStatus:
         self.id = self.__message.id
         self._status_msg= ""
         self._obj= obj
-        self._dl_info= None
+        self._client= self._obj.mega_client
+        self._dl_info= get_download_info(self._client, gid)
 
      def get_status_msg(self):
           return self._status_msg     
@@ -24,11 +28,12 @@ class MegaDownloadStatus:
      async def create_status(self):
         async with status_dict_lock:  
             status_dict[self.id] = self
-        rmsg= await sendMessage("Download Started...", self.__message)
+        status_msg = await self.create_update_message()    
+        rmsg= await sendMessage(status_msg, self.__message)
         sleeps= False
         start = time()
         while True:
-               self._dl_info = await self._obj.loop.run_in_executor(None, partial(self._obj.mega_client.getDownloadInfo, self.__gid))     
+               self._dl_info = get_download_info(self._client, self.__gid)
                if self._dl_info is not None:
                     sleeps = True
                     self._status_msg = await self.create_update_message()
@@ -38,12 +43,12 @@ class MegaDownloadStatus:
                                              [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
                                              ]))) 
                          if sleeps:
-                              if self._obj.cancelled:
+                              if self._obj.is_cancelled:
                                    await editMessage("Download Cancelled", rmsg)
                                    async with status_dict_lock:
                                         del status_dict[self.id]
                                    return False, rmsg, None
-                              if self._obj.completed:
+                              if self._obj.is_completed:
                                    path = ospath.join(self._obj.dl_add_info["dir"], self._dl_info["name"])
                                    async with status_dict_lock:
                                         del status_dict[self.id]
@@ -78,4 +83,4 @@ class MegaDownloadStatus:
         return self.__gid
 
      async def cancel_download(self):
-        await self._obj.loop.run_in_executor(None, partial(self._obj.mega_client.cancelDl, self.gid()))
+        self._obj.mega_client.cancelDl(self.gid())

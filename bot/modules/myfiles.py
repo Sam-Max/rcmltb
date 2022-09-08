@@ -134,7 +134,6 @@ async def myfiles_callback(client, callback_query):
         return await query.answer("This menu is not for you!", show_alert=True)
 
     if cmd[1] == "drive":
-        await query.answer()     
         #Reset Menu
         set_rclone_var("MYFILES_BASE_DIR", "", user_id)
         base_dir= get_rclone_var("MYFILES_BASE_DIR", user_id)
@@ -142,17 +141,17 @@ async def myfiles_callback(client, callback_query):
         drive_name= cmd[2]  
         set_rclone_var("MYFILES_DRIVE", drive_name, user_id)
         await list_dir(message, drive_name= drive_name, drive_base=base_dir, edit=True)
+        await query.answer() 
 
     elif cmd[1] == "dir":
-        await query.answer()
         path = get_rclone_var(cmd[2], user_id)
         base_dir += path + "/"
         set_rclone_var("MYFILES_BASE_DIR", base_dir, user_id)
         await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
+        await query.answer()
 
     # Handle back button
     elif cmd[1] == "back":
-        await query.answer()
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
         for dir in base_dir_split: 
@@ -164,42 +163,43 @@ async def myfiles_callback(client, callback_query):
             await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
         else:
             await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, back= "back_drive", edit=True)     
-            
-    elif cmd[1] == "back_drive":   
         await query.answer()
+
+    elif cmd[1] == "back_drive":   
         await list_drive(message, edit=True)
+        await query.answer()
     
     #Handle actions
     elif cmd[1] == "file_actions":
-        await query.answer()     
         path = get_rclone_var(cmd[2], user_id)
         base_dir += path
         set_rclone_var("MYFILES_BASE_DIR", base_dir, user_id) 
         await myfiles_settings(message, drive_name= rclone_drive, drive_base= base_dir, edit=True, is_folder= False) 
+        await query.answer()
 
     elif cmd[1] == "folder_actions":
-        await query.answer()     
         await myfiles_settings(message, drive_name= rclone_drive, drive_base= base_dir, edit=True, is_folder= True)
+        await query.answer()
 
     if cmd[1] == "delete_action":
-        await query.answer()     
         if cmd[2] == "folder":
             is_folder= True
         elif cmd[2] == "file":
             is_folder= False
         await delete_selection(message, user_id= user_id, is_folder= is_folder)
+        await query.answer()
 
     elif cmd[1] == "size_action":
-        await query.answer()
         await calculate_size(message, drive_base= base_dir, drive_name= rclone_drive, user_id= user_id)
+        await query.answer()
 
     if cmd[1]== "yes":
-        await query.answer()
         if cmd[2] == "folder":
             is_folder= True
         elif cmd[2] == "file":
             is_folder= False
         await delete_selected(message, user_id, drive_base=base_dir , drive_name=rclone_drive, is_folder= is_folder)
+        await query.answer()
         
     elif cmd[1]== "no":
         await query.answer("Closed") 

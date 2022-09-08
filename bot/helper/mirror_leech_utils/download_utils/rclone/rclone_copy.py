@@ -20,7 +20,6 @@ class RcloneCopy:
 
     async def copy(self):
         conf_path = get_rclone_config(self._user_id)
-        await editMessage("Starting Download", self.__message)
         origin_drive = get_rclone_var("COPY_ORIGIN_DRIVE", self._user_id)
         origin_dir = get_rclone_var("COPY_ORIGIN_DIR", self._user_id)
         dest_drive = get_rclone_var("COPY_DESTINATION_DRIVE", self._user_id)
@@ -29,8 +28,9 @@ class RcloneCopy:
         cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
                        f'{dest_drive}:{dest_dir + origin_dir}', '-P']
 
-        self.__rclone_pr = Popen(cmd, stdout=(PIPE),stderr=(PIPE))
-        rc_status= RcloneStatus(self.__rclone_pr, self.__message)
+        rclone_pr = Popen(cmd, stdout=(PIPE),stderr=(PIPE))
+        self.__rclone_pr= rclone_pr
+        rc_status= RcloneStatus(rclone_pr, self.__message)
         status= await rc_status.progress(status_type= MirrorStatus.STATUS_COPYING, 
                             client_type=TelegramClient.PYROGRAM)
         if status:
@@ -53,4 +53,5 @@ class RcloneCopy:
             format_out += f"**Total Size**: {human_readable_bytes(bytes) }"
             await editMessage(format_out, self.__message, reply_markup= InlineKeyboardMarkup(button))
         else:
+            self.__rclone_pr.kill()
             await editMessage("Copy Cancelled", self.__message)    

@@ -157,7 +157,6 @@ async def leech_menu_cb(client, callback_query):
         return await query.answer("This menu is not for you!", show_alert=True)
 
     if cmd[1] == "drive":
-        await query.answer()          
         #Reset menu
         set_rclone_var("LEECH_BASE_DIR", "", user_id)
         base_dir= get_rclone_var("LEECH_BASE_DIR", user_id)
@@ -165,13 +164,14 @@ async def leech_menu_cb(client, callback_query):
         drive_name= cmd[2]
         set_rclone_var("LEECH_DRIVE", drive_name, user_id)
         await list_dir(message, drive_name= drive_name, drive_base=base_dir, edit=True)
+        await query.answer()   
 
     elif cmd[1] == "dir":
-        await query.answer()     
         path = get_rclone_var(cmd[2], user_id)
         base_dir += path + "/"
         set_rclone_var("LEECH_BASE_DIR", base_dir, user_id)
         await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
+        await query.answer()   
 
     elif cmd[1] == "leech_file":
         await query.answer()      
@@ -180,15 +180,14 @@ async def leech_menu_cb(client, callback_query):
         dest_dir = f'{DOWNLOAD_DIR}{path}'
         rc_leech= RcloneLeech(message, user_id, base_dir, dest_dir, path, tag= tag, isZip=is_zip, extract=extract)
         await rc_leech.leech()
-
+          
     elif cmd[1] == "leech_folder":
-        await query.answer()      
+        await query.answer() 
         dest_dir = f'{DOWNLOAD_DIR}{base_dir}'
         rc_leech= RcloneLeech(message, user_id, base_dir, dest_dir, tag= tag, isZip=is_zip, extract=extract, folder=True)
         await rc_leech.leech()
-
+          
     elif cmd[1] == "back":
-        await query.answer()      
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
         for dir in base_dir_split: 
@@ -200,10 +199,11 @@ async def leech_menu_cb(client, callback_query):
             await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
         else:
             await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, back= "back_drive", edit=True)     
-            
+        await query.answer()      
+
     elif cmd[1] == "back_drive":
-        await query.answer()
         await list_drive(message, edit=True)
+        await query.answer()
 
     elif cmd[1] == "close":
         await query.answer("Closed")

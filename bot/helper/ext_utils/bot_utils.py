@@ -4,6 +4,7 @@ from requests import head as rhead
 from threading import Thread, Event
 from urllib.request import urlopen
 
+
 MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
 URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']

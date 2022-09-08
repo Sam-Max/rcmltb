@@ -2,8 +2,9 @@
 #Github.com/Vasusen-code
 
 import re
-import time
+from time import time
 from bot.helper.mirror_leech_utils.download_utils.rclone.rclone_mirror import RcloneMirror
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 from bot.helper.mirror_leech_utils.status_utils.telegram_status import TelegramStatus
 from bot import LOGGER
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
@@ -61,13 +62,9 @@ async def get_msg(app, client, sender, edit_id, msg_link, i):
             file = await app.download_media(
                 msg,
                 progress=status.progress,
-                progress_args=(
-                    "",
-                    "**Status:** Downloading...",
-                    time.time()
-                )
-            )
-            await edit.edit('Preparing to Upload')
+                progress_args=("",
+                    MirrorStatus.STATUS_DOWNLOADING,
+                    time()))
             rclone_mirror= RcloneMirror(file, edit, tag)
             await rclone_mirror.mirror()
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
@@ -91,13 +88,9 @@ async def get_msg(app, client, sender, edit_id, msg_link, i):
             file = await app.download_media(
                 msg,
                 progress=status.progress,
-                progress_args=(
-                    "",
-                   "**Status:** Downloading...",
-                    time.time()
-                )
-            )
-            await edit.edit('Preparing to Upload')
+                progress_args=("",
+                    MirrorStatus.STATUS_DOWNLOADING,
+                    time()))
             rclone_mirror= RcloneMirror(file, edit, tag)
             await rclone_mirror.mirror()
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):

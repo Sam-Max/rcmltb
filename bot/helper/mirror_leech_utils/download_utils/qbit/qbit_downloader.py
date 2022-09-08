@@ -3,7 +3,6 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/helper/mirror_utils/download_utils/qbit_downloader.py
 #**************************************************/
 
-from asyncio import run
 from hashlib import sha1
 from base64 import b16encode, b32decode
 from bencoding import bencode, bdecode
@@ -34,8 +33,9 @@ class QbDownloader:
         self.id= self.__message.id
         self.select = False
         self.client = None
+        self.is_cancelled= False
         self.__stalled_time = time()
-        self.uploaded= False
+        self.is_uploaded= False
         self.__rechecked = False
 
     async def add_qb_torrent(self, link, path, select):
@@ -127,7 +127,7 @@ class QbDownloader:
             if tor_info.state == "metaDL":
                 self.__stalled_time = time()
                 if TORRENT_TIMEOUT is not None and time() - tor_info.added_on >= TORRENT_TIMEOUT:
-                    run(self._qb_status.cancel_download("Dead Torrent!") )
+                    self.onDownloadError("Dead Torrent!")
             elif tor_info.state == "downloading":
                 self.__stalled_time = time()
             elif tor_info.state == "stalledDL":
@@ -138,11 +138,11 @@ class QbDownloader:
                     self.client.torrents_recheck(torrent_hashes=self.ext_hash)
                     self.__rechecked = True
                 elif TORRENT_TIMEOUT is not None and time() - self.__stalled_time >= TORRENT_TIMEOUT:
-                    run(self._qb_status.cancel_download("Dead Torrent!"))    
+                    self.onDownloadError("Dead Torrent!")    
             elif tor_info.state == "missingFiles":
                 self.client.torrents_recheck(torrent_hashes=self.ext_hash)
-            elif (tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and not self.uploaded:
-                self.uploaded = True
+            elif (tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and not self.is_uploaded:
+                self.is_uploaded = True
                 self.client.torrents_pause(torrent_hashes=self.ext_hash)
                 if self.select:
                     clean_unwanted(self.path)
@@ -150,13 +150,14 @@ class QbDownloader:
                 self.client.auth_log_out()
                 self.periodic.cancel()
             elif tor_info.state == "error":
-                run(self._qb_status.cancel_download("No enough space for this torrent on device"))     
+                self.onDownloadError("No enough space for this torrent on device")    
         except Exception as e:
             LOGGER.error(str(e))
 
-    async def onDownloadError(self, msg):
+    def onDownloadError(self, msg):
         LOGGER.info(f"Cancelling Download: {self.name}, cause: {msg}")
-        await sendMessage(msg, self.__message)
+        self.is_cancelled= True
+        self.error_message= msg
         self.client.torrents_pause(torrent_hashes= self.ext_hash)
         sleep(0.3)
         self.__remove_torrent()

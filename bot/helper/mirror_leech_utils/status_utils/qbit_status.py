@@ -3,10 +3,9 @@ from bot import EDIT_SLEEP_SECS, status_dict, status_dict_lock
 from time import time
 from asyncio import sleep
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from bot.helper.ext_utils.bot_utils import get_readable_time
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMessage
+from bot.helper.ext_utils.message_utils import editMessage, sendMessage
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
 
 class qBitTorrentStatus:
@@ -15,41 +14,33 @@ class qBitTorrentStatus:
         self.id= self.__message.id
         self._status_msg = ""
         self.__obj = obj
-        self.__is_cancelled= False
 
     def get_status_msg(self):
         return self._status_msg     
 
     async def create_status(self):
-        rmsg = await sendMessage("Starting Download", self.__message)
+        tor_info = self.__obj.client.torrents_info(torrent_hashes=self.__obj.ext_hash)[0]
+        status_msg = self.create_status_message(tor_info)
+        rmsg = await sendMessage(status_msg, self.__message)
         start = time()
         sleeps= False
         while True:
             sleeps = True
-            try:
-                tor_info = self.__obj.client.torrents_info(torrent_hashes=self.__obj.ext_hash)[0]
-            except Exception:
-                pass
+            tor_info = self.__obj.client.torrents_info(torrent_hashes=self.__obj.ext_hash)[0]
             self._status_msg = self.create_status_message(tor_info)
             if time() - start > EDIT_SLEEP_SECS:
                 start = time()       
-                try:
-                    data = "cancel_qbitdl_{}".format(self.__obj.ext_hash[:12])
-                    await editMessage(self._status_msg , rmsg, reply_markup=(InlineKeyboardMarkup([
-                                            [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
-                                            ])))
-                except FloodWait as fw:
-                    await sleep(fw.value)
-                except MessageNotModified:
-                    await sleep(1)
-
+                data = "cancel_qbitdl_{}".format(self.__obj.ext_hash[:12])
+                await editMessage(self._status_msg , rmsg, reply_markup=(InlineKeyboardMarkup([
+                                        [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
+                                        ])))
                 if sleeps:
-                    if self.__is_cancelled:     
+                    if self.__obj.is_cancelled:     
                         async with status_dict_lock:
-                            del status_dict[self.id]   
-                        await deleteMessage(rmsg)
+                            del status_dict[self.id]  
+                        await editMessage(self.__obj.error_message, rmsg)
                         return False, None
-                    if self.__obj.uploaded:
+                    if self.__obj.is_uploaded:
                         async with status_dict_lock:
                             del status_dict[self.id]   
                         return True, rmsg  
@@ -109,8 +100,7 @@ class qBitTorrentStatus:
     def name(self):
         return self.__obj.name
         
-    async def cancel_download(self, msg):
-        self.__is_cancelled= True
-        await self.__obj.onDownloadError(msg)
+    def cancel_download(self):
+        self.__obj.onDownloadError("Download stopped by user!")
         
          
