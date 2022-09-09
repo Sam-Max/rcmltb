@@ -1,5 +1,4 @@
-from os import walk
-import os
+from os import path as ospath, remove, walk
 from re import search
 from pyrogram.errors import FloodWait
 from bot import LOGGER, TG_SPLIT_SIZE
@@ -8,7 +7,7 @@ from asyncio import sleep
 from bot.helper.ext_utils.message_utils import editMessage, sendMessage
 from bot.helper.ext_utils.misc_utils import clean, get_rclone_config
 from bot.helper.ext_utils.var_holder import get_rclone_var
-from bot.helper.ext_utils.zip_utils import extract_archive, get_path_size
+from bot.helper.ext_utils.zip_utils import extract_file, get_path_size
 from bot.helper.mirror_leech_utils.status_utils.extract_status import ExtractStatus
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, TelegramClient
@@ -16,7 +15,7 @@ from bot.helper.mirror_leech_utils.status_utils.zip_status import ZipStatus
 from bot.helper.mirror_leech_utils.upload_utils.telegram.telegram_uploader import TelegramUploader
 
 class RcloneLeech:
-    def __init__(self, message, user_id, origin_dir, dest_dir, file_name="", isZip=False, extract=False, pswd=None, tag=None, folder= False):
+    def __init__(self, message, user_id, origin_dir, dest_dir, file_name="", isZip=False, extract=False, pswd="", tag=None, folder= False):
         self.__message = message
         self.id = self.__message.id
         self._user_id= user_id
@@ -61,10 +60,10 @@ class RcloneLeech:
                 if self.__pswd is not None:
                     if int(f_size) > TG_SPLIT_SIZE:
                         LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
-                        self.suproc = Popen(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.pswd}", path, f_path])
+                        self.suproc = Popen(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
                     else:
                         LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
-                        self.suproc = Popen(["7z", "a", "-mx=0", f"-p{self.pswd}", path, f_path])
+                        self.suproc = Popen(["7z", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
                 elif int(f_size) > TG_SPLIT_SIZE:
                     LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
                     self.suproc = Popen(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, f_path])
@@ -79,14 +78,14 @@ class RcloneLeech:
                 LOGGER.info(f"Extracting...")
                 ext_sts = ExtractStatus(f_name, f_size, self.__message, self)
                 await ext_sts.create_message()
-                if os.path.isdir(self.__dest_path):
+                if ospath.isdir(self.__dest_path):
                         for dirpath, _, files in walk(self.__dest_path, topdown=False):
                             for file in files:
                                 if file.endswith((".zip", ".7z")) or search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$', file) \
                                 or (file.endswith(".rar") and not search(r'\.part\d+\.rar$', file)):
-                                    f_path = os.path.join(dirpath, file)
+                                    f_path = ospath.join(dirpath, file)
                                     if self.__pswd is not None:
-                                        self.suproc = Popen(["7z", "x", f"-p{self.pswd}", f_path, f"-o{dirpath}", "-aot"])
+                                        self.suproc = Popen(["7z", "x", f"-p{self.__pswd}", f_path, f"-o{dirpath}", "-aot"])
                                     else:
                                         self.suproc = Popen(["7z", "x", f_path, f"-o{dirpath}", "-aot"])
                                     self.suproc.wait()
@@ -97,11 +96,11 @@ class RcloneLeech:
                             if self.suproc is not None and self.suproc.returncode == 0:
                                 for file_ in files:
                                     if file_.endswith((".rar", ".zip", ".7z")) or search(r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$', file_):
-                                        del_path = os.path.join(dirpath, file_)
-                                        os.remove(del_path)
+                                        del_path = ospath.join(dirpath, file_)
+                                        remove(del_path)
                                 await tgUpload(self.__dest_path, self.__message, self.__tag) 
                 else:
-                    path, msg= await extract_archive(path, self.__message, self.pswd)
+                    path, msg= await extract_file(path, self.__message, self.__pswd)
                     if path == False:
                         return await sendMessage(msg, self.__message)
                     await tgUpload(path, self.__message, self.__tag) 

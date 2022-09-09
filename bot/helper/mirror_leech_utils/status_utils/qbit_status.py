@@ -26,7 +26,10 @@ class qBitTorrentStatus:
         sleeps= False
         while True:
             sleeps = True
-            tor_info = self.__obj.client.torrents_info(torrent_hashes=self.__obj.ext_hash)[0]
+            try:
+                tor_info = self.__obj.client.torrents_info(torrent_hashes=self.__obj.ext_hash)[0]
+            except Exception:
+                pass
             self._status_msg = self.create_status_message(tor_info)
             if time() - start > EDIT_SLEEP_SECS:
                 start = time()       
@@ -101,6 +104,6 @@ class qBitTorrentStatus:
         return self.__obj.name
         
     def cancel_download(self):
-        self.__obj.onDownloadError("Download stopped by user!")
+        self.__obj.onDownloadError("Download cancelled!")
         
          

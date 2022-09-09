@@ -178,13 +178,13 @@ async def leech_menu_cb(client, callback_query):
         path = get_rclone_var(cmd[2], user_id)
         base_dir += path
         dest_dir = f'{DOWNLOAD_DIR}{path}'
-        rc_leech= RcloneLeech(message, user_id, base_dir, dest_dir, path, tag= tag, isZip=is_zip, extract=extract)
+        rc_leech= RcloneLeech(message, user_id, base_dir, dest_dir, path, tag=tag, isZip=is_zip, extract=extract)
         await rc_leech.leech()
           
     elif cmd[1] == "leech_folder":
         await query.answer() 
         dest_dir = f'{DOWNLOAD_DIR}{base_dir}'
-        rc_leech= RcloneLeech(message, user_id, base_dir, dest_dir, tag= tag, isZip=is_zip, extract=extract, folder=True)
+        rc_leech= RcloneLeech(message, user_id, base_dir, dest_dir, tag=tag, isZip=is_zip, extract=extract, folder=True)
         await rc_leech.leech()
           
     elif cmd[1] == "back":

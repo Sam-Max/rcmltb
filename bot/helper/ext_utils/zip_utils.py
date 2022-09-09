@@ -55,7 +55,7 @@ async def split_in_zip(path, size=None):
     else:
         return None
 
-async def extract_archive(path, message, password=""):
+async def extract_file(path, message, password=""):
     if os.path.exists(path):
         if os.path.isfile(path):
             valid_exts = (".zip", ".7z", ".tar", ".gzip2", ".iso", ".wim", ".rar", ".tar.gz",".tar.bz2")

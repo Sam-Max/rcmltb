@@ -20,7 +20,7 @@ from bot.helper.ext_utils.message_utils import sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import get_readable_size
 from bot.helper.ext_utils.rclone_utils import is_not_config, is_not_drive
 from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
-from bot.helper.ext_utils.zip_utils import extract_archive
+from bot.helper.ext_utils.zip_utils import extract_file
 from bot.helper.mirror_leech_utils.download_utils.aria.aria2_download import Aria2Downloader
 from bot.helper.mirror_leech_utils.download_utils.mega.mega_download import MegaDownloader
 from bot.helper.mirror_leech_utils.download_utils.qbit.qbit_downloader import QbDownloader
@@ -165,7 +165,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
                 else:
                     path= f'{path}/{name}'
                 if isLeech:
-                    tgUpload = TelegramUploader(path, rmsg)
+                    tgUpload = TelegramUploader(path, rmsg, tag)
                     await tgUpload.upload()
                 else:     
                     rclone_mirror = RcloneMirror(path, rmsg, tag, user_id)
@@ -239,7 +239,7 @@ async def mirror_file(client, message, file, tag, user_id, pswd, isZip, extract,
             LOGGER.info('File to archive not found!')
             return
     elif extract:
-        path= await extract_archive(m_path, message, pswd)
+        path= await extract_file(m_path, message, pswd)
     else:
         path= m_path
     rc_mirror= RcloneMirror(path, message, tag, user_id, new_name= new_name, is_rename= is_rename)
