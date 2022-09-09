@@ -2,6 +2,7 @@ from pathlib import Path
 from bot import LOGGER
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.ext_utils.message_utils import sendMessage
+from os import path as ospath
 from bot.helper.mirror_leech_utils.status_utils.mega_status import MegaDownloadStatus
 from megasdkrestclient import MegaSdkRestClient, constants
 
@@ -33,8 +34,9 @@ class MegaDownloader():
         self.gid= gid
         self.__periodic = setInterval(self.POLLING_INTERVAL, self.__onInterval)
         mega_status= MegaDownloadStatus(gid, self._message, self)
-        status, rmsg, path= await mega_status.create_status()
+        status, rmsg, name= await mega_status.create_status()
         if status:
+            path = ospath.join(dl["dir"], name)     
             return True, rmsg, path  
         else:
             return False, rmsg, ""       

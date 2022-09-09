@@ -2,9 +2,8 @@ from time import time
 from asyncio import sleep
 from bot import EDIT_SLEEP_SECS, status_dict, status_dict_lock
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from os import path as ospath
 from bot.helper.ext_utils.human_format import human_readable_bytes
-from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMessage
+from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
 from bot.helper.mirror_leech_utils.status_utils.status_utils import get_bottom_status
 
 
@@ -28,8 +27,9 @@ class MegaDownloadStatus:
      async def create_status(self):
         async with status_dict_lock:  
             status_dict[self.id] = self
-        status_msg = await self.create_update_message()    
-        rmsg= await sendMessage(status_msg, self.__message)
+        status_msg = await self.create_update_message() 
+        keyboard= InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data= "cancel_megadl_{}".format(self.gid()))]]) 
+        rmsg= await sendMarkup(status_msg, self.__message, reply_markup=keyboard)
         sleeps= False
         start = time()
         while True:
@@ -38,10 +38,7 @@ class MegaDownloadStatus:
                     sleeps = True
                     self._status_msg = await self.create_update_message()
                     if time() - start > EDIT_SLEEP_SECS:
-                         data = "cancel_megadl_{}".format(self.gid())
-                         await editMarkup(self._status_msg, rmsg, reply_markup=(InlineKeyboardMarkup([
-                                             [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
-                                             ]))) 
+                         await editMarkup(self._status_msg, rmsg, reply_markup=keyboard)
                          if sleeps:
                               if self._obj.is_cancelled:
                                    await editMessage("Download Cancelled", rmsg)
@@ -49,10 +46,10 @@ class MegaDownloadStatus:
                                         del status_dict[self.id]
                                    return False, rmsg, None
                               if self._obj.is_completed:
-                                   path = ospath.join(self._obj.dl_add_info["dir"], self._dl_info["name"])
+                                   name = self._dl_info["name"]
                                    async with status_dict_lock:
                                         del status_dict[self.id]
-                                   return True, rmsg, path
+                                   return True, rmsg, name
                               sleeps = False
                               await sleep(1)
 
