@@ -1,4 +1,3 @@
-from itertools import pairwise
 from os import path as ospath, getcwd
 from configparser import ConfigParser
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
@@ -12,7 +11,7 @@ from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
+from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
 from bot.helper.ext_utils.rclone_utils import is_not_config
 from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
 from bot.modules.myfiles_settings import calculate_size, delete_selected, delete_selection, myfiles_settings
@@ -37,10 +36,7 @@ async def list_drive(message, edit=False):
     conf.read(path)
 
     for j in conf.sections():
-        if "team_drive" in list(conf[j]):
-            buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"myfilesmenu^drive^{j}^{user_id}")
-        else:
-            buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"myfilesmenu^drive^{j}^{user_id}")
+        buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"myfilesmenu^drive^{j}^{user_id}")
 
     for a, b in pairwise(buttons.second_button):
         row= [] 
