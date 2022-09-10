@@ -30,7 +30,8 @@
 ### Others
 - Telegram Navigation Bottom Menus to interact with cloud
 - Renaming of Telegram files
-- Change rclone config file from bot.
+- Load and change rclone config file from bot.
+- File Manager (size, mkdir, delete, dedupe, rename)
 - Zip file/folder from cloud to Telegram
 - Extract file from cloud to Telegram
 - Extract and Zip file from Telegram to cloud
@@ -63,8 +64,10 @@ qbleech - leech torrent to Telegram
 leechset - leech settings
 copy - copy from cloud to cloud
 gclone - clone gdrive files/folder to cloud
-config - load/change rclone config file
+config - rclone config
 myfiles - file manager
+storage - drive details
+cleanup - clean drive trash
 search - search for torrents
 status - get status message of tasks
 logs - get logs from server
@@ -202,9 +205,18 @@ sudo docker-compose start
 ## Deploying on Heroku
 <p><a href="https://github.com/Sam-Max/Rclone-Tg-Bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
 
+
 ## Bot Screenshot: 
 
 <img src="./screenshot.png" alt="button menu example">
+
+## Donations
+
+<p> If you like this project you can help me, donating the amount you wish.</p>
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](YOUR_EMAIL_CODE)
+
+-----
 
 ## Repositories used to develop this bot:
 

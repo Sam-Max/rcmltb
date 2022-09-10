@@ -130,14 +130,14 @@ async def mirrorset_callback(client, callback_query):
     data = query.data
     cmd = data.split("^")
     message = query.message
-    user_id= str(query.from_user.id)
+    user_id= query.from_user.id
     base_dir= get_rclone_var("MIRRORSET_BASE_DIR", user_id)
     rclone_drive = get_rclone_var("MIRRORSET_DRIVE", user_id)
 
     if data == "pages":
         await query.answer()
 
-    if cmd[-1] != user_id:
+    if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", alert=True)
         
     elif cmd[1] == "drive":

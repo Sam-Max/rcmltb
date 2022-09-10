@@ -6,52 +6,48 @@ from signal import SIGKILL
 from sys import executable
 from subprocess import run as srun
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.message_utils import sendMessage
-from bot.helper.ext_utils.misc_utils import clean_all, start_cleanup
-from bot.modules import batch, cancel, config, copy, leech, leechset, mirror, mirrorset, search, myfiles, myfiles_settings, server, speedtest, status, gclone
+from bot.helper.ext_utils.filters import CustomFilters
+from bot.helper.ext_utils.message_utils import sendMarkup, sendMessage
+from bot.helper.ext_utils.misc_utils import ButtonMaker, clean_all, start_cleanup
+from bot.modules import batch, cancel, config, copy, leech, leechset, mirror, mirrorset, search, myfiles, myfiles_settings, server, speedtest, status, gclone, storage, cleanup
 
 print("Successfully deployed!")
 
 async def start_handler(client, message):
-        user_id= message.from_user.id
-        if user_id in ALLOWED_USERS or message.chat.id in ALLOWED_CHATS or user_id == OWNER_ID:
-            msg = '''
+    user_id= message.from_user.id
+    if user_id in ALLOWED_USERS or message.chat.id  in ALLOWED_CHATS or user_id == OWNER_ID:
+        buttons = ButtonMaker()
+        buttons.url_buildbutton("Repo", "https://github.com/Sam-Max/Rclone-Tg-Bot")
+        buttons.url_buildbutton("Owner", "https://github.com/Sam-Max")
+        reply_markup = buttons.build_menu(2)
+        msg = '''
 **Hello, ¡Welcome to Rclone-Tg-Bot!\n
 I can help you copy files from one cloud to another.
-Also can mirror files from Telegram to cloud and leech from cloud to Telegram**\n\n
-Repository: https://github.com/Sam-Max/Rclone-Tg-Bot
-    '''
-            await sendMessage(msg, message)
-        else:
-            await sendMessage('Not Authorized user, deploy your own version\n\nhttps://github.com/Sam-Max/Rclone-Tg-Bot', message)     
-        
-async def handle_restart(client, message):
-    user_id= message.from_user.id
-    chat_id= message.chat.id 
-    if user_id in ALLOWED_USERS or chat_id in ALLOWED_CHATS or user_id == OWNER_ID:
-        restart_msg= await sendMessage("Restarting...", message) 
-        try:
-            for line in popen("ps ax | grep " + "rclone" + " | grep -v grep"):
-                fields = line.split()
-                pid = fields[0]
-                kill(int(pid), SIGKILL)
-        except Exception as exc:
-            LOGGER.info(f"Error: {exc}")
-        with open(".restartmsg", "w") as f:
-            f.truncate(0)
-            f.write(f"{chat_id}\n{restart_msg.id}\n")
-        clean_all()
-        srun(["pkill", "-f", "gunicorn|aria2c|megasdkrest|qbittorrent-nox"])
-        srun(["python3", "update.py"])
-        osexecl(executable, executable, "-m", "bot")
+I can also can mirror-leech files and links to Telegram or cloud**\n\n
+        '''
+        await sendMarkup(msg, message, reply_markup)
     else:
-        await sendMessage('Not Authorized user', message)      
+        await sendMarkup("Not Authorized user, deploy your own version", message, reply_markup)     
+    
+async def handle_restart(client, message):
+    restart_msg= await sendMessage("Restarting...", message) 
+    try:
+        for line in popen("ps ax | grep " + "rclone" + " | grep -v grep"):
+            fields = line.split()
+            pid = fields[0]
+            kill(int(pid), SIGKILL)
+    except Exception as exc:
+        LOGGER.info(f"Error: {exc}")
+    with open(".restartmsg", "w") as f:
+        f.truncate(0)
+        f.write(f"{message.chat.id}\n{restart_msg.id}\n")
+    clean_all()
+    srun(["pkill", "-f", "gunicorn|aria2c|megasdkrest|qbittorrent-nox"])
+    srun(["python3", "update.py"])
+    osexecl(executable, executable, "-m", "bot")
 
 async def get_logs(client, message):
-    if message.from_user.id == OWNER_ID:
-        await client.send_document(chat_id= message.chat.id , document= "botlog.txt")
-    else:
-        await sendMessage('Not Authorized user', message)      
+    await client.send_document(chat_id= message.chat.id , document= "botlog.txt")
 
 async def main():
     start_cleanup()
@@ -63,8 +59,8 @@ async def main():
         osremove(".restartmsg")
 
     start = MessageHandler(start_handler, filters= command(BotCommands.StartCommand))
-    restart = MessageHandler(handle_restart, filters= command(BotCommands.RestartCommand))
-    logs = MessageHandler(get_logs, filters= command(BotCommands.LogsCommand))
+    restart = MessageHandler(handle_restart, filters= command(BotCommands.RestartCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+    logs = MessageHandler(get_logs, filters= command(BotCommands.LogsCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 
     Bot.add_handler(start)
     Bot.add_handler(restart)

@@ -186,7 +186,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
 async def mirror_menu(client, query):
     list = query.data.split("_")
     message= query.message
-    user_id= str(query.from_user.id)
+    user_id= query.from_user.id
     tag = f"@{message.reply_to_message.from_user.username}"
     
     file= get_rclone_var("FILE", user_id)
@@ -198,16 +198,16 @@ async def mirror_menu(client, query):
         await mirror_file(client, message, file, tag, user_id, pswd, isZip=isZip, extract=extract)
 
     if "rename" in list[1]: 
-        question= await client.send_message(message.chat.id, text= "Send the new name /ignore to cancel")
+        question= await client.send_message(message.chat.id, text= "Send the new name, /ignore to cancel")
         try:
-            response = await client.listen.Message(filters.text, id= tag, timeout = 30)
+            response = await client.listen.Message(filters.text | filters.user(user_id), id=filters.user(user_id), timeout = 30)
         except TimeoutError:
-            await question.reply("Cannot wait more longer for your response!")
+            await sendMessage("Too late 30s gone, try again!", message)
         else:
             if response:
                 if "/ignore" in response.text:
-                    await question.reply("Okay cancelled question!")
-                    await client.listen.Cancel(tag)
+                    await question.reply("Okay cancelled!")
+                    await client.listen.Cancel(filters.user(user_id))
                 else:
                     await mirror_file(client, message, file, tag, user_id, pswd, isZip=isZip, extract=extract, new_name=response.text, is_rename=True)
         finally:
@@ -260,8 +260,7 @@ qbit_mirror_handler = MessageHandler(handle_qbit_mirror,
 qbit_leech_handler = MessageHandler(handle_qbit_leech,
         filters=filters.command(BotCommands.QbLeechCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 
-mirror_menu_cb = CallbackQueryHandler(mirror_menu,
-        filters=filters.regex("mirrormenu"))
+mirror_menu_cb = CallbackQueryHandler(mirror_menu, filters=filters.regex("mirrormenu"))
 
 Bot.add_handler(mirror_handler)   
 Bot.add_handler(zip_mirror_handler)

@@ -8,7 +8,7 @@ from pyrogram import filters
 from bot import AS_DOC_USERS, AS_MEDIA_USERS, AS_DOCUMENT, Bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
-from bot.helper.ext_utils.message_utils import auto_delete_message, editMessage, sendMarkup
+from bot.helper.ext_utils.message_utils import auto_delete_message, editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 
 def getleechinfo(from_user):
@@ -77,9 +77,9 @@ async def handle_leech_set_type(client, callback_query):
         else:
             question= await editMessage("Send a photo to save thumbnail", message)
             try:
-                response = await client.listen.Message(filters.photo, id= filters.user(user_id), timeout = 30)
+                response = await client.listen.Message(filters.photo | filters.user(user_id), id=filters.user(user_id), timeout = 30)
             except asyncio.TimeoutError:
-                pass
+                await sendMessage("Too late 30s gone, try again!", message)
             else:
                 if response:
                     try: 

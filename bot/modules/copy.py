@@ -146,7 +146,7 @@ async def copy_menu_callback(client, callback_query):
     data = query.data
     cmd = data.split("^")
     message = query.message
-    user_id= str(query.from_user.id)
+    user_id= query.from_user.id
     origin_drive = get_rclone_var("COPY_ORIGIN_DRIVE", user_id)
     origin_dir= get_rclone_var("COPY_ORIGIN_DIR", user_id)
     dest_drive= get_rclone_var("COPY_DESTINATION_DRIVE", user_id)
@@ -155,7 +155,7 @@ async def copy_menu_callback(client, callback_query):
     if data == "pages":
         await query.answer()
 
-    if cmd[-1] != user_id:
+    if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", alert=True)
 
     #First Menu
@@ -203,9 +203,9 @@ async def copy_menu_callback(client, callback_query):
         await query.answer()     
 
     elif cmd[1] == "copy":
+        await query.answer()      
         rclone_copy= RcloneCopy(message, user_id)
         await rclone_copy.copy()
-        await query.answer() 
 
     elif cmd[1] == "close":
         await query.answer("Closed")

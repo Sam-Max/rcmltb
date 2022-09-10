@@ -14,7 +14,7 @@ from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMess
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
 from bot.helper.ext_utils.rclone_utils import is_not_config
 from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
-from bot.modules.myfiles_settings import calculate_size, delete_selected, delete_selection, myfiles_settings
+from bot.modules.myfiles_settings import calculate_size, delete_selected, delete_selection, myfiles_settings, rclone_dedupe, rclone_mkdir, rclone_rename
 
 folder_icon= "📁"
 
@@ -59,7 +59,7 @@ async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
     user_id= message.reply_to_message.from_user.id
     buttons = ButtonMaker()
     path = get_rclone_config(user_id)
-    buttons.cbl_buildbutton(f"⚙️ Folder Settings", f"myfilesmenu^folder_actions^{user_id}")
+    buttons.cbl_buildbutton(f"⚙️ Folder Options", f"myfilesmenu^folder_actions^{user_id}")
 
     cmd = ["rclone", "lsjson", f'--config={path}', f"{drive_name}:{drive_base}" ] 
     process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
@@ -119,14 +119,15 @@ async def myfiles_callback(client, callback_query):
     data = query.data
     cmd = data.split("^")
     message = query.message
-    user_id= str(query.from_user.id)
+    tag = f"@{message.reply_to_message.from_user.username}"
+    user_id= query.from_user.id
     base_dir= get_rclone_var("MYFILES_BASE_DIR", user_id)
     rclone_drive = get_rclone_var("MYFILES_DRIVE", user_id)
 
     if data == "pages":
         await query.answer()
 
-    if cmd[-1] != user_id:
+    if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", show_alert=True)
 
     if cmd[1] == "drive":
@@ -166,6 +167,7 @@ async def myfiles_callback(client, callback_query):
         await query.answer()
     
     #Handle actions
+
     elif cmd[1] == "file_actions":
         path = get_rclone_var(cmd[2], user_id)
         base_dir += path
@@ -188,6 +190,17 @@ async def myfiles_callback(client, callback_query):
     elif cmd[1] == "size_action":
         await calculate_size(message, drive_base= base_dir, drive_name= rclone_drive, user_id= user_id)
         await query.answer()
+
+    elif cmd[1] == "mkdir_action":
+        await rclone_mkdir(client, query, message, rclone_drive, base_dir)
+
+    elif cmd[1] == "dedupe_action":
+        await query.answer()     
+        await rclone_dedupe(message, rclone_drive, base_dir, user_id, tag)
+
+    elif cmd[1] == "rename_action":
+        await query.answer()     
+        await rclone_rename(client, message, rclone_drive, base_dir, tag)
 
     if cmd[1]== "yes":
         if cmd[2] == "folder":
@@ -216,7 +229,7 @@ async def next_page_myfiles(client, callback_query):
     prev_offset = next_offset - 10 
 
     buttons = ButtonMaker()
-    buttons.cbl_buildbutton(f"⚙️ Folder Settings", f"myfilesmenu^start_folder_actions^{user_id}")
+    buttons.cbl_buildbutton(f"⚙️ Folder Options", f"myfilesmenu^start_folder_actions^{user_id}")
 
     next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset)
 
@@ -252,7 +265,7 @@ async def next_page_myfiles(client, callback_query):
                       reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 
-next_page_myfiles_cb= CallbackQueryHandler( next_page_myfiles, filters= regex("next_myfiles"))
+next_page_myfiles_cb= CallbackQueryHandler(next_page_myfiles, filters= regex("next_myfiles"))
 myfiles_cb = CallbackQueryHandler(myfiles_callback, filters= regex("myfilesmenu"))
 myfiles_handler = MessageHandler(handle_myfiles, filters= filters.command(BotCommands.MyFilesCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 

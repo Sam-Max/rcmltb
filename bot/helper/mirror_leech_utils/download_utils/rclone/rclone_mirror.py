@@ -2,8 +2,8 @@ from configparser import ConfigParser
 from os import path as ospath
 from subprocess import Popen, PIPE
 from bot import LOGGER
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot.helper.ext_utils.misc_utils import clean, get_rclone_config, rename_file
+from bot.helper.ext_utils.message_utils import editMessage
+from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_rclone_config, rename_file
 from bot.helper.ext_utils.rclone_utils import get_gid
 from bot.helper.ext_utils.var_holder import get_rclone_var
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
@@ -28,10 +28,6 @@ class RcloneMirror:
         conf = ConfigParser()
         conf.read(conf_path)
         
-        if not ospath.exists(self.__path):
-            LOGGER.info(f"Path does not not exist, Path: {self.__path}")
-            return    
-
         for i in conf.sections():
             if self.__dest_drive == str(i):
                 if conf[i]['type'] == 'drive':
@@ -39,54 +35,55 @@ class RcloneMirror:
                 else:
                     self.__is_gdrive = False
                 break
+        
+        if not ospath.exists(self.__path):
+            LOGGER.info(f"Path does not not exist, Path: {self.__path}")
+            return    
 
         if self.__is_rename:
             self.__path = rename_file(self.__path, self.__new_name)
 
         if ospath.isdir(self.__path):
-            name= ospath.basename(self.__path) 
-            new_dest_base = ospath.join(self.__dest_base, name)
+            name = ospath.basename(self.__path)
             cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path),
-                                f"{self.__dest_drive}:{new_dest_base}", '-P']
+                    f"{self.__dest_drive}:{self.__dest_base}/{name}", '-P']
         else:
             cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path),
-                                f"{self.__dest_drive}:{self.__dest_base}", '-P']
+                    f"{self.__dest_drive}:{self.__dest_base}", '-P']
 
-        self.__rclone_pr = Popen(cmd, stdout=(PIPE), stderr=(PIPE))
-        rclone_status= RcloneStatus(self.__rclone_pr, self.__message, self.__path)
-        status= await rclone_status.progress(status_type=MirrorStatus.STATUS_UPLOADING, 
-                        client_type=TelegramClient.PYROGRAM)
+        process = Popen(cmd, stdout=(PIPE), stderr=(PIPE))
+        self.__rclone_pr= process
+        rclone_status= RcloneStatus(process, self.__message, self.__path)
+        status= await rclone_status.progress(status_type= MirrorStatus.STATUS_UPLOADING, 
+                                            client_type=TelegramClient.PYROGRAM)
         if status:
             await self.__onDownloadComplete(conf_path)
         else:
             await self.__onDownloadCancel()  
           
-    async def __onDownloadComplete(self, conf_path):    
-          msg = ""
+    async def __onDownloadComplete(self, conf_path):   
+          button= ButtonMaker() 
           if ospath.isdir(self.__path):
-                ent_name = ospath.basename(self.__path)
-                msg += f"<b>Name: </b><code>{ent_name}</code>"
+                name = ospath.basename(self.__path)
+                msg = f"<b>Name: </b><code>{name}</code>"
                 if self.__is_gdrive:
-                    gid = await get_gid(self.__dest_drive, self.__dest_base, f"{ent_name}/", conf_path)
-                    folder_link = f"https://drive.google.com/folderview?id={gid[0]}"
-                    button = []
-                    button.append([InlineKeyboardButton(text='Drive Link', url=folder_link)])
-                    await self.__message.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
+                    gid = await get_gid(self.__dest_drive, self.__dest_base, f"{name}/", conf_path)
+                    link = f"https://drive.google.com/folderview?id={gid[0]}"
+                    button.url_buildbutton('Drive Link', link)
+                    await editMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.__message, button.build_menu(1))
                 else:
-                    await self.__message.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
-                clean(self.__path)
+                    await editMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.__message)     
           else:
-                _, ent_name = self.__path.rsplit('/', 1)     
-                msg += f"<b>Name: </b><code>{ent_name}</code>"
+                _, name = self.__path.rsplit('/', 1)     
+                msg = f"<b>Name: </b><code>{name}</code>"
                 if self.__is_gdrive:
-                    gid = await get_gid(self.__dest_drive, self.__dest_base, ent_name, conf_path, False)
+                    gid = await get_gid(self.__dest_drive, self.__dest_base, name, conf_path, False)
                     link = f"https://drive.google.com/file/d/{gid[0]}/view"
-                    button = []
-                    button.append([InlineKeyboardButton(text='Drive Link', url=link)])
-                    await self.__message.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}", reply_markup=(InlineKeyboardMarkup(button)))
+                    button.url_buildbutton('Drive Link', link)
+                    await editMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.__message, button.build_menu(1))
                 else:
-                    await self.__message.edit(f"{msg}\n\n<b>cc: </b>{self.__tag}")
-                clean(self.__path)
+                    await editMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.__message)          
+          clean(self.__path)
 
     async def __onDownloadCancel(self):
         self.__rclone_pr.kill()

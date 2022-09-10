@@ -47,10 +47,7 @@ async def list_drive(message, edit=False):
     conf.read(path)
 
     for j in conf.sections():
-        if "team_drive" in list(conf[j]):
-            buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"leechmenu^drive^{j}^{user_id}")     
-        else:
-                 buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"leechmenu^drive^{j}^{user_id}") 
+        buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"leechmenu^drive^{j}^{user_id}") 
 
     for a, b in pairwise(buttons.second_button):
         row= [] 
@@ -137,7 +134,7 @@ async def leech_menu_cb(client, callback_query):
     data = query.data
     cmd = data.split("^")
     message = query.message
-    user_id= str(query.from_user.id)
+    user_id= query.from_user.id
     tag = f"@{message.reply_to_message.from_user.username}"
     base_dir= get_rclone_var("LEECH_BASE_DIR", user_id)
     rclone_drive = get_rclone_var("LEECH_DRIVE", user_id)
@@ -153,7 +150,7 @@ async def leech_menu_cb(client, callback_query):
     if data == "pages":
         await query.answer()
 
-    if cmd[-1] != user_id:
+    if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", show_alert=True)
 
     if cmd[1] == "drive":
