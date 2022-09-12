@@ -147,8 +147,8 @@ async def leech_menu_cb(client, callback_query):
     if get_rclone_var('EXTRACT', user_id):
         extract= True
 
-    if data == "pages":
-        await query.answer()
+    if cmd[1] == "pages":
+        return await query.answer()
 
     if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", show_alert=True)
@@ -228,19 +228,19 @@ async def next_page_leech(client, callback_query):
         user_id= user_id)
 
     if next_offset == 0:
-        buttons.dbuildbutton(first_text = f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", first_callback="setting pages", 
+        buttons.dbuildbutton(first_text = f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", first_callback="leechmenu^pages", 
                             second_text= "NEXT ⏩", second_callback= f"next_leech {_next_offset} {data_back_cb}" )
     
     elif next_offset >= total:
         buttons.dbuildbutton(first_text="⏪ BACK", first_callback= f"next_leech {prev_offset} {data_back_cb}", 
-                        second_text=f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", second_callback="setting pages")
+                        second_text=f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", second_callback="leechmenu^pages")
    
     elif next_offset + 10 > total:
         buttons.dbuildbutton(first_text="⏪ BACK", first_callback= f"next_leech {prev_offset} {data_back_cb}", 
-                        second_text= f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", second_callback="setting pages")                               
+                        second_text= f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", second_callback="leechmenu^pages")                               
     else:
         buttons.tbuildbutton(first_text="⏪ BACK", first_callback= f"next_leech {prev_offset} {data_back_cb}", 
-                            second_text= f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", second_callback="setting pages",
+                            second_text= f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", second_callback="leechmenu^pages",
                             third_text="NEXT ⏩", third_callback=f"next_leech {_next_offset} {data_back_cb}")
 
     buttons.cbl_buildbutton("⬅️ Back", f"leechmenu^{data_back_cb}^{user_id}")

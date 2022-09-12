@@ -70,7 +70,7 @@ async def cleanup_callback(client, callback_query):
 
 async def rclone_cleanup(message, drive_name, user_id, tag):
      conf_path = get_rclone_config(user_id)
-     edit_msg= await editMessage("Cleaning remote trash", message)
+     edit_msg= await editMessage("⏳ Cleaning remote trash", message)
      cmd = ["rclone", "cleanup", f'--config={conf_path}', f"{drive_name}:"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
@@ -79,8 +79,8 @@ async def rclone_cleanup(message, drive_name, user_id, tag):
      if return_code != 0:
           err = stderr.decode().strip()
           return await sendMessage(f'Error: {err}', message)
-     msg= "Trash Deleted\n"
-     msg+= f'cc: {tag}\n'
+     msg= "<b>Trash Cleared.</b>\n\n"
+     msg+= f'<b>cc:</b> {tag}\n'
      await editMessage(msg, edit_msg)     
 
 cleanup_callback= CallbackQueryHandler(cleanup_callback, filters= regex("cleanupmenu"))

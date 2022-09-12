@@ -134,8 +134,8 @@ async def mirrorset_callback(client, callback_query):
     base_dir= get_rclone_var("MIRRORSET_BASE_DIR", user_id)
     rclone_drive = get_rclone_var("MIRRORSET_DRIVE", user_id)
 
-    if data == "pages":
-        await query.answer()
+    if cmd[1] == "pages":
+        return await query.answer()
 
     if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", alert=True)
@@ -200,20 +200,20 @@ async def next_page_mirrorset(callback_query):
             user_id= user_id)
 
     if next_offset == 0:
-        buttons.dbuildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "setting pages",
+        buttons.dbuildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages",
                             "NEXT ⏩", f"next_mirrorset {_next_offset} {data_back_cb}")
 
     elif next_offset >= total:
         buttons.dbuildbutton("⏪ BACK", f"next_mirrorset {prev_offset} {data_back_cb}",
-                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "setting pages")
+                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages")
 
     elif next_offset + 10 > total:
         buttons.dbuildbutton("⏪ BACK", f"next_mirrorset {prev_offset} {data_back_cb}",
-                             f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "setting pages")                              
+                             f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages")                              
 
     else:
         buttons.tbuildbutton("⏪ BACK", f"next_mirrorset {prev_offset} {data_back_cb}",
-                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "setting pages",
+                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages",
                             "NEXT ⏩", f"next_mirrorset {_next_offset} {data_back_cb}")
 
     buttons.cbl_buildbutton("⬅️ Back", f"mirrorsetmenu^{data_back_cb}^{user_id}")

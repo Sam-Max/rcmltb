@@ -110,7 +110,7 @@ async def rclone_delete(message, drive_base, drive_name, conf_path):
           err = stderr.decode().strip()
           return await sendMessage(f'Error: {err}', message)
 
-async def rclone_mkdir(client, query, message, drive_name, base_dir):
+async def rclone_mkdir(client, query, message, drive_name, base_dir, tag):
      user_id= message.reply_to_message.from_user.id
      conf_path = get_rclone_config(user_id)
      question= await sendMessage("Send name for directory, /ignore to cancel", message)
@@ -125,6 +125,7 @@ async def rclone_mkdir(client, query, message, drive_name, base_dir):
                          await query.answer("Okay cancelled!")
                          await client.listen.Cancel(filters.user(user_id))
                     else:
+                         edit_mgs= await sendMessage("⏳Creating Directory...", message)
                          path= f'{base_dir}/{response.text}'
                          cmd = ["rclone", "mkdir", f'--config={conf_path}', f"{drive_name}:{path}"] 
                          process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
@@ -134,14 +135,17 @@ async def rclone_mkdir(client, query, message, drive_name, base_dir):
                          if return_code != 0:
                               err = stderr.decode().strip()
                               return await sendMessage(f'Error: {err}', message)
-                         await query.answer(text="Directory created!!", show_alert=True)
+                         msg = "<b>Directory created successfully.\n\n</b>" 
+                         msg += f"<b>Path: </b><code>{drive_name}:{path}</code>\n\n"
+                         msg += f'<b>cc:</b> {tag}\n\n' 
+                         await editMessage(msg, edit_mgs)
                except Exception as ex:
                     await sendMessage(str(ex), message) 
      finally:
           await question.delete()
 
 async def rclone_dedupe(message, rclone_drive, drive_base, user_id, tag):
-     msg= "**Deleting duplicate files**\n"
+     msg= "**⏳Deleting duplicate files**\n"
      msg += "\nIt may take some time depending on number of duplicates files"
      edit_msg= await editMessage(msg, message)
      conf_path = get_rclone_config(user_id)
@@ -153,8 +157,8 @@ async def rclone_dedupe(message, rclone_drive, drive_base, user_id, tag):
      if return_code != 0:
           err = stderr.decode().strip()
           return await sendMessage(f'Error: {err}', message)
-     msg= "Dedupe completed!!\n"
-     msg += f'cc: {tag}\n'
+     msg= "<b>Dedupe completed successfully.</b>\n\n"
+     msg += f'<b>cc:</b> {tag}\n'
      await editMessage(msg, edit_msg)
 
 async def rclone_rename(client, message, rclone_drive, drive_base, tag):
@@ -173,18 +177,18 @@ async def rclone_rename(client, message, rclone_drive, drive_base, tag):
                          await client.listen.Cancel(filters.user(user_id))
                     else:
                          new_name= response.text
-                         edit_msg= await sendMessage("Renaming file...", message) 
+                         edit_msg= await sendMessage("⏳Renaming file...", message) 
                          list_base= drive_base.split("/")
                          if len(list_base) > 1:
                               dest = list_base[:-1]
                               dest = "/".join(dest)
                               file = list_base[-1]
                               _, ext= splitext(file)
-                              path = f'{dest}/{new_name}.{ext}'
+                              path = f'{dest}/{new_name}{ext}'
                          else:
                               file = list_base[0]
                               _, ext= splitext(file)
-                              path = f'{new_name}.{ext}'
+                              path = f'{new_name}{ext}'
                          cmd = ["rclone", "moveto", f'--config={conf_path}', f"{rclone_drive}:{drive_base}", f"{rclone_drive}:{path}"]
                          process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
                          stdout, stderr = await process.communicate()
@@ -193,8 +197,10 @@ async def rclone_rename(client, message, rclone_drive, drive_base, tag):
                          if return_code != 0:
                               err = stderr.decode().strip()
                               return await sendMessage(f'Error: {err}', message)
-                         msg= "File renamed!!\n"
-                         msg += f'cc: {tag}\n'     
+                         msg= "<b>File renamed successfully.</b>\n\n"
+                         msg += f"<b>Old path: </b><code>{rclone_drive}:{drive_base}</code>\n\n"
+                         msg += f"<b>New path: </b><code>{rclone_drive}:{path}</code>\n\n"
+                         msg += f'<b>cc: {tag}</b>'     
                          await editMessage(msg, edit_msg)
                except Exception as ex:
                     await sendMessage(str(ex), message) 

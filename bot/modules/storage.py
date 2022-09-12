@@ -85,11 +85,11 @@ async def rclone_about(message, query, drive_name, user_id):
           return await query.answer("Team Drive with Unlimited Storage")
      result_msg= "<b>🗂 Storage Details</b>\n"
      try:
-          result_msg+= f"<b>\nUsed:</b>  {get_readable_file_size(info['used'])} of {get_readable_file_size(info['total'])}"
-          result_msg+= f"<b>\nFree:</b>  {get_readable_file_size(info['free'])} of {get_readable_file_size(info['total'])}"
-          result_msg+= f"<b>\nTrashed:</b>  {get_readable_file_size(info['trashed'])}"
-     except KeyError as ker:
-         LOGGER.info(ker) 
+          result_msg += f"<b>\nUsed:</b>  {get_readable_file_size(info['used'])} of {get_readable_file_size(info['total'])}"
+          result_msg += f"<b>\nFree:</b>  {get_readable_file_size(info['free'])} of {get_readable_file_size(info['total'])}"
+          result_msg += f"<b>\nTrashed:</b>  {get_readable_file_size(info['trashed'])}"
+     except KeyError:
+          result_msg += f"<b>\nN/A:</b>"
      button.cbl_buildbutton("⬅️ Back", f"storagemenu^back^{user_id}")
      button.cbl_buildbutton("✘ Close Menu", f"storagemenu^close^{user_id}")
      await editMarkup(result_msg, message, reply_markup= InlineKeyboardMarkup(button.first_button))

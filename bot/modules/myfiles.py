@@ -124,8 +124,8 @@ async def myfiles_callback(client, callback_query):
     base_dir= get_rclone_var("MYFILES_BASE_DIR", user_id)
     rclone_drive = get_rclone_var("MYFILES_DRIVE", user_id)
 
-    if data == "pages":
-        await query.answer()
+    if cmd[1] == "pages":
+        return await query.answer()
 
     if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", show_alert=True)
@@ -192,7 +192,7 @@ async def myfiles_callback(client, callback_query):
         await query.answer()
 
     elif cmd[1] == "mkdir_action":
-        await rclone_mkdir(client, query, message, rclone_drive, base_dir)
+        await rclone_mkdir(client, query, message, rclone_drive, base_dir, tag)
 
     elif cmd[1] == "dedupe_action":
         await query.answer()     

@@ -152,8 +152,8 @@ async def copy_menu_callback(client, callback_query):
     dest_drive= get_rclone_var("COPY_DESTINATION_DRIVE", user_id)
     dest_dir= get_rclone_var("COPY_DESTINATION_DIR", user_id)
 
-    if data == "pages":
-        await query.answer()
+    if cmd[1] == "pages":
+        return await query.answer()
 
     if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", alert=True)
@@ -288,7 +288,7 @@ async def next_page_copy(client, callback_query):
             is_second_menu=is_second_menu)
 
     if next_offset == 0:
-        buttons.dbuildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "setting pages",
+        buttons.dbuildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "copymenu^pages",
                             "NEXT ⏩", f"next_copy {_next_offset} {is_second_menu} {data_back_cb}")
     
     elif next_offset >= total:
@@ -298,10 +298,10 @@ async def next_page_copy(client, callback_query):
 
     elif next_offset + 10 > total:
         buttons.dbuildbutton("⏪ BACK", f"next_copy {prev_offset} {is_second_menu} {data_back_cb}",
-                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}","setting pages")                               
+                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}","copymenu^pages")                               
     else:
         buttons.tbuildbutton("⏪ BACK", f"next_copy {prev_offset} {is_second_menu} {data_back_cb}",
-                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "setting pages",
+                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "copymenu^pages",
                             "NEXT ⏩", f"next_copy {_next_offset} {is_second_menu} {data_back_cb}")
 
     buttons.cbl_buildbutton("⬅️ Back", f"copymenu^{data_back_cb}^{user_id}")
