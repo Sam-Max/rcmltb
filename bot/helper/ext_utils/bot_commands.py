@@ -17,7 +17,7 @@ class _BotCommands:
         self.QbLeechCommand = f'qbleech{CMD_INDEX}'
         self.ConfigCommand = f'config{CMD_INDEX}'
         self.CopyCommand = f'copy{CMD_INDEX}'
-        self.GcloneCommand = f'gclone{CMD_INDEX}'
+        self.GcloneCommand = f'clone{CMD_INDEX}'
         self.MyFilesCommand = f'myfiles{CMD_INDEX}'
         self.StorageCommand = f'storage{CMD_INDEX}'
         self.CleanupCommand = f'cleanup{CMD_INDEX}'
@@ -25,10 +25,11 @@ class _BotCommands:
         self.SearchCommand = f'search{CMD_INDEX}'
         self.StatusCommand = f'status{CMD_INDEX}'
         self.ExecCommand = f'exec{CMD_INDEX}'
-        self.LogsCommand = f'logs{CMD_INDEX}'
+        self.LogsCommand = f'log{CMD_INDEX}'
         self.ServerCommand = f'server{CMD_INDEX}'
         self.SpeedtestCommand = f'speedtest{CMD_INDEX}'
         self.RestartCommand = f'restart{CMD_INDEX}'
+        self.PingCommand = f'ping{CMD_INDEX}'
 
 BotCommands = _BotCommands()
 

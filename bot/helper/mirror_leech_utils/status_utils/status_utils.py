@@ -26,10 +26,6 @@ class MirrorStatus:
     STATUS_PAUSED = "Pause"
     STATUS_CHECKING = "CheckUp"
 
-class TelegramClient:
-    PYROGRAM= "pyrogram"
-    TELETHON= "telethon"
-
 def clean_unwanted(path: str):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
     for dirpath, subdir, files in walk(path, topdown=False):

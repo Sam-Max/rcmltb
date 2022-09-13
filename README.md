@@ -62,17 +62,18 @@ unzipleech - leech and extract to Telegram
 zipleech - leech and zip to Telegram 
 qbleech - leech torrent to Telegram
 leechset - leech settings
-copy - copy from cloud to cloud
-gclone - clone gdrive files/folder to cloud
-config - rclone config
 myfiles - file manager
+clone - clone gdrive files/folder to cloud
+copy - copy from cloud to cloud
+config - rclone config
 cleanup - clean drive trash
 storage - drive details
 search - search for torrents
-status - get status message of tasks
-logs - get logs from server
-server - get server info
+status - status message of tasks
+server - server stats
 speedtest - test server speed
+log - bot log
+ping - ping bot
 restart - restart bot
 ```
 
@@ -201,10 +202,6 @@ sudo docker-compose start
 - For those on android phone, you can use [RCX app](https://play.google.com/store/apps/details?id=io.github.x0b.rcx&hl=en_IN&gl=US) app to create rclone.conf file. Use "Export rclone config" option in app menu to get config file.
 - Rclone supported providers:
   > 1Fichier, Amazon Drive, Amazon S3, Backblaze B2, Box, Ceph, DigitalOcean Spaces, Dreamhost, **Dropbox**,   Enterprise File Fabric, FTP, GetSky, Google Cloud Storage, **Google Drive**, Google Photos, HDFS, HTTP, Hubic, IBM COS S3, Koofr, Mail.ru Cloud, **Mega**, Microsoft Azure Blob Storage, **Microsoft OneDrive**, **Nextcloud**, OVH, OpenDrive, Oracle Cloud Storage, ownCloud, pCloud, premiumize.me, put.io, Scaleway, Seafile, SFTP, **WebDAV**, Yandex Disk, etc. **Check all providers on official site**: [Click here](https://rclone.org/#providers).
-
-## Deploying on Heroku
-<p><a href="https://github.com/Sam-Max/Rclone-Tg-Bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
-
 
 ## Bot Screenshot: 
 

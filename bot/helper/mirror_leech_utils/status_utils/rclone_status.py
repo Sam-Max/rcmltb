@@ -3,9 +3,7 @@ from math import floor
 from os.path import basename
 import re
 import time
-from telethon.errors import FloodWaitError
-from telethon import Button
-from bot import EDIT_SLEEP_SECS, LOGGER, status_dict, status_dict_lock
+from bot import EDIT_SLEEP_SECS, status_dict, status_dict_lock
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
@@ -24,7 +22,7 @@ class RcloneStatus:
     def get_status_msg(self):
         return self._status_msg     
 
-    async def progress(self, status_type, client_type):
+    async def start(self, status_type):
         async with status_dict_lock:
             status_dict[self.id] = self
         blank = 0
@@ -55,18 +53,9 @@ class RcloneStatus:
                 self._status_msg= self.get_status_message(status_type, prg, self._path, nstr)
 
                 if time.time() - start > EDIT_SLEEP_SECS:
-                        start = time.time()
-                        if client_type == 'pyrogram':
-                            await editMessage(self._status_msg, self._message, reply_markup=keyboard )
-                        if client_type == 'telethon':
-                                try:
-                                    await self._message.edit(text=self._status_msg, 
-                                    buttons= [[Button.inline("Cancel", f"cancel_rclone_{self.id}".encode('UTF-8'))]])
-                                except FloodWaitError as fw:
-                                    LOGGER.warning(f"FloodWait : Sleeping {fw.seconds}s")
-                                    await sleep(fw.value)
-                                except:
-                                    await sleep(1)
+                    start = time.time()
+                    await editMessage(self._status_msg, self._message, reply_markup=keyboard )
+
             if data == '':
                 blank += 1
                 if blank == 20:

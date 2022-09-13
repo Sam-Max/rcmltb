@@ -6,7 +6,7 @@ from bot.helper.ext_utils.human_format import human_readable_bytes
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
-from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, TelegramClient
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 
 class RcloneCopy:
@@ -21,8 +21,7 @@ class RcloneCopy:
               f'{dest_drive}:{dest_dir}{origin_dir}', '-P']
         rclone_pr = Popen(cmd, stdout=(PIPE),stderr=(PIPE))
         rc_status= RcloneStatus(rclone_pr, self.__message)
-        status= await rc_status.progress(status_type= MirrorStatus.STATUS_COPYING, 
-                                         client_type=TelegramClient.PYROGRAM)
+        status= await rc_status.start(status_type= MirrorStatus.STATUS_COPYING)
         if status:
             #Get Link
             cmd = ["rclone", "link", f'--config={conf_path}', f"{dest_drive}:{dest_dir}{origin_dir}"]

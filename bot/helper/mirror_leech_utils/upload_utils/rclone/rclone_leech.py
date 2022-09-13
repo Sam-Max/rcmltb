@@ -10,7 +10,7 @@ from bot.helper.ext_utils.var_holder import get_rclone_var
 from bot.helper.ext_utils.zip_utils import extract_file, get_path_size
 from bot.helper.mirror_leech_utils.status_utils.extract_status import ExtractStatus
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
-from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, TelegramClient
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 from bot.helper.mirror_leech_utils.status_utils.zip_status import ZipStatus
 from bot.helper.mirror_leech_utils.upload_utils.telegram.telegram_uploader import TelegramUploader
 
@@ -36,7 +36,7 @@ class RcloneLeech:
                           f'{self.__dest_path}', '-P']
         process = Popen(cmd, stdout=(PIPE),stderr=(PIPE))
         rclone_status= RcloneStatus(process, self.__message, self.__file_name)
-        status= await rclone_status.progress(MirrorStatus.STATUS_DOWNLOADING, TelegramClient.PYROGRAM)
+        status= await rclone_status.start(MirrorStatus.STATUS_DOWNLOADING)
         if status:
             await self.__onDownloadComplete()
         else:

@@ -7,7 +7,7 @@ from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_rclone_confi
 from bot.helper.ext_utils.rclone_utils import get_gid
 from bot.helper.ext_utils.var_holder import get_rclone_var
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
-from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, TelegramClient
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 
 class RcloneMirror:
@@ -48,8 +48,7 @@ class RcloneMirror:
 
         process = Popen(cmd, stdout=(PIPE), stderr=(PIPE))
         rclone_status= RcloneStatus(process, self.__message, self.__path)
-        status= await rclone_status.progress(status_type= MirrorStatus.STATUS_UPLOADING, 
-                                            client_type=TelegramClient.PYROGRAM)
+        status= await rclone_status.start(status_type= MirrorStatus.STATUS_UPLOADING)
         if status:
             await self.__onDownloadComplete(conf_path)
         else:
