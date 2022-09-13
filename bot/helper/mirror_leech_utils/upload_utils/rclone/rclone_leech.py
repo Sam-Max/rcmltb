@@ -28,15 +28,14 @@ class RcloneLeech:
         self.__pswd = pswd
         self.__tag = tag
         self.suproc = None
-        self.__rclone_pr= None
 
     async def leech(self):
         conf_path = get_rclone_config(self._user_id)
         leech_drive = get_rclone_var("LEECH_DRIVE", self._user_id)
         cmd = ['rclone', 'copy', f'--config={conf_path}', f'{leech_drive}:{self.__origin_path}', 
                           f'{self.__dest_path}', '-P']
-        self.__rclone_pr = Popen(cmd, stdout=(PIPE),stderr=(PIPE))
-        rclone_status= RcloneStatus(self.__rclone_pr, self.__message, self.__file_name)
+        process = Popen(cmd, stdout=(PIPE),stderr=(PIPE))
+        rclone_status= RcloneStatus(process, self.__message, self.__file_name)
         status= await rclone_status.progress(MirrorStatus.STATUS_DOWNLOADING, TelegramClient.PYROGRAM)
         if status:
             await self.__onDownloadComplete()
@@ -109,7 +108,6 @@ class RcloneLeech:
             clean(self.__dest_path)
     
     async def __onDownloadCancel(self):
-        self.__rclone_pr.kill()
         await editMessage('Download cancelled', self.__message )
 
 async def tgUpload(path, user_msg, tag):

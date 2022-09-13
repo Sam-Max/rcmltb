@@ -21,7 +21,6 @@ class RcloneMirror:
         self.__dest_base = get_rclone_var('MIRRORSET_BASE_DIR', self.__user_id)
         self.__dest_drive = get_rclone_var('MIRRORSET_DRIVE', self.__user_id)
         self.__is_gdrive= False
-        self.__rclone_pr= None
 
     async def mirror(self):
         conf_path = get_rclone_config(self.__user_id)
@@ -36,10 +35,6 @@ class RcloneMirror:
                     self.__is_gdrive = False
                 break
         
-        if not ospath.exists(self.__path):
-            LOGGER.info(f"Path does not not exist, Path: {self.__path}")
-            return    
-
         if self.__is_rename:
             self.__path = rename_file(self.__path, self.__new_name)
 
@@ -52,7 +47,6 @@ class RcloneMirror:
                     f"{self.__dest_drive}:{self.__dest_base}", '-P']
 
         process = Popen(cmd, stdout=(PIPE), stderr=(PIPE))
-        self.__rclone_pr= process
         rclone_status= RcloneStatus(process, self.__message, self.__path)
         status= await rclone_status.progress(status_type= MirrorStatus.STATUS_UPLOADING, 
                                             client_type=TelegramClient.PYROGRAM)
@@ -63,9 +57,9 @@ class RcloneMirror:
           
     async def __onDownloadComplete(self, conf_path):   
           button= ButtonMaker() 
+          name = ospath.basename(self.__path)
+          msg = f"<b>Name: </b><code>{name}</code>"
           if ospath.isdir(self.__path):
-                name = ospath.basename(self.__path)
-                msg = f"<b>Name: </b><code>{name}</code>"
                 if self.__is_gdrive:
                     gid = await get_gid(self.__dest_drive, self.__dest_base, f"{name}/", conf_path)
                     link = f"https://drive.google.com/folderview?id={gid[0]}"
@@ -74,8 +68,6 @@ class RcloneMirror:
                 else:
                     await editMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.__message)     
           else:
-                _, name = self.__path.rsplit('/', 1)     
-                msg = f"<b>Name: </b><code>{name}</code>"
                 if self.__is_gdrive:
                     gid = await get_gid(self.__dest_drive, self.__dest_base, name, conf_path, False)
                     link = f"https://drive.google.com/file/d/{gid[0]}/view"
@@ -86,6 +78,5 @@ class RcloneMirror:
           clean(self.__path)
 
     async def __onDownloadCancel(self):
-        self.__rclone_pr.kill()
         await self.__message.edit('Download cancelled')
         clean(self.__path)    

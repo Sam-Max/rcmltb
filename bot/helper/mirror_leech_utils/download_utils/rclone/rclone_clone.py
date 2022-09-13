@@ -12,7 +12,7 @@ from bot.helper.ext_utils.message_utils import editMessage, sendMessage
 from bot.helper.ext_utils.misc_utils import get_rclone_config
 from bot.helper.ext_utils.var_holder import get_rclone_var
 from bot.helper.mirror_leech_utils.status_utils.clone_status import CloneStatus
-from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, TelegramClient
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 
 class GDriveClone:

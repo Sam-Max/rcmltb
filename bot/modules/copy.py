@@ -205,7 +205,7 @@ async def copy_menu_callback(client, callback_query):
     elif cmd[1] == "copy":
         await query.answer()      
         rclone_copy= RcloneCopy(message, user_id)
-        await rclone_copy.copy()
+        await rclone_copy.copy(origin_drive, origin_dir, dest_drive, dest_dir)
 
     elif cmd[1] == "close":
         await query.answer("Closed")

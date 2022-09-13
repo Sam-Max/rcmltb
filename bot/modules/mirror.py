@@ -91,9 +91,9 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
                     set_rclone_var("IS_ZIP", isZip, user_id)
                     set_rclone_var("EXTRACT", extract, user_id)
                     set_rclone_var("PSWD", pswd, user_id)
-                    keyboard = [[InlineKeyboardButton(f"📄 By default", callback_data= f'mirrormenu_default'),
-                            InlineKeyboardButton(f"📝 Rename", callback_data='mirrormenu_rename')],
-                            [InlineKeyboardButton("Close", callback_data= f"mirrorsetmenu^close")]]
+                    keyboard = [[InlineKeyboardButton(f"📄 By default", callback_data= f'mirrormenu^default^{user_id}'),
+                            InlineKeyboardButton(f"📝 Rename", callback_data=f'mirrormenu^rename^{user_id}')],
+                            [InlineKeyboardButton("Close", callback_data= f"mirrormenu^close^{user_id}")]]
                     return await sendMarkup(header_msg, message, reply_markup= InlineKeyboardMarkup(keyboard))
             else:
                 link = await client.download_media(file)
@@ -184,20 +184,23 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
                 await rclone_mirror.mirror() 
 
 async def mirror_menu(client, query):
-    list = query.data.split("_")
+    cmd = query.data.split("^")
     message= query.message
     user_id= query.from_user.id
     tag = f"@{message.reply_to_message.from_user.username}"
-    
+
     file= get_rclone_var("FILE", user_id)
     isZip = get_rclone_var("IS_ZIP", user_id)
     extract = get_rclone_var("EXTRACT", user_id)
     pswd = get_rclone_var("PSWD", user_id) 
 
-    if "default" in list[1]:
+    if int(cmd[-1]) != user_id:
+        return await query.answer("This menu is not for you!", alert=True)
+
+    elif cmd[1] == "default" :
         await mirror_file(client, message, file, tag, user_id, pswd, isZip=isZip, extract=extract)
 
-    if "rename" in list[1]: 
+    elif cmd[1] == "rename": 
         question= await client.send_message(message.chat.id, text= "Send the new name, /ignore to cancel")
         try:
             response = await client.listen.Message(filters.text | filters.user(user_id), id=filters.user(user_id), timeout = 30)
@@ -212,6 +215,10 @@ async def mirror_menu(client, query):
                     await mirror_file(client, message, file, tag, user_id, pswd, isZip=isZip, extract=extract, new_name=response.text, is_rename=True)
         finally:
             await question.delete()
+
+    elif cmd[1] == "close":
+        await query.answer("Closed")
+        await message.delete()
 
 async def mirror_file(client, message, file, tag, user_id, pswd, isZip, extract, new_name="", is_rename=False):
     tg_down= TelegramDownloader(file, client, message, DOWNLOAD_DIR)

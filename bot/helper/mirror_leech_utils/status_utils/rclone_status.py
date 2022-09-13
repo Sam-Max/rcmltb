@@ -81,6 +81,7 @@ class RcloneStatus:
                 if self.is_cancelled:
                     async with status_dict_lock:
                         del status_dict[self.id] 
+                    self._process.kill()
                     return False
                 await sleep(2)
                 self._process.stdout.flush()

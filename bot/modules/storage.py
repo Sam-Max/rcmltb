@@ -1,5 +1,6 @@
 from configparser import ConfigParser
 from json import loads
+from math import floor
 from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import InlineKeyboardMarkup
@@ -85,14 +86,29 @@ async def rclone_about(message, query, drive_name, user_id):
           return await query.answer("Team Drive with Unlimited Storage")
      result_msg= "<b>🗂 Storage Details</b>\n"
      try:
-          result_msg += f"<b>\nUsed:</b>  {get_readable_file_size(info['used'])} of {get_readable_file_size(info['total'])}"
-          result_msg += f"<b>\nFree:</b>  {get_readable_file_size(info['free'])} of {get_readable_file_size(info['total'])}"
-          result_msg += f"<b>\nTrashed:</b>  {get_readable_file_size(info['trashed'])}"
+          used = get_readable_file_size(info['used'])
+          total = get_readable_file_size(info['total'])
+          free = get_readable_file_size(info['free'])
+          used_percentage = 100 * float(info['used'])/float(info['total'])
+          used_bar= get_used_bar(used_percentage)
+          used_percentage = f"{round(used_percentage, 2)}%"
+          free_percentage = round((info['free'] * 100) / info['total'], 2) 
+          free_percentage = f"{free_percentage}%"
+          result_msg += used_bar
+          result_msg += f"<b>\nUsed:</b> {used} of {total}"
+          result_msg += f"<b>\nFree:</b> {free} of {total}"
+          result_msg += f"<b>\nTrashed:</b> {get_readable_file_size(info['trashed'])}"
+          result_msg += f"<b>\n\nStorage used:</b> {used_percentage}"
+          result_msg += f"<b>\nStorage free:</b> {free_percentage}"
      except KeyError:
           result_msg += f"<b>\nN/A:</b>"
      button.cbl_buildbutton("⬅️ Back", f"storagemenu^back^{user_id}")
      button.cbl_buildbutton("✘ Close Menu", f"storagemenu^close^{user_id}")
      await editMarkup(result_msg, message, reply_markup= InlineKeyboardMarkup(button.first_button))
+
+def get_used_bar(percentage):
+     return "{0}{1}".format(''.join(["■" for i in range(floor(percentage / 10))]),
+                              ''.join(["□" for i in range(10 - floor(percentage / 10))]))
 
 storage_callback= CallbackQueryHandler(storage_menu_cb, filters= regex("storagemenu"))
 storage = MessageHandler(handle_storage, filters=command(BotCommands.StorageCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)

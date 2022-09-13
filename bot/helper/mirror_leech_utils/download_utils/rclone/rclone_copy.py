@@ -5,7 +5,6 @@ from bot import LOGGER
 from bot.helper.ext_utils.human_format import human_readable_bytes
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
-from bot.helper.ext_utils.var_holder import get_rclone_var
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, TelegramClient
 
@@ -14,24 +13,16 @@ class RcloneCopy:
     def __init__(self, message, user_id) -> None:
         self.__message = message
         self._user_id= user_id
-        self.__rclone_pr= None
 
-    async def copy(self):
+    async def copy(self, origin_drive, origin_dir, dest_drive, dest_dir):
         conf_path = get_rclone_config(self._user_id)
         button= ButtonMaker()
-        origin_drive = get_rclone_var("COPY_ORIGIN_DRIVE", self._user_id)
-        origin_dir = get_rclone_var("COPY_ORIGIN_DIR", self._user_id)
-        dest_drive = get_rclone_var("COPY_DESTINATION_DRIVE", self._user_id)
-        dest_dir = get_rclone_var("COPY_DESTINATION_DIR", self._user_id)
-
         cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
-                       f'{dest_drive}:{dest_dir}{origin_dir}', '-P']
-
+              f'{dest_drive}:{dest_dir}{origin_dir}', '-P']
         rclone_pr = Popen(cmd, stdout=(PIPE),stderr=(PIPE))
-        self.__rclone_pr= rclone_pr
         rc_status= RcloneStatus(rclone_pr, self.__message)
         status= await rc_status.progress(status_type= MirrorStatus.STATUS_COPYING, 
-                            client_type=TelegramClient.PYROGRAM)
+                                         client_type=TelegramClient.PYROGRAM)
         if status:
             #Get Link
             cmd = ["rclone", "link", f'--config={conf_path}', f"{dest_drive}:{dest_dir}{origin_dir}"]
@@ -56,5 +47,4 @@ class RcloneCopy:
             format_out += f"**Total Size**: {size}"
             await editMessage(format_out, self.__message, reply_markup= button.build_menu(1))
         else:
-            self.__rclone_pr.kill()
             await editMessage("Copy Cancelled", self.__message)    

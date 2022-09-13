@@ -2,7 +2,7 @@
 from time import time
 from bot import status_dict, status_dict_lock, LOGGER
 from bot.helper.ext_utils.message_utils import editMessage
-from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 from bot.helper.mirror_leech_utils.status_utils.telegram_status import TelegramStatus
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 

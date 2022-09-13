@@ -40,7 +40,7 @@ async def handle_restart(client, message):
         LOGGER.info(f"Error: {exc}")
     with open(".restartmsg", "w") as f:
         f.truncate(0)
-        f.write(f"{message.chat.id}\n{restart_msg.id}\n")
+        f.write(f"{restart_msg.chat.id}\n{restart_msg.id}\n")
     clean_all()
     srun(["pkill", "-f", "gunicorn|aria2c|megasdkrest|qbittorrent-nox"])
     srun(["python3", "update.py"])
