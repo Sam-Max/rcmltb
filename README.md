@@ -55,8 +55,8 @@ mirror - mirror to selected cloud
 unzipmirror - mirror and extract to cloud 
 zipmirror - mirror and zip to cloud 
 qbmirror - mirror torrent to cloud
-mirrorbatch - mirror files in batch to cloud 
 mirrorset - select cloud/folder where to mirror
+mirrorbatch - mirror files in batch to cloud 
 leech - leech from cloud to Telegram
 unzipleech - leech and extract to Telegram 
 zipleech - leech and zip to Telegram 
@@ -66,8 +66,8 @@ copy - copy from cloud to cloud
 gclone - clone gdrive files/folder to cloud
 config - rclone config
 myfiles - file manager
-storage - drive details
 cleanup - clean drive trash
+storage - drive details
 search - search for torrents
 status - get status message of tasks
 logs - get logs from server

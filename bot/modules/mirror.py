@@ -100,16 +100,20 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
 
         if not is_url(link) and not is_magnet(link):
             help_msg = '''
+<b><u>mirror:</u></b>               
+<code>/cmd</code> along with link
+
+<b>By replying</b>   
 <code>/cmd</code> link
+<code>/cmd</code> file pswd: xx(zip/unzip)
 
-<b>Replying to link</b>   
-<code>/cmd</code> link
+<b>qBittorrent</b>    
+<code>/cmd</code> link or by replying to link
+<code>/cmd</code> <b>s</b> link or by replying to link (selection)
 
-<b>Replying to file</b>   
-<code>/cmd</code> pswd: xx(zip/unzip)
-
-<b>Bittorrent selection:</b>    
-<code>/cmd</code> <b>s</b> link or by replying to file/link
+<b><u>qbleech:</u></b>               
+<code>/cmd</code> link or by replying to link
+<code>/cmd</code> <b>s</b> link or by replying to link (selection)
             '''
             return await sendMessage(help_msg, message)
         if not is_mega_link(link) and not is_magnet(link) and not is_gdrive_link(link) \
