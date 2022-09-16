@@ -9,16 +9,18 @@
 - Aria support for direct download links
 
 ### Mirror
-- Mirror from Telegram to cloud
-- Mirror torrent/magnets to cloud using qBittorrent
-- Mirror directs links to cloud using Aria2
-- Mirror Mega.nz links to cloud
-- Mirror batch files from Telegram to cloud
+- From Telegram to cloud
+- Torrent/magnets to cloud using qBittorrent
+- Directs links to cloud using Aria2
+- Mega.nz links to cloud
+- Files in batch from Telegram to cloud
 
 ### Leech
-- Leech file/folder from cloud to Telegram
-- Leech 4gb file with premium account
-- Leech torrent/magnets to Telegram using qBittorrent
+- File/folder from cloud to Telegram
+- Directs links to Telegram using Aria2
+- Mega.nz links to Telegram
+- Torrent/magnets to Telegram using qBittorrent
+- 4gb file with premium account
 
 ### Copy
 - Copy file/folder from cloud to cloud
@@ -27,16 +29,19 @@
 - Progress bar for download and upload
 - Status for tasks
 
+### Archives
+- Extract and Zip link/file from Telegram to cloud
+- Extract and Zip folder/file from cloud to Telegram
+- Using 7-zip tool to extract all supported files
+- Extract rar, zip and 7z with or without password
+
 ### Others
 - Telegram Navigation Bottom Menus to interact with cloud
 - Renaming of Telegram files
 - Load and change rclone config file from bot.
 - File Manager (size, mkdir, delete, dedupe, rename)
-- Zip file/folder from cloud to Telegram
-- Extract file from cloud to Telegram
-- Extract and Zip file from Telegram to cloud
 
-### From Other Repositories (with some changes)
+### From Other Repositories
 - Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
 - Select files from Torrent before downloading 
 - Get restricted messages from private channels.
@@ -54,14 +59,13 @@
 mirror - mirror to selected cloud 
 unzipmirror - mirror and extract to cloud 
 zipmirror - mirror and zip to cloud 
-qbmirror - mirror torrent to cloud
 mirrorset - select cloud/folder where to mirror
 mirrorbatch - mirror files in batch to cloud 
 leech - leech from cloud to Telegram
 unzipleech - leech and extract to Telegram 
 zipleech - leech and zip to Telegram 
-qbleech - leech torrent to Telegram
 leechset - leech settings
+leechbatch - leech files in batch to Telegram 
 myfiles - file manager
 clone - clone gdrive files/folder to cloud
 copy - copy from cloud to cloud
@@ -109,12 +113,13 @@ restart - restart bot
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `UPSTREAM_BRANCH`: Upstream branch for update
-        - `USER_SESSION_STRING`: Pyrogram session string for using mirrorbatch command and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: when using string session you can't use bot, use it with group or channel
         - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
    
    - LEECH
         - `TG_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
+        - `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/supergroup id.
+        - `USER_SESSION_STRING`: Pyrogram session string for mirrorbatch command and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: when using string session, you have to use with supergroup or channel not bot.
         - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
 
    - MEGA
@@ -220,8 +225,6 @@ sudo docker-compose start
 1- [TorToolkit-Telegram](https://github.com/yash-dk/TorToolkit-Telegram). Base repository.
 
 2- [Rclone](https://github.com/rclone/rclone)
-
-3- [Telethon](https://github.com/LonamiWebs/Telethon) 
 
 4- [Pyrogram](https://github.com/pyrogram/pyrogram)
 

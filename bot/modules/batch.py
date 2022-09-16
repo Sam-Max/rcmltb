@@ -3,7 +3,8 @@
 
 import asyncio
 from bot import Bot, bot, app
-from telethon import events, Button
+from telethon import Button
+from telethon.events import NewMessage
 from pyrogram.errors import FloodWait
 from bot.helper.ext_utils.batch_helper import check, get_bulk_msg, get_link
 from bot.helper.ext_utils.bot_commands import BotCommands
@@ -15,7 +16,13 @@ async def get_pvt_content(event, chat, id):
     msg = await app.get_messages(chat, ids=id)
     await event.client.send_message(event.chat_id, msg) 
     
-async def _batch(event):
+async def leech_batch(e):
+    await _batch(e, isLeech= True)
+
+async def mirror_batch(e):
+    await _batch(e)
+
+async def _batch(event, isLeech= False):
     if app is None:
          return await event.reply("Set USER_SESSION_STRING variable to use this command!")
     else:
@@ -51,12 +58,11 @@ async def _batch(event):
                     await conv.send_message(r)
                     return
                 batch.append(f'{event.sender_id}')
-                await run_batch(app, Bot, event.sender_id, _link, value) 
+                await run_batch(app, Bot, event.sender_id, _link, value, isLeech= isLeech) 
                 conv.cancel()
                 batch.pop(0)
                 
-            
-async def run_batch(userbot, client, sender, link, _range):
+async def run_batch(userbot, client, sender, link, _range, isLeech):
     for i in range(_range):
         timer = 60
         if i < 25:
@@ -71,13 +77,16 @@ async def run_batch(userbot, client, sender, link, _range):
             else:
                 timer = 3
         try:
-            await get_bulk_msg(userbot, client, sender, link, i) 
+            await get_bulk_msg(userbot, client, sender, link, i, isLeech= isLeech) 
         except FloodWait as fw:
             await asyncio.sleep(fw.seconds + 5)
-            await get_bulk_msg(userbot, client, sender, link, i)
+            await get_bulk_msg(userbot, client, sender, link, i, isLeech= isLeech)
         await asyncio.sleep(timer)
         
 
-mirrorbatch_event= events.NewMessage(incoming=True, pattern= command_process(f"/{BotCommands.MirrorBatchCommand}"))
-bot.add_event_handler(_batch, event= mirrorbatch_event)                
+mirrorbatch_event= NewMessage(incoming=True, pattern= command_process(f"/{BotCommands.MirrorBatchCommand}"))
+bot.add_event_handler(mirror_batch, event= mirrorbatch_event)              
+
+leechbatch_event= NewMessage(incoming=True, pattern= command_process(f"/{BotCommands.LeechBatchCommand}"))
+bot.add_event_handler(leech_batch, event= leechbatch_event)   
 

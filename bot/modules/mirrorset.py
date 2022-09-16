@@ -179,11 +179,11 @@ async def mirrorset_callback(client, callback_query):
         await query.answer("Closed")
         await message.delete()
 
-async def next_page_mirrorset(callback_query):
+async def next_page_mirrorset(client, callback_query):
     data= callback_query.data
     message= callback_query.message
     user_id= message.reply_to_message.from_user.id
-    _, next_offset, data_back_cb = data.decode().split()
+    _, next_offset, data_back_cb = data.split()
     list_info = get_rclone_var("driveInfo", user_id)
     total = len(list_info)
     next_offset = int(next_offset)
@@ -221,7 +221,7 @@ async def next_page_mirrorset(callback_query):
 
     mirrorset_drive= get_rclone_var("MIRRORSET_DRIVE", user_id)
     base_dir= get_rclone_var("MIRRORSET_BASE_DIR", user_id)
-    await message.edit(f"Select folder where you want to store files\n\nPath:`{mirrorset_drive}:{base_dir}`", buttons=buttons.first_button)
+    await message.edit(f"Select folder where you want to store files\n\nPath:`{mirrorset_drive}:{base_dir}`", reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
  
 next_mirrorset_cb= CallbackQueryHandler(next_page_mirrorset, filters= regex("next_mirrorset"))

@@ -4,11 +4,11 @@ from bot import LOGGER, Bot
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from pyrogram.enums.parse_mode import ParseMode
 
+
 async def sendMessage(text: str, message):
     try:
-        return await Bot.send_message(message.chat.id,
-                            reply_to_message_id=message.id,
-                            text=text)
+        return await Bot.send_message(message.chat.id, reply_to_message_id=message.id,
+                            text=text, disable_web_page_preview=True)
     except FloodWait as fw:
         await sleep(fw.value)
         return await sendMessage(text, message)

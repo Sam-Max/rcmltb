@@ -79,7 +79,7 @@ async def rclone_cleanup(message, drive_name, user_id, tag):
      if return_code != 0:
           err = stderr.decode().strip()
           return await sendMessage(f'Error: {err}', message)
-     msg= "<b>Trash Cleared.</b>\n\n"
+     msg= "<b>Trash Cleared</b>\n\n"
      msg+= f'<b>cc:</b> {tag}\n'
      await editMessage(msg, edit_msg)     
 

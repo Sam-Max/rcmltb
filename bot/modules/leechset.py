@@ -5,7 +5,7 @@ from os import remove as osremove, path as ospath, mkdir
 from PIL import Image
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
-from bot import AS_DOC_USERS, AS_MEDIA_USERS, AS_DOCUMENT, Bot
+from bot import AS_DOC_USERS, AS_MEDIA_USERS, AS_DOCUMENT, LOGGER, Bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import auto_delete_message, editMessage, sendMarkup, sendMessage
@@ -34,6 +34,7 @@ def getleechinfo(from_user):
         thumbmsg = "Not Exists"  
         buttons.cb_buildbutton("Set Thumbnail", f"leechset {user_id} thumb")
 
+    buttons.cb_buildbutton("✘ Close Menu", f"leechset {user_id} close")
     button = buttons.build_menu(1)
 
     text = f"<u>Leech Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n\n"\
@@ -75,26 +76,33 @@ async def handle_leech_set_type(client, callback_query):
             await query.answer(text="Thumbnail Removed!", show_alert=True)
             await editLeechType(message, query)
         else:
-            question= await editMessage("Send a photo to save thumbnail", message)
+            question= await editMessage("Send a photo to save thumbnail, /ignore to cancel", message)
             try:
-                response = await client.listen.Message(filters.photo | filters.user(user_id), id=filters.user(user_id), timeout = 30)
+                response = await client.listen.Message(filters.photo | filters.text, id=filters.user(user_id), timeout = 30)
             except asyncio.TimeoutError:
                 await sendMessage("Too late 30s gone, try again!", message)
             else:
                 if response:
                     try: 
-                        path = "Thumbnails/"
-                        if not ospath.isdir(path):
-                            mkdir(path)
-                        photo_dir = await client.download_media(response)
-                        des_dir = ospath.join(path, f'{user_id}.jpg')
-                        Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
-                        osremove(photo_dir)
-                        await query.answer(text="Thumbnail Added!!", show_alert=True)
+                        if response.text:
+                            if "/ignore" in response.text:
+                                await client.listen.Cancel(filters.user(user_id))
+                        else:  
+                            path = "Thumbnails/"
+                            if not ospath.isdir(path):
+                                mkdir(path)
+                            photo_dir = await client.download_media(response)
+                            des_dir = ospath.join(path, f'{user_id}.jpg')
+                            Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
+                            osremove(photo_dir)
+                            await query.answer(text="Thumbnail Added!!", show_alert=True)
                     except Exception as ex:
                         await editMessage(str(ex), question)
             finally: 
                 await editLeechType(message, query)
+    elif data[2] == "close":
+        await query.answer("Closed")
+        await message.delete()
     else:
         await query.answer("Closed")
         try:

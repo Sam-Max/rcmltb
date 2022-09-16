@@ -3,12 +3,11 @@ from time import time
 from requests import get
 from bot import DOWNLOAD_DIR, LOGGER, MEGA_KEY, Bot
 from asyncio import TimeoutError
-from bot import Bot, DOWNLOAD_DIR, LOGGER, TG_SPLIT_SIZE
+from bot import Bot, DOWNLOAD_DIR, LOGGER
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler
-from subprocess import run
+from pyrogram.types import InlineKeyboardMarkup
 from re import match as re_match
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
 from bot.helper.ext_utils.bot_commands import BotCommands
@@ -17,16 +16,14 @@ from bot.helper.ext_utils.direct_link_generator import direct_link_generator
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import get_readable_size
+from bot.helper.ext_utils.misc_utils import ButtonMaker, get_readable_size
 from bot.helper.ext_utils.rclone_utils import is_not_config, is_not_drive
 from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
-from bot.helper.ext_utils.zip_utils import extract_file
 from bot.helper.mirror_leech_utils.download_utils.aria.aria2_download import Aria2Downloader
 from bot.helper.mirror_leech_utils.download_utils.mega.mega_download import MegaDownloader
 from bot.helper.mirror_leech_utils.download_utils.qbit.qbit_downloader import QbDownloader
-from bot.helper.mirror_leech_utils.download_utils.rclone.rclone_mirror import RcloneMirror
 from bot.helper.mirror_leech_utils.download_utils.telegram.telegram_downloader import TelegramDownloader
-from bot.helper.mirror_leech_utils.upload_utils.telegram.telegram_uploader import TelegramUploader
+from bot.helper.mirror_leech_utils.mirror_leech import MirrorLeech
 
 
 async def handle_mirror(client, message):
@@ -38,19 +35,15 @@ async def handle_zip_mirror(client, message):
 async def handle_unzip_mirror(client, message):
     await mirror_leech(client, message, extract=True)
 
-async def handle_qbit_mirror(client, message):
-    await mirror_leech(client, message, isQbit=True)
-
-async def handle_qbit_leech(client, message):
-    await mirror_leech(client, message, isLeech=True)
-
-async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False, isLeech= False):
+async def mirror_leech(client, message, _link= None, isZip=False, extract=False, isLeech= False, from_cb= False):
         user_id= message.from_user.id
+        if from_cb:
+            user_id= message.reply_to_message.from_user.id
         if await is_not_config(user_id, message):
             return
-        if await is_not_drive(user_id, message):
-            return
-        reply_message= message.reply_to_message
+        if not isLeech:
+            if await is_not_drive(user_id, message):
+                return
         select = False
         pswd= None  
         link= ''
@@ -73,6 +66,8 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
         else:
             tag = message.from_user.first_name
 
+        reply_message= message.reply_to_message
+
         if reply_message is not None:
             file = reply_message.document or reply_message.video or reply_message.audio or reply_message.photo or None
             if reply_message.from_user.username:
@@ -84,6 +79,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
                 if is_url(reply_text) or is_magnet(reply_text):     
                      link = reply_text.strip() 
             elif file.mime_type != "application/x-bittorrent":
+                    buttons= ButtonMaker() 
                     name= file.file_name
                     size= get_readable_size(file.file_size)
                     header_msg = f"<b>Which name do you want to use?</b>\n\n<b>Name</b>: `{name}`\n\n<b>Size</b>: `{size}`"
@@ -91,30 +87,36 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
                     set_rclone_var("IS_ZIP", isZip, user_id)
                     set_rclone_var("EXTRACT", extract, user_id)
                     set_rclone_var("PSWD", pswd, user_id)
-                    keyboard = [[InlineKeyboardButton(f"📄 By default", callback_data= f'mirrormenu^default^{user_id}'),
-                            InlineKeyboardButton(f"📝 Rename", callback_data=f'mirrormenu^rename^{user_id}')],
-                            [InlineKeyboardButton("Close", callback_data= f"mirrormenu^close^{user_id}")]]
-                    return await sendMarkup(header_msg, message, reply_markup= InlineKeyboardMarkup(keyboard))
+                    buttons.dbuildbutton("📄 By default", f'mirrormenu^default^{user_id}',
+                                         "📝 Rename", f'mirrormenu^rename^{user_id}')
+                    buttons.cbl_buildbutton("✘ Close Menu", f"mirrormenu^close^{user_id}")
+                    return await sendMarkup(header_msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
             else:
                 link = await client.download_media(file)
+        
+        if _link is not None:
+            link= _link
 
         if not is_url(link) and not is_magnet(link):
-            help_msg = '''
-<b><u>mirror:</u></b>               
+            if isLeech:
+                help_msg = '''         
+<code>/cmd</code> along with link pswd: xx(zip/unzip)
+
+<code>/cmd</code> torrent file 
+
+<b>qBittorrent Selection</b>    
+<code>/cmd</code> <b>s</b> link 
+'''
+            else:
+                help_msg = '''         
 <code>/cmd</code> along with link
 
 <b>By replying</b>   
-<code>/cmd</code> link
-<code>/cmd</code> file pswd: xx(zip/unzip)
+<code>/cmd</code> link/file pswd: xx(zip/unzip)
 
-<b>qBittorrent</b>    
-<code>/cmd</code> link or by replying to link
-<code>/cmd</code> <b>s</b> link or by replying to link (selection)
-
-<b><u>qbleech:</u></b>               
-<code>/cmd</code> link or by replying to link
-<code>/cmd</code> <b>s</b> link or by replying to link (selection)
-            '''
+<b>qBittorrent Selection</b>    
+<code>/cmd</code> <b>s</b> link or by replying to link
+'''
             return await sendMessage(help_msg, message)
         if not is_mega_link(link) and not is_magnet(link) and not is_gdrive_link(link) \
             and not link.endswith('.torrent'):
@@ -154,12 +156,12 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
                 mega_dl= MegaDownloader(link, message)   
                 state, rmsg, path= await mega_dl.execute(path= f'{DOWNLOAD_DIR}{message.id}')
                 if state:
-                    rclone_mirror = RcloneMirror(path, rmsg, tag, user_id)
-                    await rclone_mirror.mirror()
+                    ml= MirrorLeech(path, rmsg, tag, user_id, isZip=isZip, extract=extract, pswd=pswd, isLeech=isLeech)
+                    await ml.execute()
             else:
                 await sendMessage("MEGA_API_KEY not provided!", message)
         elif is_magnet(link) or ospath.exists(link):
-            qbit_dl= QbDownloader(message)
+            qbit_dl= QbDownloader(message, isLeech=isLeech, userId=user_id)
             path = f'{DOWNLOAD_DIR}{message.id}'
             state, rmsg, name = await qbit_dl.add_qb_torrent(link, path, select)
             if state:
@@ -168,12 +170,8 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
                     path = f'{path}/{name}'
                 else:
                     path= f'{path}/{name}'
-                if isLeech:
-                    tgUpload = TelegramUploader(path, rmsg, tag)
-                    await tgUpload.upload()
-                else:     
-                    rclone_mirror = RcloneMirror(path, rmsg, tag, user_id)
-                    await rclone_mirror.mirror()
+                ml= MirrorLeech(path, rmsg, tag, user_id, isZip=isZip, extract=extract, pswd=pswd, isLeech=isLeech)
+                await ml.execute()
         else:
             aria2= Aria2Downloader(link, message)   
             path = f'{DOWNLOAD_DIR}{message.id}'
@@ -183,9 +181,9 @@ async def mirror_leech(client, message, isZip=False, extract=False, isQbit=False
                     name = listdir(path)[-1]
                     path = f'{path}/{name}'
                 else:
-                    path= f'{path}/{name}'      
-                rclone_mirror= RcloneMirror(path, rmsg, tag, user_id)
-                await rclone_mirror.mirror() 
+                    path= f'{path}/{name}' 
+                ml= MirrorLeech(path, rmsg, tag, user_id, isZip=isZip, extract=extract, pswd=pswd, isLeech=isLeech)
+                await ml.execute()
 
 async def mirror_menu(client, query):
     cmd = query.data.split("^")
@@ -225,58 +223,20 @@ async def mirror_menu(client, query):
         await message.delete()
 
 async def mirror_file(client, message, file, tag, user_id, pswd, isZip, extract, new_name="", is_rename=False):
-    tg_down= TelegramDownloader(file, client, message, DOWNLOAD_DIR)
+    tg_down= TelegramDownloader(file, client, message, f'{DOWNLOAD_DIR}{message.id}/')
     media_path= await tg_down.download() 
     if media_path is None:
         return
-    m_path = media_path
-    if isZip:
-        try:
-            base = ospath.basename(m_path)
-            file_name = base.rsplit('.', maxsplit=1)[0]
-            file_name = file_name + ".zip"
-            path = f'{DOWNLOAD_DIR}{file_name}'
-            size = ospath.getsize(m_path)
-            if pswd is not None:
-                if int(size) > TG_SPLIT_SIZE:
-                    run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{pswd}", path, m_path])     
-                else:
-                    run(["7z", "a", "-mx=0", f"-p{pswd}", path, m_path])
-            elif int(size) > TG_SPLIT_SIZE:
-                run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, m_path])
-            else:
-                run(["7z", "a", "-mx=0", path, m_path])
-        except FileNotFoundError:
-            LOGGER.info('File to archive not found!')
-            return
-    elif extract:
-        path= await extract_file(m_path, message, pswd)
-    else:
-        path= m_path
-    rc_mirror= RcloneMirror(path, message, tag, user_id, new_name= new_name, is_rename= is_rename)
-    await rc_mirror.mirror()   
+    ml= MirrorLeech(media_path, message, tag, user_id, isZip=isZip, newName= new_name, isRename= is_rename, extract=extract, pswd=pswd)
+    await ml.execute()
 
-mirror_handler = MessageHandler(handle_mirror,
-        filters=filters.command(BotCommands.MirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-
-zip_mirror_handler = MessageHandler(handle_zip_mirror,
-        filters=filters.command(BotCommands.ZipMirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-
-unzip_mirror_handler = MessageHandler(handle_unzip_mirror,
-        filters=filters.command(BotCommands.UnzipMirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-
-qbit_mirror_handler = MessageHandler(handle_qbit_mirror,
-        filters=filters.command(BotCommands.QbMirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-
-qbit_leech_handler = MessageHandler(handle_qbit_leech,
-        filters=filters.command(BotCommands.QbLeechCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-
+mirror_handler = MessageHandler(handle_mirror,filters=filters.command(BotCommands.MirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+zip_mirror_handler = MessageHandler(handle_zip_mirror,filters=filters.command(BotCommands.ZipMirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+unzip_mirror_handler = MessageHandler(handle_unzip_mirror,filters=filters.command(BotCommands.UnzipMirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 mirror_menu_cb = CallbackQueryHandler(mirror_menu, filters=filters.regex("mirrormenu"))
 
 Bot.add_handler(mirror_handler)   
 Bot.add_handler(zip_mirror_handler)
 Bot.add_handler(unzip_mirror_handler)
-Bot.add_handler(qbit_mirror_handler)
-Bot.add_handler(qbit_leech_handler)
 Bot.add_handler(mirror_menu_cb)
 

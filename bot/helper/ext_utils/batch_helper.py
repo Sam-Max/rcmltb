@@ -1,19 +1,19 @@
-#Tg:MaheshChauhan/DroneBots
-#Github.com/Vasusen-code
+# Source: Tg:MaheshChauhan/DroneBots
+# Github.com/Vasusen-code
 
-import re
+from re import findall
 from time import time
-from bot.helper.mirror_leech_utils.download_utils.rclone.rclone_mirror import RcloneMirror
+from bot.helper.mirror_leech_utils.mirror_leech import MirrorLeech
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 from bot.helper.mirror_leech_utils.status_utils.telegram_status import TelegramStatus
-from bot import LOGGER
+from bot import LOGGER, status_dict, status_dict_lock
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 
 VIDEO_SUFFIXES = ["mkv", "mp4", "mov", "wmv", "3gp", "mpg", "webm", "avi", "flv", "m4v", "gif"]
 
 def get_link(string):
     regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-    url = re.findall(regex, string)   
+    url = findall(regex, string)   
     try:
         link = [x[0] for x in url][0]
         if link:
@@ -42,7 +42,7 @@ async def check(app, client, link):
         except Exception:
             return False, "Maybe bot is banned from the chat, or your link is invalid!"
 
-async def get_msg(app, client, sender, edit_id, msg_link, i):
+async def get_msg(app, client, sender, edit_id, message, msg_link, i, isLeech):
     edit = ""
     chat = ""
     msg_id = int(msg_link.split("/")[-1]) + int(i)
@@ -50,23 +50,24 @@ async def get_msg(app, client, sender, edit_id, msg_link, i):
         chat = int('-100' + str(msg_link.split("/")[-2]))
         try:
             msg = await app.get_messages(chat, msg_id)
+            if msg.media:
+                caption= msg.video.file_name
             if not msg.media:
                 if msg.text:
                     edit = await client.edit_message_text(sender, edit_id, "Cloning.")
                     await client.send_message(sender, msg.text.markdown)
                     await edit.delete()
                     return
-            edit = await client.edit_message_text(sender, edit_id, "Starting Download")
-            tag = f"@{edit.chat.username}"
-            status= TelegramStatus(edit)
-            file = await app.download_media(
+            user_id= message.chat.id
+            status= TelegramStatus(message)
+            async with status_dict_lock:
+                status_dict[message.id] = status
+            file_path = await app.download_media(
                 msg,
-                progress=status.progress,
-                progress_args=("",
-                    MirrorStatus.STATUS_DOWNLOADING,
-                    time()))
-            rclone_mirror= RcloneMirror(file, edit, tag)
-            await rclone_mirror.mirror()
+                progress=status.start,
+                progress_args=(caption, MirrorStatus.STATUS_DOWNLOADING, time()))
+            ml= MirrorLeech(file_path, message, tag="N/A", user_id= user_id, isLeech= isLeech)
+            await ml.execute()
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await client.edit_message_text(sender, edit_id, "Have you joined the channel?")
         except Exception as e:
@@ -76,23 +77,24 @@ async def get_msg(app, client, sender, edit_id, msg_link, i):
         chat =  msg_link.split("/")[-2]
         try:
             msg = await app.get_messages(chat, msg_id)
+            if msg.media:
+                caption= msg.video.file_name
             if not msg.media:
                 if msg.text:
                     edit = await client.edit_message_text(sender, edit_id, "Cloning.")
                     await client.send_message(sender, msg.text.markdown)
                     await edit.delete()
                     return
-            edit = await client.edit_message_text(sender, edit_id, "Starting Download")
-            tag = f"@{edit.chat.username}"
-            status= TelegramStatus(edit)
-            file = await app.download_media(
+            user_id= message.chat.id
+            status= TelegramStatus(message)
+            async with status_dict_lock:
+                status_dict[message.id] = status
+            file_path = await app.download_media(
                 msg,
-                progress=status.progress,
-                progress_args=("",
-                    MirrorStatus.STATUS_DOWNLOADING,
-                    time()))
-            rclone_mirror= RcloneMirror(file, edit, tag)
-            await rclone_mirror.mirror()
+                progress=status.start,
+                progress_args=(caption, MirrorStatus.STATUS_DOWNLOADING, time()))
+            ml= MirrorLeech(file_path, message, tag="N/A", user_id= user_id, isLeech= isLeech)
+            await ml.execute()
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await client.edit_message_text(sender, edit_id, "Have you joined the channel?")
             return 
@@ -101,6 +103,6 @@ async def get_msg(app, client, sender, edit_id, msg_link, i):
             await client.edit_message_text(sender, edit_id, f'Failed to save: `{e}`')
             return 
 
-async def get_bulk_msg(app, client, sender, msg_link, i):
-    x = await client.send_message(sender, "Processing!")
-    await get_msg(app, client, sender, x.id, msg_link, i) 
+async def get_bulk_msg(app, client, sender, msg_link, i, isLeech):
+    x = await client.send_message(sender, "Processing")
+    await get_msg(app, client, sender, x.id, x, msg_link, i, isLeech= isLeech) 

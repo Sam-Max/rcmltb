@@ -43,4 +43,4 @@ class Aria2Downloader():
                     del status_dict[self.id] 
             except:
                 pass
-            return False, rmsg, None    
+            return False, None, None    

@@ -1,132 +1,168 @@
 from asyncio import sleep
-from os import walk, rename, path as ospath
+from html import escape
+from os import walk, rename, path as ospath, remove as osremove
 from time import time
-from bot import AS_DOC_USERS, AS_DOCUMENT, AS_MEDIA_USERS, LOGGER, Bot, app, status_dict, status_dict_lock
+from bot import AS_DOC_USERS, AS_DOCUMENT, AS_MEDIA_USERS, DUMP_CHAT, LOGGER, Bot, app, status_dict, status_dict_lock
 from pyrogram.enums.parse_mode import ParseMode
 from pyrogram.errors import FloodWait
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.enums import ChatType
 from PIL import Image
+from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMessage
-from bot.helper.ext_utils.misc_utils import clean, get_media_info
+from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_media_info
 from bot.helper.ext_utils.screenshot import take_ss
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 from bot.helper.mirror_leech_utils.status_utils.telegram_status import TelegramStatus
 
-VIDEO_SUFFIXES = ["mkv", "mp4", "mov", "wmv", "3gp", "mpg", "webm", "avi", "flv", "m4v", "gif"]
+VIDEO_SUFFIXES = ("mkv", "mp4", "mov", "wmv", "3gp", "mpg", "webm", "avi", "flv", "m4v", "gif")
+IMAGE_SUFFIXES = ("jpg", "jpx", "png", "cr2", "tif", "bmp", "jxr", "psa", "ico", "heic", "jpeg")
 
 class TelegramUploader():
-    def __init__(self, path, message, tag) -> None:
-        self._client= app if app is not None else Bot
-        self._path = path
-        self._message= message 
-        self.id= self._message.id
-        self._tag= tag
-        self._chat_id= self._message.chat.id
+    def __init__(self, path, name, size, message, tag) -> None:
+        self.client= app if app is not None else Bot
+        self.__path = path
+        self.__message= message 
+        self.id= self.__message.id
+        self.__name= name
+        self.__size= size
+        self.__tag= tag
         self.__total_files = 0
+        self.__corrupted = 0
+        self.__is_corrupted = False
+        self.__msgs_dict = {}
         self.__as_doc = AS_DOCUMENT
-        self.__thumb = f"Thumbnails/{self._message.chat.id}.jpg"
-        self.current_time= time()
-        self._set_settings()
+        self.__isPrivate = self.__message.chat.type == ChatType.PRIVATE
+        self.__thumb = f"Thumbnails/{self.__message.chat.id}.jpg"
+        self.__time= time()
+        self.__set_settings()
 
     async def upload(self):
-        status= TelegramStatus(self._message)
+        await self.__msg_to_reply() 
+        status= TelegramStatus(self.__message)
         async with status_dict_lock:
             status_dict[self.id] = status
-        name= str(self._path).split("/")[-1] 
-        status_type= MirrorStatus.STATUS_UPLOADING
-        inlineKeyboard= InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data=(f"cancel_telegram_{self.id}"))]])    
-        status_msg= status.get_status_message(0, 0, 0, "", 0, name, status_type)
-        await editMessage(status_msg, self._message, reply_markup=inlineKeyboard)
-        if ospath.isdir(self._path):
-            for dirpath, _, files in walk(self._path):
+        await self.__create_empty_status(status)
+        if ospath.isdir(self.__path):
+            for dirpath, _, files in walk(self.__path):
                 for file in sorted(files):
                     self.__total_files += 1      
                     f_path = ospath.join(dirpath, file)
                     f_size = ospath.getsize(f_path)
                     if f_size == 0:
                         LOGGER.error(f"{f_size} size is zero, telegram don't upload zero size files")
+                        self.__corrupted += 1
                         continue
-                    await self.__upload_file(f_path, inlineKeyboard, status_type, status)
+                    await self.__upload_file(f_path, file, status)
+                    if (not self.__isPrivate or DUMP_CHAT is not None) and not self.__is_corrupted:
+                        self.__msgs_dict[self.__sent_msg.link] = file
                     clean(f_path)
                     await sleep(1)
+        await deleteMessage(status._status_msg)
+        size = get_readable_file_size(self.__size)
+        msg = f"<b>Name: </b><code>{escape(self.__name)}</code>\n\n<b>Size: </b>{size}"
+        if self.__total_files > 0:
+            msg += f'<b>\nTotal Files:</b> {self.__total_files}'
+        if self.__corrupted != 0:
+            msg += f'\n<b>Corrupted Files: </b>{self.__corrupted}'
+        msg += f'\ncc: {self.__tag}\n\n'
+        if not self.__msgs_dict:
+            await sendMessage(msg, self.__message)
         else:
-           await self.__upload_file(self._path, inlineKeyboard, status_type, status)
-           self.__total_files += 1  
-           clean(self._path)
+            fmsg = ''
+            for index, (link, name) in enumerate(self.__msgs_dict.items(), start=1):
+                fmsg += f"{index}. <a href='{link}'>{name}</a>\n"
+                if len(fmsg.encode() + msg.encode()) > 4000:
+                    await sendMessage(msg + fmsg, self.__message)
+                    sleep(1)
+                    fmsg = ''
+            if fmsg != '':
+                await sendMessage(msg + fmsg, self.__message) 
         async with status_dict_lock: 
             try:  
                 del status_dict[self.id]
             except:
-                pass 
-        await deleteMessage(self._message)
-        msg= ""
-        if self.__total_files > 0:
-            msg += f'**Total Files:** {self.__total_files}\n'
-        msg += f'cc: {self._tag}\n'
-        await self._client.send_message(self._chat_id, msg)
-            
-    async def __upload_file(self, up_path, inlineKeyboard, status_type, status):
+                pass    
+
+    async def __upload_file(self, up_path, file, status):
         thumb_path = self.__thumb
         notMedia = False
-        name= str(up_path).split("/")[-1]  
+        cap= f"<code>{file}</code>"
+        status_type= MirrorStatus.STATUS_UPLOADING
         try:
             if not self.__as_doc:
-                if str(up_path).split(".")[-1] in VIDEO_SUFFIXES:
-                        if not str(up_path).split(".")[-1] in ['mp4', 'mkv']:
-                            new_path = str(up_path).split(".")[0] + ".mp4"
-                            rename(up_path, new_path) 
-                            up_path = new_path
-                        duration= get_media_info(up_path)[0]
-                        if thumb_path is None:
-                            thumb_path = take_ss(up_path, duration)
-                        if thumb_path is not None and ospath.isfile(thumb_path):
-                            with Image.open(thumb_path) as img:
-                                width, height = img.size
-                        else:
-                             width = 480
-                             height = 320
-                        await self._client.send_video(
-                            chat_id= self._chat_id,
-                            video= up_path,
-                            width= width,
-                            height= height,
-                            caption= f'`{name}`',
-                            parse_mode= ParseMode.MARKDOWN,
-                            thumb= thumb_path,
-                            supports_streaming= True,
-                            duration= duration,
-                            progress= status.progress,
-                            progress_args=(name, 
-                                status_type, 
-                                self.current_time, 
-                                inlineKeyboard))
+                if file.endswith(VIDEO_SUFFIXES):
+                    if not str(up_path).split(".")[-1] in ['mp4', 'mkv']:
+                        new_path = str(up_path).split(".")[0] + ".mp4"
+                        rename(up_path, new_path) 
+                        up_path = new_path
+                    duration= get_media_info(up_path)[0]
+                    if thumb_path is None:
+                        thumb_path = take_ss(up_path, duration)
+                    if thumb_path is not None and ospath.isfile(thumb_path):
+                        with Image.open(thumb_path) as img:
+                            width, height = img.size
+                    else:
+                        width = 480
+                        height = 320
+                    self.__sent_msg= await self.__sent_msg.reply_video(
+                        video= up_path,
+                        width= width,
+                        height= height,
+                        caption= cap,
+                        disable_notification=True,
+                        parse_mode= ParseMode.HTML,
+                        thumb= thumb_path,
+                        supports_streaming= True,
+                        duration= duration,
+                        progress= status.start,
+                        progress_args=(file, status_type, self.__time))
+                elif file.endswith(IMAGE_SUFFIXES):
+                    self.__sent_msg = await self.__sent_msg.reply_photo(
+                        photo=up_path,
+                        caption=cap,
+                        parse_mode= ParseMode.HTML,
+                        disable_notification=True,
+                        progress=status.start,
+                        progress_args=(file, status_type, self.__time))
                 else:
                     notMedia = True
             if self.__as_doc or notMedia:
-                if str(up_path).split(".")[-1] in VIDEO_SUFFIXES and thumb_path is None:
+                if file.endswith(VIDEO_SUFFIXES) and thumb_path is None:
                     thumb_path = take_ss(up_path, None)
-                await self._client.send_document(
-                    chat_id= self._chat_id,
+                self.__sent_msg= await self.__sent_msg.reply_document(
                     document= up_path, 
-                    caption= f'`{name}`',
-                    parse_mode= ParseMode.MARKDOWN,
+                    caption= cap,
+                    parse_mode= ParseMode.HTML,
                     force_document= True,
                     thumb= thumb_path,
-                    progress= status.progress,
-                    progress_args=(name, 
-                        status_type, 
-                        self.current_time, 
-                        inlineKeyboard))
+                    progress= status.start,
+                    progress_args=(file, status_type, self.__time))
         except FloodWait as f:
+            LOGGER.warning(str(f))
             sleep(f.value)
         except Exception as ex:
-            LOGGER.info(str(ex))
-            await sendMessage(f"Failed to save: {self._path}", self._message)
+            LOGGER.error(f"{ex} Path: {up_path}")
+            self.__is_corrupted = True
+        if thumb_path is not None and ospath.lexists(thumb_path):
+            osremove(thumb_path)
         
-    def _set_settings(self):
-        if self._message.chat.id in AS_DOC_USERS:
+    async def __create_empty_status(self, status):
+        button= ButtonMaker()
+        button.cb_buildbutton('Cancel', data=(f"cancel_telegram_{self.id}"))    
+        status_text= status.get_status_text(0, 0, 0, "", 0, self.__name, MirrorStatus.STATUS_UPLOADING)
+        await editMessage(status_text, self.__message, reply_markup=button.build_menu(1))
+             
+    def __set_settings(self):
+        if self.__message.chat.id in AS_DOC_USERS:
             self.__as_doc = True
-        elif self._message.chat.id in AS_MEDIA_USERS:
+        elif self.__message.chat.id in AS_MEDIA_USERS:
             self.__as_doc = False
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
+
+    async def __msg_to_reply(self):
+        if DUMP_CHAT is not None:
+            msg = self.__message.date
+            self.__sent_msg = await self.client.send_message(DUMP_CHAT, msg, disable_web_page_preview=True)
+        else:
+            self.__sent_msg = await self.client.get_messages(self.__message.chat.id, self.__message.id)

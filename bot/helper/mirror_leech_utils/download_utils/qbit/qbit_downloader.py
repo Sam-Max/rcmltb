@@ -17,19 +17,22 @@ from bot import get_client, TORRENT_TIMEOUT, LOGGER
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.ext_utils.message_utils import deleteMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import bt_selection_buttons, getDownloadByGid
-from bot.helper.mirror_leech_utils.download_utils.rclone.rclone_mirror import RcloneMirror
+from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
+from bot.helper.mirror_leech_utils.mirror_leech import MirrorLeech
 from bot.helper.mirror_leech_utils.status_utils.qbit_status import qBitTorrentStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import clean_unwanted
 
 class QbDownloader:
     POLLING_INTERVAL = 3
 
-    def __init__(self, message):
+    def __init__(self, message, isLeech= False, userId= 0):
         self.periodic = None
         self.path = ''
         self.name = ''
         self.ext_hash = ''
         self.__message= message
+        self.__isLeech= isLeech
+        self.__user_id= userId
         self.id= self.__message.id
         self.select = False
         self.client = None
@@ -103,6 +106,7 @@ class QbDownloader:
                             await deleteMessage(meta)     
                             return False, None, ""
                 self.client.torrents_pause(torrent_hashes= self.ext_hash)
+                set_rclone_var("IS_LEECH", self.__isLeech, self.__user_id) 
                 SBUTTONS = bt_selection_buttons(self.ext_hash)
                 msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
                 await sendMarkup(msg, self.__message, reply_markup=SBUTTONS)
@@ -172,6 +176,8 @@ async def get_confirm(update, callback_query):
     message= query.message
     data = query.data.split()
     tag= f"@{message.reply_to_message.from_user.username}"
+    user_id = query.from_user.id
+    is_leech = get_rclone_var("IS_LEECH", user_id) 
     dl = await getDownloadByGid(data[2])
     if data[1] == "pin":
         await query.answer(text=data[3], show_alert=True)
@@ -211,8 +217,8 @@ async def get_confirm(update, callback_query):
                 path = f'{path}/{name}'
             else:
                 path= f'{path}/{name}'     
-            rclone_mirror = RcloneMirror(path, rmsg, tag)
-            await rclone_mirror.mirror()
+            ml= MirrorLeech(path, rmsg, tag, user_id, isLeech=is_leech)
+            await ml.execute()
         else:
             await query.message.delete()    
 
@@ -227,9 +233,7 @@ def _get_hash_file(path):
         decodedDict = bdecode(f.read())
         hash_ = sha1(bencode(decodedDict[b'info'])).hexdigest()
     return str(hash_)
+    
 
-
-Bot.add_handler(CallbackQueryHandler(get_confirm, filters= regex("btsel")))
-
-       
-
+confirm = CallbackQueryHandler(get_confirm, filters= regex("btsel"))
+Bot.add_handler(confirm)

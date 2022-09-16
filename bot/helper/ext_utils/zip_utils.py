@@ -1,9 +1,18 @@
-#https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/functions/zip7_utils.py
-
-import asyncio, shlex, os, time
+import shlex, os, time
+from os import path as ospath
+from asyncio.subprocess import PIPE, create_subprocess_exec
 from typing import Union,List,Tuple
-from bot import DOWNLOAD_DIR, LOGGER
-from bot.helper.ext_utils.message_utils import editMessage
+from bot import LOGGER
+from re import I, split as re_split
+from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
+
+ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".tgz", ".lzma2",
+            ".zip", ".7z", ".z", ".rar", ".iso", ".wim", ".cab", ".apm", ".arj", ".chm",
+            ".cpio", ".cramfs", ".deb", ".dmg", ".fat", ".hfs", ".lzh", ".lzma", ".mbr",
+            ".msi", ".mslz", ".nsis", ".ntfs", ".rpm", ".squashfs", ".udf", ".vhd", ".xar"]
+
+
+#https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/functions/  -- zip7_utils.py
 
 async def cli_call(cmd: Union[str,List[str]]) -> Tuple[str,str]:
     if isinstance(cmd,str):
@@ -13,10 +22,9 @@ async def cli_call(cmd: Union[str,List[str]]) -> Tuple[str,str]:
     else:
         return None,None
 
-    process = await asyncio.create_subprocess_exec(
-        *cmd,
-        stderr=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE)
+    process = await create_subprocess_exec(*cmd,
+        stderr=PIPE,
+        stdout=PIPE)
 
     stdout, stderr = await process.communicate()
     
@@ -26,13 +34,13 @@ async def cli_call(cmd: Union[str,List[str]]) -> Tuple[str,str]:
     return stdout, stderr, process.returncode
 
 async def split_in_zip(path, size=None):
-    if os.path.exists(path):
+    if ospath.exists(path):
         if os.path.isfile(path):
             LOGGER.info("Starting the split for {}".format(path))
-            fname = os.path.basename(path)
-            bdir = os.path.dirname(path)
-            bdir = os.path.join(bdir, str(time.time()).replace(".",""))
-            if not os.path.exists(bdir):
+            fname = ospath.basename(path)
+            bdir = ospath.dirname(path)
+            bdir = ospath.join(bdir, str(time.time()).replace(".",""))
+            if not ospath.exists(bdir):
                 os.mkdir(bdir)
 
             if size is None:
@@ -49,56 +57,21 @@ async def split_in_zip(path, size=None):
                 return None
             else:
                 return bdir
-                
         else:
             return None
     else:
         return None
 
-async def extract_file(path, message, password=""):
-    if os.path.exists(path):
-        if os.path.isfile(path):
-            valid_exts = (".zip", ".7z", ".tar", ".gzip2", ".iso", ".wim", ".rar", ".tar.gz",".tar.bz2")
-            
-            if str(path).endswith(valid_exts):
-                userpath = f'{DOWNLOAD_DIR}{message.id}'
-                if not os.path.exists(userpath):
-                    os.mkdir(userpath)
-                    
-                extpath = os.path.join(userpath, os.path.basename(path))
-                for i in valid_exts:
-                    li = extpath.rsplit(i, maxsplit=1)
-                    extpath = "".join(li)
+#https://github.com/anasty17/mirror-leech-telegram-bot/ -- fs_utils.py 
 
-                if not os.path.exists(extpath):
-                    os.mkdir(extpath)
-                    
-                if str(path).endswith(("tar","tar.gz","tar.bz2")):
-                    cmd = f'tar -xvf "{path}" -C "{extpath}" --warning=none'
-                else:
-                    cmd = f'7z x -y "{path}" "-o{extpath}" "-p{password}"'
-                
-                out, err, _ = await cli_call(cmd)
-                
-                if err:
-                    if "Wrong password" in err:
-                        msg= "Wrong Password"
-                        await editMessage(msg, message)
-                    else:
-                        LOGGER.error(err)
-                        LOGGER.error(out)
-                    return False
-                else:
-                    return extpath
-        else:
-            msg= "Wrong file extension, can't extract"
-            await editMessage(msg, message)
-            return False
+def get_base_name(orig_path: str):
+    ext = [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]
+    if len(ext) > 0:
+        ext = ext[0]
+        return re_split(ext + '$', orig_path, maxsplit=1, flags=I)[0]
     else:
-        msg= "Fatal Error"
-        await editMessage(msg, message)
-        return False
-
+        raise NotSupportedExtractionArchive('File format not supported for extraction')
+    
 def get_path_size(path: str):
     if os.path.isfile(path):
         return os.path.getsize(path)

@@ -66,6 +66,14 @@ except:
     AS_DOCUMENT = False
 
 try:
+    DUMP_CHAT = getConfig('DUMP_CHAT')
+    if len(DUMP_CHAT) == 0:
+        raise KeyError
+    DUMP_CHAT = int(DUMP_CHAT)
+except:
+    DUMP_CHAT = None
+
+try:
     UPTOBOX_TOKEN = getConfig('UPTOBOX_TOKEN')
     if len(UPTOBOX_TOKEN) == 0:
         raise KeyError
@@ -220,7 +228,6 @@ else:
 
 bot = TelegramClient("telethon", API_ID, API_HASH, timeout=20, retry_delay=3,
                         request_retries=10, connection_retries=10)
-
 try:
     bot.start(bot_token=BOT_TOKEN)
     LOGGER.info("Telethon client created.")
@@ -231,7 +238,7 @@ except Exception as e:
 #---------------------------
 
 Bot = Client("pyrogram", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
-Conversation(Bot)  
+Conversation(Bot) 
 try:
     Bot.start()
     LOGGER.info("Pyrogram client created")
@@ -241,7 +248,6 @@ except Exception as e:
     exit(1)
 
 #---------------------------
-
 try:
     IS_PREMIUM_USER = False
     USER_SESSION_STRING = getConfig('USER_SESSION_STRING')
@@ -257,7 +263,8 @@ except Exception as e:
 if app is not None:
     try:
         app.start()
-        LOGGER.info("Pyrogram session client created")
+        LOGGER.info("Pyrogram Session client created")
+        bot.pyro = app
     except Exception as e:
         print(e)
         exit(1)
@@ -270,12 +277,3 @@ try:
     TG_SPLIT_SIZE = int(TG_SPLIT_SIZE)
 except:
     TG_SPLIT_SIZE = TG_MAX_FILE_SIZE
-
-
-
-
-
-
-
-
-

@@ -3,7 +3,7 @@ from time import time
 from bot import DOWNLOAD_DIR, LOGGER
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from bot.helper.ext_utils.human_format import get_readable_file_size
-
+from bot.helper.ext_utils.zip_utils import get_path_size
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
 
 class ZipStatus:

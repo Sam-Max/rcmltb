@@ -35,8 +35,8 @@ async def _clone(client, message):
           await glcone.clone()  
      else:
           msg= "<b>Send Gdrive link with command or replying to the link</b>\n\n"
-          msg += "For folder: <code>/gdrive</code> link | folder name\n"
-          msg += "For file: <code>/gdrive</code> link"
+          msg += "For folder: <code>/clone</code> link | folder name\n"
+          msg += "For file: <code>/clone</code> link"
           await sendMessage(msg, message) 
 
 clone_handler = MessageHandler(_clone,
