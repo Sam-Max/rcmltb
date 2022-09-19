@@ -1,6 +1,5 @@
 from asyncio import sleep
 from math import floor
-from os.path import basename
 import re
 import time
 from bot import EDIT_SLEEP_SECS, status_dict, status_dict_lock

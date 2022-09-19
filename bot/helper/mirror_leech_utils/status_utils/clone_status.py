@@ -1,11 +1,8 @@
-from asyncio import sleep
 import re
-from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from bot import LOGGER
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
-
 
 
 class CloneStatus:
@@ -18,11 +15,10 @@ class CloneStatus:
      async def progress(self, status_type):
           try:
                stdout, stderr = await self._process.communicate()
-               err = stderr.decode()
           except 'userRateLimitExceeded' in Exception:
                return await editMessage("‼️ **ERROR** ‼️\n\n Error 403: User rate limit exceeded.", self._message)
-          except Exception as err:
-               return await editMessage(f"‼️ **ERROR** ‼️\n\n {err}", self._message)
+          except Exception as ex:
+               return await editMessage(f"‼️ **ERROR** ‼️\n\n {ex}", self._message)
 
           data = stderr.decode()
           mat = re.findall('Transferred:.*ETA.*', data)
@@ -53,8 +49,8 @@ class CloneStatus:
           except IndexError:
                await editMessage(f"Try another url or check if you sent folder name", self._message)
                return False, ""
-          except Exception as err:
-               LOGGER.info(err)
-               await editMessage(f"**ERROR**\n`{err}`", self._message)
+          except Exception as ex:
+               LOGGER.info(str(ex))
+               await editMessage(f"**ERROR**\n`{ex}`", self._message)
                return False, "" 
                     

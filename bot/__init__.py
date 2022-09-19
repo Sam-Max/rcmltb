@@ -32,8 +32,6 @@ def get_client():
 botUptime = time()
 
 DOWNLOAD_DIR = None
-ALLOWED_CHATS= set()
-ALLOWED_USERS= set()
 
 status_dict_lock = Lock()
 status_reply_dict_lock = Lock()
@@ -51,91 +49,44 @@ AS_MEDIA_USERS = set()
 
 load_dotenv('config.env', override=True)
 
-try:
-    EDIT_SLEEP_SECS = getConfig('EDIT_SLEEP_SECS')
-    if len(EDIT_SLEEP_SECS) == 0:
-        raise KeyError
-    EDIT_SLEEP_SECS = int(EDIT_SLEEP_SECS)
-except:
-    EDIT_SLEEP_SECS = 10
+EDIT_SLEEP_SECS = environ.get('EDIT_SLEEP_SECS', '')  
+EDIT_SLEEP_SECS = 10 if len(EDIT_SLEEP_SECS) == 0 else int(EDIT_SLEEP_SECS)
 
-try:
-    AS_DOCUMENT = getConfig('AS_DOCUMENT')
-    AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
-except:
-    AS_DOCUMENT = False
+AS_DOCUMENT = environ.get('AS_DOCUMENT', '')
+AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
 
-try:
-    DUMP_CHAT = getConfig('DUMP_CHAT')
-    if len(DUMP_CHAT) == 0:
-        raise KeyError
-    DUMP_CHAT = int(DUMP_CHAT)
-except:
-    DUMP_CHAT = None
+DUMP_CHAT = environ.get('DUMP_CHAT', '')
+DUMP_CHAT= None if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
 
-try:
-    UPTOBOX_TOKEN = getConfig('UPTOBOX_TOKEN')
-    if len(UPTOBOX_TOKEN) == 0:
-        raise KeyError
-except:
+UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
+if len(UPTOBOX_TOKEN) == 0:
     UPTOBOX_TOKEN = None
 
-try:
-    SEARCH_API_LINK = getConfig('SEARCH_API_LINK').rstrip("/")
-    if len(SEARCH_API_LINK) == 0:
-        raise KeyError
-except:
+SEARCH_API_LINK = environ.get('SEARCH_API_LINK', '').rstrip("/")
+if len(SEARCH_API_LINK) == 0:
     SEARCH_API_LINK = None
-try:
-    SEARCH_LIMIT = getConfig('SEARCH_LIMIT')
-    if len(SEARCH_LIMIT) == 0:
-        raise KeyError
-    SEARCH_LIMIT = int(SEARCH_LIMIT)
-except:
-    SEARCH_LIMIT = 0
+
+SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
+SEARCH_LIMIT= 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
     
-try:
-    SEARCH_PLUGINS = getConfig('SEARCH_PLUGINS')
-    if len(SEARCH_PLUGINS) == 0:
-        raise KeyError
-    SEARCH_PLUGINS = jsonloads(SEARCH_PLUGINS)
-except:
-    SEARCH_PLUGINS = None    
+SEARCH_PLUGINS = environ.get('SEARCH_PLUGINS', '')
+SEARCH_PLUGINS= None if len(SEARCH_PLUGINS) == 0 else jsonloads(SEARCH_PLUGINS)
 
-try:
-    TORRENT_TIMEOUT = getConfig('TORRENT_TIMEOUT')
-    if len(TORRENT_TIMEOUT) == 0:
-        raise KeyError
-    TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
-except:
-    TORRENT_TIMEOUT = None
+TORRENT_TIMEOUT = environ.get('TORRENT_TIMEOUT', '')
+TORRENT_TIMEOUT= None if len(TORRENT_TIMEOUT) == 0 else int(TORRENT_TIMEOUT)
 
-try:
-    WEB_PINCODE = getConfig('WEB_PINCODE')
-    WEB_PINCODE = WEB_PINCODE.lower() == 'true'
-except:
-    WEB_PINCODE = False
+WEB_PINCODE = environ.get('WEB_PINCODE', '')
+WEB_PINCODE = WEB_PINCODE.lower() == 'true'
 
-try:
-    CMD_INDEX = getConfig('CMD_INDEX')
-    if len(CMD_INDEX) == 0:
-        raise KeyError
-except:
-    CMD_INDEX = ''
+CMD_INDEX = environ.get('CMD_INDEX', '')
 
-try:
-    BASE_URL = getConfig('BASE_URL_OF_BOT')
-    if len(BASE_URL) == 0:
-        raise KeyError
-except:
+BASE_URL = environ.get('BASE_URL_OF_BOT', '')
+if len(BASE_URL) == 0:
     LOGGER.warning('BASE_URL_OF_BOT not provided!')
     BASE_URL = None
 
-try:
-    SERVER_PORT = getConfig('SERVER_PORT')
-    if len(SERVER_PORT) == 0:
-        raise KeyError
-except:
+SERVER_PORT = environ.get('SERVER_PORT', '')
+if len(SERVER_PORT) == 0:
     SERVER_PORT = 80
 
 Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
@@ -152,21 +103,19 @@ aria2 = ariaAPI(
     )
 )
 
-try:
-    aid = getConfig('ALLOWED_CHATS')
+aid = getConfig('ALLOWED_CHATS')
+if len(aid) != 0:
     aid = aid.split()
-    for _id in aid:
-        ALLOWED_CHATS.add(int(_id.strip()))
-except:
-    pass
+    ALLOWED_CHATS = {int(_id.strip()) for _id in aid}
+else:
+    ALLOWED_CHATS= set()
 
-try:
-    aid = getConfig('ALLOWED_USERS')
+aid = getConfig('ALLOWED_USERS')
+if len(aid) != 0:
     aid = aid.split()
-    for _id in aid:
-        ALLOWED_USERS.add(int(_id.strip()))
-except:
-    pass
+    ALLOWED_USERS = {int(_id.strip()) for _id in aid}
+else:
+    ALLOWED_USERS= set()
 
 try:
     API_ID = int(getConfig("API_ID"))
@@ -196,13 +145,10 @@ def aria2c_init():
 Thread(target=aria2c_init).start()
 sleep(1.5)
     
-try:
-    MEGA_KEY = getConfig('MEGA_API_KEY')
-    if len(MEGA_KEY) == 0:
-        raise KeyError
-except:
+MEGA_KEY = environ.get('MEGA_API_KEY', '')
+if len(MEGA_KEY) == 0:
+    LOGGER.warning('MEGA_API_KEY not provided!')
     MEGA_KEY = None
-    LOGGER.info('MEGA_API_KEY not provided!')
 
 if MEGA_KEY is not None:
     Popen(["megasdkrest", "--apikey", MEGA_KEY])
@@ -248,22 +194,19 @@ except Exception as e:
     exit(1)
 
 #---------------------------
-try:
-    IS_PREMIUM_USER = False
-    USER_SESSION_STRING = getConfig('USER_SESSION_STRING')
-    if len(USER_SESSION_STRING) == 0:
-        raise KeyError
+IS_PREMIUM_USER = False
+USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
+if len(USER_SESSION_STRING) == 0:
+    app = None
+else:
+    LOGGER.info("Pyrogram client created from USER_SESSION_STRING")
     app = Client(name="pyrogram_session", api_id=API_ID, api_hash=API_HASH, session_string=USER_SESSION_STRING)
     with app:
-        IS_PREMIUM_USER = app.get_me().is_premium
-except Exception as e:
-    LOGGER.info(e)
-    app = None
+        IS_PREMIUM_USER = app.me.is_premium
 
 if app is not None:
     try:
         app.start()
-        LOGGER.info("Pyrogram Session client created")
         bot.pyro = app
     except Exception as e:
         print(e)
@@ -271,7 +214,7 @@ if app is not None:
 
 try:
     TG_MAX_FILE_SIZE= 4194304000 if IS_PREMIUM_USER else 2097152000
-    TG_SPLIT_SIZE = getConfig('TG_SPLIT_SIZE')
+    TG_SPLIT_SIZE = environ.get('TG_SPLIT_SIZE', '')
     if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > TG_MAX_FILE_SIZE:
         raise KeyError
     TG_SPLIT_SIZE = int(TG_SPLIT_SIZE)

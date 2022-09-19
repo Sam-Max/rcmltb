@@ -95,17 +95,21 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
                 link = await client.download_media(file)
         
         if _link is not None:
-            link= _link
+            msgArgs = _link.split(maxsplit=1)
+            for x in msgArgs:
+                x = x.strip()
+                if x == 's':
+                   select = True
+                if is_url(x) or is_magnet(x):
+                   link= x    
 
         if not is_url(link) and not is_magnet(link):
             if isLeech:
                 help_msg = '''         
 <code>/cmd</code> along with link pswd: xx(zip/unzip)
 
-<code>/cmd</code> torrent file 
-
 <b>qBittorrent Selection</b>    
-<code>/cmd</code> <b>s</b> link 
+<b>s</b> along with link 
 '''
             else:
                 help_msg = '''         
@@ -205,7 +209,7 @@ async def mirror_menu(client, query):
     elif cmd[1] == "rename": 
         question= await client.send_message(message.chat.id, text= "Send the new name, /ignore to cancel")
         try:
-            response = await client.listen.Message(filters.text | filters.user(user_id), id=filters.user(user_id), timeout = 30)
+            response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout = 30)
         except TimeoutError:
             await sendMessage("Too late 30s gone, try again!", message)
         else:
@@ -214,7 +218,8 @@ async def mirror_menu(client, query):
                     await question.reply("Okay cancelled!")
                     await client.listen.Cancel(filters.user(user_id))
                 else:
-                    await mirror_file(client, message, file, tag, user_id, pswd, isZip=isZip, extract=extract, new_name=response.text, is_rename=True)
+                    new_name= response.text
+                    await mirror_file(client, message, file, tag, user_id, pswd, isZip=isZip, extract=extract, new_name=new_name, is_rename=True)
         finally:
             await question.delete()
 
@@ -227,7 +232,7 @@ async def mirror_file(client, message, file, tag, user_id, pswd, isZip, extract,
     media_path= await tg_down.download() 
     if media_path is None:
         return
-    ml= MirrorLeech(media_path, message, tag, user_id, isZip=isZip, newName= new_name, isRename= is_rename, extract=extract, pswd=pswd)
+    ml= MirrorLeech(media_path, message, tag, user_id, new_name, isRename= is_rename, isZip=isZip, extract=extract, pswd=pswd)
     await ml.execute()
 
 mirror_handler = MessageHandler(handle_mirror,filters=filters.command(BotCommands.MirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)

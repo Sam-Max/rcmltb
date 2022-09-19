@@ -1,6 +1,29 @@
-# Adapted from:
-# https://github.com/yash-dk/TorToolkit-Telegram/blob/master/tortoolkit/core/varholdern.py
+from bot import DUMP_CHAT, TG_SPLIT_SIZE, UPTOBOX_TOKEN
 
+class _EnvVarHolder():
+    def __init__(self):
+        self._env_var_dict = {}
+        self.__set_vars()
+
+    def __set_vars(self):
+        self._env_var_dict["DUMP_CHAT"] = DUMP_CHAT
+        self._env_var_dict["TG_SPLIT_SIZE"] = TG_SPLIT_SIZE
+        self._env_var_dict["UPTOBOX_TOKEN"] = UPTOBOX_TOKEN
+
+    def get_var(self, var):
+        if var in self._env_var_dict.keys():
+            return self._env_var_dict[var]    
+
+    def set_var(self, var, value):
+        self._env_var_dict[var] = value
+    
+EnvVarHolder = _EnvVarHolder()
+
+def get_config_var(var):
+     return EnvVarHolder.get_var(var)
+
+def set_config_var(var, value):
+     return EnvVarHolder.set_var(var, value)
 
 class _RcloneVarHolder:
     def __init__(self):

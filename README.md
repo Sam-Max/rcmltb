@@ -19,7 +19,7 @@
 - File/folder from cloud to Telegram
 - Directs links to Telegram using Aria2
 - Mega.nz links to Telegram
-- Torrent/magnets to Telegram using qBittorrent
+- Link/magnets to Telegram using qBittorrent
 - 4gb file with premium account
 
 ### Copy
@@ -39,12 +39,14 @@
 - Telegram Navigation Bottom Menus to interact with cloud
 - Renaming of Telegram files
 - Load and change rclone config file from bot.
+- Change some enviroment variables from bot
 - File Manager (size, mkdir, delete, dedupe, rename)
 
 ### From Other Repositories
 - Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
 - Select files from Torrent before downloading 
 - Get restricted messages from private channels.
+- Upload files to supergroup/channel.
 - Clone Google Drive files/folders from link to cloud using gclone
 - Thumbnail support
 - Set upload as document or as media 
@@ -70,6 +72,7 @@ myfiles - file manager
 clone - clone gdrive files/folder to cloud
 copy - copy from cloud to cloud
 config - rclone config
+ownerset - change env vars from bot
 cleanup - clean drive trash
 storage - drive details
 search - search for torrents

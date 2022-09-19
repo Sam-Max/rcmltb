@@ -38,8 +38,8 @@ else:
 def _api_buttons(user_id, method):
     buttons = ButtonMaker()
     for data, name in SITES.items():
-        buttons.sbutton(name, f"torser {user_id} {data} {method}")
-    buttons.sbutton("Cancel", f"torser {user_id} cancel")
+        buttons.cb_buildbutton(name, f"torser {user_id} {data} {method}")
+    buttons.cb_buildbutton("Cancel", f"torser {user_id} cancl")
     return buttons.build_menu(2)
 
 def _plugin_buttons(user_id):
@@ -53,7 +53,7 @@ def _plugin_buttons(user_id):
     for siteName in PLUGINS:
         buttons.cb_buildbutton(siteName.capitalize(), f"torser {user_id} {siteName} plugin")
     buttons.cb_buildbutton('All', f"torser {user_id} all plugin")
-    buttons.cb_buildbutton("Cancel", f"torser {user_id} cancel")
+    buttons.cb_buildbutton("Cancel", f"torser {user_id} cancl")
     return buttons.build_menu(2)
 
 async def handle_torrent_search(client, message):
@@ -67,13 +67,13 @@ async def handle_torrent_search(client, message):
     elif len(args) == 1:
         buttons.cb_buildbutton('Trending', f"torser {user_id} apitrend")
         buttons.cb_buildbutton('Recent', f"torser {user_id} apirecent")
-        buttons.cb_buildbutton("Cancel", f"torser {user_id} cancel")
+        buttons.cb_buildbutton("Cancel", f"torser {user_id} cancl")
         button = buttons.build_menu(2)
         await sendMarkup("Send a search key along with command", message, button)
     elif SITES is not None and SEARCH_PLUGINS is not None:
         buttons.cb_buildbutton('Api', f"torser {user_id} apisearch")
         buttons.cb_buildbutton('Plugins', f"torser {user_id} plugin")
-        buttons.cb_buildbutton("Cancel", f"torser {user_id} cancel")
+        buttons.cb_buildbutton("Cancel", f"torser {user_id} cancl")
         button = buttons.build_menu(2)
         await sendMarkup('Choose tool to search:', message, button)
     elif SITES is not None:
@@ -101,7 +101,7 @@ async def torrent_search_but(client, callback_query):
         await query.answer()
         button = _plugin_buttons(user_id)
         await editMessage('Choose site:', message, button)
-    elif data[2] != "cancel":
+    elif data[2] != "cancl":
         await query.answer()
         site = data[2]
         method = data[3]
@@ -237,8 +237,7 @@ def _getResult(search_results, key, method):
 torrent_search_handler = MessageHandler(handle_torrent_search,
                filters= filters.command(BotCommands.SearchCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 
-torrent_search_but_handler = CallbackQueryHandler(torrent_search_but,
-               filters= filters.regex("torser"))
+torrent_search_but_handler = CallbackQueryHandler(torrent_search_but, filters= filters.regex("torser"))
 
 Bot.add_handler(torrent_search_handler)
 Bot.add_handler(torrent_search_but_handler)

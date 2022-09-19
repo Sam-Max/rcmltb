@@ -1,5 +1,6 @@
 from configparser import ConfigParser
 from subprocess import Popen, PIPE
+from bot import LOGGER
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_rclone_config, rename_file
 from bot.helper.ext_utils.rclone_utils import get_gid
@@ -9,15 +10,13 @@ from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 
 class RcloneMirror:
-    def __init__(self, path, name, message, tag, user_id, new_name, isExtract= False, is_rename=False):
+    def __init__(self, path, name, message, tag, user_id, isExtract= False):
         self.__path = path
         self.__name= name
         self.__message = message
         self.__user_id= user_id
-        self.__new_name = new_name
         self.__tag = tag
         self.__is_extract= isExtract
-        self.__is_rename = is_rename
         self.__base = get_rclone_var('MIRRORSET_BASE_DIR', self.__user_id)
         self.__drive = get_rclone_var('MIRRORSET_DRIVE', self.__user_id)
         self.__is_gdrive= False
@@ -33,9 +32,6 @@ class RcloneMirror:
                     self.__is_gdrive = True
                 break
         
-        if self.__is_rename:
-            self.__path = rename_file(self.__path, self.__new_name)
-
         cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path),
                 f"{self.__drive}:{self.__base}", '-P']
         process = Popen(cmd, stdout=(PIPE), stderr=(PIPE))

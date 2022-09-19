@@ -10,7 +10,7 @@ from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean_all, start_cleanup
-from bot.modules import batch, cancel, config, copy, leech, leechset, mirror, mirrorset, search, myfiles, myfiles_settings, server, speedtest, status, gclone, storage, cleanup
+from bot.modules import batch, cancel, config, copy, leech, leechset, mirror, mirrorset, ownersettings, search, myfiles, myfiles_settings, server, speedtest, status, gclone, storage, cleanup
 
 print("Successfully deployed!")
 

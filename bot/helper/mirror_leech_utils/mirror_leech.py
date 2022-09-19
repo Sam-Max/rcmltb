@@ -1,9 +1,11 @@
 from os import path as ospath, remove, walk
 import os
 from re import search
-from bot import LOGGER, TG_SPLIT_SIZE
+from bot import LOGGER
 from subprocess import Popen
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
+from bot.helper.ext_utils.misc_utils import clean, rename_file
+from bot.helper.ext_utils.var_holder import get_config_var
 from bot.helper.ext_utils.zip_utils import get_base_name, get_path_size
 from bot.helper.mirror_leech_utils.download_utils.rclone.rclone_mirror import RcloneMirror
 from bot.helper.mirror_leech_utils.status_utils.extract_status import ExtractStatus
@@ -32,6 +34,7 @@ class MirrorLeech:
         f_path= f"{path}/{name}" 
         if self.__is_Zip:
             path = f"{f_path}.zip" 
+            TG_SPLIT_SIZE= get_config_var("TG_SPLIT_SIZE")
             zip_status= ZipStatus(name, f_size, self.__message, self)
             await zip_status.create_message()
             if self.__pswd is not None:
@@ -110,12 +113,14 @@ class MirrorLeech:
                 LOGGER.info("Not any valid archive, uploading file as it is.")
                 path = f_path
         else:
-            path= f_path 
+            if self.__isRename:
+                path = rename_file(f_path, self.__new_name) 
+            else:
+                path= f_path 
         up_dir, up_name = path.rsplit('/', 1)
         if self.__isLeech:
             tg_up= TelegramUploader(up_dir, up_name, f_size, self.__message, self.__tag)
             await tg_up.upload()
         else:
-            rc_mirror = RcloneMirror(up_dir, up_name, self.__message, self.__tag, self.__user_id, 
-                        new_name=self.__new_name, isExtract= self.__is_extract, is_rename=self.__isRename)
+            rc_mirror = RcloneMirror(up_dir, up_name, self.__message, self.__tag, self.__user_id, isExtract= self.__is_extract)
             await rc_mirror.mirror()

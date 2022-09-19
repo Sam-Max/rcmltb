@@ -31,7 +31,7 @@ class GDriveClone:
     async def clone(self):
         self.conf_path = get_rclone_config(self.user_id)
         self.link_id = self.getIdFromUrl(self.link)
-        self.edit_msg = await sendMessage("Cloning Started...", self.message)
+        self.edit_msg = await sendMessage("Cloning Started", self.message)
         id = "{"f"{self.link_id}""}"
         cmd = ["gclone", "copy", f'--config={self.conf_path}', f"{self.drive_name}:{id}",
               f"{self.drive_name}:{self.base_dir}{self.name}", "-v", "--drive-server-side-across-configs", 

@@ -11,6 +11,7 @@ from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_media_info
 from bot.helper.ext_utils.screenshot import take_ss
+from bot.helper.ext_utils.var_holder import get_config_var
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 from bot.helper.mirror_leech_utils.status_utils.telegram_status import TelegramStatus
 
@@ -43,9 +44,9 @@ class TelegramUploader():
             status_dict[self.id] = status
         await self.__create_empty_status(status)
         if ospath.isdir(self.__path):
-            for dirpath, _, files in walk(self.__path):
-                for file in sorted(files):
-                    self.__total_files += 1      
+            for dirpath, _, filenames in walk(self.__path):
+                for file in sorted(filenames):
+                    self.__total_files += 1   
                     f_path = ospath.join(dirpath, file)
                     f_size = ospath.getsize(f_path)
                     if f_size == 0:
@@ -77,6 +78,7 @@ class TelegramUploader():
                     fmsg = ''
             if fmsg != '':
                 await sendMessage(msg + fmsg, self.__message) 
+        clean(self.__path)
         async with status_dict_lock: 
             try:  
                 del status_dict[self.id]
@@ -161,8 +163,8 @@ class TelegramUploader():
             self.__thumb = None
 
     async def __msg_to_reply(self):
-        if DUMP_CHAT is not None:
+        if get_config_var("DUMP_CHAT") is not None:
             msg = self.__message.date
-            self.__sent_msg = await self.client.send_message(DUMP_CHAT, msg, disable_web_page_preview=True)
+            self.__sent_msg = await self.client.send_message(get_config_var("DUMP_CHAT"), msg, disable_web_page_preview=True)
         else:
             self.__sent_msg = await self.client.get_messages(self.__message.chat.id, self.__message.id)

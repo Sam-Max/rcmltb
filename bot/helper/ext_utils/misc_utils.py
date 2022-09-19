@@ -1,4 +1,4 @@
-import os
+from os import path as ospath, remove as osremove, rename as osrename, makedirs, getcwd
 from shutil import rmtree
 from bot import BASE_URL, DOWNLOAD_DIR, LOGGER, WEB_PINCODE, aria2, get_client, status_dict, status_dict_lock
 from itertools import zip_longest
@@ -21,11 +21,11 @@ def pairwise(iterable):
     return zip_longest(a, a)
 
 def clean(path):
-    LOGGER.info(f"Cleaning Download: {path}")
+    LOGGER.info(f"Cleaning Download")
     try:
         rmtree(path)
     except:
-        os.remove(path)
+        osremove(path)
 
 def clean_all():
     aria2.remove_all(True)
@@ -40,19 +40,20 @@ def start_cleanup():
         rmtree(DOWNLOAD_DIR)
     except:
         pass
-    os.makedirs(DOWNLOAD_DIR)
+    makedirs(DOWNLOAD_DIR)
 
-def rename_file(old_path, new_name):
-    _, ext = os.path.splitext(old_path)
+def rename_file(path, new_name):
+    up_dir, up_name = path.rsplit('/', 1)
+    _, ext = ospath.splitext(up_name)
     new_name= new_name + ext
-    new_path= f'{DOWNLOAD_DIR}{new_name}'
-    os.rename(old_path, new_path)
+    new_path= f'{up_dir}/{new_name}'
+    osrename(path, new_path)
     return new_path
 
 def get_rclone_config(user_id):
-    path = os.path.join(os.getcwd(), "users", str(user_id), "rclone.conf")      
+    path = ospath.join("users", str(user_id), "rclone.conf")      
     if path is not None:
-        if os.path.exists(path):
+        if ospath.exists(path):
             return path
     return None
 

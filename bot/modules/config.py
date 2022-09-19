@@ -50,10 +50,8 @@ async def handle_config(client, message):
           return_code = await process.wait()
           stdout = stdout.decode().strip()
           info= stdout.split("\n")
-          LOGGER.info(info)
           fstr= ''
           for i in info:
-              LOGGER.info(i)
               rstr = i.replace(":", "")
               fstr += f"- {rstr}\n"
           if return_code != 0:
@@ -74,12 +72,13 @@ async def set_config_listener(client, message):
           user_id= message.reply_to_message.from_user.id
      else:
           user_id= message.from_user.id
+
      button = InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data= 'stop')]])
      question= await client.send_message(message.chat.id, 
                text= "Send an Rclone config file", 
                reply_markup= button)
      try:
-          response = await client.listen.Message(filters.document | filters.user(user_id), id= filters.user(user_id), timeout = 30)
+          response = await client.listen.Message(filters.document, id= filters.user(user_id), timeout = 30)
      except TimeoutError:
           await client.send_message(message.chat.id, text="Too late 30s gone, try again!")
      else:
