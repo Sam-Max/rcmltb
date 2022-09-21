@@ -17,9 +17,10 @@
 
 ### Leech
 - File/folder from cloud to Telegram
+- Link/magnets to Telegram using qBittorrent
 - Directs links to Telegram using Aria2
 - Mega.nz links to Telegram
-- Link/magnets to Telegram using qBittorrent
+- Files in batch from Telegram to Telegram
 - 4gb file with premium account
 
 ### Copy
@@ -35,15 +36,21 @@
 - Using 7-zip tool to extract all supported files
 - Extract rar, zip and 7z with or without password
 
+### Database
+- SQL Database
+- Save rclone config file in database
+- Save leech settings(thumbnails, sudo and allowed users) in database
+
 ### Others
 - Telegram Navigation Bottom Menus to interact with cloud
 - Renaming of Telegram files
-- Load and change rclone config file from bot.
-- Change some enviroment variables from bot
+- Load/Change rclone config file from bot.
+- Change all config variables from bot
 - File Manager (size, mkdir, delete, dedupe, rename)
 
 ### From Other Repositories
 - Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
+- SQL Database support
 - Select files from Torrent before downloading 
 - Get restricted messages from private channels.
 - Upload files to supergroup/channel.
@@ -108,21 +115,23 @@ restart - restart bot
         - `API_HASH`: get this from https://my.telegram.org
         - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather)
         - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot
-        - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
 
    - Non mandatory variables:
-        - `ALLOWED_USERS`: list of IDs of allowed users who can use this bot separated by spaces
-        - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces
+        - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
+        - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission separated by spaces. `Str`
+        - `DEFAULT_MIRROR_DRIVE`: set a default drive from your rclone.conf. `Str`
+        - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces `Str`
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
-        - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `UPSTREAM_BRANCH`: Upstream branch for update
+        - `DATABASE_URL`: Your SQL Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data that will be saved in Database: auth and sudo users, leech settings including thumbnails for each user. `Str`
+        - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
    
    - LEECH
         - `TG_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
         - `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/supergroup id.
-        - `USER_SESSION_STRING`: Pyrogram session string for mirrorbatch command and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: when using string session, you have to use with supergroup or channel not bot.
+        - `USER_SESSION_STRING`: Pyrogram session string for batch commands and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: when using string session, you have to use with supergroup not bot.
         - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
 
    - MEGA
@@ -199,6 +208,27 @@ sudo docker-compose stop
 sudo docker-compose start
 
 ```
+## Generate Database
+
+**1. Using Railway**
+- Go to [railway](https://railway.app) and create account
+- Start new project
+- Press on `Provision PostgreSQL`
+- After creating database press on `PostgresSQL`
+- Go to `Connect` column
+- Copy `Postgres Connection URL` and fill `DATABASE_URL` variable with it
+
+**2. Using ElephantSQL**
+- Go to [elephantsql](https://elephantsql.com) and create account
+- Hit `Create New Instance`
+- Follow the further instructions in the screen
+- Hit `Select Region`
+- Hit `Review`
+- Hit `Create instance`
+- Select your database name
+- Copy your database url, and fill `DATABASE_URL` variable with it
+
+------
 
 ## How to create rclone config file
 

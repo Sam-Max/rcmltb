@@ -47,10 +47,10 @@ status_reply_dict = {}
 AS_DOC_USERS = set()
 AS_MEDIA_USERS = set()
 
-load_dotenv('config.env', override=True)
+load_dotenv('config.env')
 
 EDIT_SLEEP_SECS = environ.get('EDIT_SLEEP_SECS', '')  
-EDIT_SLEEP_SECS = 10 if len(EDIT_SLEEP_SECS) == 0 else int(EDIT_SLEEP_SECS)
+EDIT_SLEEP_SECS = 8 if len(EDIT_SLEEP_SECS) == 0 else int(EDIT_SLEEP_SECS)
 
 AS_DOCUMENT = environ.get('AS_DOCUMENT', '')
 AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
@@ -78,7 +78,13 @@ TORRENT_TIMEOUT= None if len(TORRENT_TIMEOUT) == 0 else int(TORRENT_TIMEOUT)
 WEB_PINCODE = environ.get('WEB_PINCODE', '')
 WEB_PINCODE = WEB_PINCODE.lower() == 'true'
 
+DEFAULT_MIRROR_DRIVE = environ.get('DEFAULT_MIRROR_DRIVE', '')
+
 CMD_INDEX = environ.get('CMD_INDEX', '')
+
+DB_URI = environ.get('DATABASE_URL', '')
+if len(DB_URI) == 0:
+    DB_URI = None
 
 BASE_URL = environ.get('BASE_URL_OF_BOT', '')
 if len(BASE_URL) == 0:
@@ -88,6 +94,13 @@ if len(BASE_URL) == 0:
 SERVER_PORT = environ.get('SERVER_PORT', '')
 if len(SERVER_PORT) == 0:
     SERVER_PORT = 80
+
+DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
+if len(DOWNLOAD_DIR) == 0:
+    DOWNLOAD_DIR = '/usr/src/app/downloads/'
+else:
+    if not DOWNLOAD_DIR.endswith("/"):
+        DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
 
 Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
 srun(["qbittorrent-nox", "-d", "--profile=."])
@@ -103,28 +116,25 @@ aria2 = ariaAPI(
     )
 )
 
-aid = getConfig('ALLOWED_CHATS')
+aid = environ.get('ALLOWED_CHATS', '')
 if len(aid) != 0:
     aid = aid.split()
     ALLOWED_CHATS = {int(_id.strip()) for _id in aid}
 else:
     ALLOWED_CHATS= set()
 
-aid = getConfig('ALLOWED_USERS')
+aid = environ.get('SUDO_USERS', '')
 if len(aid) != 0:
     aid = aid.split()
-    ALLOWED_USERS = {int(_id.strip()) for _id in aid}
+    SUDO_USERS = {int(_id.strip()) for _id in aid}
 else:
-    ALLOWED_USERS= set()
+    SUDO_USERS = set()
 
 try:
     API_ID = int(getConfig("API_ID"))
     API_HASH = getConfig("API_HASH")
     BOT_TOKEN = getConfig("BOT_TOKEN")
     OWNER_ID= int(getConfig('OWNER_ID'))
-    DOWNLOAD_DIR = getConfig('DOWNLOAD_DIR')
-    if not DOWNLOAD_DIR.endswith("/"):
-        DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
 except:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
@@ -212,11 +222,10 @@ if app is not None:
         print(e)
         exit(1)
 
-try:
-    TG_MAX_FILE_SIZE= 4194304000 if IS_PREMIUM_USER else 2097152000
-    TG_SPLIT_SIZE = environ.get('TG_SPLIT_SIZE', '')
-    if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > TG_MAX_FILE_SIZE:
-        raise KeyError
-    TG_SPLIT_SIZE = int(TG_SPLIT_SIZE)
-except:
+TG_MAX_FILE_SIZE= 4194304000 if IS_PREMIUM_USER else 2097152000
+TG_SPLIT_SIZE = environ.get('TG_SPLIT_SIZE', '')
+if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > TG_MAX_FILE_SIZE:
     TG_SPLIT_SIZE = TG_MAX_FILE_SIZE
+else:
+    TG_SPLIT_SIZE = int(TG_SPLIT_SIZE)
+    

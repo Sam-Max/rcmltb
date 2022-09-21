@@ -1,5 +1,5 @@
 from time import time
-from bot import OWNER_ID, ALLOWED_CHATS, ALLOWED_USERS, LOGGER, bot, Bot
+from bot import OWNER_ID, ALLOWED_CHATS, LOGGER, SUDO_USERS, bot, Bot
 from os import path as ospath, remove as osremove, execl as osexecl, kill, popen
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
@@ -10,13 +10,14 @@ from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean_all, start_cleanup
+from bot.helper.ext_utils import db_handler
 from bot.modules import batch, cancel, config, copy, leech, leechset, mirror, mirrorset, ownersettings, search, myfiles, myfiles_settings, server, speedtest, status, gclone, storage, cleanup
 
 print("Successfully deployed!")
 
 async def start(client, message):
     user_id= message.from_user.id
-    if user_id in ALLOWED_USERS or message.chat.id  in ALLOWED_CHATS or user_id == OWNER_ID:
+    if user_id in SUDO_USERS or user_id in ALLOWED_CHATS or user_id == OWNER_ID or message.chat.id in ALLOWED_CHATS:
         buttons = ButtonMaker()
         buttons.url_buildbutton("Repo", "https://github.com/Sam-Max/Rclone-Tg-Bot")
         buttons.url_buildbutton("Owner", "https://github.com/Sam-Max")
@@ -66,8 +67,8 @@ async def main():
         osremove(".restartmsg")
 
     start_handler = MessageHandler(start, filters= command(BotCommands.StartCommand))
-    restart_handler = MessageHandler(restart, filters= command(BotCommands.RestartCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-    log_handler = MessageHandler(get_log, filters= command(BotCommands.LogsCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+    restart_handler = MessageHandler(restart, filters= command(BotCommands.RestartCommand) & CustomFilters.owner_filter | CustomFilters.sudo_filter)
+    log_handler = MessageHandler(get_log, filters= command(BotCommands.LogsCommand) & CustomFilters.owner_filter | CustomFilters.sudo_filter)
     ping_handler = MessageHandler(ping, filters= command(BotCommands.PingCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 
     Bot.add_handler(start_handler)

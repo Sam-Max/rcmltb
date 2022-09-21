@@ -28,11 +28,10 @@ class RcloneCopy:
             process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
             out, err = await process.communicate()
             url = out.decode().strip()
-            button.url_buildbutton("GDrive Link", url)
+            button.url_buildbutton("Link 🔗", url)
             return_code = await process.wait()
             if return_code != 0:
                 LOGGER.info(err.decode().strip())
-
             #Calculate Size
             cmd = ["rclone", "size", f'--config={conf_path}', "--json", f"{dest_drive}:{dest_dir}{origin_dir}"]
             process = await exec(*cmd, stdout=PIPE, stderr=PIPE)

@@ -15,7 +15,7 @@ from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMess
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
 from bot.helper.ext_utils.rclone_utils import is_not_config
 from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
-from bot.helper.mirror_leech_utils.upload_utils.rclone.rclone_leech import RcloneLeech
+from bot.helper.mirror_leech_utils.upload_utils.rclone_leech import RcloneLeech
 from bot.modules.mirror import mirror_leech
 
 

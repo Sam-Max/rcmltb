@@ -4,9 +4,10 @@ from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from os import path as ospath, getcwd
-from bot import LOGGER, Bot
+from os import path as ospath
+from bot import DB_URI, LOGGER, Bot
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
@@ -84,8 +85,10 @@ async def set_config_listener(client, message):
      else:
           if response:
                try:
-                    path = ospath.join(getcwd(), "users", str(user_id), "rclone.conf" )
-                    await client.download_media(response, file_name=path)
+                    rc_path = ospath.join("users", str(user_id), "rclone.conf" )
+                    path= await client.download_media(response, file_name=rc_path)
+                    if DB_URI is not None:
+                         DbManger().user_save_rcconfig(user_id, path)
                     msg = "Use /mirrorset to select a drive"
                     await sendMessage(msg, message)
                except Exception as ex:

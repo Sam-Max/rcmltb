@@ -9,7 +9,7 @@ from pyrogram.errors import FloodWait
 from bot.helper.ext_utils.batch_helper import check, get_bulk_msg, get_link
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import command_process
-from bot.helper.ext_utils.rclone_utils import is_not_config, is_not_drive
+from bot.helper.ext_utils.rclone_utils import is_drive_set, is_not_config
 
 batch = []
 
@@ -25,7 +25,7 @@ async def leech_batch(e):
 async def mirror_batch(e):
     if await is_not_config(e.sender_id, e):
         return
-    if await is_not_drive(e.sender_id, e):
+    if await is_drive_set(e.sender_id, e) == False:
         return
     await _batch(e)
 

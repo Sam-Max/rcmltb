@@ -11,6 +11,7 @@ cfscrape
 Telethon
 tgCrypto
 Pyrogram
+psycopg2-binary
 urllib3
 pillow
 speedtest-cli

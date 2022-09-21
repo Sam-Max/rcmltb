@@ -1,16 +1,15 @@
 from os import path as ospath, remove, walk
 import os
 from re import search
-from bot import LOGGER
+from bot import LOGGER, TG_SPLIT_SIZE
 from subprocess import Popen
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
-from bot.helper.ext_utils.misc_utils import clean, rename_file
-from bot.helper.ext_utils.var_holder import get_config_var
+from bot.helper.ext_utils.misc_utils import clean_target, rename_file
 from bot.helper.ext_utils.zip_utils import get_base_name, get_path_size
 from bot.helper.mirror_leech_utils.download_utils.rclone.rclone_mirror import RcloneMirror
 from bot.helper.mirror_leech_utils.status_utils.extract_status import ExtractStatus
 from bot.helper.mirror_leech_utils.status_utils.zip_status import ZipStatus
-from bot.helper.mirror_leech_utils.upload_utils.telegram.telegram_uploader import TelegramUploader
+from bot.helper.mirror_leech_utils.upload_utils.telegram_uploader import TelegramUploader
 
 class MirrorLeech:
     def __init__(self, path, rmsg, tag, user_id, newName= None, isRename= False, isZip=False, extract=False, pswd=None, isLeech= False):
@@ -34,7 +33,6 @@ class MirrorLeech:
         f_path= f"{path}/{name}" 
         if self.__is_Zip:
             path = f"{f_path}.zip" 
-            TG_SPLIT_SIZE= get_config_var("TG_SPLIT_SIZE")
             zip_status= ZipStatus(name, f_size, self.__message, self)
             await zip_status.create_message()
             if self.__pswd is not None:
@@ -50,17 +48,10 @@ class MirrorLeech:
             else:
                 LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
                 self.__suproc = Popen(["7z", "a", "-mx=0", path, f_path])
-                self.__suproc.wait()
+            self.__suproc.wait()
             if self.__suproc.returncode == -9:
                 return
-            if self.__suproc is not None and self.__suproc.returncode == 0:
-                f_path, _ = path.rsplit('/', 1)
-                filter_name= f"{name}.zip"
-                for dirpath, _, files in walk(f_path, topdown=False):
-                        for file in files:
-                            if not file.endswith(".zip") or file != filter_name:
-                                del_path = ospath.join(dirpath, file)
-                                remove(del_path)
+            clean_target(f_path)
         elif self.__extract:
             try:
                 self.__is_extract= True

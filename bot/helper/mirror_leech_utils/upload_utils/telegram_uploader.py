@@ -11,7 +11,6 @@ from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_media_info
 from bot.helper.ext_utils.screenshot import take_ss
-from bot.helper.ext_utils.var_holder import get_config_var
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 from bot.helper.mirror_leech_utils.status_utils.telegram_status import TelegramStatus
 
@@ -163,8 +162,8 @@ class TelegramUploader():
             self.__thumb = None
 
     async def __msg_to_reply(self):
-        if get_config_var("DUMP_CHAT") is not None:
+        if DUMP_CHAT is not None:
             msg = self.__message.date
-            self.__sent_msg = await self.client.send_message(get_config_var("DUMP_CHAT"), msg, disable_web_page_preview=True)
+            self.__sent_msg = await self.client.send_message(DUMP_CHAT, msg, disable_web_page_preview=True)
         else:
             self.__sent_msg = await self.client.get_messages(self.__message.chat.id, self.__message.id)

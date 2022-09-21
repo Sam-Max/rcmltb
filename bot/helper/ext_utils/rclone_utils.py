@@ -4,7 +4,7 @@ from os import getcwd, path as ospath
 import re
 from bot import LOGGER
 from bot.helper.ext_utils.message_utils import sendMessage
-from bot.helper.ext_utils.var_holder import get_rclone_var
+from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
 
 async def get_gid(drive_name, drive_base, ent_name, conf_path, isdir=True):
     name = re.escape(ent_name)
@@ -36,10 +36,13 @@ async def get_gid(drive_name, drive_base, ent_name, conf_path, isdir=True):
     except Exception:
         LOGGER.error("Error while getting id ::- {}".format(stdout))
             
-async def is_not_drive(user_id, message):
-    if len(get_rclone_var("MIRRORSET_DRIVE", str(user_id))) == 0:
-        await sendMessage("Select a cloud first, use /mirrorset", message)
+async def is_drive_set(user_id, message):
+    MIRRORSET_DRIVE= get_rclone_var("MIRRORSET_DRIVE", str(user_id))
+    if MIRRORSET_DRIVE:
         return True
+    else:
+        await sendMessage("Select a cloud first, use /mirrorset", message)
+        return False
 
 async def is_not_config(user_id, message):
     path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")

@@ -5,8 +5,9 @@ from os import remove as osremove, path as ospath, mkdir
 from PIL import Image
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
-from bot import AS_DOC_USERS, AS_MEDIA_USERS, AS_DOCUMENT, LOGGER, Bot
+from bot import AS_DOC_USERS, AS_MEDIA_USERS, AS_DOCUMENT, DB_URI, LOGGER, Bot
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import auto_delete_message, editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker
@@ -63,16 +64,22 @@ async def handle_leech_set_type(client, callback_query):
         if user_id in AS_MEDIA_USERS:
             AS_MEDIA_USERS.remove(user_id)
         AS_DOC_USERS.add(user_id)
+        if DB_URI is not None:
+            DbManger().user_doc(user_id)
         await editLeechType(message, query)
     elif data[2] == "med":
         if user_id in AS_DOC_USERS:
             AS_DOC_USERS.remove(user_id)
         AS_MEDIA_USERS.add(user_id)
+        if DB_URI is not None:
+            DbManger().user_media(user_id)
         await editLeechType(message, query)
     elif data[2] == "thumb":
         path = f"Thumbnails/{user_id}.jpg"
         if ospath.lexists(path):
             osremove(path)
+            if DB_URI is not None:
+                DbManger().user_rm_thumb(user_id)
             await query.answer(text="Thumbnail Removed!", show_alert=True)
             await editLeechType(message, query)
         else:
@@ -95,6 +102,8 @@ async def handle_leech_set_type(client, callback_query):
                             des_dir = ospath.join(path, f'{user_id}.jpg')
                             Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
                             osremove(photo_dir)
+                            if DB_URI is not None:
+                                DbManger().user_save_thumb(user_id, des_dir)
                             await query.answer(text="Thumbnail Added!!", show_alert=True)
                     except Exception as ex:
                         await editMessage(str(ex), question)

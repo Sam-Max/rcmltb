@@ -1,28 +1,21 @@
-from bot import DUMP_CHAT, TG_SPLIT_SIZE, UPTOBOX_TOKEN
+from os import environ
 
 class _EnvVarHolder():
     def __init__(self):
-        self._env_var_dict = {}
-        self.__set_vars()
-
-    def __set_vars(self):
-        self._env_var_dict["DUMP_CHAT"] = DUMP_CHAT
-        self._env_var_dict["TG_SPLIT_SIZE"] = TG_SPLIT_SIZE
-        self._env_var_dict["UPTOBOX_TOKEN"] = UPTOBOX_TOKEN
-
+         pass
+        
     def get_var(self, var):
-        if var in self._env_var_dict.keys():
-            return self._env_var_dict[var]    
+        return environ.get(var, '')
 
     def set_var(self, var, value):
-        self._env_var_dict[var] = value
+        environ[var]= str(value)
     
 EnvVarHolder = _EnvVarHolder()
 
-def get_config_var(var):
+def get_env_var(var):
      return EnvVarHolder.get_var(var)
 
-def set_config_var(var, value):
+def set_env_var(var, value):
      return EnvVarHolder.set_var(var, value)
 
 class _RcloneVarHolder:

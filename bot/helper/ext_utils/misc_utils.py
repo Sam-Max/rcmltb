@@ -27,6 +27,20 @@ def clean(path):
     except:
         osremove(path)
 
+def clean_target(path: str):
+    if ospath.exists(path):
+        LOGGER.info(f"Cleaning Target")
+        if ospath.isdir(path):
+            try:
+                rmtree(path)
+            except:
+                pass
+        elif ospath.isfile(path):
+            try:
+                osremove(path)
+            except:
+                pass
+
 def clean_all():
     aria2.remove_all(True)
     get_client().torrents_delete(torrent_hashes="all")
