@@ -2,14 +2,14 @@
 #Github.com/Vasusen-code
 
 import asyncio
-from bot import LOGGER, Bot, bot, app
+from bot import Bot, bot, app
 from telethon import Button
 from telethon.events import NewMessage
 from pyrogram.errors import FloodWait
 from bot.helper.ext_utils.batch_helper import check, get_bulk_msg, get_link
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import command_process
-from bot.helper.ext_utils.rclone_utils import is_drive_set, is_not_config
+from bot.helper.ext_utils.rclone_utils import is_config_set, is_drive_set
 
 batch = []
 
@@ -18,13 +18,13 @@ async def get_pvt_content(event, chat, id):
     await event.client.send_message(event.chat_id, msg) 
     
 async def leech_batch(e):
-    if await is_not_config(e.sender_id, e):
-        return
+    if await is_config_set(e.sender_id, e) == False:
+        return    
     await _batch(e, isLeech= True)
 
 async def mirror_batch(e):
-    if await is_not_config(e.sender_id, e):
-        return
+    if await is_config_set(e.sender_id, e) == False:
+        return    
     if await is_drive_set(e.sender_id, e) == False:
         return
     await _batch(e)

@@ -1,7 +1,7 @@
 from os import listdir, path as ospath
 from time import time
 from requests import get
-from bot import DEFAULT_MIRROR_DRIVE, DOWNLOAD_DIR, LOGGER, MEGA_KEY, Bot
+from bot import DOWNLOAD_DIR, MEGA_KEY, Bot
 from asyncio import TimeoutError
 from bot import Bot, DOWNLOAD_DIR, LOGGER
 from pyrogram import filters
@@ -17,7 +17,7 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_readable_size
-from bot.helper.ext_utils.rclone_utils import is_drive_set, is_not_config
+from bot.helper.ext_utils.rclone_utils import is_config_set, is_drive_set
 from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
 from bot.helper.mirror_leech_utils.download_utils.aria2_download import Aria2Downloader
 from bot.helper.mirror_leech_utils.download_utils.mega_download import MegaDownloader
@@ -39,9 +39,7 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
         user_id= message.from_user.id
         if from_cb:
             user_id= message.reply_to_message.from_user.id
-        if DEFAULT_MIRROR_DRIVE:
-            set_rclone_var("MIRRORSET_DRIVE", DEFAULT_MIRROR_DRIVE, user_id)
-        if await is_not_config(user_id, message):
+        if await is_config_set(user_id, message) == False:
             return
         if not isLeech:
             if await is_drive_set(user_id, message) == False:

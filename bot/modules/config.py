@@ -2,7 +2,7 @@ from asyncio import TimeoutError
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex, command
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from os import path as ospath
 from bot import DB_URI, LOGGER, Bot
@@ -12,10 +12,8 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
 
-async def stop(client, query):
-     await client.listen.Cancel(filters.user(query.from_user.id))
-     await query.answer("Canceled")
-     await query.message.delete()
+
+
 
 async def config_callback(client, callback_query):
      query= callback_query
@@ -74,32 +72,32 @@ async def set_config_listener(client, message):
      else:
           user_id= message.from_user.id
 
-     button = InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data= 'stop')]])
      question= await client.send_message(message.chat.id, 
-               text= "Send an Rclone config file", 
-               reply_markup= button)
+               text= "Send an Rclone config file, /ignore to cancel")
      try:
-          response = await client.listen.Message(filters.document, id= filters.user(user_id), timeout = 30)
+          response = await client.listen.Message(filters.document | filters.text, id= filters.user(user_id), timeout = 30)
      except TimeoutError:
           await client.send_message(message.chat.id, text="Too late 30s gone, try again!")
      else:
           if response:
                try:
-                    rc_path = ospath.join("users", str(user_id), "rclone.conf" )
-                    path= await client.download_media(response, file_name=rc_path)
-                    if DB_URI is not None:
-                         DbManger().user_save_rcconfig(user_id, path)
-                    msg = "Use /mirrorset to select a drive"
-                    await sendMessage(msg, message)
+                    if response.text:
+                        if "/ignore" in response.text:
+                            await client.listen.Cancel(filters.user(user_id))
+                    else:
+                        rc_path = ospath.join("users", str(user_id), "rclone.conf" )
+                        path= await client.download_media(response, file_name=rc_path)
+                        if DB_URI is not None:
+                            DbManger().user_save_rcconfig(user_id, path)
+                        msg = "Use /mirrorset to select a drive"
+                        await sendMessage(msg, message)
                except Exception as ex:
                     await sendMessage(str(ex), message) 
      finally:
           await question.delete()
 
 config_handler = MessageHandler(handle_config, filters= command(BotCommands.ConfigCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-stop_cb = CallbackQueryHandler(stop, filters= regex(r'stop'))
 config_cb = CallbackQueryHandler(config_callback, filters= regex(r'configmenu'))
 
 Bot.add_handler(config_handler)
-Bot.add_handler(stop_cb)
 Bot.add_handler(config_cb)

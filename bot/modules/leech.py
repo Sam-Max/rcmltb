@@ -13,7 +13,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
-from bot.helper.ext_utils.rclone_utils import is_not_config
+from bot.helper.ext_utils.rclone_utils import is_config_set
 from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
 from bot.helper.mirror_leech_utils.upload_utils.rclone_leech import RcloneLeech
 from bot.modules.mirror import mirror_leech
@@ -31,7 +31,7 @@ async def handle_leech(client, message):
 
 async def leech(client, message, isZip=False, extract=False):
     user_id= message.from_user.id
-    if await is_not_config(user_id, message):
+    if await is_config_set(user_id, message) == False:
         return
     set_rclone_var('IS_ZIP', isZip, user_id)   
     set_rclone_var('EXTRACT', extract, user_id)  

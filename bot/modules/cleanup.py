@@ -6,13 +6,13 @@ from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from bot import Bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
-from bot.helper.ext_utils.rclone_utils import is_not_config
 from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
+from bot.helper.ext_utils.rclone_utils import is_config_set
 
 async def handle_cleanup(client, message):
-     if await is_not_config(message.from_user.id, message):
-          return  
+     if await is_config_set(message.from_user.id, message) == False:
+          return
      await list_drive(message)
 
 async def list_drive(message, edit= False):

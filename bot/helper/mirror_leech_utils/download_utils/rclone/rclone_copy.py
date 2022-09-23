@@ -1,5 +1,5 @@
 from asyncio import create_subprocess_exec as exec
-import json
+from json import loads
 from subprocess import Popen, PIPE
 from bot import LOGGER
 from bot.helper.ext_utils.human_format import human_readable_bytes
@@ -28,7 +28,7 @@ class RcloneCopy:
             process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
             out, err = await process.communicate()
             url = out.decode().strip()
-            button.url_buildbutton("Link 🔗", url)
+            button.url_buildbutton("Cloud Link 🔗", url)
             return_code = await process.wait()
             if return_code != 0:
                 LOGGER.info(err.decode().strip())
@@ -37,10 +37,12 @@ class RcloneCopy:
             process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
             out, _ = await process.communicate()
             output = out.decode().strip()
-            data = json.loads(output)
+            return_code = await process.wait()
+            if return_code != 0:
+                LOGGER.info(err.decode().strip())
+            data = loads(output)
             files = data["count"]
             size = human_readable_bytes(data["bytes"])
-            
             format_out = f"**Total Files** {files}\n" 
             format_out += f"**Total Size**: {size}"
             await editMessage(format_out, self.__message, reply_markup= button.build_menu(1))

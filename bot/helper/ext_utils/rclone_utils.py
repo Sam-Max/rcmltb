@@ -2,7 +2,7 @@ import asyncio
 import json
 from os import getcwd, path as ospath
 import re
-from bot import LOGGER
+from bot import DEFAULT_MIRROR_DRIVE, LOGGER
 from bot.helper.ext_utils.message_utils import sendMessage
 from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
 
@@ -41,11 +41,17 @@ async def is_drive_set(user_id, message):
     if MIRRORSET_DRIVE:
         return True
     else:
-        await sendMessage("Select a cloud first, use /mirrorset", message)
-        return False
+        if DEFAULT_MIRROR_DRIVE:
+            set_rclone_var("MIRRORSET_DRIVE", DEFAULT_MIRROR_DRIVE, user_id)
+            return True
+        else:
+            await sendMessage("Select a cloud first, use /mirrorset", message)
+            return False
 
-async def is_not_config(user_id, message):
-    path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
+async def is_config_set(user_id, message):
+    path= ospath.join("users", str(user_id), "rclone.conf")
     if not ospath.exists(path):
         await sendMessage("Send an rclone config file, use /config", message)
+        return False
+    else:
         return True
