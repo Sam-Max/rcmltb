@@ -319,7 +319,7 @@ async def next_page_copy(client, callback_query):
                         reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 
-copy_handler = MessageHandler(handle_copy, filters= command(BotCommands.CopyCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+copy_handler = MessageHandler(handle_copy, filters= command(BotCommands.CopyCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 next_page_cb= CallbackQueryHandler(next_page_copy, filters= regex("next_copy"))
 copy_menu_cb= CallbackQueryHandler(copy_menu_callback, filters= regex("copymenu"))
 

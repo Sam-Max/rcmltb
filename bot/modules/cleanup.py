@@ -84,6 +84,6 @@ async def rclone_cleanup(message, drive_name, user_id, tag):
      await editMessage(msg, edit_msg)     
 
 cleanup_callback= CallbackQueryHandler(cleanup_callback, filters= regex("cleanupmenu"))
-cleanup = MessageHandler(handle_cleanup, filters=command(BotCommands.CleanupCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+cleanup = MessageHandler(handle_cleanup, filters=command(BotCommands.CleanupCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 Bot.add_handler(cleanup_callback)
 Bot.add_handler(cleanup)

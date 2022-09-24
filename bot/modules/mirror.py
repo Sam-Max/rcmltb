@@ -235,9 +235,9 @@ async def mirror_file(client, message, file, tag, user_id, pswd, isZip, extract,
     ml= MirrorLeech(media_path, message, tag, user_id, new_name, isRename= is_rename, isZip=isZip, extract=extract, pswd=pswd)
     await ml.execute()
 
-mirror_handler = MessageHandler(handle_mirror,filters=filters.command(BotCommands.MirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-zip_mirror_handler = MessageHandler(handle_zip_mirror,filters=filters.command(BotCommands.ZipMirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-unzip_mirror_handler = MessageHandler(handle_unzip_mirror,filters=filters.command(BotCommands.UnzipMirrorCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+mirror_handler = MessageHandler(handle_mirror,filters=filters.command(BotCommands.MirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+zip_mirror_handler = MessageHandler(handle_zip_mirror,filters=filters.command(BotCommands.ZipMirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+unzip_mirror_handler = MessageHandler(handle_unzip_mirror,filters=filters.command(BotCommands.UnzipMirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 mirror_menu_cb = CallbackQueryHandler(mirror_menu, filters=filters.regex("mirrormenu"))
 
 Bot.add_handler(mirror_handler)   

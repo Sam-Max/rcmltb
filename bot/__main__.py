@@ -67,9 +67,9 @@ async def main():
         osremove(".restartmsg")
 
     start_handler = MessageHandler(start, filters= command(BotCommands.StartCommand))
-    restart_handler = MessageHandler(restart, filters= command(BotCommands.RestartCommand) & CustomFilters.owner_filter | CustomFilters.sudo_filter)
-    log_handler = MessageHandler(get_log, filters= command(BotCommands.LogsCommand) & CustomFilters.owner_filter | CustomFilters.sudo_filter)
-    ping_handler = MessageHandler(ping, filters= command(BotCommands.PingCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+    restart_handler = MessageHandler(restart, filters= command(BotCommands.RestartCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))
+    log_handler = MessageHandler(get_log, filters= command(BotCommands.LogsCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))
+    ping_handler = MessageHandler(ping, filters= command(BotCommands.PingCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 
     Bot.add_handler(start_handler)
     Bot.add_handler(restart_handler)

@@ -265,9 +265,10 @@ async def next_page_myfiles(client, callback_query):
                       reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 
+
+myfiles_handler = MessageHandler(handle_myfiles, filters= filters.command(BotCommands.MyFilesCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 next_page_myfiles_cb= CallbackQueryHandler(next_page_myfiles, filters= regex("next_myfiles"))
 myfiles_cb = CallbackQueryHandler(myfiles_callback, filters= regex("myfilesmenu"))
-myfiles_handler = MessageHandler(handle_myfiles, filters= filters.command(BotCommands.MyFilesCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 
 Bot.add_handler(myfiles_cb)
 Bot.add_handler(next_page_myfiles_cb)

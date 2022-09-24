@@ -198,7 +198,7 @@ async def start_listener(client, query, user_id, var, action=""):
         await question.delete()
         await response.delete()
 
-owner_settings_handler = MessageHandler(handle_ownerset, filters= command(BotCommands.OwnerSetCommand) & CustomFilters.owner_filter | CustomFilters.chat_filter)
+owner_settings_handler = MessageHandler(handle_ownerset, filters= command(BotCommands.OwnerSetCommand) & CustomFilters.owner_filter | CustomFilters.sudo_filter)
 owner_settings_cb = CallbackQueryHandler(owner_set_callback, filters= regex(r'ownersetmenu'))
 owner_settings_next = CallbackQueryHandler(ownerset_next, filters= regex(r'ownersetnext'))
 

@@ -96,7 +96,7 @@ async def set_config_listener(client, message):
      finally:
           await question.delete()
 
-config_handler = MessageHandler(handle_config, filters= command(BotCommands.ConfigCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+config_handler = MessageHandler(handle_config, filters= command(BotCommands.ConfigCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 config_cb = CallbackQueryHandler(config_callback, filters= regex(r'configmenu'))
 
 Bot.add_handler(config_handler)

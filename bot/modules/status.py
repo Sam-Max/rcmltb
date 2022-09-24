@@ -87,7 +87,5 @@ class UpdateMessageLoop:
           self.stop_loop= True
                          
 
-status_handlers = MessageHandler(status_handler,
-        filters= filters.command(BotCommands.StatusCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-
+status_handlers = MessageHandler(status_handler,filters= filters.command(BotCommands.StatusCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 Bot.add_handler(status_handlers)    

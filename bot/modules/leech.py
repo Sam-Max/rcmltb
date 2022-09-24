@@ -302,12 +302,12 @@ async def selection_callback(client, callback_query):
         await message.delete()
 
 
+leech_handler = MessageHandler(handle_leech, filters= command(BotCommands.LeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+zip_leech_handler = MessageHandler(handle_zip_leech_command, filters= command(BotCommands.ZipLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+unzip_leech_handler = MessageHandler(handle_unzip_leech_command, filters= command(BotCommands.UnzipLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 next_page_cb= CallbackQueryHandler(next_page_leech, filters= regex("next_leech"))
 leech_callback= CallbackQueryHandler(leech_menu_cb, filters= regex("leechmenu"))
 selection_cb= CallbackQueryHandler(selection_callback, filters= regex("leechselect"))
-leech_handler = MessageHandler(handle_leech, filters= command(BotCommands.LeechCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-zip_leech_handler = MessageHandler(handle_zip_leech_command, filters= command(BotCommands.ZipLeechCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-unzip_leech_handler = MessageHandler(handle_unzip_leech_command, filters= command(BotCommands.UnzipLeechCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 
 Bot.add_handler(next_page_cb)
 Bot.add_handler(leech_callback)

@@ -40,6 +40,6 @@ async def _clone(client, message):
           await sendMessage(msg, message) 
 
 clone_handler = MessageHandler(_clone,
-     filters= filters.command(BotCommands.GcloneCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+     filters= filters.command(BotCommands.GcloneCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
      
 Bot.add_handler(clone_handler)

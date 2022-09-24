@@ -224,9 +224,9 @@ async def next_page_mirrorset(client, callback_query):
     await message.edit(f"Select folder where you want to store files\n\nPath:`{mirrorset_drive}:{base_dir}`", reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
  
+mirrorset_handler = MessageHandler(handle_mirrorset, filters= filters.command(BotCommands.MirrorSetCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 next_mirrorset_cb= CallbackQueryHandler(next_page_mirrorset, filters= regex("next_mirrorset"))
 mirrorset_cb = CallbackQueryHandler(mirrorset_callback, filters= regex("mirrorsetmenu"))
-mirrorset_handler = MessageHandler(handle_mirrorset, filters= filters.command(BotCommands.MirrorSetCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
 
 Bot.add_handler(mirrorset_cb)
 Bot.add_handler(next_mirrorset_cb)

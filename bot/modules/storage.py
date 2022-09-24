@@ -110,7 +110,9 @@ def get_used_bar(percentage):
      return "{0}{1}".format(''.join(["■" for i in range(floor(percentage / 10))]),
                               ''.join(["□" for i in range(10 - floor(percentage / 10))]))
 
+
+storage = MessageHandler(handle_storage, filters=command(BotCommands.StorageCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 storage_callback= CallbackQueryHandler(storage_menu_cb, filters= regex("storagemenu"))
-storage = MessageHandler(handle_storage, filters=command(BotCommands.StorageCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+
 Bot.add_handler(storage)
 Bot.add_handler(storage_callback)

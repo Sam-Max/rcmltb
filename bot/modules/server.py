@@ -33,6 +33,6 @@ async def handle_server_command(client, message):
             f'<b>Memory Used:</b> {get_readable_file_size(memory.used)}\n'
     await sendMessage(stats, message)
         
-handle_server = MessageHandler(handle_server_command, filters= command(BotCommands.ServerCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
+handle_server = MessageHandler(handle_server_command, filters= command(BotCommands.ServerCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 Bot.add_handler(handle_server)
 

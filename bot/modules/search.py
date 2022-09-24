@@ -234,9 +234,7 @@ def _getResult(search_results, key, method):
         msg += '</span>'
     return msg
 
-torrent_search_handler = MessageHandler(handle_torrent_search,
-               filters= filters.command(BotCommands.SearchCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-
+torrent_search_handler = MessageHandler(handle_torrent_search, filters= filters.command(BotCommands.SearchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 torrent_search_but_handler = CallbackQueryHandler(torrent_search_but, filters= filters.regex("torser"))
 
 Bot.add_handler(torrent_search_handler)

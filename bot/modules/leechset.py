@@ -119,11 +119,8 @@ async def handle_leech_set_type(client, callback_query):
         except:
             pass
 
-leech_set_handler = MessageHandler(handle_leech_set,
-                    filters= filters.command(BotCommands.LeechSetCommand) & CustomFilters.user_filter | CustomFilters.chat_filter)
-
-but_set_handler = CallbackQueryHandler(handle_leech_set_type,
-                  filters= filters.regex("leechset"))
+leech_set_handler = MessageHandler(handle_leech_set, filters= filters.command(BotCommands.LeechSetCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+but_set_handler = CallbackQueryHandler(handle_leech_set_type, filters= filters.regex("leechset"))
 
 Bot.add_handler(leech_set_handler)
 Bot.add_handler(but_set_handler)
