@@ -1,6 +1,8 @@
 # Source:
 # https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/search.py
 
+from asyncio import get_running_loop
+from functools import partial
 from html import escape
 from urllib.parse import quote
 from bot import LOGGER, SEARCH_API_LINK, SEARCH_LIMIT, SEARCH_PLUGINS, Bot, get_client
@@ -13,6 +15,8 @@ from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendFile, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 from bot.helper.ext_utils.html_helper import html_template
+
+
 
 if SEARCH_PLUGINS is not None:
     PLUGINS = []
@@ -116,12 +120,12 @@ async def torrent_search_but(client, callback_query):
                 await editMessage(f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>", message)
         else:
             await editMessage(f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>", message)
-        await _search(client, key, site, message, method)
+        await _search(key, site, message, method)
     else:
         await query.answer()
         await editMessage("Search has been canceled!", message)
 
-async def _search(bot, key, site, message, method):
+async def _search(key, site, message, method):
     if method.startswith('api'):
         if method == 'apisearch':
             LOGGER.info(f"API Searching: {key} from {site}")
@@ -145,7 +149,7 @@ async def _search(bot, key, site, message, method):
             resp = rget(api)
             search_results = resp.json()
             if "error" in search_results.keys():
-                return await editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i>", message)
+                return await sendMessage("No result found for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i>", message)
             cap = f"<b>Found {search_results['total']}</b>"
             if method == 'apitrend':
                 cap += f" <b>trending results\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
@@ -155,22 +159,23 @@ async def _search(bot, key, site, message, method):
                 cap += f" <b>results for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
             search_results = search_results['data']
         except Exception as e:
-            return await editMessage(str(e), message)
+            LOGGER.info(str(e)) 
     else:
         LOGGER.info(f"PLUGINS Searching: {key} from {site}")
         client = get_client()
-        search = client.search_start(pattern=key, plugins=site, category='all')
+        loop= get_running_loop()
+        search = await loop.run_in_executor(None, partial(client.search_start, pattern=key, plugins=site, category='all'))
         search_id = search.id
         while True:
-            result_status = client.search_status(search_id=search_id)
+            result_status = await loop.run_in_executor(None, partial(client.search_status, search_id=search_id))
             status = result_status[0].status
             if status != 'Running':
                 break
-        dict_search_results = client.search_results(search_id=search_id)
+        dict_search_results = await loop.run_in_executor(None, partial(client.search_results, search_id=search_id))
         search_results = dict_search_results.results
         total_results = dict_search_results.total
         if total_results == 0:
-            return await editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i>", message)
+            return await sendMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i>", message)
         cap = f"<b>Found {total_results}</b>"
         cap += f" <b>results for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>"
     hmsg = _getResult(search_results, key, method)
@@ -180,7 +185,7 @@ async def _search(bot, key, site, message, method):
     await deleteMessage(message)
     await sendFile(message.reply_to_message, name, cap)
     if not method.startswith('api'):
-        client.search_delete(search_id=search_id)
+        await loop.run_in_executor(None, partial(client.search_delete, search_id=search_id))
 
 def _getResult(search_results, key, method):
     if method == 'apirecent':
