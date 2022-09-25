@@ -1,6 +1,8 @@
 from asyncio import sleep
 from html import escape
 from os import walk, rename, path as ospath, remove as osremove
+from random import SystemRandom
+from string import ascii_letters, digits
 from time import time
 from bot import AS_DOC_USERS, AS_DOCUMENT, AS_MEDIA_USERS, DUMP_CHAT, LOGGER, Bot, app, status_dict, status_dict_lock
 from pyrogram.enums.parse_mode import ParseMode
@@ -22,7 +24,7 @@ class TelegramUploader():
         self.client= app if app is not None else Bot
         self.__path = path
         self.__message= message 
-        self.id= self.__message.id
+        self.__id= self.__message.id
         self.__name= name
         self.__size= size
         self.__tag= tag
@@ -38,10 +40,11 @@ class TelegramUploader():
 
     async def upload(self):
         await self.__msg_to_reply() 
-        status= TelegramStatus(self.__message)
+        gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
+        status= TelegramStatus(self.__message, MirrorStatus.STATUS_UPLOADING, gid)
         async with status_dict_lock:
-            status_dict[self.id] = status
-        await self.__create_empty_status(status)
+            status_dict[self.__id] = status
+        await status.create_empty_status(self.__name)
         if ospath.isdir(self.__path):
             for dirpath, _, filenames in walk(self.__path):
                 for file in sorted(filenames):
@@ -57,7 +60,7 @@ class TelegramUploader():
                         self.__msgs_dict[self.__sent_msg.link] = file
                     clean(f_path)
                     await sleep(1)
-        await deleteMessage(status._status_msg)
+        await deleteMessage(status.status_msg)
         size = get_readable_file_size(self.__size)
         msg = f"<b>Name: </b><code>{escape(self.__name)}</code>\n\n<b>Size: </b>{size}"
         if self.__total_files > 0:
@@ -78,17 +81,11 @@ class TelegramUploader():
             if fmsg != '':
                 await sendMessage(msg + fmsg, self.__message) 
         clean(self.__path)
-        async with status_dict_lock: 
-            try:  
-                del status_dict[self.id]
-            except:
-                pass    
-
+            
     async def __upload_file(self, up_path, file, status):
         thumb_path = self.__thumb
         notMedia = False
         cap= f"<code>{file}</code>"
-        status_type= MirrorStatus.STATUS_UPLOADING
         try:
             if not self.__as_doc:
                 if file.endswith(VIDEO_SUFFIXES):
@@ -116,7 +113,7 @@ class TelegramUploader():
                         supports_streaming= True,
                         duration= duration,
                         progress= status.start,
-                        progress_args=(file, status_type, self.__time))
+                        progress_args=(file, self.__time))
                 elif file.endswith(IMAGE_SUFFIXES):
                     self.__sent_msg = await self.__sent_msg.reply_photo(
                         photo=up_path,
@@ -124,7 +121,7 @@ class TelegramUploader():
                         parse_mode= ParseMode.HTML,
                         disable_notification=True,
                         progress=status.start,
-                        progress_args=(file, status_type, self.__time))
+                        progress_args=(file, self.__time))
                 else:
                     notMedia = True
             if self.__as_doc or notMedia:
@@ -137,7 +134,7 @@ class TelegramUploader():
                     force_document= True,
                     thumb= thumb_path,
                     progress= status.start,
-                    progress_args=(file, status_type, self.__time))
+                    progress_args=(file, self.__time))
         except FloodWait as f:
             LOGGER.warning(str(f))
             sleep(f.value)
@@ -149,8 +146,8 @@ class TelegramUploader():
         
     async def __create_empty_status(self, status):
         button= ButtonMaker()
-        button.cb_buildbutton('Cancel', data=(f"cancel_telegram_{self.id}"))    
-        status_text= status.get_status_text(0, 0, 0, "", 0, self.__name, MirrorStatus.STATUS_UPLOADING)
+        button.cb_buildbutton('Cancel', data=(f"cancel {self.__id}"))    
+        status_text= status.get_status_text(0, 0, 0, 0, 0, self.__name)
         await editMessage(status_text, self.__message, reply_markup=button.build_menu(1))
              
     def __set_settings(self):

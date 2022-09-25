@@ -201,7 +201,7 @@ async def mirror_menu(client, query):
     pswd = get_rclone_var("PSWD", user_id) 
 
     if int(cmd[-1]) != user_id:
-        return await query.answer("This menu is not for you!", alert=True)
+        return await query.answer("This menu is not for you!", show_alert=True)
 
     elif cmd[1] == "default" :
         await mirror_file(client, message, file, tag, user_id, pswd, isZip=isZip, extract=extract)

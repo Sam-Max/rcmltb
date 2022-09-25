@@ -11,15 +11,13 @@
 ### Mirror
 - From Telegram to cloud
 - Torrent/magnets to cloud using qBittorrent
-- Directs links to cloud using Aria2
-- Mega.nz links to cloud
+- Mega.nz and directs links to cloud
 - Files in batch from Telegram to cloud
 
 ### Leech
 - File/folder from cloud to Telegram
 - Link/magnets to Telegram using qBittorrent
-- Directs links to Telegram using Aria2
-- Mega.nz links to Telegram
+- Mega.nz and directs links to Telegram
 - Files in batch from Telegram to Telegram
 - 4gb file with premium account
 
@@ -38,8 +36,8 @@
 
 ### Database
 - SQL Database
-- Save rclone config file in database
-- Save leech settings(thumbnails, sudo and allowed users) in database
+- Save rclone config file in db
+- Save user leech settings(thumbnails, sudo and allowed users, etc) in db
 
 ### Others
 - Telegram Navigation Bottom Menus to interact with cloud
@@ -51,6 +49,7 @@
 ### From Other Repositories
 - Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
 - SQL Database support
+- Ytdl support
 - Select files from Torrent before downloading 
 - Get restricted messages from private channels.
 - Upload files to supergroup/channel.
@@ -70,17 +69,20 @@ unzipmirror - mirror and extract to cloud
 zipmirror - mirror and zip to cloud 
 mirrorset - select cloud/folder where to mirror
 mirrorbatch - mirror files in batch to cloud 
+ytdlmirror - mirror ytdlp supported link
 leech - leech from cloud to Telegram
 unzipleech - leech and extract to Telegram 
 zipleech - leech and zip to Telegram 
 leechset - leech settings
 leechbatch - leech files in batch to Telegram 
+ytdlleech - leech yt-dlp supported link
 myfiles - file manager
 clone - clone gdrive files/folder to cloud
 copy - copy from cloud to cloud
 config - rclone config
 ownerset - change env vars from bot
 cleanup - clean drive trash
+cancelall - cancel all tasks
 storage - drive details
 search - search for torrents
 status - status message of tasks
@@ -151,6 +153,9 @@ restart - restart bot
         - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). `Str`
         - Supported Sites:
         >1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooqle, Kickass, Bitsearch, MagnetDL, Libgen, YTS, Limetorrent, TorrentFunk, Glodls, TorrentProject and YourBittorrent
+
+   - Private Files
+        - `YT_COOKIES_URL`: Youtube authentication cookies. Check setup [Here](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl). Use gist raw link and remove commit id from the link, so you can edit it from gists only. `Str`
  
 3. **Deploying on VPS Using Docker**
 

@@ -13,7 +13,7 @@ from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 
 filter= {"SUDO_USERS", "ALLOWED_CHATS", "DOWNLOAD_DIR", "EDIT_SLEEP_SECS", "TORRENT_TIMEOUT","UPTOBOX_TOKEN","UPSTREAM_REPO",
-          "UPSTREAM_BRANCH","TG_SPLIT_SIZE","AS_DOCUMENT ","DUMP_CHAT","USER_SESSION_STRING", "MEGA_API_KEY","MEGA_EMAIL_ID" ,
+          "UPSTREAM_BRANCH","TG_SPLIT_SIZE","AS_DOCUMENT ", "YT_COOKIES_URL", "DATABASE_URL", "DUMP_CHAT","USER_SESSION_STRING", "MEGA_API_KEY","MEGA_EMAIL_ID" ,
           "MEGA_PASSWORD" ,"BASE_URL_OF_BOT","SERVER_PORT", "WEB_PINCODE","SEARCH_API_LINK", "SEARCH_LIMIT"}
 
 list_env_info= []
@@ -198,7 +198,7 @@ async def start_listener(client, query, user_id, var, action=""):
         await question.delete()
         await response.delete()
 
-owner_settings_handler = MessageHandler(handle_ownerset, filters= command(BotCommands.OwnerSetCommand) & CustomFilters.owner_filter | CustomFilters.sudo_filter)
+owner_settings_handler = MessageHandler(handle_ownerset, filters= command(BotCommands.OwnerSetCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))
 owner_settings_cb = CallbackQueryHandler(owner_set_callback, filters= regex(r'ownersetmenu'))
 owner_settings_next = CallbackQueryHandler(ownerset_next, filters= regex(r'ownersetnext'))
 

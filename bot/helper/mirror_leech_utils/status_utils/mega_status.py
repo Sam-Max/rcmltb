@@ -4,7 +4,7 @@ from bot import EDIT_SLEEP_SECS, status_dict, status_dict_lock
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.helper.ext_utils.human_format import human_readable_bytes
 from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
-from bot.helper.mirror_leech_utils.status_utils.status_utils import get_bottom_status
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
 
 
 def get_download_info(mega_client, gid):
@@ -14,8 +14,8 @@ def get_download_info(mega_client, gid):
 class MegaDownloadStatus:
      def __init__(self, gid, message, obj):
         self.__gid = gid
-        self.__message= message
-        self.id = self.__message.id
+        self.message= message
+        self.id = self.message.id
         self._status_msg= ""
         self._obj= obj
         self._client= self._obj.mega_client
@@ -24,12 +24,15 @@ class MegaDownloadStatus:
      def get_status_msg(self):
           return self._status_msg     
 
+     def status(self) -> str:
+        return MirrorStatus.STATUS_DOWNLOADING
+
      async def create_status(self):
         async with status_dict_lock:  
             status_dict[self.id] = self
         status_msg = await self.create_update_message() 
-        keyboard= InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data= "cancel_megadl_{}".format(self.gid()))]]) 
-        rmsg= await sendMarkup(status_msg, self.__message, reply_markup=keyboard)
+        keyboard= InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data= "cancel {}".format(self.gid()))]]) 
+        rmsg= await sendMarkup(status_msg, self.message, reply_markup=keyboard)
         sleeps= False
         start = time()
         while True:
@@ -44,11 +47,9 @@ class MegaDownloadStatus:
                                    await editMessage("Download Cancelled", rmsg)
                                    async with status_dict_lock:
                                         del status_dict[self.id]
-                                   return False, rmsg, None
+                                   return False, self.message, None
                               if self._obj.is_completed:
                                    name = self._dl_info["name"]
-                                   async with status_dict_lock:
-                                        del status_dict[self.id]
                                    return True, rmsg, name
                               sleeps = False
                               await sleep(1)
@@ -56,7 +57,7 @@ class MegaDownloadStatus:
      async def create_update_message(self):
         download = self._dl_info
         msg =  "<b>Name:</b> {}\n".format(download["name"])
-        msg += "<b>Status:</b> Downloading...\n"
+        msg += f"<b>Status:</b> {MirrorStatus.STATUS_DOWNLOADING}\n"
         msg += "{}\n".format(self.__get_progress_bar(download["completed_length"], download["total_length"]))
         msg += "<b>P:</b> {}%\n".format(round((download["completed_length"]/download["total_length"])*100, 2))
         msg += "<b>Downloaded:</b> {} of {}\n".format(human_readable_bytes(download["completed_length"]),
@@ -79,5 +80,5 @@ class MegaDownloadStatus:
      def gid(self):
         return self.__gid
 
-     async def cancel_download(self):
+     def cancel_download(self):
         self._obj.mega_client.cancelDl(self.gid())

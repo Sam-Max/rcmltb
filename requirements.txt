@@ -19,4 +19,5 @@ python-dotenv
 requests
 megasdkrestclient
 qbittorrent-api
+yt-dlp
 

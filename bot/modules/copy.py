@@ -156,7 +156,7 @@ async def copy_menu_callback(client, callback_query):
         return await query.answer()
 
     if int(cmd[-1]) != user_id:
-        return await query.answer("This menu is not for you!", alert=True)
+        return await query.answer("This menu is not for you!", show_alert=True)
 
     #First Menu
     if cmd[1] == "drive_origin":

@@ -11,7 +11,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean_all, start_cleanup
 from bot.helper.ext_utils import db_handler
-from bot.modules import batch, cancel, config, copy, leech, leechset, mirror, mirrorset, myfilesset, ownerset, search, myfiles, server, speedtest, status, gclone, storage, cleanup
+from bot.modules import batch, cancel, config, copy, leech, leechset, mirror, mirrorset, myfilesset, ownerset, search, myfiles, server, speedtest, status, gclone, storage, cleanup, ytdlp
 
 print("Successfully deployed!")
 

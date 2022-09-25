@@ -10,8 +10,8 @@ from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 class qBitTorrentStatus:
     def __init__(self, message, obj):
-        self.__message= message
-        self.id= self.__message.id
+        self.message= message
+        self.id= self.message.id
         self._status_msg = ""
         self.__obj = obj
 
@@ -21,7 +21,7 @@ class qBitTorrentStatus:
     async def create_status(self):
         tor_info = self.__obj.client.torrents_info(torrent_hashes=self.__obj.ext_hash)[0]
         status_msg = self.create_status_message(tor_info)
-        rmsg = await sendMessage(status_msg, self.__message)
+        rmsg = await sendMessage(status_msg, self.message)
         start = time()
         sleeps= False
         while True:
@@ -33,7 +33,7 @@ class qBitTorrentStatus:
             self._status_msg = self.create_status_message(tor_info)
             if time() - start > EDIT_SLEEP_SECS:
                 start = time()       
-                data = "cancel_qbitdl_{}".format(self.__obj.ext_hash[:12])
+                data = "cancel {}".format(self.__obj.ext_hash[:12])
                 await editMessage(self._status_msg , rmsg, reply_markup=(InlineKeyboardMarkup([
                                         [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
                                         ])))
@@ -44,9 +44,7 @@ class qBitTorrentStatus:
                         await editMessage(self.__obj.error_message, rmsg)
                         return False, None
                     if self.__obj.is_uploaded:
-                        async with status_dict_lock:
-                            del status_dict[self.id]   
-                        return True, rmsg  
+                        return True, self.message  
                     sleeps = False
                     await sleep(1)
 
@@ -55,17 +53,8 @@ class qBitTorrentStatus:
             size= tor_info.size
         else:
             size= tor_info.total_size
-
         download = tor_info.state
-        if download in ["queuedDL", "queuedUP"]:
-            status= MirrorStatus.STATUS_WAITING
-        elif download in ["pausedDL", "pausedUP"]:
-            status= MirrorStatus.STATUS_PAUSED
-        elif download in ["checkingUP", "checkingDL"]:
-            status= MirrorStatus.STATUS_CHECKING
-        else:
-            status= MirrorStatus.STATUS_DOWNLOADING
-
+        status= self.status(download)
         msg = "<b>Name:</b>{}\n".format(tor_info.name)
         msg += f"<b>Status:</b> {status}\n"
         msg += "{}\n".format(self.get_progress_bar_string(tor_info))
@@ -74,11 +63,23 @@ class qBitTorrentStatus:
         msg += "<b>Speed:</b> {}".format(f"{get_readable_file_size(tor_info.dlspeed)}/s") + "|" + "<b>ETA: {}\n</b>".format(get_readable_time(tor_info.eta))
         try:
             msg += f"<b>Seeders:</b> {tor_info.num_seeds}" \
-                    f" | <b>Leechers:</b> {tor_info.num_leechs}\n"
+                f" | <b>Leechers:</b> {tor_info.num_leechs}\n"
         except:
             pass
         msg += get_bottom_status()
         return msg 
+
+    def status(self, download):
+        if download in ["queuedDL", "queuedUP"]:
+            return MirrorStatus.STATUS_WAITING
+        elif download in ["pausedDL", "pausedUP"]:
+            return MirrorStatus.STATUS_PAUSED
+        elif download in ["checkingUP", "checkingDL"]:
+            return MirrorStatus.STATUS_CHECKING
+        elif download in ["stalledUP", "uploading"]:
+            return MirrorStatus.STATUS_SEEDING
+        else:
+            return MirrorStatus.STATUS_DOWNLOADING
 
     def get_progress_bar_string(self, tor_info):
         completed = tor_info.downloaded / 8
@@ -97,13 +98,10 @@ class qBitTorrentStatus:
     def gid(self):
         return self.__obj.ext_hash[:12]
 
-    def message(self):
-        return self.__message
-
     def name(self):
         return self.__obj.name
         
     def cancel_download(self):
-        self.__obj.onDownloadError("Download cancelled!")
+        self.__obj.onDownloadError("Download cancelled")
         
          

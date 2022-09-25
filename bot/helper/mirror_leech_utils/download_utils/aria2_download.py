@@ -33,8 +33,6 @@ class Aria2Downloader():
         LOGGER.info("Aria2Download started...")
         status, rmsg, msg, name = await aria_status.create_status()
         if status:
-            async with status_dict_lock:     
-                del status_dict[self.id] 
             return True, rmsg, name
         else:
             await editMessage(msg, rmsg)    

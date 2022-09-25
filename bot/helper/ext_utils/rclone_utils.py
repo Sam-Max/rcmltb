@@ -1,6 +1,6 @@
 import asyncio
 import json
-from os import getcwd, path as ospath
+from os import path as ospath
 import re
 from bot import DEFAULT_MIRROR_DRIVE, LOGGER
 from bot.helper.ext_utils.message_utils import sendMessage

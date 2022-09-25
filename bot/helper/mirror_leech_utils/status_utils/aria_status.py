@@ -14,8 +14,8 @@ def get_download(gid):
 class AriaDownloadStatus:
     def __init__(self, gid, message):
         self.__gid = gid
-        self.__message= message
-        self.id= self.__message.id
+        self.message= message
+        self.id= self.message.id
         self._status_msg= ""
 
     def __update(self):
@@ -31,7 +31,7 @@ class AriaDownloadStatus:
               status_dict[self.id] = self
           self.__update()
           status_msg= self.create_status_message()
-          rmsg= await sendMessage(status_msg, self.__message)
+          rmsg= await sendMessage(status_msg, self.message)
           sleeps= False
           start = time()
           while True:
@@ -44,7 +44,7 @@ class AriaDownloadStatus:
                             self._status_msg= self.create_status_message()
                             if time() - start > EDIT_SLEEP_SECS:
                                 try:
-                                    data = "cancel_aria2_{}".format(self.__gid)
+                                    data = "cancel {}".format(self.__gid)
                                     await editMessage(self._status_msg, rmsg, reply_markup= InlineKeyboardMarkup([
                                                 [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
                                                 ]))
@@ -58,7 +58,7 @@ class AriaDownloadStatus:
                         else:
                             msg = self.__download.error_message
                             msg = f"Download failed:- {msg}"
-                            return False, rmsg, msg, ""
+                            return False, self.message, msg, ""
                     else:
                         LOGGER.info("Download completed!")
                         msg = "Download completed!"

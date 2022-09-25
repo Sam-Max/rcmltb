@@ -1,4 +1,4 @@
-from os import path as ospath, remove as osremove, rename as osrename, makedirs, getcwd
+from os import path as ospath, remove as osremove, rename as osrename, makedirs
 from shutil import rmtree
 from bot import BASE_URL, DOWNLOAD_DIR, LOGGER, WEB_PINCODE, aria2, get_client, status_dict, status_dict_lock
 from itertools import zip_longest
@@ -22,10 +22,16 @@ def pairwise(iterable):
 
 def clean(path):
     LOGGER.info(f"Cleaning Download")
-    try:
-        rmtree(path)
-    except:
-        osremove(path)
+    if ospath.isdir(path):
+            try:
+                rmtree(path)
+            except:
+                pass
+    elif ospath.isfile(path):
+        try:
+            osremove(path)
+        except:
+            pass
 
 def clean_target(path: str):
     if ospath.exists(path):
@@ -147,10 +153,11 @@ async def getDownloadByGid(gid):
                 return dl
     return None
 
-async def getDownloadById(id):
+async def getAllDownload(req_status: str):
     async with status_dict_lock:
         for dl in list(status_dict.values()):
-            if dl.id == id:
+            status = dl.status()
+            if req_status in ['all', status]:
                 return dl
     return None
 

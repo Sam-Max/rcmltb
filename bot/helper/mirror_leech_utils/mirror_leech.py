@@ -1,7 +1,7 @@
-from os import path as ospath, remove, walk
+from os import listdir, path as ospath, remove, walk
 import os
 from re import search
-from bot import LOGGER, TG_SPLIT_SIZE
+from bot import LOGGER, TG_SPLIT_SIZE, status_dict, status_dict_lock
 from subprocess import Popen
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.misc_utils import clean_target, rename_file
@@ -12,8 +12,8 @@ from bot.helper.mirror_leech_utils.status_utils.zip_status import ZipStatus
 from bot.helper.mirror_leech_utils.upload_utils.telegram_uploader import TelegramUploader
 
 class MirrorLeech:
-    def __init__(self, path, rmsg, tag, user_id, newName= None, isRename= False, isZip=False, extract=False, pswd=None, isLeech= False):
-        self.__message = rmsg
+    def __init__(self, path, message, tag, user_id, newName= None, isRename= False, isZip=False, extract=False, pswd=None, isLeech= False):
+        self.__message = message
         self.id = self.__message.id
         self.__path = path
         self.__is_Zip = isZip
@@ -29,7 +29,15 @@ class MirrorLeech:
 
     async def execute(self):
         f_size = get_path_size(self.__path)
-        path, name= self.__path.rsplit("/", 1)
+        async with status_dict_lock:
+            try:  
+                download = status_dict[self.id]
+                path= self.__path
+                name = str(download.name()).replace('/', '')
+            except:
+                path, name= self.__path.rsplit("/", 1)
+        if name == "None" or not ospath.exists(f"{path}/{name}"):
+            name = listdir(path)[-1]
         f_path= f"{path}/{name}" 
         if self.__is_Zip:
             path = f"{f_path}.zip" 
@@ -115,3 +123,8 @@ class MirrorLeech:
         else:
             rc_mirror = RcloneMirror(up_dir, up_name, self.__message, self.__tag, self.__user_id, isExtract= self.__is_extract)
             await rc_mirror.mirror()
+        async with status_dict_lock: 
+            try:  
+                del status_dict[self.id]
+            except:
+                pass

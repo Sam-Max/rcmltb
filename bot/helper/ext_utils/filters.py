@@ -19,7 +19,10 @@ class CustomFilters():
      user_filter = filters.create(custom_user_filter)
 
      async def custom_sudo_filter(_, client, update):
-          user_id= update.from_user.id
-          return user_id in SUDO_USERS 
+          return update.from_user.id in SUDO_USERS 
 
      sudo_filter = filters.create(custom_sudo_filter)
+
+     @staticmethod
+     def _owner_query(user_id):
+        return user_id == OWNER_ID or user_id in SUDO_USERS

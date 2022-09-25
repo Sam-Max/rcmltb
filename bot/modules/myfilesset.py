@@ -76,7 +76,7 @@ async def delete_selected(message, user_id, drive_base="", drive_name="", is_fol
      await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 async def rclone_size(message, drive_base, drive_name, conf_path):
-     await editMessage("**Calculating Folder Size...**\n\nPlease wait, it will take some time depending on number of files", message)
+     await editMessage("**⏳Calculating Folder Size...**\n\nPlease wait, it will take some time depending on number of files", message)
      cmd = ["rclone", "size", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--json"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
@@ -157,7 +157,7 @@ async def rclone_dedupe(message, rclone_drive, drive_base, user_id, tag):
      if return_code != 0:
           err = stderr.decode().strip()
           return await sendMessage(f'Error: {err}', message)
-     msg= "<b>Dedupe completed successfully.</b>\n\n"
+     msg= "<b>Dedupe completed successfully ✅</b>\n"
      msg += f'<b>cc:</b> {tag}\n'
      await editMessage(msg, edit_msg)
 

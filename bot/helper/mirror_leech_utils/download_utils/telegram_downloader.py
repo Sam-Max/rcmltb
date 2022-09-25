@@ -15,18 +15,18 @@ class TelegramDownloader:
         self._path= path
 
     async def download(self):
-        status= TelegramStatus(self._message)
+        file_name= self._file.file_name
+        file_id = self._file.file_unique_id
+        status= TelegramStatus(self._message, MirrorStatus.STATUS_DOWNLOADING, file_id)
+        await status.create_empty_status(file_name)
         async with status_dict_lock:
             status_dict[self.id] = status
-        file_name= self._file.file_name
-        status_type= MirrorStatus.STATUS_DOWNLOADING
-        await self.__create_empty_status(file_name, status, status_type)
         try:
             media_path= await self._client.download_media(
                 message= self._file,
                 file_name= self._path,
                 progress=status.start,
-                progress_args=(file_name, status_type, time()))
+                progress_args=(file_name, time()))
         except Exception as e:
             LOGGER.error(str(e))
         async with status_dict_lock: 
@@ -36,8 +36,4 @@ class TelegramDownloader:
                 pass
         return media_path
 
-    async def __create_empty_status(self, file_name, status, status_type ):
-        button= ButtonMaker()
-        button.cb_buildbutton('Cancel', data=(f"cancel_telegram_{self.id}"))
-        status_msg= status.get_status_text(0, 0, 0, "", 0, file_name, status_type)
-        await editMessage(status_msg, self._message, reply_markup=button.build_menu(1))
+    

@@ -1,5 +1,7 @@
 from asyncio import create_subprocess_exec as exec
 from json import loads
+from random import SystemRandom
+from string import ascii_letters, digits
 from subprocess import Popen, PIPE
 from bot import LOGGER
 from bot.helper.ext_utils.human_format import human_readable_bytes
@@ -20,8 +22,10 @@ class RcloneCopy:
         cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
               f'{dest_drive}:{dest_dir}{origin_dir}', '-P']
         rclone_pr = Popen(cmd, stdout=(PIPE),stderr=(PIPE))
-        rc_status= RcloneStatus(rclone_pr, self.__message)
-        status= await rc_status.start(status_type= MirrorStatus.STATUS_COPYING)
+        gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
+        status_type= MirrorStatus.STATUS_COPYING
+        rc_status= RcloneStatus(rclone_pr, self.__message, status_type, gid)
+        status= await rc_status.start()
         if status:
             #Get Link
             cmd = ["rclone", "link", f'--config={conf_path}', f"{dest_drive}:{dest_dir}{origin_dir}"]

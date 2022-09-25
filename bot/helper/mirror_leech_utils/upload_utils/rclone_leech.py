@@ -1,3 +1,5 @@
+from random import SystemRandom
+from string import ascii_letters, digits
 from subprocess import Popen, PIPE
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import clean, get_rclone_config
@@ -29,8 +31,10 @@ class RcloneLeech:
             name = self.__dest_path.rsplit("/", 2)[1]
         else:
             name= self.__dest_path.rsplit("/", 1)[1]
-        rclone_status= RcloneStatus(process, self.__message, name)
-        status= await rclone_status.start(MirrorStatus.STATUS_DOWNLOADING)
+        gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))  
+        status_type= MirrorStatus.STATUS_UPLOADING  
+        rclone_status= RcloneStatus(process, self.__message, status_type, gid, name)
+        status= await rclone_status.start()
         if status:
             await self.__onDownloadComplete()
         else:

@@ -1,8 +1,10 @@
 from configparser import ConfigParser
+from random import SystemRandom
+from string import ascii_letters, digits
 from subprocess import Popen, PIPE
 from bot import LOGGER
 from bot.helper.ext_utils.message_utils import editMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_rclone_config, rename_file
+from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_rclone_config
 from bot.helper.ext_utils.rclone_utils import get_gid
 from bot.helper.ext_utils.var_holder import get_rclone_var
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
@@ -19,24 +21,26 @@ class RcloneMirror:
         self.__is_extract= isExtract
         self.__base = get_rclone_var('MIRRORSET_BASE_DIR', self.__user_id)
         self.__drive = get_rclone_var('MIRRORSET_DRIVE', self.__user_id)
-        self.__is_gdrive= False
+        self.__is_gdrive = False
 
     async def mirror(self):
         conf_path = get_rclone_config(self.__user_id)
         conf = ConfigParser()
         conf.read(conf_path)
-        
+
         for i in conf.sections():
             if self.__drive == str(i):
                 if conf[i]['type'] == 'drive':
                     self.__is_gdrive = True
-                break
+                    break
         
         cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path),
                 f"{self.__drive}:{self.__base}", '-P']
         process = Popen(cmd, stdout=(PIPE), stderr=(PIPE))
-        rclone_status= RcloneStatus(process, self.__message, self.__name)
-        status= await rclone_status.start(status_type= MirrorStatus.STATUS_UPLOADING)
+        gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
+        status_type= MirrorStatus.STATUS_UPLOADING
+        rclone_status= RcloneStatus(process, self.__message, status_type, gid, self.__name)
+        status= await rclone_status.start()
         if status:
             await self.__onDownloadComplete(conf_path)
         else:

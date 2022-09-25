@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from bot import LOGGER
 from bot.helper.ext_utils.bot_utils import setInterval
@@ -17,6 +18,7 @@ class MegaDownloader():
         self._message = message
         self.id= self._message.id
         self.__periodic= None
+        self.loop= asyncio.get_running_loop()
         self.is_cancelled= False
         self.is_completed= False
 
@@ -24,7 +26,7 @@ class MegaDownloader():
         Path(path).mkdir(parents=True, exist_ok=True)
         LOGGER.info("Mega Download Started...")
         try:
-            dl = self.mega_client.addDl(self._link, path)
+            dl = await self.loop.run_in_executor(None, self.mega_client.addDl, self._link, path)
         except Exception as e:
             error_reason = str(dict(e.message)["message"]).title()
             await sendMessage(error_reason, self._message)

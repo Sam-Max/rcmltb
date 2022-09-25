@@ -138,7 +138,7 @@ async def mirrorset_callback(client, callback_query):
         return await query.answer()
 
     if int(cmd[-1]) != user_id:
-        return await query.answer("This menu is not for you!", alert=True)
+        return await query.answer("This menu is not for you!", show_alert=True)
         
     elif cmd[1] == "drive":
         #Reset Menu

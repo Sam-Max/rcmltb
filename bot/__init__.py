@@ -5,6 +5,7 @@ from asyncio import Lock
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from os import environ
 from json import loads as jsonloads
+from requests import get as rget
 from threading import Thread
 from time import sleep, time
 from sys import exit
@@ -81,6 +82,18 @@ WEB_PINCODE = WEB_PINCODE.lower() == 'true'
 DEFAULT_MIRROR_DRIVE = environ.get('DEFAULT_MIRROR_DRIVE', '')
 
 CMD_INDEX = environ.get('CMD_INDEX', '')
+
+YT_COOKIES_URL = environ.get('YT_COOKIES_URL', '')
+if len(YT_COOKIES_URL) != 0:
+    try:
+        res = rget(YT_COOKIES_URL)
+        if res.status_code == 200:
+            with open('cookies.txt', 'wb+') as f:
+                f.write(res.content)
+        else:
+            LOGGER.error(f"Failed to download cookies.txt, link got HTTP response: {res.status_code}")
+    except Exception as e:
+        LOGGER.error(f"YT_COOKIES_URL: {e}")
 
 DB_URI = environ.get('DATABASE_URL', '')
 if len(DB_URI) == 0:
