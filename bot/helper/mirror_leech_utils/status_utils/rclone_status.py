@@ -11,7 +11,7 @@ from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 class RcloneStatus:
     def __init__(self, process, message, status_type, gid, name=""):
-        self._process = process
+        self._rc_process = process
         self.message = message
         self._id = self.message.id
         self._gid= gid
@@ -33,8 +33,8 @@ class RcloneStatus:
         await editMessage(self._status_msg_text, self.message, reply_markup=button.build_menu(1))
         
         while True:
-            data = self._process.stdout.readline().decode()
-            data = data.strip()
+            data = await self._rc_process.stdout.readline()
+            data = data.decode().strip()
             mat = re.findall('Transferred:.*ETA.*', data)
 
             if mat is not None and len(mat) > 0:
@@ -66,10 +66,9 @@ class RcloneStatus:
                 if self.is_cancelled:
                     async with status_dict_lock:
                         del status_dict[self._id] 
-                    self._process.kill()
+                    self._rc_process.kill()
                     return False
                 await sleep(2)
-                self._process.stdout.flush()
 
     def get_status_msg(self):
         return self._status_msg_text
