@@ -1,7 +1,8 @@
+from asyncio import create_subprocess_exec
+from asyncio.subprocess import PIPE
 from configparser import ConfigParser
 from random import SystemRandom
 from string import ascii_letters, digits
-from subprocess import Popen, PIPE
 from bot import LOGGER
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_rclone_config
@@ -34,12 +35,11 @@ class RcloneMirror:
                     self.__is_gdrive = True
                     break
         
-        cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path),
-                f"{self.__drive}:{self.__base}", '-P']
-        process = Popen(cmd, stdout=(PIPE), stderr=(PIPE))
+        cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path), f"{self.__drive}:{self.__base}", '-P']
+        rc_process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         status_type= MirrorStatus.STATUS_UPLOADING
-        rclone_status= RcloneStatus(process, self.__message, status_type, gid, self.__name)
+        rclone_status= RcloneStatus(rc_process, self.__message, status_type, gid, self.__name)
         status= await rclone_status.start()
         if status:
             await self.__onDownloadComplete(conf_path)

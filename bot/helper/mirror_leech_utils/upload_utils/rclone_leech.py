@@ -1,6 +1,7 @@
+from asyncio import create_subprocess_exec
+from asyncio.subprocess import PIPE
 from random import SystemRandom
 from string import ascii_letters, digits
-from subprocess import Popen, PIPE
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import clean, get_rclone_config
 from bot.helper.ext_utils.var_holder import get_rclone_var
@@ -26,14 +27,14 @@ class RcloneLeech:
         leech_drive = get_rclone_var("LEECH_DRIVE", self._user_id)
         cmd = ['rclone', 'copy', f'--config={conf_path}', f'{leech_drive}:{self.__origin_path}', 
               f'{self.__dest_path}', '-P']
-        process = Popen(cmd, stdout=(PIPE),stderr=(PIPE))
+        rc_process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         if self.__isFolder:
             name = self.__dest_path.rsplit("/", 2)[1]
         else:
             name= self.__dest_path.rsplit("/", 1)[1]
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))  
-        status_type= MirrorStatus.STATUS_UPLOADING  
-        rclone_status= RcloneStatus(process, self.__message, status_type, gid, name)
+        status_type= MirrorStatus.STATUS_DOWNLOADING
+        rclone_status= RcloneStatus(rc_process, self.__message, status_type, gid, name)
         status= await rclone_status.start()
         if status:
             await self.__onDownloadComplete()

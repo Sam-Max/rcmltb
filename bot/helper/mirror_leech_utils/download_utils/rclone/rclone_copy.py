@@ -1,5 +1,5 @@
-from asyncio import create_subprocess_exec as exec
-import asyncio
+from asyncio import create_subprocess_exec
+from asyncio.subprocess import PIPE
 from json import loads
 from random import SystemRandom
 from string import ascii_letters, digits
@@ -21,7 +21,7 @@ class RcloneCopy:
         button= ButtonMaker()
         cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
               f'{dest_drive}:{dest_dir}{origin_dir}', '-P']
-        rc_process = await exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        rc_process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         status_type= MirrorStatus.STATUS_COPYING
         rc_status= RcloneStatus(rc_process, self.__message, status_type, gid)
@@ -29,7 +29,7 @@ class RcloneCopy:
         if status:
             #Get Link
             cmd = ["rclone", "link", f'--config={conf_path}', f"{dest_drive}:{dest_dir}{origin_dir}"]
-            process = await exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
             out, err = await process.communicate()
             url = out.decode().strip()
             button.url_buildbutton("Cloud Link 🔗", url)
@@ -38,7 +38,7 @@ class RcloneCopy:
                 LOGGER.info(err.decode().strip())
             #Calculate Size
             cmd = ["rclone", "size", f'--config={conf_path}', "--json", f"{dest_drive}:{dest_dir}{origin_dir}"]
-            process = await exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
             out, _ = await process.communicate()
             output = out.decode().strip()
             return_code = await process.wait()
