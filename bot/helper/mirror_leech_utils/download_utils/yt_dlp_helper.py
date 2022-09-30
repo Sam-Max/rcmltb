@@ -1,6 +1,8 @@
 #From: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/ytdlp.py
 
+import asyncio
 from logging import getLogger
+import time
 from yt_dlp import YoutubeDL, DownloadError
 from re import search as re_search
 from json import loads as jsonloads
@@ -32,11 +34,9 @@ class MyLogger:
 
 
 class YoutubeDLHelper:
-    def __init__(self, message, listener=None):
+    def __init__(self, listener=None):
         self.name = ""
         self.is_playlist = False
-        self.__message= message
-        self.__listener= listener
         self._last_downloaded = 0
         self.__size = 0
         self.__downloaded_bytes = 0
@@ -46,6 +46,7 @@ class YoutubeDLHelper:
         self.error_message= None
         self.is_cancelled = False
         self.is_completed = False
+        self.__loop= asyncio.get_running_loop()
         self.__downloading = False
         self.opts = {'progress_hooks': [self.__onDownloadProgress],
                      'logger': MyLogger(self),
@@ -104,10 +105,6 @@ class YoutubeDLHelper:
                 except:
                     pass
 
-    def __onDownloadComplete(self, loop):
-        self.is_completed = True
-        loop.create_task(self.__listener.execute())
-
     def __onDownloadError(self, error):
         self.is_cancelled = True
         self.error_message= error
@@ -151,7 +148,7 @@ class YoutubeDLHelper:
             else:
                 self.name = f"{name}.{ext}"
 
-    async def add_download(self, link, path, name, qual, playlist, args, loop):
+    async def add_download(self, link, path, name, qual, playlist, args):
         if playlist:
             self.opts['ignoreerrors'] = True
             self.is_playlist = True
@@ -162,7 +159,7 @@ class YoutubeDLHelper:
             self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': rate}]
         self.opts['format'] = qual
         LOGGER.info(f"Downloading with YT-DLP: {link}")
-        await loop.run_in_executor(None, self.extractMetaData, link, name, args)
+        await self.__loop.run_in_executor(None, self.extractMetaData, link, name, args)
         if self.is_cancelled:
             return
         if self.is_playlist:
@@ -173,20 +170,20 @@ class YoutubeDLHelper:
             folder_name = self.name.rsplit('.', 1)[0]
             self.opts['outtmpl'] = f"{path}/{folder_name}/{self.name}"
             self.name = folder_name
-        await loop.run_in_executor(None, self.__download, link, loop)
+        await self.__download(link)
 
-    def __download(self, link, loop):
+    async def __download(self, link):
         try:
             with YoutubeDL(self.opts) as ydl:
                 try:
-                    ydl.download([link])
+                    await self.__loop.run_in_executor(None, ydl.download, [link]) 
                 except DownloadError as e:
                     if not self.is_cancelled:
                         self.__onDownloadError(str(e))
                     return
             if self.is_cancelled:
                 raise ValueError
-            self.__onDownloadComplete(loop)
+            self.is_completed = True
         except ValueError:
             self.__onDownloadError("Download cancelled by user")
 

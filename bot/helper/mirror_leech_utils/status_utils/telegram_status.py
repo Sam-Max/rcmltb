@@ -3,7 +3,7 @@ from math import floor
 import time
 from bot import LOGGER, Bot, status_dict, status_dict_lock
 from bot.helper.ext_utils.human_format import human_readable_bytes, human_readable_timedelta
-from bot.helper.ext_utils.message_utils import editMarkup, editMessage
+from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
 
@@ -24,7 +24,7 @@ class TelegramStatus:
         button= ButtonMaker()
         button.cb_buildbutton('Cancel', data=(f"cancel {self._gid}"))
         self._status_msg_text= self.get_status_text(0, 0, 0, "", 0, file_name)
-        await editMessage(self._status_msg_text, self.message, reply_markup=button.build_menu(1))
+        self.message = await editMessage(self._status_msg_text, self.message, reply_markup=button.build_menu(1))
 
     async def start(self, current, total, name, current_time):
         now = time.time()
@@ -35,8 +35,6 @@ class TelegramStatus:
         if self.is_cancelled:
             await editMessage('Download cancelled', self.message)
             await sleep(1.5) 
-            async with status_dict_lock:
-                del status_dict[self.id]
             Bot.stop_transmission()
         
         if round(diff % 10.00) == 0 or current == total:
@@ -49,7 +47,7 @@ class TelegramStatus:
             estimated_total_time = human_readable_timedelta(estimated_total_time)
 
             self._status_msg_text = self.get_status_text(current, total, speed, estimated_total_time, percentage, name)
-            self.status_msg = await editMarkup(self._status_msg_text, self.message, reply_markup= button.build_menu(1))
+            self.status_msg = await editMessage(self._status_msg_text, self.message, reply_markup= button.build_menu(1))
 
     def status(self):
         if self.status_type == MirrorStatus.STATUS_DOWNLOADING:

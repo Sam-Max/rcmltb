@@ -7,6 +7,9 @@ gunicorn
 anytree
 lk21
 lxml
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
 cfscrape
 Telethon
 tgCrypto
@@ -14,6 +17,7 @@ Pyrogram
 psycopg2-binary
 urllib3
 pillow
+tenacity
 speedtest-cli
 python-dotenv
 requests

@@ -10,8 +10,8 @@ from pyrogram.errors import FloodWait
 from pyrogram.enums import ChatType
 from PIL import Image
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_media_info
+from bot.helper.ext_utils.message_utils import deleteMessage, sendMessage
+from bot.helper.ext_utils.misc_utils import clean, get_media_info
 from bot.helper.ext_utils.screenshot import take_ss
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 from bot.helper.mirror_leech_utils.status_utils.telegram_status import TelegramStatus
@@ -41,10 +41,10 @@ class TelegramUploader():
     async def upload(self):
         await self.__msg_to_reply() 
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
-        status= TelegramStatus(self.__message, MirrorStatus.STATUS_UPLOADING, gid)
-        async with status_dict_lock:
-            status_dict[self.__id] = status
-        await status.create_empty_status(self.__name)
+        tg_status= TelegramStatus(self.__message, MirrorStatus.STATUS_UPLOADING, gid)
+        #async with status_dict_lock:
+        status_dict[self.__id] = tg_status
+        await tg_status.create_empty_status(self.__name)
         if ospath.isdir(self.__path):
             for dirpath, _, filenames in walk(self.__path):
                 for file in sorted(filenames):
@@ -55,12 +55,12 @@ class TelegramUploader():
                         LOGGER.error(f"{f_size} size is zero, telegram don't upload zero size files")
                         self.__corrupted += 1
                         continue
-                    await self.__upload_file(f_path, file, status)
+                    await self.__upload_file(f_path, file, tg_status)
                     if (not self.__isPrivate or DUMP_CHAT is not None) and not self.__is_corrupted:
                         self.__msgs_dict[self.__sent_msg.link] = file
                     clean(f_path)
                     await sleep(1)
-        await deleteMessage(status.status_msg)
+        await deleteMessage(tg_status.status_msg)
         size = get_readable_file_size(self.__size)
         msg = f"<b>Name: </b><code>{escape(self.__name)}</code>\n\n<b>Size: </b>{size}"
         if self.__total_files > 0:
@@ -144,12 +144,6 @@ class TelegramUploader():
         if thumb_path is not None and ospath.lexists(thumb_path):
             osremove(thumb_path)
         
-    async def __create_empty_status(self, status):
-        button= ButtonMaker()
-        button.cb_buildbutton('Cancel', data=(f"cancel {self.__id}"))    
-        status_text= status.get_status_text(0, 0, 0, 0, 0, self.__name)
-        await editMessage(status_text, self.__message, reply_markup=button.build_menu(1))
-             
     def __set_settings(self):
         if self.__message.chat.id in AS_DOC_USERS:
             self.__as_doc = True

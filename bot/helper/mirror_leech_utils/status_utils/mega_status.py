@@ -1,9 +1,9 @@
 from time import time
 from asyncio import sleep
-from bot import EDIT_SLEEP_SECS, status_dict, status_dict_lock
+from bot import EDIT_SLEEP_SECS
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.helper.ext_utils.human_format import human_readable_bytes
-from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
+from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
 
 
@@ -28,8 +28,6 @@ class MegaDownloadStatus:
         return MirrorStatus.STATUS_DOWNLOADING
 
      async def create_status(self):
-        async with status_dict_lock:  
-            status_dict[self.id] = self
         status_msg = await self.create_update_message() 
         keyboard= InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data= "cancel {}".format(self.gid()))]]) 
         rmsg= await sendMarkup(status_msg, self.message, reply_markup=keyboard)
@@ -45,9 +43,7 @@ class MegaDownloadStatus:
                          if sleeps:
                               if self._obj.is_cancelled:
                                    await editMessage("Download Cancelled", rmsg)
-                                   async with status_dict_lock:
-                                        del status_dict[self.id]
-                                   return False, self.message, None
+                                   return False, rmsg, None
                               if self._obj.is_completed:
                                    name = self._dl_info["name"]
                                    return True, rmsg, name

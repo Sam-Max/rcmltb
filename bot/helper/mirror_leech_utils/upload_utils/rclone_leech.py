@@ -5,6 +5,7 @@ from string import ascii_letters, digits
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import clean, get_rclone_config
 from bot.helper.ext_utils.var_holder import get_rclone_var
+from bot import status_dict, status_dict_lock
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 from bot.helper.mirror_leech_utils.mirror_leech import MirrorLeech
@@ -35,6 +36,8 @@ class RcloneLeech:
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))  
         status_type= MirrorStatus.STATUS_DOWNLOADING
         rclone_status= RcloneStatus(rc_process, self.__message, status_type, gid, name)
+        #async with status_dict_lock:
+        status_dict[self.id] = rclone_status
         status= await rclone_status.start()
         if status:
             await self.__onDownloadComplete()

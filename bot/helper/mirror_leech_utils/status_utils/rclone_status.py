@@ -2,7 +2,7 @@ from asyncio import sleep
 from math import floor
 import re
 import time
-from bot import EDIT_SLEEP_SECS, status_dict, status_dict_lock
+from bot import EDIT_SLEEP_SECS
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
@@ -21,8 +21,6 @@ class RcloneStatus:
         self.is_cancelled = False
 
     async def start(self):
-        async with status_dict_lock:
-            status_dict[self._id] = self
         blank = 0
         sleeps = False
         start = time.time()
@@ -30,7 +28,7 @@ class RcloneStatus:
         button.cb_buildbutton('Cancel', data=f"cancel {self._gid}")
         status= self.status()
         self._status_msg_text= await self.__create_empty_status(status, self._name)
-        await editMessage(self._status_msg_text, self.message, reply_markup=button.build_menu(1))
+        rmsg= await editMessage(self._status_msg_text, self.message, reply_markup=button.build_menu(1))
         
         while True:
             data = await self._rc_process.stdout.readline()
@@ -52,7 +50,7 @@ class RcloneStatus:
                 if time.time() - start > EDIT_SLEEP_SECS:
                     start = time.time()
                     self._status_msg_text= self.get_status_message(status, prg, self._name, nstr)
-                    await editMessage(self._status_msg_text, self.message, reply_markup=button.build_menu(1))
+                    await editMessage(self._status_msg_text, rmsg, reply_markup=button.build_menu(1))
 
             if data == '':
                 blank += 1
@@ -64,8 +62,6 @@ class RcloneStatus:
             if sleeps:
                 sleeps = False
                 if self.is_cancelled:
-                    async with status_dict_lock:
-                        del status_dict[self._id] 
                     self._rc_process.kill()
                     return False
                 await sleep(2)

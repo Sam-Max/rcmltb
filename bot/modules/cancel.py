@@ -1,11 +1,10 @@
 
-from asyncio import sleep
-import asyncio
-from threading import Thread
+import time
 from pyrogram.filters import regex
 from pyrogram.handlers import CallbackQueryHandler
-from bot import OWNER_ID, SUDO_USERS, Bot, status_dict, status_dict_lock
+from bot import LOGGER, OWNER_ID, SUDO_USERS, Bot, status_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import new_thread
 from bot.helper.ext_utils.filters import CustomFilters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
@@ -46,8 +45,8 @@ async def cancel_mirror(client, message):
     dl.cancel_download()
 
 async def cancell_all_buttons(client, message):
-    async with status_dict_lock:
-        count = len(status_dict)
+    #async with status_dict_lock:
+    count = len(status_dict)
     if count == 0:
         return await sendMessage("No active tasks", message)
     buttons = ButtonMaker()
@@ -66,20 +65,18 @@ async def cancel_all_update(client, callbackquery):
         await query.answer()
         if data[1] == 'close':
             return await query.message.delete()
-        Thread(target=cancel_all_, args=(data[1], )).start()
+        cancel_all_(data[1])  
     else:
         await query.answer(text="You don't have permission to use these buttons", show_alert=True)
 
+@new_thread
 def cancel_all_(status):
-    asyncio.run(cancel_all(status))
-
-async def cancel_all(status):
     gid = ''
-    while dl := await getAllDownload(status):
+    while dl := getAllDownload(status):
         if dl.gid() != gid:
             gid = dl.gid()
             dl.cancel_download()
-            await sleep(1)
+            time.sleep(1)
 
 cancel_mirror_handler = MessageHandler(cancel_mirror, filters.command(BotCommands.CancelCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 cancel_all_handler = MessageHandler(cancell_all_buttons, filters= filters.command(BotCommands.CancelAllCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))

@@ -67,6 +67,18 @@ def get_readable_time(seconds: int) -> str:
     result += f'{seconds}s'
     return result
 
+def new_thread(fn):
+    """To use as decorator to make a function call threaded.
+    Needs import
+    from threading import Thread"""
+
+    def wrapper(*args, **kwargs):
+        thread = Thread(target=fn, args=args, kwargs=kwargs)
+        thread.start()
+        return thread
+
+    return wrapper
+
 class setInterval:
     def __init__(self, interval, action):
         self.interval = interval

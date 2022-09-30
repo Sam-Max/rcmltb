@@ -13,8 +13,7 @@ RUN apt-get -y update && DEBIAN_FRONTEND="noninteractive" \
     if [[ "$cpu" == "x86_64" ]]; then echo "amd64"; elif [[ "$cpu" == "x86" ]]; \
     then echo "i386"; elif [[ "$cpu" == "aarch64" ]]; then echo "arm64"; else echo $cpu; fi) \
     -o /usr/local/bin/megasdkrest && chmod +x /usr/local/bin/megasdkrest && \ 
-    curl -L https://git.io/JJMSG -o /usr/local/bin/gclone.gz && gzip -d /usr/local/bin/gclone.gz && \ 
-    chmod +x /usr/local/bin/gclone && curl https://rclone.org/install.sh | bash 
+    curl https://rclone.org/install.sh | bash 
 
 COPY requirements.txt .
 

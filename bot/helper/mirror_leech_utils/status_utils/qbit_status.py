@@ -39,12 +39,10 @@ class qBitTorrentStatus:
                                         ])))
                 if sleeps:
                     if self.__obj.is_cancelled:     
-                        async with status_dict_lock:
-                            del status_dict[self.id]  
                         await editMessage(self.__obj.error_message, rmsg)
                         return False, None
                     if self.__obj.is_uploaded:
-                        return True, self.message  
+                        return True, rmsg
                     sleeps = False
                     await sleep(1)
 

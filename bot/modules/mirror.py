@@ -26,6 +26,8 @@ from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import Tel
 from bot.helper.mirror_leech_utils.mirror_leech import MirrorLeech
 
 
+listener_dict = {}
+
 async def handle_mirror(client, message):
     await mirror_leech(client, message)
 
@@ -37,6 +39,7 @@ async def handle_unzip_mirror(client, message):
 
 async def mirror_leech(client, message, _link= None, isZip=False, extract=False, isLeech= False, from_cb= False):
         user_id= message.from_user.id
+        message_id= message.id
         if from_cb:
             user_id= message.reply_to_message.from_user.id
         if await is_config_set(user_id, message) == False:
@@ -83,13 +86,10 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
                     name= file.file_name
                     size= get_readable_size(file.file_size)
                     header_msg = f"<b>Which name do you want to use?</b>\n\n<b>Name</b>: `{name}`\n\n<b>Size</b>: `{size}`"
-                    set_rclone_var("FILE", file, user_id)
-                    set_rclone_var("IS_ZIP", isZip, user_id)
-                    set_rclone_var("EXTRACT", extract, user_id)
-                    set_rclone_var("PSWD", pswd, user_id)
-                    buttons.dbuildbutton("📄 By default", f'mirrormenu^default^{user_id}',
-                                         "📝 Rename", f'mirrormenu^rename^{user_id}')
-                    buttons.cbl_buildbutton("✘ Close Menu", f"mirrormenu^close^{user_id}")
+                    listener_dict[message_id] = [file, isZip, extract, pswd, user_id]
+                    buttons.dbuildbutton("📄 By default", f'mirrormenu^default^{message_id}',
+                                         "📝 Rename", f'mirrormenu^rename^{message_id}')
+                    buttons.cbl_buildbutton("✘ Close Menu", f"mirrormenu^close^{message_id}")
                     return await sendMarkup(header_msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
             else:
                 link = await client.download_media(file)
@@ -153,7 +153,7 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
                     else:
                         return await sendMessage(tag + " " + error, message)
         if is_gdrive_link(link):
-            gmsg = f"Use /{BotCommands.GcloneCommand} to clone Google Drive file/folder\n\n"
+            gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
             await sendMessage(gmsg, message)      
         elif is_mega_link(link):
             if MEGA_KEY is not None:
@@ -194,13 +194,14 @@ async def mirror_menu(client, query):
     message= query.message
     user_id= query.from_user.id
     tag = f"@{message.reply_to_message.from_user.username}"
+    msg_id= int(cmd[-1])
+    info= listener_dict[msg_id] 
+    file = info[0]
+    isZip = info[1]
+    extract = info[2]
+    pswd = info[3]
 
-    file= get_rclone_var("FILE", user_id)
-    isZip = get_rclone_var("IS_ZIP", user_id)
-    extract = get_rclone_var("EXTRACT", user_id)
-    pswd = get_rclone_var("PSWD", user_id) 
-
-    if int(cmd[-1]) != user_id:
+    if int(info[-1]) != user_id:
         return await query.answer("This menu is not for you!", show_alert=True)
 
     elif cmd[1] == "default" :

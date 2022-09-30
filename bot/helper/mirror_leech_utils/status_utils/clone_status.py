@@ -1,56 +1,98 @@
-import re
-from bot import LOGGER
+from asyncio import sleep
+from time import time
+from bot import EDIT_SLEEP_SECS
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot.helper.ext_utils.message_utils import editMessage
-from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
+from bot.helper.ext_utils.bot_utils import get_readable_time
+from bot.helper.ext_utils.human_format import get_readable_file_size
+from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status, get_progress_bar_string
 
 
 class CloneStatus:
-     def __init__(self, process, message, name):
-        self._process = process
-        self._message = message
-        self.id = self._message.id
-        self.name= name
+    def __init__(self, obj, size, message, gid):
+        self.__obj = obj
+        self.__size = size
+        self.__gid = gid
+        self.message = message
 
-     async def progress(self, status_type):
-          try:
-               stdout, stderr = await self._process.communicate()
-          except 'userRateLimitExceeded' in Exception:
-               return await editMessage("‼️ **ERROR** ‼️\n\n Error 403: User rate limit exceeded.", self._message)
-          except Exception as ex:
-               return await editMessage(f"‼️ **ERROR** ‼️\n\n {ex}", self._message)
+    async def start(self):
+        sleeps= False
+        start = time()
+        data = "cancel {}".format(self.gid())
+        status_msg = self.get_status_message_text()
+        rmsg= await sendMarkup(status_msg, self.message, reply_markup=(InlineKeyboardMarkup([
+                            [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]])))
+        while True:
+            sleeps = True
+            status_msg  = self.get_status_message_text()
+            if time() - start > EDIT_SLEEP_SECS:
+                await editMessage(status_msg, rmsg, reply_markup=(InlineKeyboardMarkup([
+                                [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]]))) 
+                if sleeps:
+                    if self.__obj.is_cancelled:
+                        return rmsg
+                    if self.__obj.is_completed:
+                        return rmsg
+                    sleeps = False
+                    await sleep(1)
+    
+    def get_status_message_text(self):
+        msg = f"<code>{str(self.name())}</code>"
+        msg += f"\n<b>Status:</b> {MirrorStatus.STATUS_CLONING}"
+        msg += f"\n{get_progress_bar_string(self.processed_bytes(), self.size_raw())} {self.progress()}"
+        msg += f"\n<b>Processed:</b> {get_readable_file_size(self.processed_bytes())} of {self.size()}"
+        msg += f"\n<b>Speed:</b> {self.speed()} | <b>ETA:</b> {self.eta()}\n"
+        msg += get_bottom_status()
+        return msg
 
-          data = stderr.decode()
-          mat = re.findall('Transferred:.*ETA.*', data)
-          
-          if mat is not None and len(mat) > 0:
-               nstr = mat[0].replace('Transferred:', '')
-               nstr = nstr.strip()
-               nstr = nstr.split(',')
+    def get_status_msg(self):
+        return self.get_status_message_text()
 
-               if status_type == MirrorStatus.STATUS_CLONING:
-                    status_msg = '**Name:** `{}`\n**Status:** {}\n**Downloaded:** {}\n**Speed:** {} | **ETA:** {}\n'.format(
-                                        self.name, status_type, nstr[0], nstr[2], nstr[3].replace('ETA', ''))
-                    status_msg += get_bottom_status()
+    def processed_bytes(self):
+        return self.__obj.transferred_size
 
-                    await editMessage(status_msg, self._message, reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton('Cancel', callback_data=f"cancel_rclone_{self.id}".encode('UTF-8'))]
-                    ]))
-          
-          #Get file name  
-          try:
-               if len(self.name) == 0:
-                    pattern = "INFO(.*)(:)(.*)(:) (Copied)"
-                    name = re.findall(pattern, data)
-                    file_name = name[0][2].strip()
-                    return True, file_name 
-               else:
-                    return True, ""
-          except IndexError:
-               await editMessage(f"Try another url or check if you sent folder name", self._message)
-               return False, ""
-          except Exception as ex:
-               LOGGER.info(str(ex))
-               await editMessage(f"**ERROR**\n`{ex}`", self._message)
-               return False, "" 
-                    
+    def size_raw(self):
+        return self.__size
+
+    def size(self):
+        return get_readable_file_size(self.__size)
+
+    def status(self):
+        return MirrorStatus.STATUS_CLONING
+
+    def name(self):
+        return self.__obj.name
+
+    def gid(self) -> str:
+        return self.__gid
+
+    def progress_raw(self):
+        try:
+            return self.__obj.transferred_size / self.__size * 100
+        except:
+            return 0
+
+    def progress(self):
+        return f'{round(self.progress_raw(), 2)}%'
+
+    def speed_raw(self):
+        """
+        :return: Download speed in Bytes/Seconds
+        """
+        return self.__obj.cspeed()
+
+    def speed(self):
+        return f'{get_readable_file_size(self.speed_raw())}/s'
+
+    def eta(self):
+        try:
+            seconds = (self.__size - self.__obj.transferred_size) / self.speed_raw()
+            return f'{get_readable_time(seconds)}'
+        except:
+            return '-'
+
+    def download(self):
+        return self.__obj
+
+    def cancel_download(self):
+       self.__obj.cancel_download()

@@ -31,7 +31,8 @@ def get_client():
     return qbitClient(host="localhost", port=8090)
 
 botUptime = time()
-
+Interval = []
+EXTENSION_FILTER = {'.aria2'}
 DOWNLOAD_DIR = None
 
 status_dict_lock = Lock()
@@ -79,7 +80,7 @@ TORRENT_TIMEOUT= None if len(TORRENT_TIMEOUT) == 0 else int(TORRENT_TIMEOUT)
 WEB_PINCODE = environ.get('WEB_PINCODE', '')
 WEB_PINCODE = WEB_PINCODE.lower() == 'true'
 
-DEFAULT_MIRROR_DRIVE = environ.get('DEFAULT_MIRROR_DRIVE', '')
+DEFAULT_DRIVE = environ.get('DEFAULT_DRIVE', '')
 
 CMD_INDEX = environ.get('CMD_INDEX', '')
 
@@ -107,6 +108,13 @@ if len(BASE_URL) == 0:
 SERVER_PORT = environ.get('SERVER_PORT', '')
 if len(SERVER_PORT) == 0:
     SERVER_PORT = 80
+
+IS_TEAM_DRIVE = environ.get('IS_TEAM_DRIVE', '')
+IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == 'true'    
+
+PARENT_ID = environ.get('GDRIVE_FOLDER_ID', '')
+if len(PARENT_ID) == 0:
+    PARENT_ID = None
 
 DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
 if len(DOWNLOAD_DIR) == 0:
@@ -142,6 +150,12 @@ if len(aid) != 0:
     SUDO_USERS = {int(_id.strip()) for _id in aid}
 else:
     SUDO_USERS = set()
+
+fx = environ.get('EXTENSION_FILTER', '')
+if len(fx) > 0:
+    fx = fx.split()
+    for x in fx:
+        EXTENSION_FILTER.add(x.strip().lower())
 
 try:
     API_ID = int(getConfig("API_ID"))

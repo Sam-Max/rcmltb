@@ -1,62 +1,56 @@
 from asyncio import sleep
 from time import time
-from bot import DOWNLOAD_DIR, EDIT_SLEEP_SECS
+from bot import DOWNLOAD_DIR, EDIT_SLEEP_SECS, status_dict
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot import status_dict, status_dict_lock
 from bot.helper.ext_utils.bot_utils import get_readable_time
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.message_utils import editMarkup, editMessage
+from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.zip_utils import get_path_size
-from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status, get_progress_bar_string
 
 
 class YtDlpDownloadStatus:
     def __init__(self, obj, message, gid):
         self.__obj = obj
-        self.__id = message.id
-        self.__gid = gid
         self.message = message
-        self.__status_msg= None
-
-    def get_status_msg(self):
-        return self.__status_msg
+        self.__id = self.message.id
+        self.__gid = gid
 
     async def start(self):
         sleeps= False
         start = time()
         data = "cancel {}".format(self.gid())
-        status_msg = self.create_update_message()
-        await editMarkup(status_msg, self.message, reply_markup=(InlineKeyboardMarkup([
+        status_msg = self.get_status_message_text()
+        await editMessage(status_msg, self.message, reply_markup=(InlineKeyboardMarkup([
                             [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]])))
         while True:
             sleeps = True
-            status_msg  = self.create_update_message()
-            self.__status_msg = status_msg 
+            status_msg  = self.get_status_message_text()
             if time() - start > EDIT_SLEEP_SECS:
-                await editMarkup(status_msg, self.message, reply_markup=(InlineKeyboardMarkup([
+                await editMessage(status_msg, self.message, reply_markup=(InlineKeyboardMarkup([
                                 [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]]))) 
                 if sleeps:
                     if self.__obj.is_cancelled:
-                        async with status_dict_lock:
-                            del status_dict[self.__id]
+                        del status_dict[self.__id] 
                         await editMessage(f"{self.__obj.error_message}", self.message)
-                        return
+                        return False
                     if self.__obj.is_completed:
-                        return 
+                        #del status_dict[self.__id] 
+                        return True
                     sleeps = False
                     await sleep(1)
 
-    def create_update_message(self):
+    def get_status_message_text(self):
         msg = f"<code>{str(self.name())}</code>"
         msg += f"\n<b>Status:</b> {MirrorStatus.STATUS_DOWNLOADING}"
-        msg += f"\n{self.get_progress_bar_string()} {self.progress()}"
+        msg += f"\n{get_progress_bar_string(self.processed_bytes(), self.size_raw())} {self.progress()}"
         msg += f"\n<b>Processed:</b> {get_readable_file_size(self.processed_bytes())} of {self.size()}"
         msg += f"\n<b>Speed:</b> {self.speed()} | <b>ETA:</b> {self.eta()}\n"
         msg += get_bottom_status()
         return msg
 
-    def cancel_download(self):
-       self.__obj.cancel_download()
+    def get_status_msg(self):
+        return self.get_status_message_text()
 
     def status(self):
         return MirrorStatus.STATUS_DOWNLOADING
@@ -103,13 +97,6 @@ class YtDlpDownloadStatus:
         except:
             return '-'
 
-    def get_progress_bar_string(self):
-        completed = self.processed_bytes() / 8
-        total = self.size_raw() / 8
-        p = 0 if total == 0 else round(completed * 100 / total)
-        p = min(max(p, 0), 100)
-        cFull = p // 8
-        p_str = '■' * cFull
-        p_str += '□' * (12 - cFull)
-        p_str = f"[{p_str}]"
-        return p_str
+    def cancel_download(self):
+       self.__obj.cancel_download()
+

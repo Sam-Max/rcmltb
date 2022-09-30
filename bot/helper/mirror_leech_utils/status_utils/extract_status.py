@@ -1,17 +1,16 @@
-from asyncio import sleep
 from time import time
 from bot import DOWNLOAD_DIR, LOGGER
-from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from bot.helper.ext_utils.human_format import get_readable_file_size
-
+from bot.helper.ext_utils.message_utils import editMessage
+from bot.helper.ext_utils.zip_utils import get_path_size
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
 
 class ExtractStatus:
     def __init__(self, name, size, message, listener):
+        self.__user_message= message
+        self.__id = self.__user_message.id
         self.__name = name
         self.__size= size
-        self.__user_message= message
-        self.id = self.__user_message.id
         self.__start_time = time()
         self.__listener= listener
         self.__status_msg = ""
@@ -44,22 +43,13 @@ class ExtractStatus:
         return MirrorStatus.STATUS_EXTRACTING
 
     async def create_message(self):
-        msg = f'**Name:** {self.__name}\n'
-        msg += f'**Status:** {self.status()}\n'
-        msg += f"**Size:** {get_readable_file_size(self.__size)}\n"
-        msg += f'**Speed:** {self.speed()} | **ETA:** {self.eta()}\n'
+        msg = f'<b>Name:</b> {self.__name}\n'
+        msg += f'<b>Status:</b> {self.status()}\n'
+        msg += f"<b>Size:</b> {get_readable_file_size(self.__size)}\n"
+        msg += f'<b>Speed:</b> {self.speed()} | <b>ETA:</b> {self.eta()}\n'
         msg += get_bottom_status()
         self._status_msg= msg
-
-        try:
-            await self.__user_message.edit(text= self._status_msg)
-        except FloodWait as fw:
-            LOGGER.warning(f"FloodWait : Sleeping {fw.value}s")
-            await sleep(fw.value)
-        except MessageNotModified:
-            await sleep(1)
-        except Exception:
-            await sleep(1)
+        await editMessage(self._status_msg, self.__user_message)
 
     def cancel_download(self):
         LOGGER.info(f'Cancelling Extract: {self.__name}')

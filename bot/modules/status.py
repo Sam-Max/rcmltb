@@ -12,20 +12,20 @@ UP_MSG_LOOP= []
 
 async def status_handler(client, message):
     chat_id= message.chat.id
-    async with status_dict_lock:
-        count = len(status_dict)
+    #async with status_dict_lock:
+    count = len(status_dict)
     if count == 0:
         status_msg = "**No Active Tasks**\n"
         status_msg += get_bottom_status()
         msg= await sendMessage(status_msg, message)
         await auto_delete_message(msg, message)
     else:
-        async with status_dict_lock:
-            status_msg= ""
-            for dl in list(status_dict.values()):
-                status_msg += dl.get_status_msg()
-                status_msg += f"\n<code>/{BotCommands.CancelCommand} {dl.gid()}</code>"
-                status_msg += "\n\n"
+        #async with status_dict_lock:
+        status_msg= ""
+        for dl in list(status_dict.values()):
+            status_msg += dl.get_status_msg()
+            status_msg += f"\n<code>/{BotCommands.CancelCommand} {dl.gid()}</code>"
+            status_msg += "\n\n"
         
         if len(status_msg) == 0:
             return
@@ -62,24 +62,24 @@ class UpdateMessageLoop:
             async with status_reply_dict_lock:
                 if not status_reply_dict or not UP_MSG_LOOP:
                     return
-            async with status_dict_lock:
-                count = len(status_dict)
+            #async with status_dict_lock:
+            count = len(status_dict)
             if count == 0:
                 await deleteMessage(self.message)
                 return 
             if self.stop_loop:
                 return 
-            async with status_dict_lock:
-                status_msg= ""
-                for dl in list(status_dict.values()):
-                    status_msg += dl.get_status_msg()
-                    status_msg += f"\n<code>/{BotCommands.CancelCommand} {dl.gid()}</code>"
-                    status_msg += "\n\n"
+            #async with status_dict_lock:
+            status_msg= ""
+            for dl in list(status_dict.values()):
+                status_msg += dl.get_status_msg()
+                status_msg += f"\n<code>/{BotCommands.CancelCommand} {dl.gid()}</code>"
+                status_msg += "\n\n"
             async with status_reply_dict_lock:
                 if status_reply_dict[self.chat_id] and status_msg != status_reply_dict[self.chat_id][0].text:
                     await editMessage(status_msg, status_reply_dict[self.chat_id][0])
                     status_reply_dict[self.chat_id][0].text = status_msg
-            await sleep(2)
+            await sleep(0.5)
 
     def cancel(self):
         self.stop_loop= True

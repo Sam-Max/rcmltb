@@ -21,7 +21,6 @@ from bot.helper.mirror_leech_utils.status_utils.yt_dlp_status import YtDlpDownlo
 listener_dict = {}
 
 
-
 async def _ytdl(client, message, isLeech=False):
     mssg = message.text
     user_id = message.from_user.id
@@ -88,7 +87,7 @@ You can add tuple and dict also. Use double quotes inside dict.
         """
         return await sendMessage(help_msg, message)
 
-    listener= (tag, user_id, isLeech)
+    listener= (tag, isLeech)
     buttons = ButtonMaker()
     best_video = "bv*+ba/b"
     best_audio = "ba/b"
@@ -200,35 +199,35 @@ async def select_format(client, callback_query):
     query = callback_query
     user_id = query.from_user.id
     data = query.data
-    msg = query.message
+    message = query.message
     data = data.split(" ")
     task_id = int(data[1])
     try:
         task_info = listener_dict[task_id]
     except:
-        return await editMessage("This is an old task", msg)
+        return await editMessage("This is an old task", message)
     uid = task_info[1]
     if user_id != uid and not CustomFilters._owner_query(user_id):
         return await query.answer(text="This task is not for you!", show_alert=True)
     elif data[2] == "dict":
         await query.answer()
         b_name = data[3]
-        await _qual_subbuttons(task_id, b_name, msg)
+        await _qual_subbuttons(task_id, b_name, message)
         return
     elif data[2] == "back":
         await query.answer()
-        return await editMessage('Choose Video Quality:', msg, task_info[3])
+        return await editMessage('Choose Video Quality:', message, task_info[3])
     elif data[2] == "mp3":
         await query.answer()
         if len(data) == 4:
             playlist = True
         else:
             playlist = False
-        await _mp3_subbuttons(task_id, msg, playlist)
+        await _mp3_subbuttons(task_id, message, playlist)
         return
     elif data[2] == "close":
         await query.answer("Closed")
-        await msg.delete()
+        await message.delete()
     else:
         await query.answer()
         listener= task_info[0]
@@ -245,16 +244,19 @@ async def select_format(client, callback_query):
             if '|' in qual:
                 b_name, tbr = qual.split('|')
                 qual = task_info[6][b_name][tbr][1]
-        (tag, user_id, isLeech)= listener
-        mirror_leech= MirrorLeech(f'{DOWNLOAD_DIR}/{task_id}/', msg, tag, user_id, isLeech= isLeech)        
-        ydl = YoutubeDLHelper(msg, mirror_leech)
-        async with status_dict_lock:
-            gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
-            ytdl_status = YtDlpDownloadStatus(ydl, msg, gid)
-            status_dict[msg.id]= ytdl_status
-        loop= asyncio.get_running_loop()    
-        loop.create_task(ytdl_status.start())
-        loop.create_task(ydl.add_download(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, opt, loop))
+        (tag, isLeech)= listener
+        mirror_leech= MirrorLeech(f'{DOWNLOAD_DIR}/{task_id}', message, tag, uid, isLeech= isLeech)        
+        gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
+        ydl_hp = YoutubeDLHelper(mirror_leech)
+        ytdl_status = YtDlpDownloadStatus(ydl_hp, message, gid)
+        status_dict[message.id] = ytdl_status
+        loop= asyncio.get_running_loop() 
+        status_task= loop.create_task(ytdl_status.start())
+        loop.create_task(ydl_hp.add_download(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, opt))
+        await status_task
+        status= status_task.result()
+        if status:
+            await mirror_leech.execute()
         
     del listener_dict[task_id]
 

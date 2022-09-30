@@ -27,8 +27,6 @@ class AriaDownloadStatus:
          return self._status_msg     
 
     async def create_status(self):
-          async with status_dict_lock:
-              status_dict[self.id] = self
           self.__update()
           status_msg= self.create_status_message()
           rmsg= await sendMessage(status_msg, self.message)
@@ -58,7 +56,7 @@ class AriaDownloadStatus:
                         else:
                             msg = self.__download.error_message
                             msg = f"Download failed:- {msg}"
-                            return False, self.message, msg, ""
+                            return False, rmsg, msg, ""
                     else:
                         LOGGER.info("Download completed!")
                         msg = "Download completed!"

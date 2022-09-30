@@ -5,13 +5,12 @@ from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from os import path as ospath
-from bot import DB_URI, LOGGER, Bot
+from bot import DB_URI, Bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
-
 
 
 
@@ -25,12 +24,26 @@ async def config_callback(client, callback_query):
      if int(cmd[-1]) != user_id:
           return await query.answer("This menu is not for you!", show_alert=True)
 
-     if cmd[1] == "get":
+     if cmd[1] == "get_config":
           path= get_rclone_config(user_id)
-          await client.send_document(document=path, chat_id=message.chat.id)
+          try:
+               await client.send_document(document=path, chat_id=message.chat.id)
+          except ValueError as err:
+               await sendMessage(err, message)
           await query.answer()
 
-     if cmd[1] == "change":
+     if cmd[1] == "get_pickle":
+          try:
+               await client.send_document(document="token.pickle", chat_id=message.chat.id)
+          except ValueError as err:
+               await sendMessage(err, message)
+          await query.answer()
+
+     if cmd[1] == "change_config":
+          await query.answer()
+          await set_config_listener(client, message, is_rclone=True)
+
+     if cmd[1] == "change_pickle":
           await query.answer()
           await set_config_listener(client, message)
 
@@ -56,24 +69,24 @@ async def handle_config(client, message):
           if return_code != 0:
                err = stderr.decode().strip()
                return await sendMessage(f'Error: {err}', message)  
-          msg= "❇️ **Rclone configuration**"
-          msg+= "\n\n**Here is list of drives in config file:**"
-          msg+= f"\n{fstr}"
-          buttons.cbl_buildbutton("🗂 Get rclone config", f"configmenu^get^{user_id}")
-          buttons.cbl_buildbutton("📃 Change rclone config", f"configmenu^change^{user_id}")
-          buttons.cbl_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}")
-          await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))       
-     else:
-          await set_config_listener(client, message)  
+     msg= "❇️ **Rclone configuration**"
+     msg+= "\n\n**Here is list of drives in config file:**"
+     msg+= f"\n{fstr}"
+     buttons.dbuildbutton("🗂 Get rclone.conf", f"configmenu^get_config^{user_id}",
+                          "🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}")
+     buttons.dbuildbutton("📃 Change rclone.conf", f"configmenu^change_config^{user_id}",
+                          "📃 Change token.pickle", f"configmenu^change_pickle^{user_id}")
+     buttons.cbl_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}")
+     await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))       
 
-async def set_config_listener(client, message):
+async def set_config_listener(client, message, is_rclone= False):
      if message.reply_to_message:
           user_id= message.reply_to_message.from_user.id
      else:
           user_id= message.from_user.id
 
      question= await client.send_message(message.chat.id, 
-               text= "Send an Rclone config file, /ignore to cancel")
+               text= "Send file, /ignore to cancel")
      try:
           response = await client.listen.Message(filters.document | filters.text, id= filters.user(user_id), timeout = 30)
      except TimeoutError:
@@ -85,12 +98,16 @@ async def set_config_listener(client, message):
                         if "/ignore" in response.text:
                             await client.listen.Cancel(filters.user(user_id))
                     else:
-                        rc_path = ospath.join("users", str(user_id), "rclone.conf" )
-                        path= await client.download_media(response, file_name=rc_path)
-                        if DB_URI is not None:
-                            DbManger().user_save_rcconfig(user_id, path)
-                        msg = "Use /mirrorset to select a drive"
-                        await sendMessage(msg, message)
+                        if is_rclone:
+                              rclone_path = ospath.join("users", str(user_id), "rclone.conf" )
+                              path= await client.download_media(response, file_name=rclone_path)
+                              if DB_URI is not None:
+                                   DbManger().user_save_rcconfig(user_id, path)
+                              msg = "Use /mirrorset to select a drive"
+                              await sendMessage(msg, message)
+                        else:
+                           path= await client.download_media(response, file_name= "./")
+                        
                except Exception as ex:
                     await sendMessage(str(ex), message) 
      finally:

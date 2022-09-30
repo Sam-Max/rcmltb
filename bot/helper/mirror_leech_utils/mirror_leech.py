@@ -29,13 +29,13 @@ class MirrorLeech:
 
     async def execute(self):
         f_size = get_path_size(self.__path)
-        async with status_dict_lock:
-            try:  
-                download = status_dict[self.id]
-                path= self.__path
-                name = str(download.name()).replace('/', '')
-            except:
-                path, name= self.__path.rsplit("/", 1)
+        #async with status_dict_lock:
+        try:  
+            download = status_dict[self.id]
+            path= self.__path
+            name = str(download.name()).replace('/', '')
+        except:
+            path, name= self.__path.rsplit("/", 1)
         if name == "None" or not ospath.exists(f"{path}/{name}"):
             name = listdir(path)[-1]
         f_path= f"{path}/{name}" 
@@ -123,8 +123,8 @@ class MirrorLeech:
         else:
             rc_mirror = RcloneMirror(up_dir, up_name, self.__message, self.__tag, self.__user_id, isExtract= self.__is_extract)
             await rc_mirror.mirror()
-        async with status_dict_lock: 
-            try:  
-                del status_dict[self.id]
-            except:
-                pass
+        #async with status_dict_lock: 
+        try:  
+            del status_dict[self.id]
+        except:
+            pass

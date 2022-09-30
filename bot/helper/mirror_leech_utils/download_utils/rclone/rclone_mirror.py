@@ -3,7 +3,7 @@ from asyncio.subprocess import PIPE
 from configparser import ConfigParser
 from random import SystemRandom
 from string import ascii_letters, digits
-from bot import LOGGER
+from bot import LOGGER, status_dict, status_dict_lock
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_rclone_config
 from bot.helper.ext_utils.rclone_utils import get_gid
@@ -17,6 +17,7 @@ class RcloneMirror:
         self.__path = path
         self.__name= name
         self.__message = message
+        self.__id = self.__message.id
         self.__user_id= user_id
         self.__tag = tag
         self.__is_extract= isExtract
@@ -40,6 +41,8 @@ class RcloneMirror:
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         status_type= MirrorStatus.STATUS_UPLOADING
         rclone_status= RcloneStatus(rc_process, self.__message, status_type, gid, self.__name)
+        #async with status_dict_lock:
+        status_dict[self.__id] = rclone_status
         status= await rclone_status.start()
         if status:
             await self.__onDownloadComplete(conf_path)
@@ -65,8 +68,12 @@ class RcloneMirror:
                 await editMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.__message, button.build_menu(1))
             else:
                 await editMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.__message)          
+        #async with status_dict_lock:
+        del status_dict[self.__id] 
         clean(self.__path)
-
+        
     async def __onDownloadCancel(self):
         await self.__message.edit('Download cancelled')
+        #async with status_dict_lock:
+        del status_dict[self.__id] 
         clean(self.__path)    

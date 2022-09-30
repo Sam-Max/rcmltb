@@ -17,7 +17,7 @@ class _BotCommands:
         self.ConfigCommand = f'config{CMD_INDEX}'
         self.OwnerSetCommand = f'ownerset{CMD_INDEX}'
         self.CopyCommand = f'copy{CMD_INDEX}'
-        self.GcloneCommand = f'clone{CMD_INDEX}'
+        self.CloneCommand = f'clone{CMD_INDEX}'
         self.MyFilesCommand = f'myfiles{CMD_INDEX}'
         self.StorageCommand = f'storage{CMD_INDEX}'
         self.CleanupCommand = f'cleanup{CMD_INDEX}'

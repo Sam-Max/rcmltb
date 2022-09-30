@@ -53,7 +53,7 @@
 - Select files from Torrent before downloading 
 - Get restricted messages from private channels.
 - Upload files to supergroup/channel.
-- Clone Google Drive files/folders from link to cloud using gclone
+- Clone Google Drive files/folders from link
 - Thumbnail support
 - Set upload as document or as media 
 - Update bot at startup and with restart command using UPSTREAM_REPO
@@ -77,7 +77,7 @@ leechset - leech settings
 leechbatch - leech files in batch to Telegram 
 ytdlleech - leech yt-dlp supported link
 myfiles - file manager
-clone - clone gdrive files/folder to cloud
+clone - clone gdrive file/folder from link
 copy - copy from cloud to cloud
 config - rclone config
 ownerset - change env vars from bot
@@ -121,7 +121,7 @@ restart - restart bot
    - Non mandatory variables:
         - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
         - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission separated by spaces. `Str`
-        - `DEFAULT_MIRROR_DRIVE`: set a default drive from your rclone.conf. `Str`
+        - `DEFAULT_DRIVE`: set a default drive from your rclone.conf. `Str`
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces `Str`
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
         - `UPSTREAM_BRANCH`: Upstream branch for update
@@ -129,6 +129,12 @@ restart - restart bot
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
+
+   - CLONE
+     - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Str`
+     - `IS_TEAM_DRIVE`: Set `True` if TeamDrive. Default is `False`. `Bool`
+     - `EXTENSION_FILTER`: File extensions that won't clone. Separate them by space. `Str`
+     **Notes**: Must add **token.pickle** file directly to root for cloning to work. You can use /config command to add from bot.
    
    - LEECH
         - `TG_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
@@ -246,24 +252,31 @@ sudo docker-compose start
 - Rclone supported providers:
   > 1Fichier, Amazon Drive, Amazon S3, Backblaze B2, Box, Ceph, DigitalOcean Spaces, Dreamhost, **Dropbox**,   Enterprise File Fabric, FTP, GetSky, Google Cloud Storage, **Google Drive**, Google Photos, HDFS, HTTP, Hubic, IBM COS S3, Koofr, Mail.ru Cloud, **Mega**, Microsoft Azure Blob Storage, **Microsoft OneDrive**, **Nextcloud**, OVH, OpenDrive, Oracle Cloud Storage, ownCloud, pCloud, premiumize.me, put.io, Scaleway, Seafile, SFTP, **WebDAV**, Yandex Disk, etc. **Check all providers on official site**: [Click here](https://rclone.org/#providers).
 
+## Getting Google OAuth API credential file and token.pickle
+
+**NOTES**
+- You need OS with a browser.
+- Windows users should install python3 and pip. You can find how to install and use them from google.
+- You can ONLY open the generated link from `generate_drive_token.py` in local browser.
+
+1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
+2. Go to the OAuth Consent tab, fill it, and save.
+3. Go to the Credentials tab and click Create Credentials -> OAuth Client ID
+4. Choose Desktop and Create.
+5. Publish your OAuth consent screen App to prevent **token.pickle** from expire
+6. Use the download button to download your credentials.
+7. Move that file to the root of rclone-tg-bot, and rename it to **credentials.json**
+8. Visit [Google API page](https://console.developers.google.com/apis/library)
+9. Search for Google Drive Api and enable it
+10. Finally, run the script to generate **token.pickle** file for Google Drive:
+```
+pip3 install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+python3 generate_drive_token.py
+```
+------
+
 ## Bot Screenshot: 
 
 <img src="./screenshot.png" alt="button menu example">
 
-## Donations
-
-<p> If you like this project you can help me, donating the amount you wish.</p>
-
-[![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](YOUR_EMAIL_CODE)
-
 -----
-
-## Repositories used to develop this bot:
-
-1- [TorToolkit-Telegram](https://github.com/yash-dk/TorToolkit-Telegram). Base repository.
-
-2- [Rclone](https://github.com/rclone/rclone)
-
-4- [Pyrogram](https://github.com/pyrogram/pyrogram)
-
-4- and many others mentioned in code.

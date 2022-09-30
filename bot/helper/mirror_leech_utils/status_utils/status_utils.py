@@ -26,6 +26,17 @@ class MirrorStatus:
     STATUS_PAUSED = "Pause"
     STATUS_CHECKING = "CheckUp"
 
+def get_progress_bar_string(processed_bytes, size_raw):
+    completed = processed_bytes / 8
+    total = size_raw / 8
+    p = 0 if total == 0 else round(completed * 100 / total)
+    p = min(max(p, 0), 100)
+    cFull = p // 8
+    p_str = '■' * cFull
+    p_str += '□' * (12 - cFull)
+    p_str = f"[{p_str}]"
+    return p_str
+
 def clean_unwanted(path: str):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
     for dirpath, subdir, files in walk(path, topdown=False):
