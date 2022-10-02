@@ -3,7 +3,6 @@ from asyncio.subprocess import PIPE
 from json import loads
 from random import SystemRandom
 from string import ascii_letters, digits
-from bot import LOGGER
 from bot import status_dict, status_dict_lock
 from bot.helper.ext_utils.human_format import human_readable_bytes
 from bot.helper.ext_utils.message_utils import editMessage
@@ -44,7 +43,7 @@ class RcloneCopy:
         button.url_buildbutton("Cloud Link 🔗", url)
         return_code = await process.wait()
         if return_code != 0:
-            LOGGER.info(err.decode().strip())
+             return await editMessage(err.decode().strip(), self.__message)
         #Calculate Size
         cmd = ["rclone", "size", f'--config={conf_path}', "--json", f"{dest_drive}:{dest_dir}{origin_dir}"]
         process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
@@ -52,7 +51,7 @@ class RcloneCopy:
         output = out.decode().strip()
         return_code = await process.wait()
         if return_code != 0:
-            LOGGER.info(err.decode().strip())
+            return await editMessage(err.decode().strip(), self.__message)
         data = loads(output)   
         files = data["count"]
         size = human_readable_bytes(data["bytes"])
