@@ -55,6 +55,7 @@ async def handle_config(client, message):
      user_id= message.from_user.id
      conf_path= get_rclone_config(user_id)
      buttons= ButtonMaker()
+     fstr= ''
      if conf_path is not None and ospath.exists(conf_path):
           cmd = ["rclone", "listremotes", f'--config={conf_path}'] 
           process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
@@ -62,7 +63,6 @@ async def handle_config(client, message):
           return_code = await process.wait()
           stdout = stdout.decode().strip()
           info= stdout.split("\n")
-          fstr= ''
           for i in info:
               rstr = i.replace(":", "")
               fstr += f"- {rstr}\n"
