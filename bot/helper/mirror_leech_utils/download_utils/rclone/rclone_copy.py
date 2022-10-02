@@ -53,12 +53,14 @@ class RcloneCopy:
         return_code = await process.wait()
         if return_code != 0:
             LOGGER.info(err.decode().strip())
-        data = loads(output)
+        data = loads(output)   
         files = data["count"]
         size = human_readable_bytes(data["bytes"])
         format_out = f"**Total Files** {files}\n" 
         format_out += f"**Total Size**: {size}"
         await editMessage(format_out, self.__message, reply_markup= button.build_menu(1))
-
+        del status_dict[self.id] 
+        
     async def __onDownloadCancel(self):
         await editMessage("Copy Cancelled", self.__message)
+        del status_dict[self.id] 
