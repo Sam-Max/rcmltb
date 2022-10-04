@@ -1,5 +1,5 @@
 
-from bot import EDIT_SLEEP_SECS, status_dict, status_dict_lock
+from bot import EDIT_SLEEP_SECS
 from time import time
 from asyncio import sleep
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton

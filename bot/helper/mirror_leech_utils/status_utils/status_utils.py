@@ -25,6 +25,7 @@ class MirrorStatus:
     STATUS_WAITING = "Queue"
     STATUS_PAUSED = "Pause"
     STATUS_CHECKING = "CheckUp"
+    STATUS_SEEDING = "Seed"
 
 def get_progress_bar_string(processed_bytes, size_raw):
     completed = processed_bytes / 8
