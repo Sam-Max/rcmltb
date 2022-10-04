@@ -76,13 +76,6 @@ async def main():
     Bot.add_handler(log_handler)
     Bot.add_handler(ping_handler)
 
-    await Bot.send_message(OWNER_ID, text="The bot is ready to use")
-
 bot.loop.run_until_complete(main())
-try:
-    bot.loop.run_until_complete()
-except:
-    pass
-
 bot.run_until_disconnected()
 
