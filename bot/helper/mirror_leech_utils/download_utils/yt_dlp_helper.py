@@ -34,7 +34,7 @@ class MyLogger:
 
 
 class YoutubeDLHelper:
-    def __init__(self, listener=None):
+    def __init__(self):
         self.name = ""
         self.is_playlist = False
         self._last_downloaded = 0

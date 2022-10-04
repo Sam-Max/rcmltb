@@ -73,20 +73,21 @@ ytdlmirror - mirror ytdlp supported link
 leech - leech from cloud to Telegram
 unzipleech - leech and extract to Telegram 
 zipleech - leech and zip to Telegram 
-leechset - leech settings
 leechbatch - leech files in batch to Telegram 
 ytdlleech - leech yt-dlp supported link
 myfiles - file manager
 clone - clone gdrive file/folder from link
 copy - copy from cloud to cloud
 config - rclone config
-ownerset - change env vars from bot
+usetting - user settings
+ownsetting - owner settings
 cleanup - clean drive trash
 cancelall - cancel all tasks
 storage - drive details
 search - search for torrents
 status - status message of tasks
-server - server stats
+stats - bot stats
+shell - run cmds in shell
 speedtest - test server speed
 log - bot log
 ping - ping bot
@@ -137,7 +138,7 @@ restart - restart bot
      **Notes**: Must add **token.pickle** file directly to root for cloning to work. You can use /config command to add from bot.
    
    - LEECH
-        - `TG_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
+        - `LEECH_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
         - `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/supergroup id.
         - `USER_SESSION_STRING`: Pyrogram session string for batch commands and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: when using string session, you have to use with supergroup not bot.
         - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`

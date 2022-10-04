@@ -147,18 +147,18 @@ def bt_selection_buttons(id_: str):
     return buttons.build_menu(2)
 
 async def getDownloadByGid(gid):
-    #async with status_dict_lock:
-    for dl in list(status_dict.values()):
-        if dl.gid() == gid:
-            return dl
+    async with status_dict_lock:
+        for dl in list(status_dict.values()):
+            if dl.gid() == gid:
+                return dl
     return None
 
-def getAllDownload(req_status: str):
-    #async with status_dict_lock:
-    for dl in list(status_dict.values()):
-        status = dl.status()
-        if req_status in ['all', status]:
-            return dl
+async def getAllDownload(req_status: str):
+    async with status_dict_lock:
+        for dl in list(status_dict.values()):
+            status = dl.status()
+            if req_status in ['all', status]:
+                return dl
     return None
 
 class ButtonMaker:

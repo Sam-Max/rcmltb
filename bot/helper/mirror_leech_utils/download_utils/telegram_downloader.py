@@ -16,8 +16,8 @@ class TelegramDownloader:
         file_name= self._file.file_name
         file_id = self._file.file_unique_id
         tg_status= TelegramStatus(self._message, MirrorStatus.STATUS_DOWNLOADING, file_id)
-        #async with status_dict_lock:
-        status_dict[self.id] = tg_status
+        async with status_dict_lock:
+            status_dict[self.id] = tg_status
         await tg_status.create_empty_status(file_name)
         try:
             media_path= await self._client.download_media(
@@ -27,11 +27,11 @@ class TelegramDownloader:
                 progress_args=(file_name, time()))
         except Exception as e:
             LOGGER.error(str(e))
-        #async with status_dict_lock: 
-        try:  
-            del status_dict[self.id]
-        except:
-            pass
+        async with status_dict_lock: 
+            try:  
+                del status_dict[self.id]
+            except:
+                pass
         return media_path
 
     

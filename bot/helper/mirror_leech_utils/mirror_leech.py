@@ -1,7 +1,7 @@
 from os import listdir, path as ospath, remove, walk
 import os
 from re import search
-from bot import LOGGER, TG_SPLIT_SIZE, status_dict, status_dict_lock
+from bot import LOGGER, LEECH_SPLIT_SIZE, status_dict, status_dict_lock
 from subprocess import Popen
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.misc_utils import clean_target, rename_file
@@ -29,13 +29,13 @@ class MirrorLeech:
 
     async def execute(self):
         f_size = get_path_size(self.__path)
-        #async with status_dict_lock:
-        try:  
-            download = status_dict[self.id]
-            path= self.__path
-            name = str(download.name()).replace('/', '')
-        except:
-            path, name= self.__path.rsplit("/", 1)
+        async with status_dict_lock:
+            try:  
+                download = status_dict[self.id]
+                path= self.__path
+                name = str(download.name()).replace('/', '')
+            except:
+                path, name= self.__path.rsplit("/", 1)
         if name == "None" or not ospath.exists(f"{path}/{name}"):
             name = listdir(path)[-1]
         f_path= f"{path}/{name}" 
@@ -44,15 +44,15 @@ class MirrorLeech:
             zip_status= ZipStatus(name, f_size, self.__message, self)
             await zip_status.create_message()
             if self.__pswd is not None:
-                if int(f_size) > TG_SPLIT_SIZE:
+                if int(f_size) > LEECH_SPLIT_SIZE:
                     LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
-                    self.__suproc = Popen(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
+                    self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
                 else:
                     LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
                     self.__suproc = Popen(["7z", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
-            elif int(f_size) > TG_SPLIT_SIZE:
+            elif int(f_size) > LEECH_SPLIT_SIZE:
                 LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
-                self.__suproc = Popen(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, f_path])
+                self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, f_path])
             else:
                 LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
                 self.__suproc = Popen(["7z", "a", "-mx=0", path, f_path])
@@ -123,8 +123,8 @@ class MirrorLeech:
         else:
             rc_mirror = RcloneMirror(up_dir, up_name, self.__message, self.__tag, self.__user_id, isExtract= self.__is_extract)
             await rc_mirror.mirror()
-        #async with status_dict_lock: 
-        try:  
-            del status_dict[self.id]
-        except:
-            pass
+        async with status_dict_lock: 
+            try:  
+                del status_dict[self.id]
+            except:
+                pass

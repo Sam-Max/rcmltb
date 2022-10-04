@@ -1,10 +1,10 @@
 
+import asyncio
 import time
 from pyrogram.filters import regex
 from pyrogram.handlers import CallbackQueryHandler
-from bot import LOGGER, OWNER_ID, SUDO_USERS, Bot, status_dict
+from bot import status_dict_lock, OWNER_ID, SUDO_USERS, Bot, status_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import new_thread
 from bot.helper.ext_utils.filters import CustomFilters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
@@ -45,8 +45,8 @@ async def cancel_mirror(client, message):
     dl.cancel_download()
 
 async def cancell_all_buttons(client, message):
-    #async with status_dict_lock:
-    count = len(status_dict)
+    async with status_dict_lock:
+        count = len(status_dict)
     if count == 0:
         return await sendMessage("No active tasks", message)
     buttons = ButtonMaker()
@@ -65,14 +65,14 @@ async def cancel_all_update(client, callbackquery):
         await query.answer()
         if data[1] == 'close':
             return await query.message.delete()
-        cancel_all_(data[1])  
+        loop= asyncio.get_running_loop()
+        loop.run_in_executor(None, cancel_all_, data[1], loop)
     else:
         await query.answer(text="You don't have permission to use these buttons", show_alert=True)
 
-@new_thread
-def cancel_all_(status):
+def cancel_all_(status, loop):
     gid = ''
-    while dl := getAllDownload(status):
+    while dl := asyncio.run_coroutine_threadsafe(getAllDownload(status), loop).result():
         if dl.gid() != gid:
             gid = dl.gid()
             dl.cancel_download()

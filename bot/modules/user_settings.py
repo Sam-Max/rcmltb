@@ -38,7 +38,7 @@ def getleechinfo(from_user):
     buttons.cb_buildbutton("✘ Close Menu", f"leechset {user_id} close")
     button = buttons.build_menu(1)
 
-    text = f"<u>Leech Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n\n"\
+    text = f"<u>Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n\n"\
            f"Leech Type <b>{ltype}</b>\n"\
            f"Custom Thumbnail <b>{thumbmsg}</b>"
     return text, button
@@ -119,7 +119,7 @@ async def handle_leech_set_type(client, callback_query):
         except:
             pass
 
-leech_set_handler = MessageHandler(handle_leech_set, filters= filters.command(BotCommands.LeechSetCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+leech_set_handler = MessageHandler(handle_leech_set, filters= filters.command(BotCommands.UserSetCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 but_set_handler = CallbackQueryHandler(handle_leech_set_type, filters= filters.regex("leechset"))
 
 Bot.add_handler(leech_set_handler)

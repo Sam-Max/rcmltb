@@ -42,8 +42,8 @@ class TelegramUploader():
         await self.__msg_to_reply() 
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         tg_status= TelegramStatus(self.__message, MirrorStatus.STATUS_UPLOADING, gid)
-        #async with status_dict_lock:
-        status_dict[self.__id] = tg_status
+        async with status_dict_lock:
+            status_dict[self.__id] = tg_status
         await tg_status.create_empty_status(self.__name)
         if ospath.isdir(self.__path):
             for dirpath, _, filenames in walk(self.__path):

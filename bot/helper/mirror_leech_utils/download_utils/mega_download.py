@@ -37,17 +37,17 @@ class MegaDownloader():
         self.gid= gid
         self.__periodic = setInterval(self.POLLING_INTERVAL, self.__onInterval)
         mega_status= MegaDownloadStatus(gid, self._message, self)
-        #async with status_dict_lock:  
-        status_dict[self.id] = mega_status
+        async with status_dict_lock:  
+            status_dict[self.id] = mega_status
         status, rmsg, name= await mega_status.create_status()
         if status:
-            #async with status_dict_lock:
-            del status_dict[self.id]
+            async with status_dict_lock:
+                del status_dict[self.id]
             path = ospath.join(dl["dir"], name)     
             return True, rmsg, path  
         else:
-            #async with status_dict_lock:
-            del status_dict[self.id]
+            async with status_dict_lock:
+                del status_dict[self.id]
             return False, rmsg, ""       
 
     def __onInterval(self):

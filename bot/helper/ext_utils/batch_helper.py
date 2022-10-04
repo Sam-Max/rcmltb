@@ -60,8 +60,8 @@ async def get_msg(app, client, sender, edit_id, message, msg_link, i, isLeech):
                     return
             user_id= message.chat.id
             status= TelegramStatus(message)
-            #async with status_dict_lock:
-            status_dict[message.id] = status
+            async with status_dict_lock:
+                status_dict[message.id] = status
             file_path = await app.download_media(
                 msg,
                 progress=status.start,
@@ -87,8 +87,8 @@ async def get_msg(app, client, sender, edit_id, message, msg_link, i, isLeech):
                     return
             user_id= message.chat.id
             status= TelegramStatus(message)
-            #async with status_dict_lock:
-            status_dict[message.id] = status
+            async with status_dict_lock:
+                status_dict[message.id] = status
             file_path = await app.download_media(
                 msg,
                 progress=status.start,

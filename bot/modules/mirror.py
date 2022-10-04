@@ -228,6 +228,9 @@ async def mirror_menu(client, query):
         await query.answer("Closed")
         await message.delete()
 
+    del listener_dict[msg_id]
+
+
 async def mirror_file(client, message, file, tag, user_id, pswd, isZip, extract, new_name="", is_rename=False):
     tg_down= TelegramDownloader(file, client, message, f'{DOWNLOAD_DIR}{message.id}/')
     media_path= await tg_down.download() 

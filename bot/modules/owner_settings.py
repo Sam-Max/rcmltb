@@ -13,7 +13,7 @@ from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 
 filter= {"SUDO_USERS", "ALLOWED_CHATS", "DOWNLOAD_DIR", "EDIT_SLEEP_SECS", "TORRENT_TIMEOUT","UPTOBOX_TOKEN","UPSTREAM_REPO",
-          "UPSTREAM_BRANCH","TG_SPLIT_SIZE","AS_DOCUMENT ", "YT_COOKIES_URL", "DATABASE_URL", "DUMP_CHAT","USER_SESSION_STRING", "MEGA_API_KEY","MEGA_EMAIL_ID" ,
+          "UPSTREAM_BRANCH","LEECH_SPLIT_SIZE","AS_DOCUMENT ", "YT_COOKIES_URL", "DATABASE_URL", "DUMP_CHAT","USER_SESSION_STRING", "MEGA_API_KEY","MEGA_EMAIL_ID" ,
           "MEGA_PASSWORD" ,"BASE_URL_OF_BOT","SERVER_PORT", "WEB_PINCODE","SEARCH_API_LINK", "SEARCH_LIMIT"}
 
 list_env_info= []
@@ -41,7 +41,7 @@ def get_menu_message():
     for key, value in dict_env.items():
         if len(value) == 0:
             value= 'None'
-        if key == "TG_SPLIT_SIZE":
+        if key == "LEECH_SPLIT_SIZE":
             if value != "None":
                 msg += f'\n<b>{key.replace("_", " ").lower().capitalize()}:</b> <code>{value} bytes</code> - ({get_readable_file_size(int(value))})'
             else:

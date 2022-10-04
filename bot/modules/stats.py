@@ -1,10 +1,11 @@
-#From:
-#https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/__main__.py
+#Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/__main__.py
 
 from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, boot_time
 from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
 from time import time
+from os import path as ospath
+from subprocess import check_output
 from bot.helper.ext_utils.message_utils import sendMessage
 from bot import Bot, botUptime
 from bot.helper.ext_utils.bot_commands import BotCommands
@@ -12,11 +13,16 @@ from bot.helper.ext_utils.bot_utils import get_readable_time
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.filters import CustomFilters
 
-async def handle_server_command(client, message):
+async def stats(client, message):
+    if ospath.exists('.git'):
+        last_commit = check_output(["git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'"], shell=True).decode()
+    else:
+        last_commit = 'No UPSTREAM_REPO'
     total, used, free, disk = disk_usage('/')
     swap = swap_memory()
     memory = virtual_memory()
-    stats = f'<b>Bot Uptime:</b> {get_readable_time(time() - botUptime)}\n'\
+    stats = f'<b>Commit Date:</b> {last_commit}\n\n'\
+            f'<b>Bot Uptime:</b> {get_readable_time(time() - botUptime)}\n'\
             f'<b>OS Uptime:</b> {get_readable_time(time() - boot_time())}\n\n'\
             f'<b>Total Disk Space:</b> {get_readable_file_size(total)}\n'\
             f'<b>Used:</b> {get_readable_file_size(used)} | <b>Free:</b> {get_readable_file_size(free)}\n\n'\
@@ -33,6 +39,6 @@ async def handle_server_command(client, message):
             f'<b>Memory Used:</b> {get_readable_file_size(memory.used)}\n'
     await sendMessage(stats, message)
         
-handle_server = MessageHandler(handle_server_command, filters= command(BotCommands.ServerCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-Bot.add_handler(handle_server)
+stats_handler = MessageHandler(stats, filters= command(BotCommands.StatsCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+Bot.add_handler(stats_handler)
 

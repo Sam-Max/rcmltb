@@ -7,7 +7,7 @@ from bot import Bot, LOGGER, status_dict, status_dict_lock, Interval
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import is_gdrive_link
 from bot.helper.ext_utils.filters import CustomFilters
-from bot.helper.ext_utils.message_utils import deleteMessage, editMarkup, editMessage, sendMarkup, sendMessage
+from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMessage
 from bot.helper.mirror_leech_utils.status_utils.clone_status import CloneStatus
 from bot.helper.mirror_leech_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from pyrogram import filters
@@ -43,14 +43,14 @@ async def _clone(client, message):
             gd = GoogleDriveHelper(name)
             gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
             clone_status = CloneStatus(gd, size, message, gid)
-            #async with status_dict_lock:
-            status_dict[message.id] = clone_status
+            async with status_dict_lock:
+                status_dict[message.id] = clone_status
             status_task= loop.create_task(clone_status.start())
             result, button = await loop.run_in_executor(None, gd.clone, link) 
             await status_task
             msg = status_task.result()
-            #async with status_dict_lock:
-            del status_dict[message.id]
+            async with status_dict_lock:
+                del status_dict[message.id]
             count = len(status_dict)
             try:
                 if count == 0:

@@ -41,8 +41,8 @@ class RcloneMirror:
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         status_type= MirrorStatus.STATUS_UPLOADING
         rclone_status= RcloneStatus(rc_process, self.__message, status_type, gid, self.__name)
-        #async with status_dict_lock:
-        status_dict[self.__id] = rclone_status
+        async with status_dict_lock:
+            status_dict[self.__id] = rclone_status
         status= await rclone_status.start()
         if status:
             await self.__onDownloadComplete(conf_path)
@@ -68,12 +68,12 @@ class RcloneMirror:
                 await editMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.__message, button.build_menu(1))
             else:
                 await editMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.__message)          
-        #async with status_dict_lock:
-        del status_dict[self.__id] 
+        async with status_dict_lock:
+            del status_dict[self.__id] 
         clean(self.__path)
         
     async def __onDownloadCancel(self):
         await self.__message.edit('Download cancelled')
-        #async with status_dict_lock:
-        del status_dict[self.__id] 
+        async with status_dict_lock:
+            del status_dict[self.__id] 
         clean(self.__path)    

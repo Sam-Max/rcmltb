@@ -257,7 +257,6 @@ async def select_format(client, callback_query):
         status= status_task.result()
         if status:
             await mirror_leech.execute()
-        
     del listener_dict[task_id]
 
 async def ytdlleech(client, message):

@@ -36,8 +36,8 @@ class RcloneLeech:
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))  
         status_type= MirrorStatus.STATUS_DOWNLOADING
         rclone_status= RcloneStatus(rc_process, self.__message, status_type, gid, name)
-        #async with status_dict_lock:
-        status_dict[self.id] = rclone_status
+        async with status_dict_lock:
+            status_dict[self.id] = rclone_status
         status= await rclone_status.start()
         if status:
             await self.__onDownloadComplete()

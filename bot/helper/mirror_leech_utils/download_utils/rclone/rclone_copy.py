@@ -25,8 +25,8 @@ class RcloneCopy:
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         status_type= MirrorStatus.STATUS_COPYING
         rc_status= RcloneStatus(rc_process, self.__message, status_type, gid)
-        #async with status_dict_lock:
-        status_dict[self.id] = rc_status
+        async with status_dict_lock:
+             status_dict[self.id] = rc_status
         status= await rc_status.start()
         if status:
             await self.__onDownloadComplete(conf_path, origin_dir, dest_drive, dest_dir)

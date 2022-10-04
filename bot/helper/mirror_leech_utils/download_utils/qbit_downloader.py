@@ -86,8 +86,8 @@ class QbDownloader:
             self.periodic = setInterval(self.POLLING_INTERVAL, self.__qb_listener)
             qb_status= qBitTorrentStatus(self.__message, self)
             self._qb_status= qb_status
-            #async with status_dict_lock:
-            status_dict[self.id] = qb_status
+            async with status_dict_lock:
+                status_dict[self.id] = qb_status
             LOGGER.info(f"QbitDownload started: {self.name} - Hash: {self.ext_hash}")
             if BASE_URL is not None and select:
                 if link.startswith('magnet:'):
@@ -115,12 +115,12 @@ class QbDownloader:
             else:
                 status, rmsg= await self._qb_status.create_status()
                 if status:
-                    #async with status_dict_lock:
-                    del status_dict[self.id] 
+                    async with status_dict_lock:
+                        del status_dict[self.id] 
                     return True, rmsg, self.name
                 else:
-                    #async with status_dict_lock:
-                    del status_dict[self.id] 
+                    async with status_dict_lock:
+                        del status_dict[self.id] 
                     return False, None, ""
         except Exception as e:
             LOGGER.info(str(e))

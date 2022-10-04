@@ -31,15 +31,15 @@ class Aria2Downloader():
 
         aria_status= AriaDownloadStatus(download.gid, self.__message)
         LOGGER.info("Aria2Download started...")
-        #async with status_dict_lock:
-        status_dict[self.id] = aria_status
+        async with status_dict_lock:
+            status_dict[self.id] = aria_status
         status, rmsg, msg, name = await aria_status.create_status()
         if status:
-            #async with status_dict_lock:     
-            del status_dict[self.id] 
+            async with status_dict_lock:     
+                del status_dict[self.id] 
             return True, rmsg, name
         else:
-            #async with status_dict_lock:     
-            del status_dict[self.id] 
+            async with status_dict_lock:     
+                del status_dict[self.id] 
             await editMessage(msg, rmsg)    
             return False, None, None    
