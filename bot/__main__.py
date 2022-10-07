@@ -17,11 +17,11 @@ print("Successfully deployed!")
 
 async def start(client, message):
     user_id= message.from_user.id
+    buttons = ButtonMaker()
+    buttons.url_buildbutton("Repo", "https://github.com/Sam-Max/Rclone-Tg-Bot")
+    buttons.url_buildbutton("Owner", "https://github.com/Sam-Max")
+    reply_markup = buttons.build_menu(2)
     if user_id in SUDO_USERS or user_id in ALLOWED_CHATS or user_id == OWNER_ID or message.chat.id in ALLOWED_CHATS:
-        buttons = ButtonMaker()
-        buttons.url_buildbutton("Repo", "https://github.com/Sam-Max/Rclone-Tg-Bot")
-        buttons.url_buildbutton("Owner", "https://github.com/Sam-Max")
-        reply_markup = buttons.build_menu(2)
         msg = '''
 **Hello, ¡Welcome to Rclone-Tg-Bot!\n
 I can help you copy files from one cloud to another.

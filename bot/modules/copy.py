@@ -12,7 +12,7 @@ from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rclone
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
 from bot.helper.ext_utils.rclone_utils import is_config_set
-from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
+from bot.helper.ext_utils.var_holder import get_rc_user_value, update_rc_user_var
 from bot.helper.mirror_leech_utils.download_utils.rclone.rclone_copy import RcloneCopy
 
 folder_icon= "📁"
@@ -23,11 +23,11 @@ async def handle_copy(client, message):
         return
     path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
     if not ospath.exists(path):
-        msg= f"Send an rclone config file, using /config"
+        msg= f"Send rclone config file, using /config"
         await sendMessage(msg, message)
     else:
-        origin_drive = get_rclone_var("COPY_ORIGIN_DRIVE", user_id)      
-        origin_dir= get_rclone_var("COPY_ORIGIN_DIR", user_id)
+        origin_drive = get_rc_user_value("COPY_ORIGIN_DRIVE", user_id)      
+        origin_dir= get_rc_user_value("COPY_ORIGIN_DIR", user_id)
         await list_drive(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
 
 async def list_drive(message, rclone_drive, base_dir, callback, is_second_menu= False, edit=False):
@@ -96,7 +96,7 @@ async def list_dir(message, drive_name, drive_base, callback= "", back_callback=
             list_info.sort(key=lambda x: x["Name"]) 
         else:
             list_info.sort(key=lambda x: x["Size"])  
-        set_rclone_var("driveInfo", list_info, user_id)
+        update_rc_user_var("driveInfo", list_info, user_id)
         
         if len(list_info) == 0:
             buttons.cbl_buildbutton("❌Nothing to show❌", "copymenu^pages^{user_id}")
@@ -147,10 +147,10 @@ async def copy_menu_callback(client, callback_query):
     cmd = data.split("^")
     message = query.message
     user_id= query.from_user.id
-    origin_drive = get_rclone_var("COPY_ORIGIN_DRIVE", user_id)
-    origin_dir= get_rclone_var("COPY_ORIGIN_DIR", user_id)
-    dest_drive= get_rclone_var("COPY_DESTINATION_DRIVE", user_id)
-    dest_dir= get_rclone_var("COPY_DESTINATION_DIR", user_id)
+    origin_drive = get_rc_user_value("COPY_ORIGIN_DRIVE", user_id)
+    origin_dir= get_rc_user_value("COPY_ORIGIN_DIR", user_id)
+    dest_drive= get_rc_user_value("COPY_DESTINATION_DRIVE", user_id)
+    dest_dir= get_rc_user_value("COPY_DESTINATION_DIR", user_id)
 
     if cmd[1] == "pages":
         return await query.answer()
@@ -161,44 +161,44 @@ async def copy_menu_callback(client, callback_query):
     #First Menu
     if cmd[1] == "drive_origin":
         #Clean Menu
-        set_rclone_var("COPY_ORIGIN_DIR", "", user_id)
-        origin_dir= get_rclone_var("COPY_ORIGIN_DIR", user_id)
+        update_rc_user_var("COPY_ORIGIN_DIR", "", user_id)
+        origin_dir= get_rc_user_value("COPY_ORIGIN_DIR", user_id)
         
         origin_drive= cmd[2]
-        set_rclone_var("COPY_ORIGIN_DRIVE", origin_drive, user_id)
+        update_rc_user_var("COPY_ORIGIN_DRIVE", origin_drive, user_id)
         await list_dir(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= "back_origin")
         await query.answer()
 
     elif cmd[1] == "origin_dir":
-        path = get_rclone_var(cmd[2], user_id)
+        path = get_rc_user_value(cmd[2], user_id)
         origin_dir_= origin_dir + path  + "/"
-        set_rclone_var("COPY_ORIGIN_DIR", origin_dir_, user_id)
+        update_rc_user_var("COPY_ORIGIN_DIR", origin_dir_, user_id)
         await list_dir(message, drive_name= origin_drive, drive_base= origin_dir_, callback="origin_dir", edit=True, back_callback= "back_origin")
         await query.answer()     
 
     #Second Menu
     elif cmd[1] == "drive_second":
         if cmd[3] == "True":
-            path = get_rclone_var(cmd[2], user_id)
+            path = get_rc_user_value(cmd[2], user_id)
             origin_dir_= origin_dir + path  
-            set_rclone_var("COPY_ORIGIN_DIR", origin_dir_, user_id)
+            update_rc_user_var("COPY_ORIGIN_DIR", origin_dir_, user_id)
         await list_drive(message, callback="drive_dest", rclone_drive= dest_drive, base_dir= dest_dir, edit=True, is_second_menu=True)   
         await query.answer()   
 
     elif cmd[1] == "drive_dest":
         #Clean Menu
-        set_rclone_var("COPY_DESTINATION_DIR", "", user_id)
-        dest_dir= get_rclone_var("COPY_DESTINATION_DIR", user_id) 
+        update_rc_user_var("COPY_DESTINATION_DIR", "", user_id)
+        dest_dir= get_rc_user_value("COPY_DESTINATION_DIR", user_id) 
 
         dest_drive= cmd[2]
-        set_rclone_var("COPY_DESTINATION_DRIVE", dest_drive, user_id)
+        update_rc_user_var("COPY_DESTINATION_DRIVE", dest_drive, user_id)
         await list_dir(message, drive_name= dest_drive, drive_base= dest_dir, callback="dir_dest", edit=True, back_callback= "back_dest", is_second_menu=True)
         await query.answer() 
 
     elif cmd[1] == "dir_dest":
-        path = get_rclone_var(cmd[2], user_id)
+        path = get_rc_user_value(cmd[2], user_id)
         dest_dir_= f"{dest_dir}{path}/"
-        set_rclone_var("COPY_DESTINATION_DIR", dest_dir_, user_id)
+        update_rc_user_var("COPY_DESTINATION_DIR", dest_dir_, user_id)
         await list_dir(message, drive_name= dest_drive, drive_base= dest_dir_, callback="dir_dest", edit=True, back_callback= "back_dest", is_second_menu=True)
         await query.answer()     
 
@@ -218,7 +218,7 @@ async def copy_menu_callback(client, callback_query):
         for dir in origin_dir_list: 
             origin_dir_string += dir + "/" 
         origin_dir= origin_dir_string
-        set_rclone_var("COPY_ORIGIN_DIR", origin_dir, user_id)
+        update_rc_user_var("COPY_ORIGIN_DIR", origin_dir, user_id)
 
         if len(origin_dir) > 0: 
             back_cb= cmd[1]  
@@ -239,7 +239,7 @@ async def copy_menu_callback(client, callback_query):
         for dir in dest_dir_list: 
             dest_dir_string += dir + "/"
         dest_dir= dest_dir_string
-        set_rclone_var("COPY_DESTINATION_DIR", dest_dir, user_id)
+        update_rc_user_var("COPY_DESTINATION_DIR", dest_dir, user_id)
         
         if len(dest_dir) > 0: 
             back_cb= cmd[1]  
@@ -259,7 +259,7 @@ async def next_page_copy(client, callback_query):
     user_id= message.reply_to_message.from_user.id
     _, next_offset, is_second_menu, data_back_cb = data.split()
     is_second_menu = is_second_menu.lower() == 'true'
-    list_info = get_rclone_var("driveInfo", user_id)
+    list_info = get_rc_user_value("driveInfo", user_id)
     total = len(list_info)
     next_offset = int(next_offset)
     prev_offset = next_offset - 10 
@@ -308,13 +308,13 @@ async def next_page_copy(client, callback_query):
     buttons.cbl_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}")
                             
     if is_second_menu:
-        dest_drive= get_rclone_var("COPY_DESTINATION_DRIVE", user_id)
-        dest_dir= get_rclone_var("COPY_DESTINATION_DIR", user_id)
+        dest_drive= get_rc_user_value("COPY_DESTINATION_DRIVE", user_id)
+        dest_dir= get_rc_user_value("COPY_DESTINATION_DIR", user_id)
         await editMessage(f"Select folder where you want to copy\n\nPath:`{dest_drive}:{dest_dir}`", message, 
                         reply_markup= InlineKeyboardMarkup(buttons.first_button))
     else:
-        origin_drive= get_rclone_var("COPY_ORIGIN_DRIVE", user_id)
-        origin_dir= get_rclone_var("COPY_ORIGIN_DIR", user_id)
+        origin_drive= get_rc_user_value("COPY_ORIGIN_DRIVE", user_id)
+        origin_dir= get_rc_user_value("COPY_ORIGIN_DIR", user_id)
         await editMessage(f"Select file or folder which you want to copy\n\nPath:`{origin_drive}:{origin_dir}`", message, 
                         reply_markup= InlineKeyboardMarkup(buttons.first_button))
 

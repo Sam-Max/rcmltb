@@ -13,7 +13,7 @@ from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rclone
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
 from bot.helper.ext_utils.rclone_utils import is_config_set
-from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
+from bot.helper.ext_utils.var_holder import get_rc_user_value, update_rc_user_var
 from bot.modules.myfilesset import calculate_size, delete_selected, delete_selection, myfiles_settings, rclone_dedupe, rclone_mkdir, rclone_rename
 
 folder_icon= "📁"
@@ -73,7 +73,7 @@ async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
 
     list_info = jsonloads(out)
     list_info.sort(key=lambda x: x["Size"])
-    set_rclone_var("driveInfo", list_info, user_id)
+    update_rc_user_var("driveInfo", list_info, user_id)
 
     if len(list_info) == 0:
         buttons.cbl_buildbutton("❌Nothing to show❌", f"myfilesmenu^pages^{user_id}")   
@@ -121,8 +121,8 @@ async def myfiles_callback(client, callback_query):
     message = query.message
     tag = f"@{message.reply_to_message.from_user.username}"
     user_id= query.from_user.id
-    base_dir= get_rclone_var("MYFILES_BASE_DIR", user_id)
-    rclone_drive = get_rclone_var("MYFILES_DRIVE", user_id)
+    base_dir= get_rc_user_value("MYFILES_BASE_DIR", user_id)
+    rclone_drive = get_rc_user_value("MYFILES_DRIVE", user_id)
 
     if cmd[1] == "pages":
         return await query.answer()
@@ -132,18 +132,18 @@ async def myfiles_callback(client, callback_query):
 
     if cmd[1] == "drive":
         #Reset Menu
-        set_rclone_var("MYFILES_BASE_DIR", "", user_id)
-        base_dir= get_rclone_var("MYFILES_BASE_DIR", user_id)
+        update_rc_user_var("MYFILES_BASE_DIR", "", user_id)
+        base_dir= get_rc_user_value("MYFILES_BASE_DIR", user_id)
              
         drive_name= cmd[2]  
-        set_rclone_var("MYFILES_DRIVE", drive_name, user_id)
+        update_rc_user_var("MYFILES_DRIVE", drive_name, user_id)
         await list_dir(message, drive_name= drive_name, drive_base=base_dir, edit=True)
         await query.answer() 
 
     elif cmd[1] == "dir":
-        path = get_rclone_var(cmd[2], user_id)
+        path = get_rc_user_value(cmd[2], user_id)
         base_dir += path + "/"
-        set_rclone_var("MYFILES_BASE_DIR", base_dir, user_id)
+        update_rc_user_var("MYFILES_BASE_DIR", base_dir, user_id)
         await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
         await query.answer()
 
@@ -154,7 +154,7 @@ async def myfiles_callback(client, callback_query):
         for dir in base_dir_split: 
             base_dir_string += dir + "/"
         base_dir = base_dir_string
-        set_rclone_var("MYFILES_BASE_DIR", base_dir, user_id)
+        update_rc_user_var("MYFILES_BASE_DIR", base_dir, user_id)
         
         if len(base_dir) > 0: 
             await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
@@ -169,9 +169,9 @@ async def myfiles_callback(client, callback_query):
     #Handle actions
 
     elif cmd[1] == "file_actions":
-        path = get_rclone_var(cmd[2], user_id)
+        path = get_rc_user_value(cmd[2], user_id)
         base_dir += path
-        set_rclone_var("MYFILES_BASE_DIR", base_dir, user_id) 
+        update_rc_user_var("MYFILES_BASE_DIR", base_dir, user_id) 
         await myfiles_settings(message, drive_name= rclone_drive, drive_base= base_dir, edit=True, is_folder= False) 
         await query.answer()
 
@@ -223,7 +223,7 @@ async def next_page_myfiles(client, callback_query):
     message= callback_query.message
     user_id= message.reply_to_message.from_user.id
     _, next_offset, data_back_cb = data.split()
-    list_info = get_rclone_var("driveInfo", user_id)
+    list_info = get_rc_user_value("driveInfo", user_id)
     total = len(list_info)
     next_offset = int(next_offset)
     prev_offset = next_offset - 10 
@@ -259,8 +259,8 @@ async def next_page_myfiles(client, callback_query):
     buttons.cbl_buildbutton("⬅️ Back", f"myfilesmenu^{data_back_cb}^{user_id}")
     buttons.cbl_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}")
 
-    myfiles_drive= get_rclone_var("MYFILES_DRIVE", user_id)
-    base_dir= get_rclone_var("MYFILES_BASE_DIR", user_id)
+    myfiles_drive= get_rc_user_value("MYFILES_DRIVE", user_id)
+    base_dir= get_rc_user_value("MYFILES_BASE_DIR", user_id)
     await editMessage(f"Your drive files are listed below\n\nPath:`{myfiles_drive}:{base_dir}`", message, 
                       reply_markup= InlineKeyboardMarkup(buttons.first_button))
 

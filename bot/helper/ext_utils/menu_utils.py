@@ -1,6 +1,6 @@
 
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.var_holder import set_rclone_var
+from bot.helper.ext_utils.var_holder import update_rc_user_var
 
 folder_icon= "📁"
 
@@ -27,7 +27,7 @@ def rcloneListNextPage(list_info, offset= 0, max_results=10):
 def rcloneListButtonMaker(result_list, buttons, menu_type, callback, user_id, is_second_menu= False):
     for index, dir in enumerate(result_list):
         path = dir["Path"]
-        set_rclone_var(str(index), path, user_id)
+        update_rc_user_var(str(index), path, user_id)
         size= dir['Size']
         size= get_readable_file_size(size)
         mime_type= dir['MimeType']

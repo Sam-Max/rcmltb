@@ -7,7 +7,7 @@ from bot import LOGGER, status_dict, status_dict_lock
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean, get_rclone_config
 from bot.helper.ext_utils.rclone_utils import get_gid
-from bot.helper.ext_utils.var_holder import get_rclone_var
+from bot.helper.ext_utils.var_holder import get_rc_user_value
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
@@ -21,8 +21,8 @@ class RcloneMirror:
         self.__user_id= user_id
         self.__tag = tag
         self.__is_extract= isExtract
-        self.__base = get_rclone_var('MIRRORSET_BASE_DIR', self.__user_id)
-        self.__drive = get_rclone_var('MIRRORSET_DRIVE', self.__user_id)
+        self.__base = get_rc_user_value('MIRRORSET_BASE_DIR', self.__user_id)
+        self.__drive = get_rc_user_value('MIRRORSET_DRIVE', self.__user_id)
         self.__is_gdrive = False
 
     async def mirror(self):

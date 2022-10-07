@@ -14,7 +14,7 @@ from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rclone
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
 from bot.helper.ext_utils.rclone_utils import is_config_set
-from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
+from bot.helper.ext_utils.var_holder import get_rc_user_value, update_rc_user_var
 from bot.helper.mirror_leech_utils.upload_utils.rclone_leech import RcloneLeech
 from bot.modules.mirror import mirror_leech
 
@@ -33,8 +33,8 @@ async def leech(client, message, isZip=False, extract=False):
     user_id= message.from_user.id
     if await is_config_set(user_id, message) == False:
         return
-    set_rclone_var('IS_ZIP', isZip, user_id)   
-    set_rclone_var('EXTRACT', extract, user_id)  
+    update_rc_user_var('IS_ZIP', isZip, user_id)   
+    update_rc_user_var('EXTRACT', extract, user_id)  
     buttons= ButtonMaker()
     buttons.cb_buildbutton("🔗 From Link", f"leechselect^link^{user_id}")
     buttons.cb_buildbutton("📁 From Cloud", f"leechselect^cloud^{user_id}")
@@ -91,7 +91,7 @@ async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
 
     list_info = jsonloads(out)
     list_info.sort(key=lambda x: x["Size"])
-    set_rclone_var("driveInfo", list_info, user_id)
+    update_rc_user_var("driveInfo", list_info, user_id)
 
     if len(list_info) == 0:
         buttons.cbl_buildbutton("❌Nothing to show❌", data=f"leechmenu^pages^{user_id}")
@@ -126,9 +126,9 @@ async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
     buttons.cbl_buildbutton("✘ Close Menu", data=f"leechmenu^close^{user_id}")
 
     msg= 'Select folder or file that you want to leech\n'
-    if get_rclone_var('IS_ZIP', user_id):
+    if get_rc_user_value('IS_ZIP', user_id):
         msg= 'Select file that you want to zip\n' 
-    if get_rclone_var('EXTRACT', user_id):
+    if get_rc_user_value('EXTRACT', user_id):
         msg= 'Select file that you want to extract\n'
 
     if edit:
@@ -143,15 +143,15 @@ async def leech_menu_cb(client, callback_query):
     message = query.message
     user_id= query.from_user.id
     tag = f"@{message.reply_to_message.from_user.username}"
-    base_dir= get_rclone_var("LEECH_BASE_DIR", user_id)
-    rclone_drive = get_rclone_var("LEECH_DRIVE", user_id)
+    base_dir= get_rc_user_value("LEECH_BASE_DIR", user_id)
+    rclone_drive = get_rc_user_value("LEECH_DRIVE", user_id)
     is_zip = False
     extract = False
 
-    if get_rclone_var('IS_ZIP', user_id):
+    if get_rc_user_value('IS_ZIP', user_id):
         is_zip= True
         
-    if get_rclone_var('EXTRACT', user_id):
+    if get_rc_user_value('EXTRACT', user_id):
         extract= True
 
     if cmd[1] == "pages":
@@ -162,24 +162,24 @@ async def leech_menu_cb(client, callback_query):
 
     if cmd[1] == "drive":
         #Reset menu
-        set_rclone_var("LEECH_BASE_DIR", "", user_id)
-        base_dir= get_rclone_var("LEECH_BASE_DIR", user_id)
+        update_rc_user_var("LEECH_BASE_DIR", "", user_id)
+        base_dir= get_rc_user_value("LEECH_BASE_DIR", user_id)
 
         drive_name= cmd[2]
-        set_rclone_var("LEECH_DRIVE", drive_name, user_id)
+        update_rc_user_var("LEECH_DRIVE", drive_name, user_id)
         await list_dir(message, drive_name= drive_name, drive_base=base_dir, edit=True)
         await query.answer()   
 
     elif cmd[1] == "dir":
-        path = get_rclone_var(cmd[2], user_id)
+        path = get_rc_user_value(cmd[2], user_id)
         base_dir += path + "/"
-        set_rclone_var("LEECH_BASE_DIR", base_dir, user_id)
+        update_rc_user_var("LEECH_BASE_DIR", base_dir, user_id)
         await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
         await query.answer()   
 
     elif cmd[1] == "leech_file":
         await query.answer()      
-        path = get_rclone_var(cmd[2], user_id)
+        path = get_rc_user_value(cmd[2], user_id)
         base_dir += path
         name, ext = ospath.splitext(base_dir)
         dest_dir = f'{DOWNLOAD_DIR}{message.id}/{name}'
@@ -200,7 +200,7 @@ async def leech_menu_cb(client, callback_query):
         for dir in base_dir_split: 
             base_dir_string += dir + "/"
         base_dir = base_dir_string
-        set_rclone_var("LEECH_BASE_DIR", base_dir, user_id)
+        update_rc_user_var("LEECH_BASE_DIR", base_dir, user_id)
         
         if len(base_dir) > 0: 
             await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
@@ -221,7 +221,7 @@ async def next_page_leech(client, callback_query):
     message= callback_query.message
     user_id= message.reply_to_message.from_user.id
     _, next_offset, data_back_cb= data.split()
-    list_info = get_rclone_var("driveInfo", user_id)
+    list_info = get_rc_user_value("driveInfo", user_id)
     total = len(list_info)
     next_offset = int(next_offset)
     prev_offset = next_offset - 10 
@@ -256,8 +256,8 @@ async def next_page_leech(client, callback_query):
     buttons.cbl_buildbutton("⬅️ Back", f"leechmenu^{data_back_cb}^{user_id}")
     buttons.cbl_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}")
 
-    leech_drive= get_rclone_var("LEECH_DRIVE", user_id)
-    base_dir= get_rclone_var("LEECH_BASE_DIR", user_id)
+    leech_drive= get_rc_user_value("LEECH_DRIVE", user_id)
+    base_dir= get_rc_user_value("LEECH_BASE_DIR", user_id)
     await editMessage(f"Select folder or file that you want to leech\n\nPath:`{leech_drive}:{base_dir}`", message, 
                         reply_markup= InlineKeyboardMarkup(buttons.first_button))    
            
@@ -267,8 +267,8 @@ async def selection_callback(client, callback_query):
     cmd = data.split("^")
     message = query.message
     user_id= query.from_user.id
-    is_zip = get_rclone_var("IS_ZIP", user_id)
-    extract = get_rclone_var("EXTRACT", user_id)
+    is_zip = get_rc_user_value("IS_ZIP", user_id)
+    extract = get_rc_user_value("EXTRACT", user_id)
 
     if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", show_alert=True)

@@ -4,7 +4,7 @@ from random import SystemRandom
 from string import ascii_letters, digits
 from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import clean, get_rclone_config
-from bot.helper.ext_utils.var_holder import get_rclone_var
+from bot.helper.ext_utils.var_holder import get_rc_user_value
 from bot import status_dict, status_dict_lock
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
@@ -25,7 +25,7 @@ class RcloneLeech:
 
     async def leech(self):
         conf_path = get_rclone_config(self._user_id)
-        leech_drive = get_rclone_var("LEECH_DRIVE", self._user_id)
+        leech_drive = get_rc_user_value("LEECH_DRIVE", self._user_id)
         cmd = ['rclone', 'copy', f'--config={conf_path}', f'{leech_drive}:{self.__origin_path}', 
               f'{self.__dest_path}', '-P']
         rc_process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)

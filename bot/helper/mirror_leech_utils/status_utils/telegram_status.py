@@ -1,9 +1,9 @@
 from asyncio import sleep
 from math import floor
 import time
-from bot import LOGGER, Bot, status_dict, status_dict_lock
+from bot import Bot
 from bot.helper.ext_utils.human_format import human_readable_bytes, human_readable_timedelta
-from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup
+from bot.helper.ext_utils.message_utils import editMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
 

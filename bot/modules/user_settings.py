@@ -1,5 +1,3 @@
-#From: Anasty
-
 import asyncio
 from os import remove as osremove, path as ospath, mkdir
 from PIL import Image

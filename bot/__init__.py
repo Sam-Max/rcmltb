@@ -46,6 +46,8 @@ status_dict = {}
 # Value: telegram.Message
 status_reply_dict = {}
 
+rclone_user_dict = {}
+
 AS_DOC_USERS = set()
 AS_MEDIA_USERS = set()
 
@@ -81,6 +83,20 @@ WEB_PINCODE = environ.get('WEB_PINCODE', '')
 WEB_PINCODE = WEB_PINCODE.lower() == 'true'
 
 DEFAULT_DRIVE = environ.get('DEFAULT_DRIVE', '')
+
+aid = environ.get('ALLOWED_CHATS', '')
+if len(aid) != 0:
+    aid = aid.split()
+    ALLOWED_CHATS = {int(_id.strip()) for _id in aid}
+else:
+    ALLOWED_CHATS= set()
+
+aid = environ.get('SUDO_USERS', '')
+if len(aid) != 0:
+    aid = aid.split()
+    SUDO_USERS = {int(_id.strip()) for _id in aid}
+else:
+    SUDO_USERS = set()
 
 CMD_INDEX = environ.get('CMD_INDEX', '')
 
@@ -136,20 +152,6 @@ aria2 = ariaAPI(
         secret="",
     )
 )
-
-aid = environ.get('ALLOWED_CHATS', '')
-if len(aid) != 0:
-    aid = aid.split()
-    ALLOWED_CHATS = {int(_id.strip()) for _id in aid}
-else:
-    ALLOWED_CHATS= set()
-
-aid = environ.get('SUDO_USERS', '')
-if len(aid) != 0:
-    aid = aid.split()
-    SUDO_USERS = {int(_id.strip()) for _id in aid}
-else:
-    SUDO_USERS = set()
 
 fx = environ.get('EXTENSION_FILTER', '')
 if len(fx) > 0:

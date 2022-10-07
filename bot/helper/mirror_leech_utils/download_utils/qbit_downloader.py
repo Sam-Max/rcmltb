@@ -17,7 +17,7 @@ from bot import get_client, TORRENT_TIMEOUT, LOGGER
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.ext_utils.message_utils import deleteMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import bt_selection_buttons, getDownloadByGid
-from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
+from bot.helper.ext_utils.var_holder import get_rc_user_value, update_rc_user_var
 from bot.helper.mirror_leech_utils.mirror_leech import MirrorLeech
 from bot.helper.mirror_leech_utils.status_utils.qbit_status import qBitTorrentStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import clean_unwanted
@@ -107,7 +107,7 @@ class QbDownloader:
                             await deleteMessage(meta)     
                             return False, None, ""
                 self.client.torrents_pause(torrent_hashes= self.ext_hash)
-                set_rclone_var("IS_LEECH", self.__isLeech, self.__user_id) 
+                update_rc_user_var("IS_LEECH", self.__isLeech, self.__user_id) 
                 SBUTTONS = bt_selection_buttons(self.ext_hash)
                 msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
                 await sendMarkup(msg, self.__message, reply_markup=SBUTTONS)
@@ -182,7 +182,7 @@ async def get_confirm(update, callback_query):
     data = query.data.split()
     tag= f"@{message.reply_to_message.from_user.username}"
     user_id = query.from_user.id
-    is_leech = get_rclone_var("IS_LEECH", user_id) 
+    is_leech = get_rc_user_value("IS_LEECH", user_id) 
     dl = await getDownloadByGid(data[2])
     if data[1] == "pin":
         await query.answer(text=data[3], show_alert=True)

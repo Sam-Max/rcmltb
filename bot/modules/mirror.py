@@ -18,7 +18,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_readable_size
 from bot.helper.ext_utils.rclone_utils import is_config_set, is_drive_set
-from bot.helper.ext_utils.var_holder import get_rclone_var, set_rclone_var
+from bot.helper.ext_utils.var_holder import get_rc_user_value, update_rc_user_var
 from bot.helper.mirror_leech_utils.download_utils.aria2_download import Aria2Downloader
 from bot.helper.mirror_leech_utils.download_utils.mega_download import MegaDownloader
 from bot.helper.mirror_leech_utils.download_utils.qbit_downloader import QbDownloader

@@ -72,12 +72,19 @@ async def handle_config(client, message):
      msg= "❇️ **Rclone configuration**"
      msg+= "\n\n**Here is list of drives in config file:**"
      msg+= f"\n{fstr}"
-     buttons.dbuildbutton("🗂 Get rclone.conf", f"configmenu^get_config^{user_id}",
-                          "🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}")
-     buttons.dbuildbutton("📃 Change rclone.conf", f"configmenu^change_config^{user_id}",
-                          "📃 Change token.pickle", f"configmenu^change_pickle^{user_id}")
+     path= ospath.join("users", str(user_id), "rclone.conf")
+     if ospath.exists(path):
+          buttons.dbuildbutton("🗂 Get rclone.conf", f"configmenu^get_config^{user_id}",
+                              "📃 Change rclone.conf", f"configmenu^change_config^{user_id}")
+     else:
+          buttons.cbl_buildbutton("📃 Load rclone.conf", f"configmenu^change_config^{user_id}")
+     if ospath.exists("token.pickle"):
+          buttons.dbuildbutton("🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}",
+                              "📃 Change token.pickle", f"configmenu^change_pickle^{user_id}")
+     else:
+          buttons.cbl_buildbutton("📃 Load token.pickle", f"configmenu^change_pickle^{user_id}")
      buttons.cbl_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}")
-     await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))       
+     await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 async def set_config_listener(client, message, is_rclone= False):
      if message.reply_to_message:
