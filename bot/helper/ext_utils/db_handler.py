@@ -1,6 +1,6 @@
 from os import path as ospath, makedirs
 from psycopg2 import connect, DatabaseError
-from bot import ALLOWED_CHATS, DB_URI, AS_DOC_USERS, AS_MEDIA_USERS, LOGGER, SUDO_USERS
+from bot import ALLOWED_CHATS, DB_URI, AS_DOC_USERS, AS_MEDIA_USERS, LOGGER, SUDO_USERS, rss_dict
 
 class DbManger:
     def __init__(self):
@@ -30,6 +30,15 @@ class DbManger:
                  doc boolean DEFAULT FALSE,
                  thumb bytea DEFAULT NULL,
                  rcconfig bytea DEFAULT NULL
+              )
+              """
+        self.cur.execute(sql)
+        sql = """CREATE TABLE IF NOT EXISTS rss (
+                 name text,
+                 link text,
+                 last text,
+                 title text,
+                 filters text
               )
               """
         self.cur.execute(sql)
@@ -64,6 +73,19 @@ class DbManger:
                     with open(path, 'wb+') as f:
                         f.write(row[6])
             LOGGER.info("Users data has been imported from Database")
+        # Rss Data
+        self.cur.execute("SELECT * FROM rss")
+        rows = self.cur.fetchall()  # return a list ==> (name, feed_link, last_link, last_title, filters)
+        if rows:
+            for row in rows:
+                f_lists = []
+                if row[4] is not None:
+                    filters_list = row[4].split('|')
+                    for x in filters_list:
+                        y = x.split(' or ')
+                        f_lists.append(y)
+                rss_dict[row[0]] = {'link': row[1], 'last_feed': row[2], 'last_title': row[3], 'filters': f_lists}
+            LOGGER.info("Rss data has been imported from Database.")
         self.disconnect()
 
     def user_auth(self, chat_id: int):
@@ -151,6 +173,29 @@ class DbManger:
         elif self.user_check(user_id):
             sql = 'UPDATE users SET rcconfig = NULL WHERE uid = {}'.format(user_id)
         self.cur.execute(sql)
+        self.conn.commit()
+        self.disconnect()
+
+    def rss_add(self, name, link, last, title, filters):
+        if self.err:
+            return
+        q = (name, link, last, title, filters)
+        self.cur.execute("INSERT INTO rss (name, link, last, title, filters) VALUES (%s, %s, %s, %s, %s)", q)
+        self.conn.commit()
+        self.disconnect()
+
+    def rss_update(self, name, last, title):
+        if self.err:
+            return
+        q = (last, title, name)
+        self.cur.execute("UPDATE rss SET last = %s, title = %s WHERE name = %s", q)
+        self.conn.commit()
+        self.disconnect()
+
+    def rss_delete(self, name):
+        if self.err:
+            return
+        self.cur.execute("DELETE FROM rss WHERE name = %s", (name,))
         self.conn.commit()
         self.disconnect()
 

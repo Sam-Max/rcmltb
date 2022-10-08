@@ -1,6 +1,6 @@
 from asyncio import sleep
 from os import remove
-from bot import LOGGER, Bot
+from bot import LOGGER, RSS_CHAT_ID, Bot, rss_session
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from pyrogram.enums.parse_mode import ParseMode
 
@@ -54,6 +54,29 @@ async def editMessage(text: str, message, reply_markup=None):
         LOGGER.error(str(e))
         return str(e)
 
+async def sendRss(text: str):
+    if rss_session is None:
+        try:
+            return await Bot.send_message(RSS_CHAT_ID, text, disable_web_page_preview=True)
+        except FloodWait as e:
+            LOGGER.warning(str(e))
+            await sleep(e.value * 1.5)
+            return await sendRss(text)
+        except Exception as e:
+            LOGGER.error(str(e))
+            return
+    else:
+        try:
+            with rss_session:
+                return rss_session.send_message(RSS_CHAT_ID, text, disable_web_page_preview=True)
+        except FloodWait as e:
+            LOGGER.warning(str(e))
+            await sleep(e.value * 1.5)
+            return await sendRss(text)
+        except Exception as e:
+            LOGGER.error(str(e))
+            return
+            
 async def deleteMessage(message):
     try:
         await Bot.delete_messages(chat_id=message.chat.id,

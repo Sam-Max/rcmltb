@@ -1,5 +1,5 @@
-# Source:
-# https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/search.py
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/search.py
+# Adapted for asyncio framework and pyrogram library
 
 from asyncio import get_running_loop
 from functools import partial

@@ -39,6 +39,9 @@
 - Save rclone config file in db
 - Save user leech settings(thumbnails, sudo and allowed users, etc) in db
 
+### RSS
+- Rss feed with filter.
+
 ### Others
 - Telegram Navigation Bottom Menus to interact with cloud
 - Renaming of Telegram files
@@ -81,6 +84,11 @@ copy - copy from cloud to cloud
 config - rclone config
 usetting - user settings
 ownsetting - owner settings
+rsslist - list all subscribed rss feed 
+rssget - get specific No. of links from specific rss feed
+rsssub - subscribe new rss feed
+rssunsub - unsubscribe rss feed by title
+rssset - rss settings
 cleanup - clean drive trash
 cancelall - cancel all tasks
 storage - drive details
@@ -147,6 +155,13 @@ restart - restart bot
         - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from Mega SDK Page
         - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account
         - `MEGA_PASSWORD`: Password for mega.nz account
+
+   - RSS
+        - `RSS_DELAY`: Time in seconds for rss refresh interval. Default is `900` in sec. `Str`
+        - `RSS_COMMAND`: Choose command for the desired action. `Str`
+        - `RSS_CHAT_ID`: Chat ID where rss links will be sent. Add `-100` before channel id. `Str`
+        - `RSS_USER_SESSION_STRING`: To send rss links from your telegram account. To generate session string use this command `python3 generate_string_session.py`. `Str`. **NOTE**: Don't use same session string as `USER_SESSION_STRING`.
+        - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` are required, otherwise rss commands will not work. You must use bot in group. You can also add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.    
 
    - qBittorrent
         - `BASE_URL_OF_BOT`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https). Str

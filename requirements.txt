@@ -16,6 +16,7 @@ tgCrypto
 Pyrogram
 psycopg2-binary
 urllib3
+feedparser
 pillow
 tenacity
 speedtest-cli

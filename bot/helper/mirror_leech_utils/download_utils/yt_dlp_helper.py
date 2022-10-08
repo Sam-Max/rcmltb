@@ -1,8 +1,8 @@
-#From: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/ytdlp.py
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/ytdlp.py
+# Adapted for asyncio framework and pyrogram library
 
 import asyncio
 from logging import getLogger
-import time
 from yt_dlp import YoutubeDL, DownloadError
 from re import search as re_search
 from json import loads as jsonloads

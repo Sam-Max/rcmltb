@@ -1,4 +1,5 @@
-#From: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/ytdlp.py
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/ytdlp.py
+# Adapted for asyncio framework and pyrogram library
 
 import asyncio
 from random import SystemRandom

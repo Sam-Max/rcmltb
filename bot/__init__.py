@@ -46,6 +46,10 @@ status_dict = {}
 # Value: telegram.Message
 status_reply_dict = {}
 
+# key: rss_title
+# value: [rss_feed, last_link, last_title, filter]
+rss_dict = {}
+
 rclone_user_dict = {}
 
 AS_DOC_USERS = set()
@@ -115,6 +119,16 @@ if len(YT_COOKIES_URL) != 0:
 DB_URI = environ.get('DATABASE_URL', '')
 if len(DB_URI) == 0:
     DB_URI = None
+
+RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
+RSS_CHAT_ID = None if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
+
+RSS_DELAY = environ.get('RSS_DELAY', '')
+RSS_DELAY = 900 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
+
+RSS_COMMAND = environ.get('RSS_COMMAND', '')
+if len(RSS_COMMAND) == 0:
+    RSS_COMMAND = None
 
 BASE_URL = environ.get('BASE_URL_OF_BOT', '')
 if len(BASE_URL) == 0:
@@ -231,6 +245,15 @@ try:
 except Exception as e:
     print(e)
     exit(1)
+
+#---------------------------
+
+RSS_USER_SESSION_STRING = environ.get('RSS_USER_SESSION_STRING', '')
+if len(RSS_USER_SESSION_STRING) == 0:
+    rss_session = None
+else:
+    LOGGER.info("Creating client from RSS_USER_SESSION_STRING")
+    rss_session = Client(name='rss_session', api_id=API_ID, api_hash=API_HASH, session_string=RSS_USER_SESSION_STRING, no_updates=True)
 
 #---------------------------
 IS_PREMIUM_USER = False
