@@ -3,9 +3,9 @@
 
 from re import findall
 from time import time
-from bot.helper.mirror_leech_utils.mirror_leech import MirrorLeech
+from bot.helper.mirror_leech_utils.listener import MirrorLeechListener
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
-from bot.helper.mirror_leech_utils.status_utils.telegram_status import TelegramStatus
+from bot.helper.mirror_leech_utils.status_utils.tg_download_status import TelegramStatus
 from bot import LOGGER, status_dict, status_dict_lock
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 
@@ -66,7 +66,7 @@ async def get_msg(app, client, sender, edit_id, message, msg_link, i, isLeech):
                 msg,
                 progress=status.start,
                 progress_args=(caption, MirrorStatus.STATUS_DOWNLOADING, time()))
-            ml= MirrorLeech(file_path, message, tag="N/A", user_id= user_id, isLeech= isLeech)
+            ml= MirrorLeechListener(file_path, message, tag="N/A", user_id= user_id, isLeech= isLeech)
             await ml.execute()
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await client.edit_message_text(sender, edit_id, "Have you joined the channel?")
@@ -93,7 +93,7 @@ async def get_msg(app, client, sender, edit_id, message, msg_link, i, isLeech):
                 msg,
                 progress=status.start,
                 progress_args=(caption, MirrorStatus.STATUS_DOWNLOADING, time()))
-            ml= MirrorLeech(file_path, message, tag="N/A", user_id= user_id, isLeech= isLeech)
+            ml= MirrorLeechListener(file_path, message, tag="N/A", user_id= user_id, isLeech= isLeech)
             await ml.execute()
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await client.edit_message_text(sender, edit_id, "Have you joined the channel?")

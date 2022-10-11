@@ -1,105 +1,116 @@
+from asyncio import get_running_loop
+from bot import LOGGER, get_client
+from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 
-from bot import EDIT_SLEEP_SECS
-from time import time
-from asyncio import sleep
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot.helper.ext_utils.bot_utils import get_readable_time
-from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.message_utils import editMessage, sendMessage
-from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
+def get_download(client, hash_):
+    try:
+        return client.torrents_info(torrent_hashes=hash_)[0]
+    except Exception as e:
+        LOGGER.error(f'{e}: Qbittorrent, Error while getting torrent info')
+        client = get_client()
+        return get_download(client, hash_)
 
-class qBitTorrentStatus:
-    def __init__(self, message, obj):
-        self.message= message
-        self.id= self.message.id
-        self._status_msg = ""
-        self.__obj = obj
 
-    def get_status_msg(self):
-        return self._status_msg     
+class QbDownloadStatus:
+    def __init__(self, listener, hash_, seeding=False):
+        self.__client = get_client()
+        self.__listener = listener
+        self.__hash = hash_
+        self.__loop= get_running_loop()
+        self.__info = get_download(self.__client, self.__hash)
+        self.seeding = seeding
+        self.message = listener.message
 
-    async def create_status(self):
-        tor_info = self.__obj.client.torrents_info(torrent_hashes=self.__obj.ext_hash)[0]
-        status_msg = self.create_status_message(tor_info)
-        rmsg = await sendMessage(status_msg, self.message)
-        start = time()
-        sleeps= False
-        while True:
-            sleeps = True
-            try:
-                tor_info = self.__obj.client.torrents_info(torrent_hashes=self.__obj.ext_hash)[0]
-            except Exception:
-                pass
-            self._status_msg = self.create_status_message(tor_info)
-            if time() - start > EDIT_SLEEP_SECS:
-                start = time()       
-                data = "cancel {}".format(self.__obj.ext_hash[:12])
-                await editMessage(self._status_msg , rmsg, reply_markup=(InlineKeyboardMarkup([
-                                        [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]
-                                        ])))
-                if sleeps:
-                    if self.__obj.is_cancelled:     
-                        await editMessage(self.__obj.error_message, rmsg)
-                        return False, None
-                    if self.__obj.is_uploaded:
-                        return True, rmsg
-                    sleeps = False
-                    await sleep(1)
+    def __update(self):
+        self.__info = get_download(self.__client, self.__hash)
 
-    def create_status_message(self, tor_info):
-        if self.__obj.select:
-            size= tor_info.size
+    def progress(self):
+        """
+        Calculates the progress of the mirror (upload or download)
+        :return: returns progress in percentage
+        """
+        return f'{round(self.__info.progress*100, 2)}%'
+
+    def size_raw(self):
+        """
+        Gets total size of the mirror file/folder
+        :return: total size of mirror
+        """
+        return self.__info.size
+
+    def processed_bytes(self):
+        return self.__info.downloaded
+
+    def speed(self):
+        self.__update()
+        return f"{get_readable_file_size(self.__info.dlspeed)}/s"
+
+    def name(self):
+        if self.__info.state in ["metaDL", "checkingResumeData"]:
+            return f"[METADATA]{self.__info.name}"
         else:
-            size= tor_info.total_size
-        download = tor_info.state
-        status= self.status(download)
-        msg = "<b>Name:</b>{}\n".format(tor_info.name)
-        msg += f"<b>Status:</b> {status}\n"
-        msg += "{}\n".format(self.get_progress_bar_string(tor_info))
-        msg += "<b>P:</b>{}\n".format(f'{round(tor_info.progress*100, 2)}%')
-        msg += "<b>Downloaded:</b> {} <b>of:</b> {}\n".format(get_readable_file_size(tor_info.downloaded), get_readable_file_size(size))
-        msg += "<b>Speed:</b> {}".format(f"{get_readable_file_size(tor_info.dlspeed)}/s") + "|" + "<b>ETA: {}\n</b>".format(get_readable_time(tor_info.eta))
-        try:
-            msg += f"<b>Seeders:</b> {tor_info.num_seeds}" \
-                f" | <b>Leechers:</b> {tor_info.num_leechs}\n"
-        except:
-            pass
-        msg += get_bottom_status()
-        return msg 
+            return self.__info.name
 
-    def status(self, download):
+    def size(self):
+        return get_readable_file_size(self.__info.size)
+
+    def eta(self):
+        return get_readable_time(self.__info.eta)
+
+    def status(self):
+        self.__update()
+        download = self.__info.state
         if download in ["queuedDL", "queuedUP"]:
             return MirrorStatus.STATUS_WAITING
         elif download in ["pausedDL", "pausedUP"]:
             return MirrorStatus.STATUS_PAUSED
         elif download in ["checkingUP", "checkingDL"]:
             return MirrorStatus.STATUS_CHECKING
-        elif download in ["stalledUP", "uploading"]:
+        elif download in ["stalledUP", "uploading"] and self.seeding:
             return MirrorStatus.STATUS_SEEDING
         else:
             return MirrorStatus.STATUS_DOWNLOADING
 
-    def get_progress_bar_string(self, tor_info):
-        completed = tor_info.downloaded / 8
-        total = tor_info.total_size / 8
-        p = 0 if total == 0 else round(completed * 100 / total)
-        p = min(max(p, 0), 100)
-        cFull = p // 8
-        p_str = '■' * cFull
-        p_str += '□' * (12 - cFull)
-        p_str = f"[{p_str}]"
-        return p_str
+    def seeders_num(self):
+        return self.__info.num_seeds
 
-    def client(self):
-        return self.__obj.client
+    def leechers_num(self):
+        return self.__info.num_leechs
+
+    def uploaded_bytes(self):
+        return f"{get_readable_file_size(self.__info.uploaded)}"
+
+    def upload_speed(self):
+        self.__update()
+        return f"{get_readable_file_size(self.__info.upspeed)}/s"
+
+    def ratio(self):
+        return f"{round(self.__info.ratio, 3)}"
+
+    def seeding_time(self):
+        return f"{get_readable_time(self.__info.seeding_time)}"
+
+    def download(self):
+        return self
 
     def gid(self):
-        return self.__obj.ext_hash[:12]
+        return self.__hash[:12]
 
-    def name(self):
-        return self.__obj.name
-        
+    def hash(self):
+        return self.__hash
+
+    def client(self):
+        return self.__client
+
+    def listener(self):
+        return self.__listener
+
+    def type(self):
+        return "Qbit"
+
     def cancel_download(self):
-        self.__obj.onDownloadError("Download cancelled")
-        
-         
+        self.__client.torrents_pause(torrent_hashes=self.__hash)
+        if self.status() != MirrorStatus.STATUS_SEEDING:
+            LOGGER.info(f"Cancelling Download: {self.__info.name}")
+            self.__loop.create_task(self.__listener.onDownloadError('Download stopped by user!'))
+            self.__client.torrents_delete(torrent_hashes=self.__hash, delete_files=True)

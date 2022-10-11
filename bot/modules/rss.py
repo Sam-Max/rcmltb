@@ -19,6 +19,7 @@ rss_dict_lock = Lock()
 rss_job_enabled = True
 
 
+
 async def rss_list(client, message):
     if len(rss_dict) > 0:
         list_feed = "<b>Your subscriptions: </b>\n\n"
@@ -102,8 +103,7 @@ async def rss_sub(client, message):
             async with rss_dict_lock:
                 if len(rss_dict) == 0:
                     rss_job.resume()
-                    global rss_job_enabled
-                    rss_job_enabled = True
+                    globals()['rss_job_enabled'] = True
                 rss_dict[title] = {'link': feed_link, 'last_feed': last_link, 'last_title': last_title, 'filters': f_lists}
             DbManger().rss_add(title, feed_link, last_link, last_title, filters)
             await sendMessage(sub_msg, message)
@@ -173,8 +173,7 @@ async def rss_set_update(client, callback_query):
             async with rss_dict_lock:
                 rss_dict.clear()
             rss_job.pause()
-            global rss_job_enabled
-            rss_job_enabled = False
+            globals()['rss_job_enabled'] = False
             await editMessage("All Rss Subscriptions have been removed.", msg)
             LOGGER.info("All Rss Subscriptions have been removed.")
         else:
@@ -182,13 +181,13 @@ async def rss_set_update(client, callback_query):
     elif data[1] == 'pause':
         await query.answer()
         rss_job.pause()
-        rss_job_enabled = False
+        globals()['rss_job_enabled'] = False
         await editMessage("Rss Paused", msg)
         LOGGER.info("Rss Paused")
     elif data[1] == 'start':
         await query.answer()
         rss_job.resume()
-        rss_job_enabled = True
+        globals()['rss_job_enabled'] = False
         await editMessage("Rss Started", msg)
         LOGGER.info("Rss Started")
     else:
@@ -200,8 +199,7 @@ async def rss_monitor():
     async with rss_dict_lock:
         if len(rss_dict) == 0:
             rss_job.pause()
-            global rss_job_enabled
-            rss_job_enabled = False
+            globals()['rss_job_enabled'] = False
             return
         rss_saver = deepcopy(rss_dict)
     for title, data in rss_saver.items():

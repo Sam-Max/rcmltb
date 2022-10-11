@@ -8,10 +8,10 @@ from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
-from bot.helper.ext_utils.rclone_utils import is_config_set
+from bot.helper.ext_utils.rclone_utils import is_rclone_config
 
-async def handle_cleanup(client, message):
-     if await is_config_set(message.from_user.id, message) == False:
+async def cleanup(client, message):
+     if await is_rclone_config(message.from_user.id, message) == False:
           return
      await list_drive(message)
 
@@ -83,7 +83,7 @@ async def rclone_cleanup(message, drive_name, user_id, tag):
      msg+= f'<b>cc:</b> {tag}\n'
      await editMessage(msg, edit_msg)     
 
-cleanup_callback= CallbackQueryHandler(cleanup_callback, filters= regex("cleanupmenu"))
-cleanup = MessageHandler(handle_cleanup, filters=command(BotCommands.CleanupCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-Bot.add_handler(cleanup_callback)
-Bot.add_handler(cleanup)
+handle_cleanup = MessageHandler(cleanup, filters=command(BotCommands.CleanupCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+cleanup_cb= CallbackQueryHandler(cleanup_callback, filters= regex("cleanupmenu"))
+Bot.add_handler(handle_cleanup)
+Bot.add_handler(cleanup_cb)

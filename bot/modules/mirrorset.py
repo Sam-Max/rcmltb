@@ -8,7 +8,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
-from bot.helper.ext_utils.rclone_utils import is_config_set
+from bot.helper.ext_utils.rclone_utils import is_rclone_config
 from bot.helper.ext_utils.var_holder import get_rc_user_value, update_rc_user_var
 from pyrogram.filters import regex
 from pyrogram import filters
@@ -20,7 +20,7 @@ folder_icon= "📁"
 
 async def handle_mirrorset(client, message):
     user_id= message.from_user.id
-    if await is_config_set(user_id, message) == False:
+    if await is_rclone_config(user_id, message) == False:
         return
     rclone_drive = get_rc_user_value("MIRRORSET_DRIVE", user_id)              
     base_dir= get_rc_user_value("MIRRORSET_BASE_DIR", user_id)

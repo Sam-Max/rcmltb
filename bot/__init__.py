@@ -32,6 +32,7 @@ def get_client():
 
 botUptime = time()
 Interval = []
+QbInterval = []
 EXTENSION_FILTER = {'.aria2'}
 DOWNLOAD_DIR = None
 
@@ -60,8 +61,20 @@ load_dotenv('config.env')
 EDIT_SLEEP_SECS = environ.get('EDIT_SLEEP_SECS', '')  
 EDIT_SLEEP_SECS = 8 if len(EDIT_SLEEP_SECS) == 0 else int(EDIT_SLEEP_SECS)
 
+STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
+STATUS_LIMIT = None if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+
+STATUS_UPDATE_INTERVAL = environ.get('STATUS_UPDATE_INTERVAL', '')
+if len(STATUS_UPDATE_INTERVAL) == 0:
+    STATUS_UPDATE_INTERVAL = 10
+else:
+    STATUS_UPDATE_INTERVAL = int(STATUS_UPDATE_INTERVAL)
+
 AS_DOCUMENT = environ.get('AS_DOCUMENT', '')
 AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
+
+AUTO_MIRROR= environ.get('AUTO_MIRROR', '')  
+AUTO_MIRROR= AUTO_MIRROR.lower() == 'true'
 
 DUMP_CHAT = environ.get('DUMP_CHAT', '')
 DUMP_CHAT= None if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
@@ -85,6 +98,9 @@ TORRENT_TIMEOUT= None if len(TORRENT_TIMEOUT) == 0 else int(TORRENT_TIMEOUT)
 
 WEB_PINCODE = environ.get('WEB_PINCODE', '')
 WEB_PINCODE = WEB_PINCODE.lower() == 'true'
+
+EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '')
+EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
 
 DEFAULT_DRIVE = environ.get('DEFAULT_DRIVE', '')
 

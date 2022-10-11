@@ -1,7 +1,7 @@
 import configparser
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from json import loads as jsonloads
-from bot import Bot
+from bot import LOGGER, Bot
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.types import InlineKeyboardMarkup
@@ -9,17 +9,22 @@ from os import path as ospath, getcwd
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
-from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
+from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
-from bot.helper.ext_utils.rclone_utils import is_config_set
+from bot.helper.ext_utils.rclone_utils import is_rclone_config
 from bot.helper.ext_utils.var_holder import get_rc_user_value, update_rc_user_var
-from bot.helper.mirror_leech_utils.download_utils.rclone.rclone_copy import RcloneCopy
+from bot.helper.mirror_leech_utils.download_utils.rclone_copy import RcloneCopy
+from bot.helper.mirror_leech_utils.listener import MirrorLeechListener
 
 folder_icon= "📁"
 
+listener_dict = {}
+
 async def handle_copy(client, message):
     user_id= message.from_user.id
-    if await is_config_set(user_id, message) == False:
+    message_id= message.id
+    tag = f"@{message.from_user.username}"
+    if await is_rclone_config(user_id, message) == False:
         return
     path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
     if not ospath.exists(path):
@@ -28,6 +33,8 @@ async def handle_copy(client, message):
     else:
         origin_drive = get_rc_user_value("COPY_ORIGIN_DRIVE", user_id)      
         origin_dir= get_rc_user_value("COPY_ORIGIN_DIR", user_id)
+        listener= MirrorLeechListener(message, tag, user_id)
+        listener_dict[message_id] = [listener]
         await list_drive(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
 
 async def list_drive(message, rclone_drive, base_dir, callback, is_second_menu= False, edit=False):
@@ -147,6 +154,9 @@ async def copy_menu_callback(client, callback_query):
     cmd = data.split("^")
     message = query.message
     user_id= query.from_user.id
+    msg_id= message.reply_to_message.id
+    info= listener_dict[msg_id] 
+    listener= info[0]
     origin_drive = get_rc_user_value("COPY_ORIGIN_DRIVE", user_id)
     origin_dir= get_rc_user_value("COPY_ORIGIN_DIR", user_id)
     dest_drive= get_rc_user_value("COPY_DESTINATION_DRIVE", user_id)
@@ -204,7 +214,8 @@ async def copy_menu_callback(client, callback_query):
 
     elif cmd[1] == "copy":
         await query.answer()      
-        rclone_copy= RcloneCopy(message, user_id)
+        await deleteMessage(message)
+        rclone_copy= RcloneCopy(user_id, listener)
         await rclone_copy.copy(origin_drive, origin_dir, dest_drive, dest_dir)
 
     elif cmd[1] == "close":

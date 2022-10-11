@@ -1,3 +1,4 @@
+from math import floor
 from os import listdir, rmdir, walk, path as ospath, remove
 import time
 from psutil import cpu_percent, virtual_memory
@@ -15,21 +16,25 @@ def get_bottom_status():
      return msg 
 
 class MirrorStatus:
-    STATUS_UPLOADING = "Uploading..."
-    STATUS_CLONING= "Cloning..."
-    STATUS_DOWNLOADING = "Downloading..."
-    STATUS_COPYING= "Copying..."
-    STATUS_ARCHIVING = "Archiving...🔐"
-    STATUS_EXTRACTING = "Extracting...📂"
-    STATUS_SPLITTING = "Splitting...✂️"
+    STATUS_UPLOADING = "Uploading"
+    STATUS_CLONING= "Cloning"
+    STATUS_DOWNLOADING = "Downloading"
+    STATUS_COPYING= "Copying"
+    STATUS_ARCHIVING = "Archiving 🔐"
+    STATUS_EXTRACTING = "Extracting 📂"
+    STATUS_SPLITTING = "Splitting ✂️"
     STATUS_WAITING = "Queue"
     STATUS_PAUSED = "Pause"
     STATUS_CHECKING = "CheckUp"
     STATUS_SEEDING = "Seed"
 
-def get_progress_bar_string(processed_bytes, size_raw):
-    completed = processed_bytes / 8
-    total = size_raw / 8
+class TaskType():
+    RCLONE= "Rclone"
+    TELEGRAM= "Telegram"
+
+def get_progress_bar_string(status):
+    completed = status.processed_bytes() / 8
+    total = status.size_raw() / 8
     p = 0 if total == 0 else round(completed * 100 / total)
     p = min(max(p, 0), 100)
     cFull = p // 8
@@ -37,6 +42,11 @@ def get_progress_bar_string(processed_bytes, size_raw):
     p_str += '□' * (12 - cFull)
     p_str = f"[{p_str}]"
     return p_str
+
+def get_progress_bar_rclone(percentage):
+    return "{0}{1}\n".format(
+    ''.join(['■' for i in range(floor(percentage / 10))]),
+    ''.join(['□' for i in range(10 - floor(percentage / 10))]))
 
 def clean_unwanted(path: str):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")

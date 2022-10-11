@@ -1,28 +1,24 @@
 from time import time
 from bot import DOWNLOAD_DIR, LOGGER
-from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.message_utils import editMessage
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus, get_readable_time
 from bot.helper.ext_utils.zip_utils import get_path_size
-from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
+
 
 class ZipStatus:
-    def __init__(self, name, size, message, listener):
-        self.__user_message= message
-        self.__id = self.__user_message.id
+    def __init__(self, name, size, gid, listener):
         self.__name = name
-        self.__size= size
+        self.__size = size
+        self.__gid = gid
+        self.__listener = listener
+        self.__uid = listener.uid
         self.__start_time = time()
-        self.__listener= listener
-        self.__status_msg = ""
+        self.message = listener.message
 
-    def get_status_msg(self):
-        return self.__status_msg  
+    def gid(self):
+        return self.__gid
 
     def speed_raw(self):
         return self.processed_bytes() / (time() - self.__start_time)
-
-    def speed(self):
-        return '0.0/s'
 
     def progress_raw(self):
         try:
@@ -30,29 +26,42 @@ class ZipStatus:
         except:
             return 0
 
-    def progress_string(self):
+    def progress(self):
         return f'{round(self.progress_raw(), 2)}%'
 
-    def processed_bytes(self):
-        return get_path_size(f"{DOWNLOAD_DIR}{self.__name}") - self.__size
+    def speed(self):
+        return f'{get_readable_file_size(self.speed_raw())}/s'
+
+    def name(self):
+        return self.__name
+
+    def size_raw(self):
+        return self.__size
+
+    def size(self):
+        return get_readable_file_size(self.__size)
 
     def eta(self):
-        return '-'
+        try:
+            seconds = (self.size_raw() - self.processed_bytes()) / self.speed_raw()
+            return f'{get_readable_time(seconds)}'
+        except:
+            return '-'
 
     def status(self):
         return MirrorStatus.STATUS_ARCHIVING
 
-    async def create_message(self):
-        msg = f'**Name:** {self.__name}\n'
-        msg += f'**Status:** {self.status()}\n'
-        msg += f"**Size:** {get_readable_file_size(self.__size)}\n"
-        msg += f'**Speed:** {self.speed()} | **ETA:** {self.eta()}\n'
-        msg += get_bottom_status()
-        self._status_msg= msg
-        await editMessage(self._status_msg, self.__user_message)
+    def processed_bytes(self):
+        return get_path_size(f"{DOWNLOAD_DIR}{self.__uid}") - self.__size
+
+    def download(self):
+        return self
 
     def cancel_download(self):
         LOGGER.info(f'Cancelling Archive: {self.__name}')
         if self.__listener.suproc is not None:
             self.__listener.suproc.kill()
-        LOGGER.info('Archiving stopped!')
+        self.__listener.onUploadError('archiving stopped by user!')
+
+    def type(self):
+        return "Zip"

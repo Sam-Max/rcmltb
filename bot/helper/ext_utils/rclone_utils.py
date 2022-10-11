@@ -36,7 +36,7 @@ async def get_gid(drive_name, drive_base, ent_name, conf_path, isdir=True):
     except Exception:
         LOGGER.error("Error while getting id ::- {}".format(stdout))
             
-async def is_drive_set(user_id, message):
+async def is_rclone_drive(user_id, message):
     value= get_rc_user_value("MIRRORSET_DRIVE", user_id)
     if value:
         return True
@@ -48,7 +48,7 @@ async def is_drive_set(user_id, message):
             await sendMessage("Select a cloud first, use /mirrorset", message)
             return False
 
-async def is_config_set(user_id, message):
+async def is_rclone_config(user_id, message):
     path= ospath.join("users", str(user_id), "rclone.conf")
     if not ospath.exists(path):
         await sendMessage("Send rclone config file, use /config", message)

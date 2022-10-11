@@ -12,14 +12,14 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
-from bot.helper.ext_utils.rclone_utils import is_config_set
+from bot.helper.ext_utils.rclone_utils import is_rclone_config
 from bot.helper.ext_utils.var_holder import get_rc_user_value, update_rc_user_var
 from bot.modules.myfilesset import calculate_size, delete_selected, delete_selection, myfiles_settings, rclone_dedupe, rclone_mkdir, rclone_rename
 
 folder_icon= "📁"
 
 async def handle_myfiles(client, message):
-    if await is_config_set(message.from_user.id, message) == False:
+    if await is_rclone_config(message.from_user.id, message) == False:
         return
     await list_drive(message)
 

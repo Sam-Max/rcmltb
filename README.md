@@ -4,6 +4,7 @@
 
 ### qBittorrent
 - Qbittorrent support for torrent and magnets
+- Select files from Torrent before downloading 
 
 ### Aria2c
 - Aria support for direct download links
@@ -43,9 +44,10 @@
 - Rss feed with filter.
 
 ### Others
-- Telegram Navigation Bottom Menus to interact with cloud
+- Telegram Navigation Bottom Menus to interact with Cloud
 - Renaming of Telegram files
-- Load/Change rclone config file from bot.
+- Load/change rclone.conf file from bot
+- Load/change token.pickle from bot
 - Change all config variables from bot
 - File Manager (size, mkdir, delete, dedupe, rename)
 
@@ -130,7 +132,8 @@ restart - restart bot
    - Non mandatory variables:
         - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
         - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission separated by spaces. `Str`
-        - `DEFAULT_DRIVE`: set a default drive from your rclone.conf. `Str`
+        - `DEFAULT_DRIVE`: To set a default drive from your rclone.conf. `Str`
+        - `AUTO_MIRROR`: For auto mirroring files sent to the bot. Default is `False`. `Bool`
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces `Str`
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
         - `UPSTREAM_BRANCH`: Upstream branch for update

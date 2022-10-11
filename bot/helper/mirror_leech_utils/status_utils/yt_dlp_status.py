@@ -1,77 +1,36 @@
-from asyncio import sleep
-from time import time
-from bot import DOWNLOAD_DIR, EDIT_SLEEP_SECS, status_dict
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bot.helper.ext_utils.bot_utils import get_readable_time
-from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.message_utils import editMessage
-from bot.helper.ext_utils.zip_utils import get_path_size
-from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status, get_progress_bar_string
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
 
+from bot import DOWNLOAD_DIR
+from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
+from bot.helper.ext_utils.zip_utils import get_path_size
 
 class YtDlpDownloadStatus:
-    def __init__(self, obj, message, gid):
+    def __init__(self, obj, listener, gid):
         self.__obj = obj
-        self.message = message
-        self.__id = self.message.id
+        self.__uid = listener.uid
         self.__gid = gid
-
-    async def start(self):
-        sleeps= False
-        start = time()
-        data = "cancel {}".format(self.gid())
-        status_msg = self.get_status_message_text()
-        await editMessage(status_msg, self.message, reply_markup=(InlineKeyboardMarkup([
-                            [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]])))
-        while True:
-            sleeps = True
-            status_msg  = self.get_status_message_text()
-            if time() - start > EDIT_SLEEP_SECS:
-                await editMessage(status_msg, self.message, reply_markup=(InlineKeyboardMarkup([
-                                [InlineKeyboardButton('Cancel', callback_data=data.encode("UTF-8"))]]))) 
-                if sleeps:
-                    if self.__obj.is_cancelled:
-                        del status_dict[self.__id] 
-                        await editMessage(f"{self.__obj.error_message}", self.message)
-                        return False
-                    if self.__obj.is_completed:
-                        #del status_dict[self.__id] 
-                        return True
-                    sleeps = False
-                    await sleep(1)
-
-    def get_status_message_text(self):
-        msg = f"<code>{str(self.name())}</code>"
-        msg += f"\n<b>Status:</b> {MirrorStatus.STATUS_DOWNLOADING}"
-        msg += f"\n{get_progress_bar_string(self.processed_bytes(), self.size_raw())} {self.progress()}"
-        msg += f"\n<b>Processed:</b> {get_readable_file_size(self.processed_bytes())} of {self.size()}"
-        msg += f"\n<b>Speed:</b> {self.speed()} | <b>ETA:</b> {self.eta()}\n"
-        msg += get_bottom_status()
-        return msg
-
-    def get_status_msg(self):
-        return self.get_status_message_text()
-
-    def status(self):
-        return MirrorStatus.STATUS_DOWNLOADING
+        self.message = listener.message
 
     def gid(self):
         return self.__gid
-
-    def name(self):
-        return self.__obj.name
 
     def processed_bytes(self):
         if self.__obj.downloaded_bytes != 0:
           return self.__obj.downloaded_bytes
         else:
-          return get_path_size(f"{DOWNLOAD_DIR}{self.__id}")
+          return get_path_size(f"{DOWNLOAD_DIR}{self.__uid}")
 
     def size_raw(self):
         return self.__obj.size
 
     def size(self):
         return get_readable_file_size(self.size_raw())
+
+    def status(self):
+        return MirrorStatus.STATUS_DOWNLOADING
+
+    def name(self):
+        return self.__obj.name
 
     def progress_raw(self):
         return self.__obj.progress
@@ -97,6 +56,8 @@ class YtDlpDownloadStatus:
         except:
             return '-'
 
-    def cancel_download(self):
-       self.__obj.cancel_download()
+    def download(self):
+        return self.__obj
 
+    def type(self):
+        return "Ytdl"

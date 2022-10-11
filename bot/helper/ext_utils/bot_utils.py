@@ -1,13 +1,26 @@
+from asyncio import sleep, get_running_loop
+from html import escape
+from math import ceil
 from re import match as re_match, findall as re_findall, IGNORECASE, compile
 from time import time
+from psutil import cpu_percent, disk_usage, virtual_memory
+from bot import DOWNLOAD_DIR, STATUS_LIMIT, status_dict_lock, status_dict, botUptime
 from requests import head as rhead
-from threading import Thread, Event
+from threading import Event, Thread
 from urllib.request import urlopen
+from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.human_format import get_readable_file_size
+from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, TaskType, get_progress_bar_rclone, get_progress_bar_string
 
 
 MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
 URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+
+COUNT = 0
+PAGE_NO = 1
+PAGES = 0
 
 def is_url(url: str):
     url = re_findall(URL_REGEX, url)
@@ -79,7 +92,100 @@ def new_thread(fn):
 
     return wrapper
 
+async def get_readable_message():
+    async with status_dict_lock:
+        msg = ""
+        if STATUS_LIMIT is not None:
+            tasks = len(status_dict)
+            globals()['PAGES'] = ceil(tasks/STATUS_LIMIT)
+            if PAGE_NO > PAGES and PAGES != 0:
+                globals()['COUNT'] -= STATUS_LIMIT
+                globals()['PAGE_NO'] -= 1
+        for index, download in enumerate(list(status_dict.values())[COUNT:], start=1):
+            msg += f"<b>Status: </b> {download.status()}"
+            msg += f"\n<b>Name: </b><code>{escape(str(download.name()))}</code>"
+            if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
+                if download.type() == TaskType.RCLONE:
+                    msg += f"\n{get_progress_bar_rclone(download.progress())} {download.progress()}%"
+                    msg += f"\n<b>Processed:</b> {download.processed_bytes()}"
+                else:
+                    msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
+                    msg += f"\n<b>Processed:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
+                msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
+                if hasattr(download, 'seeders_num'):
+                    try:
+                        msg += f"\n<b>Seeders:</b> {download.seeders_num()} | <b>Leechers:</b> {download.leechers_num()}"
+                    except:
+                        pass
+            elif download.status() == MirrorStatus.STATUS_SEEDING:
+                msg += f"\n<b>Size: </b>{download.size()}"
+                msg += f"\n<b>Speed: </b>{download.upload_speed()}"
+                msg += f" | <b>Uploaded: </b>{download.uploaded_bytes()}"
+                msg += f"\n<b>Ratio: </b>{download.ratio()}"
+                msg += f" | <b>Time: </b>{download.seeding_time()}"
+            else:
+                msg += f"\n<b>Size: </b>{download.size()}"
+            msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>"
+            msg += "\n\n"
+            if STATUS_LIMIT is not None and index == STATUS_LIMIT:
+                break
+        if len(msg) == 0:
+            return None, None
+        dl_speed = 0
+        up_speed = 0
+        for download in list(status_dict.values()):
+            if download.status() == MirrorStatus.STATUS_DOWNLOADING:
+                spd = download.speed()
+                if 'K' in spd:
+                    dl_speed += float(spd.split('K')[0]) * 1024
+                elif 'M' in spd:
+                    dl_speed += float(spd.split('M')[0]) * 1048576
+            elif download.status() == MirrorStatus.STATUS_UPLOADING:
+                spd = download.speed()
+                if 'KB/s' in spd:
+                    up_speed += float(spd.split('K')[0]) * 1024
+                elif 'MB/s' in spd:
+                    up_speed += float(spd.split('M')[0]) * 1048576
+            elif download.status() == MirrorStatus.STATUS_SEEDING:
+                spd = download.upload_speed()
+                if 'K' in spd:
+                    up_speed += float(spd.split('K')[0]) * 1024
+                elif 'M' in spd:
+                    up_speed += float(spd.split('M')[0]) * 1048576
+        bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
+        bmsg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botUptime)}"
+        bmsg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
+        if STATUS_LIMIT is not None and tasks > STATUS_LIMIT:
+            msg += f"<b>Page:</b> {PAGE_NO}/{PAGES} | <b>Tasks:</b> {tasks}\n"
+            buttons = ButtonMaker()
+            buttons.cbl_buildbutton("<<", "status pre")
+            buttons.cbl_buildbutton(">>", "status nex")
+            buttons.cbl_buildbutton("♻️", "status ref")
+            button = buttons.build_menu(3)
+            return msg + bmsg, button
+        return msg + bmsg, ""
+
 class setInterval:
+    def __init__(self, interval, action):
+        self.interval = interval
+        self.action = action
+        self.is_cancelled= False
+        self.loop= get_running_loop()
+        self.loop.create_task(self.setInterval())
+
+    async def setInterval(self):
+        nextTime = time() + self.interval
+        while True:
+            await sleep(nextTime - time())
+            nextTime += self.interval
+            await self.action()
+            if self.is_cancelled:
+                break
+
+    def cancel(self):
+        self.is_cancelled= True
+
+class setIntervalThreaded:
     def __init__(self, interval, action):
         self.interval = interval
         self.action = action
@@ -90,8 +196,8 @@ class setInterval:
     def __setInterval(self):
         nextTime = time() + self.interval
         while not self.stopEvent.wait(nextTime - time()):
-            nextTime += self.interval
             self.action()
+            nextTime = time() + self.interval
 
     def cancel(self):
         self.stopEvent.set()

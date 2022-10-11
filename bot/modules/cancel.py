@@ -2,7 +2,6 @@
 import asyncio
 import time
 from pyrogram.filters import regex
-from pyrogram.handlers import CallbackQueryHandler
 from bot import status_dict_lock, OWNER_ID, SUDO_USERS, Bot, status_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
@@ -12,27 +11,13 @@ from bot.helper.ext_utils.message_utils import sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, getAllDownload, getDownloadByGid
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
-async def handle_cancel(client, callback_query):
-    query= callback_query
-    user_id = query.from_user.id
-    data = query.data.split()
-    gid = data[1]
-    gid = gid.strip()
-    dl = await getDownloadByGid(gid)
-    if dl.message.reply_to_message:
-        if dl.message.reply_to_message.from_user.id != user_id:
-            return await query.answer("This task is not for you!", show_alert=True)
-    else:
-        if dl.message.from_user.id != user_id:
-            return await query.answer("This task is not for you!", show_alert=True)
-    dl.cancel_download()
 
 async def cancel_mirror(client, message):
     user_id = message.from_user.id
     args= message.text.split()
     if len(args) > 1:
         gid = args[1]
-        dl = await getDownloadByGid(gid)
+        dl = getDownloadByGid(gid)
         if not dl:
            return await sendMessage(f"GID: <code>{gid}</code> Not Found.", message)
     else:
@@ -42,7 +27,7 @@ async def cancel_mirror(client, message):
     if OWNER_ID != user_id and user_id not in SUDO_USERS:
         return await sendMessage("This is not for you!", message)
 
-    dl.cancel_download()
+    dl.download().cancel_download()
 
 async def cancell_all_buttons(client, message):
     async with status_dict_lock:
@@ -75,17 +60,15 @@ def cancel_all_(status, loop):
     while dl := asyncio.run_coroutine_threadsafe(getAllDownload(status), loop).result():
         if dl.gid() != gid:
             gid = dl.gid()
-            dl.cancel_download()
+            dl.download().cancel_download()
             time.sleep(1)
 
 cancel_mirror_handler = MessageHandler(cancel_mirror, filters.command(BotCommands.CancelCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 cancel_all_handler = MessageHandler(cancell_all_buttons, filters= filters.command(BotCommands.CancelAllCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))
 cancel_all_cb = CallbackQueryHandler(cancel_all_update, filters= regex("canall"))
-cancel_cb= CallbackQueryHandler(handle_cancel, filters= regex("cancel"))
 
 Bot.add_handler(cancel_mirror_handler)  
 Bot.add_handler(cancel_all_handler)
-Bot.add_handler(cancel_cb)  
 Bot.add_handler(cancel_all_cb)
 
         

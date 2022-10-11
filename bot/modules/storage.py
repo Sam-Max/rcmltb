@@ -9,12 +9,12 @@ from bot import LOGGER, Bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.rclone_utils import is_config_set
+from bot.helper.ext_utils.rclone_utils import is_rclone_config
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
 
 async def handle_storage(client, message):
-     if await is_config_set(message.from_user.id, message) == False:
+     if await is_rclone_config(message.from_user.id, message) == False:
         return  
      await list_drive(message)
 

@@ -1,12 +1,9 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/ytdlp.py
 # Adapted for asyncio framework and pyrogram library
 
-import asyncio
-from random import SystemRandom
-from string import ascii_letters, digits
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import regex, command
-from bot import DOWNLOAD_DIR, LOGGER, Bot, status_dict, status_dict_lock
+from bot import DOWNLOAD_DIR, Bot
 from re import split as re_split
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import is_url
@@ -14,10 +11,9 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker
-from bot.helper.ext_utils.rclone_utils import is_config_set, is_drive_set
+from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_rclone_drive
 from bot.helper.mirror_leech_utils.download_utils.yt_dlp_helper import YoutubeDLHelper
-from bot.helper.mirror_leech_utils.mirror_leech import MirrorLeech
-from bot.helper.mirror_leech_utils.status_utils.yt_dlp_status import YtDlpDownloadStatus
+from bot.helper.mirror_leech_utils.listener import MirrorLeechListener
 
 listener_dict = {}
 
@@ -27,11 +23,11 @@ async def _ytdl(client, message, isLeech=False):
     user_id = message.from_user.id
     msg_id = message.id
 
-    if await is_config_set(user_id, message) == False:
+    if await is_rclone_config(user_id, message) == False:
         return
 
     if not isLeech:
-        if await is_drive_set(user_id, message) == False:
+        if await is_rclone_drive(user_id, message) == False:
             return
 
     link = mssg.split()
@@ -88,7 +84,7 @@ You can add tuple and dict also. Use double quotes inside dict.
         """
         return await sendMessage(help_msg, message)
 
-    listener= (tag, isLeech)
+    listener = MirrorLeechListener(message, tag, user_id, isLeech=isLeech)
     buttons = ButtonMaker()
     best_video = "bv*+ba/b"
     best_audio = "ba/b"
@@ -245,19 +241,8 @@ async def select_format(client, callback_query):
             if '|' in qual:
                 b_name, tbr = qual.split('|')
                 qual = task_info[6][b_name][tbr][1]
-        (tag, isLeech)= listener
-        mirror_leech= MirrorLeech(f'{DOWNLOAD_DIR}/{task_id}', message, tag, uid, isLeech= isLeech)        
-        gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
-        ydl_hp = YoutubeDLHelper(mirror_leech)
-        ytdl_status = YtDlpDownloadStatus(ydl_hp, message, gid)
-        status_dict[message.id] = ytdl_status
-        loop= asyncio.get_running_loop() 
-        status_task= loop.create_task(ytdl_status.start())
-        loop.create_task(ydl_hp.add_download(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, opt))
-        await status_task
-        status= status_task.result()
-        if status:
-            await mirror_leech.execute()
+        ydl_hp = YoutubeDLHelper(listener)
+        await ydl_hp.add_download(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, opt)
     del listener_dict[task_id]
 
 async def ytdlleech(client, message):

@@ -11,7 +11,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean_all, start_cleanup
 from bot.helper.ext_utils import db_handler
-from bot.modules import batch, cancel, config, copy, leech, mirror, mirrorset, myfilesset, owner_settings, search, myfiles, speedtest, stats, status, clone, storage, cleanup, user_settings, ytdlp, shell, rss
+from bot.modules import batch, cancel, config, copy, leech, mirror, mirrorset, myfilesset, owner_settings, search, myfiles, speedtest, stats, status, clone, storage, cleanup, user_settings, ytdlp, shell, bt_select, rss
 
 print("Successfully deployed!")
 
@@ -70,7 +70,7 @@ async def main():
     restart_handler = MessageHandler(restart, filters= command(BotCommands.RestartCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))
     log_handler = MessageHandler(get_log, filters= command(BotCommands.LogsCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))
     ping_handler = MessageHandler(ping, filters= command(BotCommands.PingCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-
+   
     Bot.add_handler(start_handler)
     Bot.add_handler(restart_handler)
     Bot.add_handler(log_handler)

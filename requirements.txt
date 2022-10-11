@@ -21,6 +21,7 @@ APScheduler
 pillow
 tenacity
 speedtest-cli
+python-magic
 python-dotenv
 requests
 megasdkrestclient

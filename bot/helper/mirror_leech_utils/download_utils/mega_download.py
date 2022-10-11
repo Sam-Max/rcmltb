@@ -1,10 +1,12 @@
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
+# Adapted for asyncio framework and pyrogram library
+
 import asyncio
 from pathlib import Path
 from bot import LOGGER
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot import status_dict, status_dict_lock
-from bot.helper.ext_utils.message_utils import sendMessage
-from os import path as ospath
+from bot.helper.ext_utils.message_utils import sendMessage, sendStatusMessage
 from bot.helper.mirror_leech_utils.status_utils.mega_status import MegaDownloadStatus
 from megasdkrestclient import MegaSdkRestClient, constants
 
@@ -12,60 +14,92 @@ from megasdkrestclient import MegaSdkRestClient, constants
 class MegaDownloader():
     POLLING_INTERVAL = 3
 
-    def __init__(self, link, message):
+    def __init__(self, link, listener):
         super().__init__()
         self._link = link
-        self.mega_client = MegaSdkRestClient('http://localhost:6090')
-        self._message = message
-        self.id= self._message.id
+        self.__name = ""
+        self.__gid = ''
+        self.__mega_client = MegaSdkRestClient('http://localhost:6090')
+        self.__listener = listener
         self.__periodic= None
-        self.loop= asyncio.get_running_loop()
-        self.is_cancelled= False
-        self.is_completed= False
+        self.__loop = asyncio.get_running_loop()
+        self.__downloaded_bytes = 0
+        self.__progress = 0
+        self.__size = 0
+
+    @property
+    def progress(self):
+        return self.__progress
+
+    @property
+    def downloaded_bytes(self):
+        return self.__downloaded_bytes
+
+    @property
+    def size(self):
+        return self.__size
+
+    @property
+    def gid(self):
+        return self.__gid
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def download_speed(self):
+        if self.gid is not None:
+            return self.__mega_client.getDownloadInfo(self.gid)['speed']
 
     async def execute(self, path):
         Path(path).mkdir(parents=True, exist_ok=True)
-        LOGGER.info("Mega Download Started...")
+        LOGGER.info("MegaDownload Started...")
         try:
-            dl = await self.loop.run_in_executor(None, self.mega_client.addDl, self._link, path)
-        except Exception as e:
-            error_reason = str(dict(e.message)["message"]).title()
-            await sendMessage(error_reason, self._message)
-            return False, None, ""
-
+            dl = await self.__loop.run_in_executor(None, self.__mega_client.addDl, self._link, path)
+        except Exception as er:
+            return await sendMessage(str(er), self.__listener.message)
         gid = dl["gid"]
-        self.gid= gid
+        info = await self.__loop.run_in_executor(None, self.__mega_client.getDownloadInfo, gid)
+        file_name = info['name']
+        file_size = info['total_length']
         self.__periodic = setInterval(self.POLLING_INTERVAL, self.__onInterval)
-        mega_status= MegaDownloadStatus(gid, self._message, self)
         async with status_dict_lock:  
-            status_dict[self.id] = mega_status
-        status, rmsg, name= await mega_status.create_status()
-        if status:
-            async with status_dict_lock:
-                del status_dict[self.id]
-            path = ospath.join(dl["dir"], name)     
-            return True, rmsg, path  
-        else:
-            async with status_dict_lock:
-                del status_dict[self.id]
-            return False, rmsg, ""       
+            status_dict[self.__listener.uid] = MegaDownloadStatus(self, self.__listener)
+        self.__name = file_name
+        self.__size = file_size
+        self.__gid = gid
+        await sendStatusMessage(self.__listener.message)
 
-    def __onInterval(self):
-        dlInfo = self.mega_client.getDownloadInfo(self.gid)
+    async def __onDownloadError(self, error):
+        await self.__listener.onDownloadError(error)
+
+    async def __onDownloadComplete(self):
+        await self.__listener.onDownloadComplete()
+
+    def __onDownloadProgress(self, current, total):
+            self.__downloaded_bytes = current
+            try:
+                self.__progress = current / total * 100
+            except ZeroDivisionError:
+                self.__progress = 0    
+
+    async def __onInterval(self):
+        dlInfo = self.__mega_client.getDownloadInfo(self.gid)
         name = dlInfo['name']
         if dlInfo['state'] in [constants.State.TYPE_STATE_COMPLETED, constants.State.TYPE_STATE_CANCELED, 
             constants.State.TYPE_STATE_FAILED] and self.__periodic is not None:
             self.__periodic.cancel()
         if dlInfo['state'] == constants.State.TYPE_STATE_COMPLETED:
-            self.is_completed= True
+            await self.__onDownloadComplete()
             return
         if dlInfo['state'] == constants.State.TYPE_STATE_CANCELED:
             LOGGER.info(f"Cancelling Download: {name}, cause: 'Download stopped by user!'")
-            self.is_cancelled= True
+            await self.__onDownloadError('Download stopped by user!')
             return
         if dlInfo['state'] == constants.State.TYPE_STATE_FAILED:
             LOGGER.info(f"Cancelling Download: {name}, cause: {dlInfo['error_string']}'")
-            self.is_cancelled= True
+            await self.__onDownloadError(dlInfo['error_string'])
             return
-    
+        self.__onDownloadProgress(dlInfo['completed_length'], dlInfo['total_length'])
 

@@ -204,13 +204,13 @@ class GoogleDriveHelper:
                 msg += f'\n<b>SubFolders: </b>{self.__total_folders}'
                 msg += f'\n<b>Files: </b>{self.__total_files}'
                 buttons = ButtonMaker()
-                buttons.url_buildbutton("☁️ Drive Link", durl)
+                buttons.url_buildbutton("Cloud Link 🔗", durl)
             else:
                 file = self.__copyFile(meta.get('id'), PARENT_ID)
                 msg += f'<b>Name: </b><code>{file.get("name")}</code>'
                 durl = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 buttons = ButtonMaker()
-                buttons.url_buildbutton("☁️ Drive Link", durl)
+                buttons.url_buildbutton("Cloud Link 🔗", durl)
                 if mime_type is None:
                     mime_type = 'File'
                 msg += f'\n\n<b>Size: </b>{get_readable_file_size(int(meta.get("size", 0)))}'

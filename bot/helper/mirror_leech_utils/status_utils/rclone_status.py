@@ -1,128 +1,86 @@
-from asyncio import sleep
-from math import floor
+from asyncio import sleep, get_running_loop
 import re
-import time
-from bot import EDIT_SLEEP_SECS
-from bot.helper.ext_utils.message_utils import editMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker
-from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, get_bottom_status
+from bot.helper.ext_utils.human_format import get_readable_file_size
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 
 
 class RcloneStatus:
-    def __init__(self, process, message, status_type, gid, name=""):
-        self._rc_process = process
-        self.message = message
-        self._id = self.message.id
-        self._gid= gid
-        self._name= name
-        self._status_type= status_type
-        self._status_msg_text= ""
-        self.is_cancelled = False
-
-    async def start(self):
+    def __init__(self, obj, gid):
+        self.__obj = obj
+        self.__gid = gid
+        self.__percent= 0
+        self.__speed= 0 
+        self.__transfered_bytes = 0 
+        self.__eta= "-"
+        self.is_rclone= True
+        self.loop= get_running_loop()
+        self.loop.create_task(self.read_stdout())
+    
+    async def read_stdout(self):
         blank = 0
-        sleeps = False
-        start = time.time()
-        button= ButtonMaker()
-        button.cb_buildbutton('Cancel', data=f"cancel {self._gid}")
-        status= self.status()
-        self._status_msg_text= await self.__create_empty_status(status, self._name)
-        rmsg= await editMessage(self._status_msg_text, self.message, reply_markup=button.build_menu(1))
-        
         while True:
-            data = await self._rc_process.stdout.readline()
-            data = data.decode().strip()
-            mat = re.findall('Transferred:.*ETA.*', data)
+            if self.__obj.process is not None:
+                data = await self.__obj.process.stdout.readline()
+                data = data.decode().strip()
+                mat = re.findall('Transferred:.*ETA.*', data)
+                if len(mat) > 0:
+                    nstr = mat[0].replace('Transferred:', '')
+                    nstr = nstr.strip()
+                    nstr = nstr.split(',')
+                    percent = nstr[1].strip('% ')
+                    try:
+                        self.__percent = int(percent)
+                    except:
+                        pass
+                    self.__transfered_bytes = nstr[0]
+                    self.__speed = nstr[2]
+                    self.__eta = nstr[3].replace('ETA', '')
 
-            if mat is not None and len(mat) > 0:
-                sleeps = True
-                nstr = mat[0].replace('Transferred:', '')
-                nstr = nstr.strip()
-                nstr = nstr.split(',')
-                percent = nstr[1].strip('% ')
-                try:
-                    percentage = int(percent)
-                except:
-                    percentage = 0
-                prg = self.__get_progress_bar(percentage)
+                if data == '':
+                    blank += 1
+                    if blank == 20:
+                        break
+                else:
+                    blank = 0
+            await sleep(0.5)
 
-                if time.time() - start > EDIT_SLEEP_SECS:
-                    start = time.time()
-                    self._status_msg_text= self.get_status_message(status, prg, self._name, nstr)
-                    await editMessage(self._status_msg_text, rmsg, reply_markup=button.build_menu(1))
+    def gid(self):
+        return self.__gid
 
-            if data == '':
-                blank += 1
-                if blank == 20:
-                    return True
-            else:
-                blank = 0
+    def processed_bytes(self):
+        return self.__transfered_bytes
 
-            if sleeps:
-                sleeps = False
-                if self.is_cancelled:
-                    self._rc_process.kill()
-                    return False
-                await sleep(2)
+    def size_raw(self):
+        return self.__obj.size
 
-    def get_status_msg(self):
-        return self._status_msg_text
-
-    def name(self):
-        return self._name
+    def size(self):
+        return get_readable_file_size(self.size_raw())
 
     def status(self):
-        if self._status_type == MirrorStatus.STATUS_UPLOADING:
+        if self.__obj.status_type == MirrorStatus.STATUS_UPLOADING:
             return MirrorStatus.STATUS_UPLOADING
-        elif self._status_type == MirrorStatus.STATUS_CLONING:
-            return MirrorStatus.STATUS_CLONING
-        elif self._status_type == MirrorStatus.STATUS_COPYING:
+        elif self.__obj.status_type== MirrorStatus.STATUS_COPYING:
             return MirrorStatus.STATUS_COPYING
         else:
             return MirrorStatus.STATUS_DOWNLOADING
 
-    def get_status_message(self, status_type, prg, name, nstr):
-        if status_type == MirrorStatus.STATUS_UPLOADING:
-            status_msg = '**Name:** `{}`\n**Status:** {}\n{}\n**Uploaded:** {}\n**Speed:** {} | **ETA:** {}\n'.format(
-                        name, status_type, prg, nstr[0], nstr[2], nstr[3].replace('ETA', ''))
-        elif status_type == MirrorStatus.STATUS_CLONING:
-            status_msg = '**Name:** `{}`\n**Status:** {}\n{}\n**Downloaded:** {}\n**Speed:** {} | **ETA:** {}\n'.format(
-                                name, status_type, prg, nstr[0], nstr[2], nstr[3].replace('ETA', ''))
-        elif status_type == MirrorStatus.STATUS_DOWNLOADING:
-            status_msg = '**Name:** `{}`\n**Status:** {}\n{}\n**Downloaded:** {}\n**Speed:** {} | **ETA:** {}\n'.format(
-                                name, status_type, prg, nstr[0], nstr[2], nstr[3].replace('ETA', ''))
-        elif status_type == MirrorStatus.STATUS_COPYING:
-            status_msg = '**Status:** {}\n{}\n**Copied:** {}\n**Speed:** {} | **ETA:** {}\n'.format(
-                                    status_type, prg, nstr[0], nstr[2], nstr[3].replace('ETA', ''))
-        status_msg += get_bottom_status()   
-        return status_msg
+    def name(self):
+        return self.__obj.name
 
-    async def __create_empty_status(self, status_type, name):
-        prg = self.__get_progress_bar(0)
-        if status_type == MirrorStatus.STATUS_UPLOADING:
-            status_msg = '**Name:** `{}`\n**Status:** {}\n{}\n**Uploaded:** {}\n**Speed:** {} | **ETA:** {}\n'.format(
-                        name, status_type, prg, "0 B", "0 B/s ", "-")
-        elif status_type == MirrorStatus.STATUS_CLONING:
-            status_msg = '**Name:** `{}`\n**Status:** {}\n{}\n**Downloaded:** {}\n**Speed:** {} | **ETA:** {}\n'.format(
-                                name, status_type, prg, "0 B", "0 B/s ", "-")
-        elif status_type == MirrorStatus.STATUS_DOWNLOADING:
-            status_msg = '**Name:** `{}`\n**Status:** {}\n{}\n**Downloaded:** {}\n**Speed:** {} | **ETA:** {}\n'.format(
-                                name, status_type, prg, "0 B", "0 B/s ", "-")
-        elif status_type == MirrorStatus.STATUS_COPYING:
-            status_msg = '**Status:** {}\n{}\n**Copied:** {}\n**Speed:** {} | **ETA:** {}\n'.format(
-                                    status_type, prg, "0 B", "0 B/s ", "-")
-        status_msg += get_bottom_status()  
-        return status_msg
+    def progress(self):
+        return self.__percent   
 
-    def __get_progress_bar(self, percentage):
-        return "{0}{1}\n**P:** {2}%".format(
-        ''.join(['■' for i in range(floor(percentage / 10))]),
-        ''.join(['□' for i in range(10 - floor(percentage / 10))]),
-        round(percentage, 2))
+    def speed(self):
+        return f'{self.__speed}'
 
-    def gid(self):
-        return self._gid
+    def eta(self):
+        return self.__eta
 
-    def cancel_download(self):
-        self.is_cancelled = True
+    def download(self):
+        return self.__obj
+    
+    def type(self):
+        return "Rclone"
+        
+

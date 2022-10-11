@@ -11,14 +11,16 @@ from bot import DOWNLOAD_DIR, Bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
-from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
+from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
-from bot.helper.ext_utils.rclone_utils import is_config_set
+from bot.helper.ext_utils.rclone_utils import is_rclone_config
 from bot.helper.ext_utils.var_holder import get_rc_user_value, update_rc_user_var
-from bot.helper.mirror_leech_utils.upload_utils.rclone_leech import RcloneLeech
+from bot.helper.mirror_leech_utils.download_utils.rclone_download import RcloneLeech
+from bot.helper.mirror_leech_utils.listener import MirrorLeechListener
 from bot.modules.mirror import mirror_leech
 
 
+listener_dict = {}
 
 async def handle_zip_leech_command(client, message):
     await leech(client, message, isZip=True)
@@ -31,10 +33,12 @@ async def handle_leech(client, message):
 
 async def leech(client, message, isZip=False, extract=False):
     user_id= message.from_user.id
-    if await is_config_set(user_id, message) == False:
+    message_id= message.id
+    tag = f"@{message.from_user.username}"
+    if await is_rclone_config(user_id, message) == False:
         return
-    update_rc_user_var('IS_ZIP', isZip, user_id)   
-    update_rc_user_var('EXTRACT', extract, user_id)  
+    listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, isLeech=True)
+    listener_dict[message_id] = [listener, isZip, extract]
     buttons= ButtonMaker()
     buttons.cb_buildbutton("🔗 From Link", f"leechselect^link^{user_id}")
     buttons.cb_buildbutton("📁 From Cloud", f"leechselect^cloud^{user_id}")
@@ -48,7 +52,6 @@ async def list_drive(message, edit=False):
         user_id= message.from_user.id
 
     buttons = ButtonMaker()
-
     path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
     conf = ConfigParser()
     conf.read(path)
@@ -75,6 +78,10 @@ async def list_drive(message, edit=False):
 
 async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
     user_id= message.reply_to_message.from_user.id
+    msg_id= message.reply_to_message.id
+    info= listener_dict[msg_id] 
+    is_zip= info[1]
+    extract= info[2]
     buttons = ButtonMaker()
     path = get_rclone_config(user_id)
     buttons.cbl_buildbutton("✅ Select this folder", f"leechmenu^leech_folder^{user_id}")
@@ -125,11 +132,11 @@ async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
     buttons.cbl_buildbutton("⬅️ Back", data= f"leechmenu^{back}^{user_id}")
     buttons.cbl_buildbutton("✘ Close Menu", data=f"leechmenu^close^{user_id}")
 
-    msg= 'Select folder or file that you want to leech\n'
-    if get_rc_user_value('IS_ZIP', user_id):
-        msg= 'Select file that you want to zip\n' 
-    if get_rc_user_value('EXTRACT', user_id):
-        msg= 'Select file that you want to extract\n'
+    msg = 'Select folder or file that you want to leech\n'
+    if is_zip:
+        msg = 'Select file that you want to zip\n' 
+    if extract:
+        msg = 'Select file that you want to extract\n'
 
     if edit:
         await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
@@ -142,17 +149,11 @@ async def leech_menu_cb(client, callback_query):
     cmd = data.split("^")
     message = query.message
     user_id= query.from_user.id
-    tag = f"@{message.reply_to_message.from_user.username}"
+    msg_id= message.reply_to_message.id
+    info= listener_dict[msg_id] 
+    listener= info[0]
     base_dir= get_rc_user_value("LEECH_BASE_DIR", user_id)
     rclone_drive = get_rc_user_value("LEECH_DRIVE", user_id)
-    is_zip = False
-    extract = False
-
-    if get_rc_user_value('IS_ZIP', user_id):
-        is_zip= True
-        
-    if get_rc_user_value('EXTRACT', user_id):
-        extract= True
 
     if cmd[1] == "pages":
         return await query.answer()
@@ -182,17 +183,15 @@ async def leech_menu_cb(client, callback_query):
         path = get_rc_user_value(cmd[2], user_id)
         base_dir += path
         name, ext = ospath.splitext(base_dir)
-        dest_dir = f'{DOWNLOAD_DIR}{message.id}/{name}'
-        rc_leech= RcloneLeech(message, user_id, base_dir, dest_dir, 
-                             tag=tag, isZip=is_zip, extract=extract)
-        await rc_leech.leech()
+        dest_dir = f'{DOWNLOAD_DIR}{msg_id}/{name}'
+        await deleteMessage(message)
+        await RcloneLeech(base_dir, dest_dir, listener).leech()
           
     elif cmd[1] == "leech_folder":
         await query.answer() 
-        dest_dir = f'{DOWNLOAD_DIR}{message.id}/{base_dir}'
-        rc_leech= RcloneLeech(message, user_id, base_dir, dest_dir, 
-                              tag=tag, isZip=is_zip, extract=extract, isFolder=True)
-        await rc_leech.leech()
+        dest_dir = f'{DOWNLOAD_DIR}{msg_id}/{base_dir}'
+        await deleteMessage(message)
+        await RcloneLeech(base_dir, dest_dir, listener, isFolder=True).leech()
           
     elif cmd[1] == "back":
         base_dir_split= base_dir.split("/")[:-2]
@@ -266,9 +265,12 @@ async def selection_callback(client, callback_query):
     data = query.data
     cmd = data.split("^")
     message = query.message
+    msg_id= message.reply_to_message.id
+    info= listener_dict[msg_id] 
+    listener= info[0]
+    is_zip= info[1]
+    extract= info[2]
     user_id= query.from_user.id
-    is_zip = get_rc_user_value("IS_ZIP", user_id)
-    extract = get_rc_user_value("EXTRACT", user_id)
 
     if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", show_alert=True)
@@ -287,7 +289,7 @@ async def selection_callback(client, callback_query):
                         await client.listen.Cancel(filters.user(user_id))
                     else:
                         link= response.text
-                        await mirror_leech(client, message, _link= link, isZip= is_zip, extract= extract, isLeech=True, from_cb=True)
+                        await mirror_leech(client, listener.message, _link= link, isZip=is_zip, extract=extract, isLeech=True)
                 except Exception as ex:
                         await sendMessage(str(ex), message) 
         finally:

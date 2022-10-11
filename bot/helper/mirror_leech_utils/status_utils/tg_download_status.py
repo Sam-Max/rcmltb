@@ -1,16 +1,17 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
+from bot.helper.ext_utils.bot_utils import get_readable_time
+from bot.helper.ext_utils.human_format import get_readable_file_size
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
-from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 
 
-class MegaDownloadStatus:
-    def __init__(self, obj, listener):
+class TelegramStatus:
+    def __init__(self, obj, message, gid):
+        self.message = message
         self.__obj = obj
-        self.__uid = listener.uid
-        self.message = listener.message
-
+        self.__gid = gid
+        
     def gid(self):
-        return self.__obj.gid
+        return self.__gid
 
     def processed_bytes(self):
         return self.__obj.downloaded_bytes
@@ -53,4 +54,4 @@ class MegaDownloadStatus:
         return self.__obj
 
     def type(self):
-        return "Mega"
+        return "Telegram"

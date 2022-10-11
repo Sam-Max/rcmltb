@@ -1,89 +1,46 @@
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
+# Adapted for asyncio framework and pyrogram library
 
-from asyncio import sleep
-from bot import Bot, status_dict, status_reply_dict, status_dict_lock, status_reply_dict_lock
+from time import time
+from psutil import cpu_percent, virtual_memory, disk_usage
+from bot import DOWNLOAD_DIR, STATUS_UPDATE_INTERVAL, Bot, Interval, status_dict, status_dict_lock, status_reply_dict_lock, botUptime
 from pyrogram.handlers import MessageHandler
 from pyrogram import filters
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval
 from bot.helper.ext_utils.filters import CustomFilters
-from bot.helper.ext_utils.message_utils import auto_delete_message, deleteMessage, editMessage, sendMessage
-from bot.helper.mirror_leech_utils.status_utils.status_utils import get_bottom_status
+from bot.helper.ext_utils.human_format import get_readable_file_size
+from bot.helper.ext_utils.message_utils import auto_delete_message, sendMessage, sendStatusMessage, update_all_messages
 
-UP_MSG_LOOP= []
+
 
 async def status_handler(client, message):
-    chat_id= message.chat.id
     async with status_dict_lock:
         count = len(status_dict)
     if count == 0:
-        status_msg = "**No Active Tasks**\n"
-        status_msg += get_bottom_status()
-        msg= await sendMessage(status_msg, message)
-        await auto_delete_message(msg, message)
+        currentTime = get_readable_time(time() - botUptime)
+        free = get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)
+        msg = 'No Active Downloads !\n___________________________'
+        msg += f"\n<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}" \
+                   f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {currentTime}"
+        reply_message = await sendMessage(msg, message)
+        await auto_delete_message(message, reply_message)
     else:
-        async with status_dict_lock:
-            status_msg= ""
-            for dl in list(status_dict.values()):
-                status_msg += dl.get_status_msg()
-                status_msg += f"\n<code>/{BotCommands.CancelCommand} {dl.gid()}</code>"
-                status_msg += "\n\n"
-        
-        if len(status_msg) == 0:
-            return
-        elif len(status_msg) > 3900:
-            return
-
+        await sendStatusMessage(message)
         async with status_reply_dict_lock:
-            if chat_id in status_reply_dict:
-                    await deleteMessage(status_reply_dict[chat_id][0])
-                    del status_reply_dict[chat_id] 
             try:
-                if UP_MSG_LOOP:
-                    UP_MSG_LOOP[0].cancel()
-                    UP_MSG_LOOP.clear()
+                if Interval:
+                    Interval[0].cancel()
+                    Interval.clear()
             except:
                 pass
+            finally:
+                Interval.append(setInterval(STATUS_UPDATE_INTERVAL, update_all_messages))
 
-            edit_message = await sendMessage(status_msg, message)
-            status_reply_dict[chat_id] = [edit_message]
 
-        up_msg = UpdateMessageLoop(chat_id, edit_message)
-        if not UP_MSG_LOOP:
-            UP_MSG_LOOP.append(up_msg)
-        await up_msg.update()
-        
-class UpdateMessageLoop:
-    def __init__(self, chat_id, message):
-        self.chat_id= chat_id
-        self.message= message
-        self.stop_loop= False
+status_handlers = MessageHandler(status_handler, filters= filters.command(BotCommands.StatusCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+#status_pages_handler = CallbackQueryHandler(status_pages, filters= filters.regex("status"))
 
-    async def update(self):
-        while True:
-            async with status_reply_dict_lock:
-                if not status_reply_dict or not UP_MSG_LOOP:
-                    return
-            async with status_dict_lock:
-                count = len(status_dict)
-            if count == 0:
-                await deleteMessage(self.message)
-                return 
-            if self.stop_loop:
-                return 
-            async with status_dict_lock:
-                status_msg= ""
-                for dl in list(status_dict.values()):
-                    status_msg += dl.get_status_msg()
-                    status_msg += f"\n<code>/{BotCommands.CancelCommand} {dl.gid()}</code>"
-                    status_msg += "\n\n"
-            async with status_reply_dict_lock:
-                if status_reply_dict[self.chat_id] and status_msg != status_reply_dict[self.chat_id][0].text:
-                    await editMessage(status_msg, status_reply_dict[self.chat_id][0])
-                    status_reply_dict[self.chat_id][0].text = status_msg
-            await sleep(0.5)
+Bot.add_handler(status_handlers)
+#Bot.add_handler(status_pages_handler)
 
-    def cancel(self):
-        self.stop_loop= True
-                         
-
-status_handlers = MessageHandler(status_handler,filters= filters.command(BotCommands.StatusCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-Bot.add_handler(status_handlers)    
