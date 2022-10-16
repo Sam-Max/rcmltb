@@ -1,14 +1,13 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/ytdlp.py
 # Adapted for asyncio framework and pyrogram library
 
-import asyncio
 from logging import getLogger
 from random import SystemRandom
 from string import ascii_letters, digits
 from yt_dlp import YoutubeDL, DownloadError
 from re import search as re_search
 from json import loads as jsonloads
-from bot import status_dict_lock, status_dict
+from bot import status_dict_lock, status_dict, botloop
 from bot.helper.ext_utils.message_utils import sendStatusMessage
 from bot.helper.mirror_leech_utils.status_utils.yt_dlp_status import YtDlpDownloadStatus
 
@@ -51,7 +50,6 @@ class YoutubeDLHelper:
         self.__progress = 0
         self.__gid = ""
         self.is_cancelled = False
-        self.__loop= asyncio.get_running_loop()
         self.__downloading = False
         self.opts = {'progress_hooks': [self.__onDownloadProgress],
                      'logger': MyLogger(self),
@@ -132,7 +130,7 @@ class YoutubeDLHelper:
             except Exception as e:
                 if get_info:
                     raise e
-                self.__loop.create_task(self.__onDownloadError("Download cancelled by user")) 
+                botloop.create_task(self.__onDownloadError("Download cancelled by user")) 
                 return
         if 'entries' in result:
             for v in result['entries']:
@@ -172,7 +170,7 @@ class YoutubeDLHelper:
             self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': rate}]
         self.opts['format'] = qual
         LOGGER.info(f"Downloading with YT-DLP: {link}")
-        await self.__loop.run_in_executor(None, self.extractMetaData, link, name, args)
+        await botloop.run_in_executor(None, self.extractMetaData, link, name, args)
         if self.is_cancelled:
             return
         if self.is_playlist:
@@ -189,7 +187,7 @@ class YoutubeDLHelper:
         try:
             with YoutubeDL(self.opts) as ydl:
                 try:
-                    await self.__loop.run_in_executor(None, ydl.download, [link]) 
+                    await botloop.run_in_executor(None, ydl.download, [link]) 
                 except DownloadError as e:
                     if not self.is_cancelled:
                         await self.__onDownloadError(str(e))
@@ -204,7 +202,7 @@ class YoutubeDLHelper:
         self.is_cancelled = True
         LOGGER.info(f"Cancelling Download: {self.name}")
         if not self.__downloading:
-            self.__loop.create_task(self.__onDownloadError("Download cancelled by user"))
+            botloop.create_task(self.__onDownloadError("Download cancelled by user"))
 
     def __set_args(self, args):
         args = args.split('|')

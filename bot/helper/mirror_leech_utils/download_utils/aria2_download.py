@@ -1,14 +1,13 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/
 # Adapted for asyncio framework and pyrogram library
 
-import asyncio
+from asyncio import run_coroutine_threadsafe
 from time import sleep
-from bot import LOGGER, status_dict_lock, status_dict, aria2
+from bot import LOGGER, status_dict_lock, status_dict, aria2, botloop
 from bot.helper.ext_utils.bot_utils import is_magnet, new_thread
 from bot.helper.ext_utils.message_utils import sendMessage, sendStatusMessage
 from bot.helper.ext_utils.misc_utils import getDownloadByGid
 from bot.helper.mirror_leech_utils.status_utils.aria_status import AriaDownloadStatus
-
 
 
 @new_thread
@@ -28,7 +27,8 @@ def __onDownloadComplete(api, gid):
         return
     LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
     if dl := getDownloadByGid(gid):
-        asyncio.run(dl.listener().onDownloadComplete())
+        future= run_coroutine_threadsafe(dl.listener().onDownloadComplete(), botloop)
+        future.result()
         api.remove([download], force=True, files=True)
 
 @new_thread
@@ -39,14 +39,15 @@ def __onBtDownloadComplete(api, gid):
     if dl := getDownloadByGid(gid):
         listener = dl.listener()
         api.client.force_pause(gid)
-        asyncio.run(listener.onDownloadComplete())
+        future= run_coroutine_threadsafe(listener.onDownloadComplete(), botloop)
+        future.result()
         api.remove([download], force=True, files=True)
 
 @new_thread
 def __onDownloadStopped(api, gid):
     sleep(6)
     if dl := getDownloadByGid(gid):
-        asyncio.run(dl.listener().onDownloadError('Dead torrent!'))
+        run_coroutine_threadsafe(dl.listener().onDownloadError('Dead torrent!'), botloop)
         
 @new_thread
 def __onDownloadError(api, gid):
@@ -59,7 +60,7 @@ def __onDownloadError(api, gid):
     except:
         pass
     if dl := getDownloadByGid(gid):
-        asyncio.run(dl.listener().onDownloadError(error))
+        run_coroutine_threadsafe(dl.listener().onDownloadError(error), botloop)
 
 def start_listener():
     aria2.listen_to_notifications(threaded=True,
@@ -75,9 +76,9 @@ async def add_aria2c_download(link: str, path, listener, filename):
     if filename:
         args['out'] = filename
     if is_magnet(link):
-        download = await asyncio.get_running_loop().run_in_executor(None, aria2.add_magnet, link, args)  
+        download = await botloop.run_in_executor(None, aria2.add_magnet, link, args)  
     else:
-        download = await asyncio.get_running_loop().run_in_executor(None, aria2.add_uris, [link], args)
+        download = await botloop.run_in_executor(None, aria2.add_uris, [link], args)
     if download.error_message:
         error = str(download.error_message).replace('<', ' ').replace('>', ' ')
         LOGGER.info(f"Download Error: {error}")

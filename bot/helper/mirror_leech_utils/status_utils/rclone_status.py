@@ -1,8 +1,8 @@
-from asyncio import sleep, get_running_loop
-import re
+from asyncio import sleep
+from bot import botloop
+from re import findall
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
-
 
 
 class RcloneStatus:
@@ -14,8 +14,7 @@ class RcloneStatus:
         self.__transfered_bytes = 0 
         self.__eta= "-"
         self.is_rclone= True
-        self.loop= get_running_loop()
-        self.loop.create_task(self.read_stdout())
+        botloop.create_task(self.read_stdout())
     
     async def read_stdout(self):
         blank = 0
@@ -23,7 +22,7 @@ class RcloneStatus:
             if self.__obj.process is not None:
                 data = await self.__obj.process.stdout.readline()
                 data = data.decode().strip()
-                mat = re.findall('Transferred:.*ETA.*', data)
+                mat = findall('Transferred:.*ETA.*', data)
                 if len(mat) > 0:
                     nstr = mat[0].replace('Transferred:', '')
                     nstr = nstr.strip()

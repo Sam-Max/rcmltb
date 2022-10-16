@@ -1,8 +1,8 @@
 
 import asyncio
-import time
+from time import sleep
 from pyrogram.filters import regex
-from bot import status_dict_lock, OWNER_ID, SUDO_USERS, Bot, status_dict
+from bot import status_dict_lock, OWNER_ID, SUDO_USERS, Bot, status_dict, botloop
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
@@ -50,8 +50,7 @@ async def cancel_all_update(client, callbackquery):
         await query.answer()
         if data[1] == 'close':
             return await query.message.delete()
-        loop= asyncio.get_running_loop()
-        loop.run_in_executor(None, cancel_all_, data[1], loop)
+        botloop.run_in_executor(None, cancel_all_, data[1], botloop)
     else:
         await query.answer(text="You don't have permission to use these buttons", show_alert=True)
 
@@ -61,7 +60,7 @@ def cancel_all_(status, loop):
         if dl.gid() != gid:
             gid = dl.gid()
             dl.download().cancel_download()
-            time.sleep(1)
+            sleep(1)
 
 cancel_mirror_handler = MessageHandler(cancel_mirror, filters.command(BotCommands.CancelCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 cancel_all_handler = MessageHandler(cancell_all_buttons, filters= filters.command(BotCommands.CancelAllCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))

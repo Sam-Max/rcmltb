@@ -1,9 +1,8 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/
 # Adapted for asyncio framework and pyrogram library
 
-import asyncio
 from pathlib import Path
-from bot import LOGGER
+from bot import LOGGER, botloop
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot import status_dict, status_dict_lock
 from bot.helper.ext_utils.message_utils import sendMessage, sendStatusMessage
@@ -22,7 +21,6 @@ class MegaDownloader():
         self.__mega_client = MegaSdkRestClient('http://localhost:6090')
         self.__listener = listener
         self.__periodic= None
-        self.__loop = asyncio.get_running_loop()
         self.__downloaded_bytes = 0
         self.__progress = 0
         self.__size = 0
@@ -56,11 +54,11 @@ class MegaDownloader():
         Path(path).mkdir(parents=True, exist_ok=True)
         LOGGER.info("MegaDownload Started...")
         try:
-            dl = await self.__loop.run_in_executor(None, self.__mega_client.addDl, self._link, path)
+            dl = await botloop.run_in_executor(None, self.__mega_client.addDl, self._link, path)
         except Exception as er:
             return await sendMessage(str(er), self.__listener.message)
         gid = dl["gid"]
-        info = await self.__loop.run_in_executor(None, self.__mega_client.getDownloadInfo, gid)
+        info = await botloop.run_in_executor(None, self.__mega_client.getDownloadInfo, gid)
         file_name = info['name']
         file_size = info['total_length']
         self.__periodic = setInterval(self.POLLING_INTERVAL, self.__onInterval)

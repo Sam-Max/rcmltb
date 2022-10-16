@@ -1,5 +1,4 @@
-from asyncio import get_running_loop
-from bot import LOGGER, get_client
+from bot import LOGGER, get_client, botloop
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 
 def get_download(client, hash_):
@@ -16,7 +15,6 @@ class QbDownloadStatus:
         self.__client = get_client()
         self.__listener = listener
         self.__hash = hash_
-        self.__loop= get_running_loop()
         self.__info = get_download(self.__client, self.__hash)
         self.seeding = seeding
         self.message = listener.message
@@ -112,5 +110,5 @@ class QbDownloadStatus:
         self.__client.torrents_pause(torrent_hashes=self.__hash)
         if self.status() != MirrorStatus.STATUS_SEEDING:
             LOGGER.info(f"Cancelling Download: {self.__info.name}")
-            self.__loop.create_task(self.__listener.onDownloadError('Download stopped by user!'))
+            botloop.create_task(self.__listener.onDownloadError('Download stopped by user!'))
             self.__client.torrents_delete(torrent_hashes=self.__hash, delete_files=True)

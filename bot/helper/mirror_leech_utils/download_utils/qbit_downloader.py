@@ -1,4 +1,3 @@
-import asyncio
 from functools import partial
 from hashlib import sha1
 from base64 import b16encode, b32decode
@@ -7,7 +6,7 @@ from time import time
 from asyncio import Lock, sleep
 from re import search as re_search
 from os import remove
-from bot import QbInterval, status_dict, status_dict_lock, BASE_URL, get_client, TORRENT_TIMEOUT, LOGGER
+from bot import QbInterval, status_dict, status_dict_lock, BASE_URL, get_client, botloop, TORRENT_TIMEOUT, LOGGER
 from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval
 from bot.helper.ext_utils.message_utils import deleteMessage, sendMarkup, sendMessage, sendStatusMessage, update_all_messages
 from bot.helper.ext_utils.misc_utils import bt_selection_buttons, getDownloadByGid
@@ -36,22 +35,21 @@ def __get_hash_file(path):
 
 async def add_qb_torrent(link, path, listener):
     client = get_client()
-    loop= asyncio.get_running_loop()
     ADD_TIME = time()
     try:
         if link.startswith('magnet:'):
-            ext_hash = await loop.run_in_executor(None, __get_hash_magnet, link)  
+            ext_hash = await botloop.run_in_executor(None, __get_hash_magnet, link)  
         else:
-            ext_hash = await loop.run_in_executor(None, __get_hash_file, link)
+            ext_hash = await botloop.run_in_executor(None, __get_hash_file, link)
         if ext_hash is None or len(ext_hash) < 30:
             return await sendMessage("Not a torrent! Qbittorrent only for torrents!", listener.message)
         tor_info = client.torrents_info(torrent_hashes=ext_hash)
         if len(tor_info) > 0:
             return await sendMessage("This Torrent already added!", listener.message)
         if link.startswith('magnet:'):
-            op = await loop.run_in_executor(None, partial(client.torrents_add, link, save_path=path))
+            op = await botloop.run_in_executor(None, partial(client.torrents_add, link, save_path=path))
         else:
-            op = await loop.run_in_executor(None, partial(client.torrents_add, torrent_files=[link], save_path=path))
+            op = await botloop.run_in_executor(None, partial(client.torrents_add, torrent_files=[link], save_path=path))
         await sleep(0.3)
         if op.lower() == "ok.":
             tor_info = client.torrents_info(torrent_hashes=ext_hash)

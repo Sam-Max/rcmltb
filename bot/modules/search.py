@@ -1,11 +1,10 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/search.py
 # Adapted for asyncio framework and pyrogram library
 
-from asyncio import get_running_loop
 from functools import partial
 from html import escape
 from urllib.parse import quote
-from bot import LOGGER, SEARCH_API_LINK, SEARCH_LIMIT, SEARCH_PLUGINS, Bot, get_client
+from bot import LOGGER, SEARCH_API_LINK, SEARCH_LIMIT, SEARCH_PLUGINS, Bot, get_client, botloop
 from requests import get as rget
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
@@ -163,15 +162,14 @@ async def _search(key, site, message, method):
     else:
         LOGGER.info(f"PLUGINS Searching: {key} from {site}")
         client = get_client()
-        loop= get_running_loop()
-        search = await loop.run_in_executor(None, partial(client.search_start, pattern=key, plugins=site, category='all'))
+        search = await botloop.run_in_executor(None, partial(client.search_start, pattern=key, plugins=site, category='all'))
         search_id = search.id
         while True:
-            result_status = await loop.run_in_executor(None, partial(client.search_status, search_id=search_id))
+            result_status = await botloop.run_in_executor(None, partial(client.search_status, search_id=search_id))
             status = result_status[0].status
             if status != 'Running':
                 break
-        dict_search_results = await loop.run_in_executor(None, partial(client.search_results, search_id=search_id))
+        dict_search_results = await botloop.run_in_executor(None, partial(client.search_results, search_id=search_id))
         search_results = dict_search_results.results
         total_results = dict_search_results.total
         if total_results == 0:
@@ -185,7 +183,7 @@ async def _search(key, site, message, method):
     await deleteMessage(message)
     await sendFile(message.reply_to_message, name, cap)
     if not method.startswith('api'):
-        await loop.run_in_executor(None, partial(client.search_delete, search_id=search_id))
+        await botloop.run_in_executor(None, partial(client.search_delete, search_id=search_id))
 
 def _getResult(search_results, key, method):
     if method == 'apirecent':
