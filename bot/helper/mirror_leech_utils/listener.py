@@ -7,6 +7,7 @@ import os
 from re import search
 from bot import DOWNLOAD_DIR, LOGGER, LEECH_SPLIT_SIZE, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2
 from subprocess import Popen
+from pyrogram.enums import ChatType
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.human_format import human_readable_bytes
 from bot.helper.ext_utils.message_utils import delete_all_messages, sendMarkup, sendMessage, update_all_messages
@@ -33,6 +34,7 @@ class MirrorLeechListener:
         self.newName= newName
         self.isRename= isRename
         self.dir = f"{DOWNLOAD_DIR}{self.uid}"
+        self.isPrivate = message.chat.type == ChatType.PRIVATE
         self.user_id= user_id
         self.__isLeech= isLeech
         self.__suproc = None

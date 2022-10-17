@@ -1,10 +1,9 @@
 from asyncio import sleep
 from os import walk, rename, path as ospath, remove as osremove
 from time import time
-from bot import AS_DOC_USERS, AS_DOCUMENT, AS_MEDIA_USERS, DUMP_CHAT, EXTENSION_FILTER, LOGGER, Bot, app
+from bot import AS_DOC_USERS, AS_DOCUMENT, AS_MEDIA_USERS, DUMP_CHAT, EXTENSION_FILTER, LOGGER, Bot, app, botloop
 from pyrogram.enums.parse_mode import ParseMode
 from pyrogram.errors import FloodWait
-from pyrogram.enums import ChatType
 from PIL import Image
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.misc_utils import get_media_info, get_media_streams
@@ -25,7 +24,6 @@ class TelegramUploader():
         self.__is_cancelled = False
         self.__msgs_dict = {}
         self.__as_doc = AS_DOCUMENT
-        self.__isPrivate = listener.message.chat.type == ChatType.PRIVATE
         self.__thumb = f"Thumbnails/{listener.message.chat.id}.jpg"
         self.__start_time= time()
         self.uploaded_bytes = 0
@@ -48,7 +46,7 @@ class TelegramUploader():
                         await self.__upload_file(f_path, file)
                         if self.__is_cancelled:
                             return
-                        if (not self.__isPrivate or DUMP_CHAT is not None) and not self.__is_corrupted:
+                        if (not self.__listener.isPrivate or DUMP_CHAT is not None) and not self.__is_corrupted:
                             self.__msgs_dict[self.__sent_msg.link] = file
                         self._last_uploaded = 0
                         await sleep(1)
@@ -130,7 +128,7 @@ class TelegramUploader():
                     progress= self.__upload_progress)
         except FloodWait as f:
             LOGGER.warning(str(f))
-            sleep(f.value)
+            await sleep(f.value)
         except Exception as ex:
             LOGGER.error(f"{ex} Path: {up_path}")
             self.__corrupted += 1
@@ -145,7 +143,7 @@ class TelegramUploader():
 
     def __upload_progress(self, current, total):
         if self.__is_cancelled:
-            app.stop_transmission()
+            self.client.stop_transmission()
             return
         chunk_size = current - self._last_uploaded
         self._last_uploaded = current
@@ -179,4 +177,4 @@ class TelegramUploader():
     def cancel_download(self):
         self.__is_cancelled = True
         LOGGER.info(f"Cancelling Upload: {self.name}")
-        self.__listener.onUploadError('Your upload has been stopped!')
+        botloop.create_task(self.__listener.onUploadError('Your upload has been stopped!'))

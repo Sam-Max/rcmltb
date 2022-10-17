@@ -54,7 +54,7 @@ def clean_unwanted(path: str):
         for filee in files:
             if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
                 remove(ospath.join(dirpath, filee))
-        if dirpath.endswith((".unwanted", "splited_files_mltb")):
+        if dirpath.endswith((".unwanted", "splited_files")):
             rmtree(dirpath)
     for dirpath, subdir, files in walk(path, topdown=False):
         if not listdir(dirpath):
