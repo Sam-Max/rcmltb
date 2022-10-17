@@ -1,5 +1,5 @@
 from time import time
-from bot import OWNER_ID, ALLOWED_CHATS, LOGGER, SUDO_USERS, bot, Bot
+from bot import OWNER_ID, ALLOWED_CHATS, LOGGER, SUDO_USERS, Interval, QbInterval, bot, Bot
 from os import path as ospath, remove as osremove, execl as osexecl, kill, popen
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
@@ -33,6 +33,12 @@ I can also can mirror-leech files and links to Telegram or cloud**\n\n
     
 async def restart(client, message):
     restart_msg= await sendMessage("Restarting", message) 
+    if Interval:
+        Interval[0].cancel()
+        Interval.clear()
+    if QbInterval:
+        QbInterval[0].cancel()
+        QbInterval.clear()
     try:
         for line in popen("ps ax | grep " + "rclone" + " | grep -v grep"):
             fields = line.split()
@@ -42,9 +48,9 @@ async def restart(client, message):
         LOGGER.info(f"Error: {exc}")
     with open(".restartmsg", "w") as f:
         f.truncate(0)
-        f.write(f"{message.chat.id}\n{restart_msg.id}\n")
+        f.write(f"{restart_msg.chat.id}\n{restart_msg.id}\n")
     clean_all()
-    srun(["pkill", "-f", "gunicorn|aria2c|megasdkrest|qbittorrent-nox"])
+    srun(["pkill", "-f", "gunicorn|aria2c|megasdkrest|qbittorrent-nox|ffmpeg"])
     srun(["python3", "update.py"])
     osexecl(executable, executable, "-m", "bot")
 
@@ -61,9 +67,8 @@ async def main():
     start_cleanup()
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
-            cht_id, msg_id = map(int, f)
-        await Bot.edit_message_text(text= "Restarted successfully!", message_id= msg_id,
-                                chat_id= cht_id)     
+            chat_id, msg_id = map(int, f)
+        await Bot.edit_message_text(chat_id, msg_id, "Restarted successfully!")     
         osremove(".restartmsg")
 
     start_handler = MessageHandler(start, filters= command(BotCommands.StartCommand))
