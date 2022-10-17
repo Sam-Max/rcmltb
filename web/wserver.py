@@ -232,7 +232,7 @@ function s_validate() {
         </a>
       </div>
       <div class="social">
-        <a href="https://github.com/Sam-Max/Rclone-Tg-Bot"><i class="fab fa-github"></i></a>
+        <a href="https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot"><i class="fab fa-github"></i></a>
       </div>
     </header>
     <div id="sticks">
@@ -623,7 +623,7 @@ section span{
         </a>
       </div>
       <div class="social">
-        <a href="https://github.com/Sam-Max/Rclone-Tg-Bot"><i class="fab fa-github"></i></a>
+        <a href="https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot"><i class="fab fa-github"></i></a>
       </div>
     </header>
     <section>
@@ -772,7 +772,7 @@ def set_priority(id_):
 
 @app.route('/')
 def homepage():
-    return "<h1>See Rclone-Tg-Bot <a href='https://github.com/Sam-Max/Rclone-Tg-Bot'> @GitHub</a> By <a href='https://github.com/Sam-Max'>Sam-Max</a></h1>"
+    return "<h1>See Rclone-Tg-Bot <a href='https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot'> @GitHub</a> By <a href='https://github.com/Sam-Max'>Sam-Max</a></h1>"
 
 @app.errorhandler(Exception)
 def page_not_found(e):

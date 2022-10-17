@@ -4,7 +4,7 @@ from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot import ALLOWED_CHATS, IS_PREMIUM_USER, LOGGER, SUDO_USERS, Bot
+from bot import ALLOWED_CHATS, IS_PREMIUM_USER, SUDO_USERS, Bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.filters import CustomFilters
@@ -12,7 +12,7 @@ from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 
-filter= {"SUDO_USERS", "ALLOWED_CHATS", "DOWNLOAD_DIR", "EDIT_SLEEP_SECS", "TORRENT_TIMEOUT","UPTOBOX_TOKEN","UPSTREAM_REPO",
+filter= {"SUDO_USERS", "ALLOWED_CHATS", "DOWNLOAD_DIR", "AUTO_MIRROR", "GDRIVE_FOLDER_ID", "EDIT_SLEEP_SECS", "TORRENT_TIMEOUT","UPTOBOX_TOKEN","UPSTREAM_REPO",
           "UPSTREAM_BRANCH","LEECH_SPLIT_SIZE","AS_DOCUMENT ", "YT_COOKIES_URL", "DATABASE_URL", "DUMP_CHAT","USER_SESSION_STRING", "MEGA_API_KEY","MEGA_EMAIL_ID" ,
           "MEGA_PASSWORD" ,"BASE_URL_OF_BOT","SERVER_PORT", "WEB_PINCODE","SEARCH_API_LINK", "SEARCH_LIMIT"}
 
@@ -50,8 +50,8 @@ def get_menu_message():
         else:
             msg += f'\n<b>{key.replace("_", " ").lower().capitalize()}:</b> <code>{value}</code>'
     msg += "\n\n<b>Notes:</b>"
-    msg += "\n1. Must restart bot after you set new values for changes to apply"
-    msg += "\n2. Use Database for sudo and allowed users not to be lost when bot restarted"
+    msg += "\n1. Use /restart command after you set new values for changes to apply"
+    msg += "\n2. Use database for sudo and allowed users not to be lost when bot restarted"
     
     return msg
 
@@ -196,7 +196,6 @@ async def start_listener(client, query, user_id, var, action=""):
                 return await query.answer("Value doesn't exist") 
     finally:
         await question.delete()
-        await response.delete()
 
 owner_settings_handler = MessageHandler(handle_ownerset, filters= command(BotCommands.OwnerSetCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))
 owner_settings_cb = CallbackQueryHandler(owner_set_callback, filters= regex(r'ownersetmenu'))

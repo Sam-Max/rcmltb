@@ -29,14 +29,14 @@ async def config_callback(client, callback_query):
           try:
                await client.send_document(document=path, chat_id=message.chat.id)
           except ValueError as err:
-               await sendMessage(err, message)
+               await sendMessage(str(err), message)
           await query.answer()
 
      if cmd[1] == "get_pickle":
           try:
                await client.send_document(document="token.pickle", chat_id=message.chat.id)
           except ValueError as err:
-               await sendMessage(err, message)
+               await sendMessage(str(err), message)
           await query.answer()
 
      if cmd[1] == "change_config":
@@ -105,16 +105,17 @@ async def set_config_listener(client, message, is_rclone= False):
                         if "/ignore" in response.text:
                             await client.listen.Cancel(filters.user(user_id))
                     else:
-                        if is_rclone:
+                         if is_rclone:
                               rclone_path = ospath.join("users", str(user_id), "rclone.conf" )
                               path= await client.download_media(response, file_name=rclone_path)
                               if DB_URI is not None:
-                                   DbManger().user_save_rcconfig(user_id, path)
+                                   DbManger().user_saveconfig(user_id, path)
                               msg = "Use /mirrorset to select a drive"
                               await sendMessage(msg, message)
-                        else:
-                           path= await client.download_media(response, file_name= "./")
-                        
+                         else:
+                              path= await client.download_media(response, file_name= "./")
+                              if DB_URI is not None:
+                                   DbManger().user_savepickle(user_id, path)
                except Exception as ex:
                     await sendMessage(str(ex), message) 
      finally:

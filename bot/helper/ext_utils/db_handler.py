@@ -29,7 +29,8 @@ class DbManger:
                  media boolean DEFAULT FALSE,
                  doc boolean DEFAULT FALSE,
                  thumb bytea DEFAULT NULL,
-                 rcconfig bytea DEFAULT NULL
+                 config bytea DEFAULT NULL,
+                 pickle bytea DEFAULT NULL
               )
               """
         self.cur.execute(sql)
@@ -49,7 +50,7 @@ class DbManger:
     def db_load(self):
         # User Data
         self.cur.execute("SELECT * from users")
-        rows = self.cur.fetchall()  # return a list ==> (uid, sudo, auth, media, doc, thumb, rcconfig)
+        rows = self.cur.fetchall()  # return a list ==> (uid, sudo, auth, media, doc, thumb, config, pickle)
         if rows:
             for row in rows:
                 if row[1] and row[0] not in SUDO_USERS:
@@ -72,6 +73,10 @@ class DbManger:
                         makedirs(f'users/{row[0]}')
                     with open(path, 'wb+') as f:
                         f.write(row[6])
+                path= "token.pickle"
+                if row[7] is not None and not ospath.exists(path):
+                    with open(path, 'wb+') as f:
+                        f.write(row[7])
             LOGGER.info("Users data has been imported from Database")
         # Rss Data
         self.cur.execute("SELECT * FROM rss")
@@ -154,27 +159,49 @@ class DbManger:
         self.conn.commit()
         self.disconnect()
 
-    def user_save_rcconfig(self, user_id: int, path):
+    def user_savepickle(self, user_id: int, path):
+        if self.err:
+            return
+        with open(path, 'rb') as f:
+            data= f.read()
+        if not self.user_check(user_id):
+            sql = 'INSERT INTO users (pickle, uid) VALUES (%s, %s)'
+        else:
+            sql = 'UPDATE users SET pickle = %s WHERE uid = %s'
+        self.cur.execute(sql, (data, user_id))
+        self.conn.commit()
+        self.disconnect()
+
+    def user_rmpickle(self, user_id: int):
+        if self.err:
+            return
+        if self.user_check(user_id):
+            sql = 'UPDATE users SET pickle = NULL WHERE uid = {}'.format(user_id)
+            self.cur.execute(sql)
+            self.conn.commit()
+            self.disconnect()
+
+    def user_saveconfig(self, user_id: int, path):
         if self.err:
             return
         with open(path,'rb') as f:
             data= f.read()
         if not self.user_check(user_id):
-            sql = 'INSERT INTO users (rcconfig, uid) VALUES (%s, %s)'
+            sql = 'INSERT INTO users (config, uid) VALUES (%s, %s)'
         else:
-            sql = 'UPDATE users SET rcconfig = %s WHERE uid = %s'
+            sql = 'UPDATE users SET config = %s WHERE uid = %s'
         self.cur.execute(sql, (data, user_id))
         self.conn.commit()
         self.disconnect()
 
-    def user_rm_rcconfig(self, user_id: int):
+    def user_rmconfig(self, user_id: int):
         if self.err:
             return
-        elif self.user_check(user_id):
-            sql = 'UPDATE users SET rcconfig = NULL WHERE uid = {}'.format(user_id)
-        self.cur.execute(sql)
-        self.conn.commit()
-        self.disconnect()
+        if self.user_check(user_id):
+            sql = 'UPDATE users SET config = NULL WHERE uid = {}'.format(user_id)
+            self.cur.execute(sql)
+            self.conn.commit()
+            self.disconnect()
 
     def rss_add(self, name, link, last, title, filters):
         if self.err:
@@ -215,11 +242,11 @@ class DbManger:
     def user_rm_thumb(self, user_id: int):
         if self.err:
             return
-        elif self.user_check(user_id):
+        if self.user_check(user_id):
             sql = 'UPDATE users SET thumb = NULL WHERE uid = {}'.format(user_id)
-        self.cur.execute(sql)
-        self.conn.commit()
-        self.disconnect()
+            self.cur.execute(sql)
+            self.conn.commit()
+            self.disconnect()
 
     def user_check(self, uid: int):
         self.cur.execute("SELECT * FROM users WHERE uid = {}".format(uid))

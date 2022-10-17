@@ -37,8 +37,8 @@
 
 ### Database
 - SQL Database
-- Save rclone config file in db
-- Save user leech settings(thumbnails, sudo and allowed users, etc) in db
+- Save rclone.conf and token.pickle files on db
+- Save user leech settings(thumbnails, sudo and allowed users, etc) on db
 
 ### RSS
 - Rss feed with filter.
@@ -110,7 +110,7 @@ restart - restart bot
 
  - Clone repo:
 
-        git clone https://github.com/Sam-Max/Rclone-Tg-Bot rclonetgbot/ && cd rclonetgbot
+        git clone https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot rclonetgbot/ && cd rclonetgbot
 
  - Install Docker(skip this if deploying without docker).
 
