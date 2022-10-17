@@ -27,9 +27,11 @@ async def edit_settings(client, message):
     await editMarkup(text, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 def get_menu_message():
-    sudo_users= {f'<code>{i}</code>' for i in SUDO_USERS}
-    allowed_chats= {f'<code>{i}</code>' for i in ALLOWED_CHATS}
-    
+    sudo_users = [f'<code>{i}</code>' for i in SUDO_USERS]
+    allowed_chats = [f'<code>{i}</code>' for i in ALLOWED_CHATS]
+    sudo_users = f'<code>None</code>' if len(sudo_users) == 0 else sudo_users
+    allowed_chats= f'<code>None</code>' if len(allowed_chats) == 0 else allowed_chats
+
     msg= "❇️<b>Owner Variables Settings</b>"
     msg += "\n\n<b>Here is list of variables:</b>"
     msg += f"\n\n<b>Sudo users:</b> {sudo_users}"
@@ -51,7 +53,7 @@ def get_menu_message():
             msg += f'\n<b>{key.replace("_", " ").lower().capitalize()}:</b> <code>{value}</code>'
     msg += "\n\n<b>Notes:</b>"
     msg += "\n1. Use /restart command after you set new values for changes to apply"
-    msg += "\n2. Use database for sudo and allowed users not to be lost when bot restarted"
+    msg += "\n2. Use database for sudo and allowed users to persist when bot restarted"
     
     return msg
 
