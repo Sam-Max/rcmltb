@@ -23,6 +23,8 @@ class _BotCommands:
         self.CleanupCommand = f'cleanup{CMD_INDEX}'
         self.YtdlMirrorCommand = f'ytdlmirror{CMD_INDEX}'
         self.YtdlLeechCommand = f'ytdlleech{CMD_INDEX}'
+        self.YtdlZipMirrorCommand = (f'ytdlzipmirror{CMD_INDEX}')
+        self.YtdlZipLeechCommand = (f'ytdlzipleech{CMD_INDEX}')
         self.SearchCommand = f'search{CMD_INDEX}'
         self.StatusCommand = f'status{CMD_INDEX}'
         self.StatsCommand = f'stats{CMD_INDEX}'

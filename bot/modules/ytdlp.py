@@ -18,7 +18,7 @@ from bot.helper.mirror_leech_utils.listener import MirrorLeechListener
 listener_dict = {}
 
 
-async def _ytdl(client, message, isLeech=False):
+async def _ytdl(client, message, isZip= False, isLeech=False):
     mssg = message.text
     user_id = message.from_user.id
     msg_id = message.id
@@ -84,7 +84,7 @@ You can add tuple and dict also. Use double quotes inside dict.
         """
         return await sendMessage(help_msg, message)
 
-    listener = MirrorLeechListener(message, tag, user_id, isLeech=isLeech)
+    listener = MirrorLeechListener(message, tag, user_id, isZip= isZip, isLeech=isLeech)
     buttons = ButtonMaker()
     best_video = "bv*+ba/b"
     best_audio = "ba/b"
@@ -245,16 +245,26 @@ async def select_format(client, callback_query):
         await ydl_hp.add_download(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, opt)
     del listener_dict[task_id]
 
-async def ytdlleech(client, message):
-    await _ytdl(client, message, isLeech=True)
-
 async def ytdlmirror(client, message):
     await _ytdl(client, message)
 
+async def ytdlzipmirror(client, message):
+    await _ytdl(client, message, isZip= True)
+
+async def ytdlleech(client, message):
+    await _ytdl(client, message, isLeech=True)    
+
+async def ytdlzipleech(client, message):
+    await _ytdl(client, message, isZip= True, isLeech=True)    
+
 ytdl_handler = MessageHandler(ytdlmirror, filters= command(BotCommands.YtdlMirrorCommand))
 ytdl_leech_handler = MessageHandler(ytdlleech, filters= command(BotCommands.YtdlLeechCommand))
+ytdl_zipmirror_handler = MessageHandler(ytdlzipmirror, filters= command(BotCommands.YtdlZipMirrorCommand))
+ytdl_zipleech_handler = MessageHandler(ytdlzipleech, filters= command(BotCommands.YtdlZipLeechCommand))
 quality_handler = CallbackQueryHandler(select_format, filters= regex("qu"))
 
 Bot.add_handler(ytdl_handler)
 Bot.add_handler(ytdl_leech_handler)
+Bot.add_handler(ytdl_zipmirror_handler)
+Bot.add_handler(ytdl_zipleech_handler)
 Bot.add_handler(quality_handler)

@@ -5,6 +5,7 @@
 ### qBittorrent
 - Qbittorrent support for torrent and magnets
 - Select files from Torrent before downloading 
+- Zip and unzip
 
 ### Aria2c
 - Aria support for direct download links
@@ -75,11 +76,13 @@ zipmirror - mirror and zip to cloud
 mirrorset - select cloud/folder where to mirror
 mirrorbatch - mirror files in batch to cloud 
 ytdlmirror - mirror ytdlp supported link
+ytdlzipmirror- mirror and zip ytdlp supported link
 leech - leech from cloud to Telegram
 unzipleech - leech and extract to Telegram 
 zipleech - leech and zip to Telegram 
 leechbatch - leech files in batch to Telegram 
 ytdlleech - leech yt-dlp supported link
+ytdlzipleech - leech and zip yt-dlp supported link
 myfiles - file manager
 clone - clone gdrive file/folder from link
 copy - copy from cloud to cloud
