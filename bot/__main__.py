@@ -32,26 +32,19 @@ I can also can mirror-leech files and links to Telegram or cloud**\n\n
         await sendMarkup("Not Authorized user, deploy your own version", message, reply_markup)     
     
 async def restart(client, message):
-    restart_msg= await sendMessage("Restarting", message) 
+    restart_msg= await sendMessage("Restarting...", message) 
     if Interval:
         Interval[0].cancel()
         Interval.clear()
     if QbInterval:
         QbInterval[0].cancel()
         QbInterval.clear()
-    try:
-        for line in popen("ps ax | grep " + "rclone" + " | grep -v grep"):
-            fields = line.split()
-            pid = fields[0]
-            kill(int(pid), SIGKILL)
-    except Exception as exc:
-        LOGGER.info(f"Error: {exc}")
+    clean_all()
+    srun(["pkill", "-f", "gunicorn|aria2c|rclone|megasdkrest|qbittorrent-nox|ffmpeg"])
+    srun(["python3", "update.py"])
     with open(".restartmsg", "w") as f:
         f.truncate(0)
         f.write(f"{restart_msg.chat.id}\n{restart_msg.id}\n")
-    clean_all()
-    srun(["pkill", "-f", "gunicorn|aria2c|megasdkrest|qbittorrent-nox|ffmpeg"])
-    srun(["python3", "update.py"])
     osexecl(executable, executable, "-m", "bot")
 
 async def ping(client, message):
