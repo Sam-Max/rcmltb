@@ -101,3 +101,6 @@ class MegaDownloader():
             return
         self.__onDownloadProgress(dlInfo['completed_length'], dlInfo['total_length'])
 
+    def cancel_download(self):
+        LOGGER.info(f'Cancelling download on user request: {self.gid}')
+        self.__mega_client.cancelDl(self.gid)
