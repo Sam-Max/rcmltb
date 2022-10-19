@@ -37,13 +37,16 @@ async def leech(client, message, isZip=False, extract=False):
     tag = f"@{message.from_user.username}"
     if await is_rclone_config(user_id, message) == False:
         return
-    listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, isLeech=True)
-    listener_dict[message_id] = [listener, isZip, extract]
-    buttons= ButtonMaker()
-    buttons.cb_buildbutton("🔗 From Link", f"leechselect^link^{user_id}")
-    buttons.cb_buildbutton("📁 From Cloud", f"leechselect^cloud^{user_id}")
-    buttons.cb_buildbutton("✘ Close Menu", f"leechselect^close^{user_id}")
-    await sendMarkup("Select from where you want to leech", message, buttons.build_menu(2))  
+    if message.reply_to_message:
+        await mirror_leech(client, message, isLeech= True)
+    else:
+        listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, isLeech=True)
+        listener_dict[message_id] = [listener, isZip, extract]
+        buttons= ButtonMaker()
+        buttons.cb_buildbutton("🔗 From Link", f"leechselect^link^{user_id}")
+        buttons.cb_buildbutton("📁 From Cloud", f"leechselect^cloud^{user_id}")
+        buttons.cb_buildbutton("✘ Close Menu", f"leechselect^close^{user_id}")
+        await sendMarkup("Select from where you want to leech", message, buttons.build_menu(2))  
     
 async def list_drive(message, edit=False):
     if message.reply_to_message:
