@@ -15,7 +15,6 @@ from qbittorrentapi import Client as qbitClient
 from subprocess import Popen, run as srun
 from megasdkrestclient import MegaSdkRestClient, errors
 from pyrogram import Client
-from telethon import TelegramClient
 from bot.conv_pyrogram import Conversation
 from asyncio import get_event_loop
 
@@ -105,7 +104,10 @@ WEB_PINCODE = WEB_PINCODE.lower() == 'true'
 EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '')
 EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
 
-DEFAULT_DRIVE = environ.get('DEFAULT_DRIVE', '')
+DEFAULT_RCLONE_DRIVE = environ.get('DEFAULT_RCLONE_DRIVE', '')
+
+MULTI_RCLONE_CONFIG = environ.get('MULTI_RCLONE_CONFIG', '')
+MULTI_RCLONE_CONFIG = MULTI_RCLONE_CONFIG.lower() == 'true'  
 
 aid = environ.get('ALLOWED_CHATS', '')
 if len(aid) != 0:
@@ -159,7 +161,7 @@ if len(SERVER_PORT) == 0:
     SERVER_PORT = 80
 
 IS_TEAM_DRIVE = environ.get('IS_TEAM_DRIVE', '')
-IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == 'true'    
+IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == 'true'   
 
 PARENT_ID = environ.get('GDRIVE_FOLDER_ID', '')
 if len(PARENT_ID) == 0:
@@ -241,17 +243,6 @@ if MEGA_KEY is not None:
             LOGGER.info("Mega username and password not provided. Starting mega in anonymous mode!")
 else:
     sleep(1.5)
-
-#---------------------------
-
-bot = TelegramClient("telethon", API_ID, API_HASH, timeout=20, retry_delay=3,
-                        request_retries=10, connection_retries=10)
-try:
-    bot.start(bot_token=BOT_TOKEN)
-    LOGGER.info("Telethon client created.")
-except Exception as e:
-    print(e)
-    exit(1)
 
 #---------------------------
 

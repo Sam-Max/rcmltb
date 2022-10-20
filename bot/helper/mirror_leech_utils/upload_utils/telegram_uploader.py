@@ -13,7 +13,7 @@ IMAGE_SUFFIXES = ("jpg", "jpx", "png", "cr2", "tif", "bmp", "jxr", "psa", "ico",
 
 class TelegramUploader():
     def __init__(self, path, name, size, listener= None) -> None:
-        self.client= app if app is not None else Bot
+        self.client= app if app else Bot
         self.__path = path
         self.__listener = listener
         self.name= name

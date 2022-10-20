@@ -1,11 +1,11 @@
-import configparser
+from configparser import ConfigParser
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from json import loads as jsonloads
-from bot import LOGGER, Bot
+from bot import MULTI_RCLONE_CONFIG, OWNER_ID, Bot
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.types import InlineKeyboardMarkup
-from os import path as ospath, getcwd
+from os import path as ospath
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
@@ -26,16 +26,17 @@ async def handle_copy(client, message):
     tag = f"@{message.from_user.username}"
     if await is_rclone_config(user_id, message) == False:
         return
-    path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
-    if not ospath.exists(path):
-        msg= f"Send rclone config file, using /config"
-        await sendMessage(msg, message)
-    else:
-        origin_drive = get_rc_user_value("COPY_ORIGIN_DRIVE", user_id)      
-        origin_dir= get_rc_user_value("COPY_ORIGIN_DIR", user_id)
-        listener= MirrorLeechListener(message, tag, user_id)
-        listener_dict[message_id] = [listener]
+    origin_drive = get_rc_user_value("COPY_ORIGIN_DRIVE", user_id)      
+    origin_dir= get_rc_user_value("COPY_ORIGIN_DIR", user_id)
+    listener= MirrorLeechListener(message, tag, user_id)
+    listener_dict[message_id] = [listener]
+    if MULTI_RCLONE_CONFIG:
         await list_drive(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
+    else:
+        if user_id == OWNER_ID:  
+           await list_drive(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
+        else:
+           await sendMessage("You can't use on current mode", message)
 
 async def list_drive(message, rclone_drive, base_dir, callback, is_second_menu= False, edit=False):
     if message.reply_to_message:
@@ -44,9 +45,8 @@ async def list_drive(message, rclone_drive, base_dir, callback, is_second_menu= 
         user_id= message.from_user.id
 
     buttons = ButtonMaker()
-
-    path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
-    conf = configparser.ConfigParser()
+    path= get_rclone_config(user_id)
+    conf = ConfigParser()
     conf.read(path)
 
     for j in conf.sections():
@@ -68,9 +68,9 @@ async def list_drive(message, rclone_drive, base_dir, callback, is_second_menu= 
     buttons.cbl_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}")
 
     if is_second_menu:
-        msg= 'Select folder where you want to copy' 
+        msg= '<b>Select folder where you want to copy</b>' 
     else:
-        msg= f"Select cloud where your files are stored\n\nPath:`{rclone_drive}:{base_dir}`"     
+        msg= f"<b>Select cloud where your files are stored</b>\n\n<b>Path: </b><code>{rclone_drive}:{base_dir}</code>"     
 
     if edit:
         await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
@@ -139,9 +139,9 @@ async def list_dir(message, drive_name, drive_base, callback= "", back_callback=
         buttons.cbl_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}")
 
         if is_second_menu:
-            msg=f'Select folder where you want to copy\n\nPath:`{drive_name}:{drive_base}`'
+            msg=f'<b>Select folder where you want to copy</b>\n\n<b>Path: </b><code>{drive_name}:{drive_base}</code>'
         else:    
-            msg= f'Select file or folder which you want to copy\n\nPath: `{drive_name}:{drive_base}`'
+            msg= f'<b>Select file or folder which you want to copy</b>\n\n<b>Path: </b><code>{drive_name}:{drive_base}</code>'
 
         if edit:
             await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
@@ -321,12 +321,12 @@ async def next_page_copy(client, callback_query):
     if is_second_menu:
         dest_drive= get_rc_user_value("COPY_DESTINATION_DRIVE", user_id)
         dest_dir= get_rc_user_value("COPY_DESTINATION_DIR", user_id)
-        await editMessage(f"Select folder where you want to copy\n\nPath:`{dest_drive}:{dest_dir}`", message, 
+        await editMessage(f"Select folder where you want to copy\n\nPath:<code>{dest_drive}:{dest_dir}</code>", message, 
                         reply_markup= InlineKeyboardMarkup(buttons.first_button))
     else:
         origin_drive= get_rc_user_value("COPY_ORIGIN_DRIVE", user_id)
         origin_dir= get_rc_user_value("COPY_ORIGIN_DIR", user_id)
-        await editMessage(f"Select file or folder which you want to copy\n\nPath:`{origin_drive}:{origin_dir}`", message, 
+        await editMessage(f"Select file or folder which you want to copy\n\nPath:<code>{origin_drive}:{origin_dir}</code>", message, 
                         reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 

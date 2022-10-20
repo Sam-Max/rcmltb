@@ -57,7 +57,7 @@
 - SQL Database support
 - Ytdl support
 - Select files from Torrent before downloading 
-- Get restricted messages from private channels.
+- Save restricted messages from private channels.
 - Upload files to supergroup/channel.
 - Clone Google Drive files/folders from link
 - Thumbnail support
@@ -70,41 +70,41 @@
 ## Commands for bot(set through @BotFather)
 
 ```
-mirror - mirror to selected cloud 
-unzipmirror - mirror and extract to cloud 
-zipmirror - mirror and zip to cloud 
-mirrorset - select cloud/folder where to mirror
-mirrorbatch - mirror files in batch to cloud 
-ytdlmirror - mirror ytdlp supported link
-ytdlzipmirror- mirror and zip ytdlp supported link
-leech - leech from cloud to Telegram
-unzipleech - leech and extract to Telegram 
-zipleech - leech and zip to Telegram 
-leechbatch - leech files in batch to Telegram 
-ytdlleech - leech yt-dlp supported link
-ytdlzipleech - leech and zip yt-dlp supported link
-myfiles - file manager
-clone - clone gdrive file/folder from link
-copy - copy from cloud to cloud
-config - rclone config
-usetting - user settings
-ownsetting - owner settings
-rsslist - list all subscribed rss feed 
-rssget - get specific No. of links from specific rss feed
-rsssub - subscribe new rss feed
-rssunsub - unsubscribe rss feed by title
-rssset - rss settings
-cleanup - clean drive trash
-cancelall - cancel all tasks
-storage - drive details
-search - search for torrents
-status - status message of tasks
-stats - bot stats
-shell - run cmds in shell
-speedtest - test server speed
-log - bot log
-ping - ping bot
-restart - restart bot
+mirror - Mirror to selected cloud 
+unzipmirror - Mirror and extract to cloud 
+zipmirror - Mirror and zip to cloud 
+mirrorset - Select cloud/folder where to mirror
+mirrorbatch - Mirror Telegram files in batch to cloud 
+ytdlmirror - Mirror ytdlp supported link
+ytdlzipmirror- Mirror and zip ytdlp supported link
+leech - Leech from cloud to Telegram
+unzipleech - Leech and extract to Telegram 
+zipleech - Leech and zip to Telegram 
+leechbatch - Leech Telegram files in batch to Telegram 
+ytdlleech - Leech yt-dlp supported link
+ytdlzipleech - Leech and zip yt-dlp supported link
+myfiles - File manager
+clone - Clone gdrive file/folder from link
+copy - Copy from cloud to cloud
+config - Rclone config
+usetting - User settings
+ownsetting - Owner settings
+rsslist - List all subscribed rss feed 
+rssget - Get specific No. of links from specific rss feed
+rsssub - Subscribe new rss feed
+rssunsub - Unsubscribe rss feed by title
+rssset - Rss settings
+cleanup - Clean drive trash
+cancelall - Cancel all tasks
+storage - Drive details
+search - Search for torrents
+status - Status message of tasks
+stats - Bot stats
+shell - Run cmds in shell
+speedtest - Test server speed
+log - Bot log
+ping - Ping bot
+restart - Restart bot
 ```
 
 ## Deploy on VPS: 
@@ -135,15 +135,18 @@ restart - restart bot
    - Non mandatory variables:
         - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
         - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission separated by spaces. `Str`
-        - `DEFAULT_DRIVE`: To set a default drive from your rclone.conf. `Str`
-        - `AUTO_MIRROR`: For auto mirroring files sent to the bot. Default is `False`. `Bool`
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces `Str`
+        - `AUTO_MIRROR`: For auto mirroring files sent to the bot. Default is `False`. `Bool`
         - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
         - `UPSTREAM_BRANCH`: Upstream branch for update
         - `DATABASE_URL`: Your SQL Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data that will be saved in Database: auth and sudo users, leech settings including thumbnails for each user. `Str`
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
+
+   - RCLONE
+     - `DEFAULT_RCLONE_DRIVE`: To set a default drive from your rclone config (for owner) `Str`
+     - `MULTI_RCLONE_DRIVE`: For using one rclone config for all users or each user with their own rclone config. Default to True. `Bool` 
 
    - CLONE
      - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Str`
@@ -152,38 +155,38 @@ restart - restart bot
      **Notes**: Must add **token.pickle** file directly to root for cloning to work. You can use /config command to add from bot.
    
    - LEECH
-        - `LEECH_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
-        - `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/supergroup id.
-        - `USER_SESSION_STRING`: Pyrogram session string for batch commands and to download/upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: when using string session, you have to use with supergroup not bot.
-        - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
+     - `LEECH_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
+     - `USER_SESSION_STRING`: Pyrogram session string for batch commands and to upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: When using string session, you have to use with supergroup not with bot and have to use along with DUMP_CHAT variable. You can also use batch commands without string session, but you can't save messages from restricted private channels.
+      - `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/supergroup id. You have to use along with USER_SESSION_STRING variable.
+     - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
 
    - MEGA
-        - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from Mega SDK Page
-        - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account
-        - `MEGA_PASSWORD`: Password for mega.nz account
+     - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from Mega SDK Page
+     - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account
+     - `MEGA_PASSWORD`: Password for mega.nz account
 
    - RSS
-        - `RSS_DELAY`: Time in seconds for rss refresh interval. Default is `900` in sec. `Str`
-        - `RSS_COMMAND`: Choose command for the desired action. `Str`
-        - `RSS_CHAT_ID`: Chat ID where rss links will be sent. Add `-100` before channel id. `Str`
-        - `RSS_USER_SESSION_STRING`: To send rss links from your telegram account. To generate session string use this command `python3 generate_string_session.py`. `Str`. **NOTE**: Don't use same session string as `USER_SESSION_STRING`.
-        - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` are required, otherwise rss commands will not work. You must use bot in group. You can also add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.    
+     - `RSS_DELAY`: Time in seconds for rss refresh interval. Default is `900` in sec. `Str`
+     - `RSS_COMMAND`: Choose command for the desired action. `Str`
+     - `RSS_CHAT_ID`: Chat ID where rss links will be sent. Add `-100` before channel id. `Str`
+     - `RSS_USER_SESSION_STRING`: To send rss links from your telegram account. To generate session string use this command `python3 generate_string_session.py`. `Str`. **NOTE**: Don't use same session string as `USER_SESSION_STRING`.
+     - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` are required, otherwise rss commands will not work. You must use bot in group. You can also add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.    
 
    - qBittorrent
-        - `BASE_URL_OF_BOT`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https). Str
-        - `SERVER_PORT`: Port. Str
-        - `WEB_PINCODE`: If empty or False means no more pincode required while qbit web selection. Bool
-        Qbittorrent NOTE: If your facing ram exceeded issue then set limit for MaxConnecs, decrease AsyncIOThreadsCount in qbittorrent config and set limit of DiskWriteCacheSize to 32
+     - `BASE_URL_OF_BOT`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https). Str
+     - `SERVER_PORT`: Port. Str
+     - `WEB_PINCODE`: If empty or False means no more pincode required while qbit web selection. Bool
+     Qbittorrent NOTE: If your facing ram exceeded issue then set limit for MaxConnecs, decrease AsyncIOThreadsCount in qbittorrent config and set limit of DiskWriteCacheSize to 32
 
    - Torrent Search
-        - `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrent-Api-py). `Str`
-        - `SEARCH_LIMIT`: Search limit for search api, limit for each site. Default is zero. `Str`
-        - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). `Str`
-        - Supported Sites:
-        >1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooqle, Kickass, Bitsearch, MagnetDL, Libgen, YTS, Limetorrent, TorrentFunk, Glodls, TorrentProject and YourBittorrent
+     - `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrent-Api-py). `Str`
+     - `SEARCH_LIMIT`: Search limit for search api, limit for each site. Default is zero. `Str`
+     - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). `Str`
+     - Supported Sites:
+     >1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooqle, Kickass, Bitsearch, MagnetDL, Libgen, YTS, Limetorrent, TorrentFunk, Glodls, TorrentProject and YourBittorrent
 
    - Private Files
-        - `YT_COOKIES_URL`: Youtube authentication cookies. Check setup [Here](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl). Use gist raw link and remove commit id from the link, so you can edit it from gists only. `Str`
+     - `YT_COOKIES_URL`: Youtube authentication cookies. Check setup [Here](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl). Use gist raw link and remove commit id from the link, so you can edit it from gists only. `Str`
  
 3. **Deploying on VPS Using Docker**
 
@@ -241,6 +244,7 @@ sudo docker-compose stop
 sudo docker-compose start
 
 ```
+
 ## Generate Database
 
 **1. Using Railway**

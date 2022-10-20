@@ -257,10 +257,10 @@ async def ytdlleech(client, message):
 async def ytdlzipleech(client, message):
     await _ytdl(client, message, isZip= True, isLeech=True)    
 
-ytdl_handler = MessageHandler(ytdlmirror, filters= command(BotCommands.YtdlMirrorCommand))
-ytdl_leech_handler = MessageHandler(ytdlleech, filters= command(BotCommands.YtdlLeechCommand))
-ytdl_zipmirror_handler = MessageHandler(ytdlzipmirror, filters= command(BotCommands.YtdlZipMirrorCommand))
-ytdl_zipleech_handler = MessageHandler(ytdlzipleech, filters= command(BotCommands.YtdlZipLeechCommand))
+ytdl_handler = MessageHandler(ytdlmirror, filters= command(BotCommands.YtdlMirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+ytdl_leech_handler = MessageHandler(ytdlleech, filters= command(BotCommands.YtdlLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+ytdl_zipmirror_handler = MessageHandler(ytdlzipmirror, filters= command(BotCommands.YtdlZipMirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+ytdl_zipleech_handler = MessageHandler(ytdlzipleech, filters= command(BotCommands.YtdlZipLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 quality_handler = CallbackQueryHandler(select_format, filters= regex("qu"))
 
 Bot.add_handler(ytdl_handler)

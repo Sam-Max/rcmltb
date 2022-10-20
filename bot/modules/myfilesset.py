@@ -3,7 +3,7 @@ from pyrogram.types import InlineKeyboardMarkup
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from json import loads as jsonloads
 from os.path import splitext
-from bot.helper.ext_utils.message_utils import editMessage, sendMessage
+from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, get_readable_size
 from pyrogram import filters
 
@@ -32,12 +32,12 @@ async def myfiles_settings(message, edit= False, drive_name= "", drive_base="", 
      buttons.cbl_buildbutton("⬅️ Back", f"myfilesmenu^back_drive^{user_id}")
      buttons.cbl_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}")
      
-     msg= f"Path:`{drive_name}:{drive_base}`"
+     msg= f"<b>Path:</b><code>{drive_name}:{drive_base}</code>"
 
      if edit:
           await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
      else:
-          await sendMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+          await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 async def calculate_size(message, drive_base="", drive_name="", user_id= ""):
      buttons= ButtonMaker()

@@ -248,11 +248,11 @@ async def rss_monitor():
             continue
 
 if DB_URI is not None and RSS_CHAT_ID is not None:
-    rss_list_handler = MessageHandler(rss_list, filters= command(BotCommands.RssListCommand))
-    rss_get_handler = MessageHandler(rss_get, filters= command(BotCommands.RssGetCommand))
-    rss_sub_handler = MessageHandler(rss_sub, filters= command(BotCommands.RssSubCommand))
-    rss_unsub_handler = MessageHandler(rss_unsub, filters= command(BotCommands.RssUnSubCommand))
-    rss_settings_handler = MessageHandler(rss_settings, filters= command(BotCommands.RssSettingsCommand))
+    rss_list_handler = MessageHandler(rss_list, filters= command(BotCommands.RssListCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+    rss_get_handler = MessageHandler(rss_get, filters= command(BotCommands.RssGetCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+    rss_sub_handler = MessageHandler(rss_sub, filters= command(BotCommands.RssSubCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+    rss_unsub_handler = MessageHandler(rss_unsub, filters= command(BotCommands.RssUnSubCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+    rss_settings_handler = MessageHandler(rss_settings, filters= command(BotCommands.RssSettingsCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
     rss_buttons_handler = CallbackQueryHandler(rss_set_update, filters= regex("rss"))
 
     Bot.add_handler(rss_list_handler)

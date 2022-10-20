@@ -1,12 +1,10 @@
 from os import path as ospath
-from random import seed
 from time import time
 from requests import get
 from bot import AUTO_MIRROR, DOWNLOAD_DIR, MEGA_KEY, Bot
 from asyncio import TimeoutError
 from bot import Bot, DOWNLOAD_DIR
 from pyrogram import filters
-from pyrogram.handlers import CallbackQueryHandler
 from pyrogram.types import InlineKeyboardMarkup
 from re import match as re_match
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -55,9 +53,10 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
             for x in msg_args:
                 x = x.strip()
                 if x == 's':
-                    select = True
-                if is_url(x) or is_magnet(x):
-                   link= x         
+                   select = True
+                elif is_url(x) or is_magnet(x):
+                   link= x     
+
             pswdMsg = msg[1].split(' pswd: ', maxsplit=1)
             if len(pswdMsg) > 1:
                 pswd = pswdMsg[1]
@@ -67,6 +66,7 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
 
         reply_message= message.reply_to_message
         if reply_message is not None:
+            listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, pswd=pswd, isLeech=isLeech)
             file = reply_message.document or reply_message.video or reply_message.audio or reply_message.photo or None
             if reply_message.from_user.username:
                 tag = f"@{reply_message.from_user.username}"
@@ -75,17 +75,16 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
                 if is_url(reply_text) or is_magnet(reply_text):     
                      link = reply_text.strip() 
             elif file.mime_type != "application/x-bittorrent":
-                    buttons= ButtonMaker() 
-                    name= file.file_name
-                    size= get_readable_size(file.file_size)
-                    header_msg = f"<b>Which name do you want to use?</b>\n\n<b>Name</b>: `{name}`\n\n<b>Size</b>: `{size}`"
-                    listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, pswd=pswd, isLeech=isLeech)
-                    buttons.dbuildbutton("📄 By default", f'mirrormenu^default^{message_id}',
-                                         "📝 Rename", f'mirrormenu^rename^{message_id}')
-                    buttons.cbl_buildbutton("✘ Close Menu", f"mirrormenu^close^{message_id}")
-                    menu_msg= await sendMarkup(header_msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
-                    listener_dict[message_id] = [listener, file, menu_msg, user_id]
-                    return
+                buttons= ButtonMaker() 
+                name= file.file_name
+                size= get_readable_size(file.file_size)
+                header_msg = f"<b>Which name do you want to use?</b>\n\n<b>Name</b>: <code>{name}</code>\n\n<b>Size</b>: <code>{size}</code>"
+                buttons.dbuildbutton("📄 By default", f'mirrormenu^default^{message_id}',
+                                    "📝 Rename", f'mirrormenu^rename^{message_id}')
+                buttons.cbl_buildbutton("✘ Close Menu", f"mirrormenu^close^{message_id}")
+                menu_msg= await sendMarkup(header_msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+                listener_dict[message_id] = [listener, file, menu_msg, user_id]
+                return
             else:
                 link = await client.download_media(file)
         
@@ -203,6 +202,7 @@ async def mirror_menu(client, query):
     elif cmd[1] == "close":
         await query.answer("Closed")
         await message.delete()
+        return
 
     del listener_dict[msg_id]
 

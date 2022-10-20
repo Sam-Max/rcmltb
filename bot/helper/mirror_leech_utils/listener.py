@@ -25,6 +25,7 @@ class MirrorLeechListener:
     def __init__(self, message, tag, user_id, newName= None, isRename= False, isZip=False, extract=False, pswd=None, isLeech= False, select=False, seed=False):
         self.message = message
         self.uid = self.message.id
+        self.user_id = user_id
         self.__isZip = isZip
         self.__extract = extract
         self.__pswd = pswd
@@ -34,11 +35,10 @@ class MirrorLeechListener:
         self.newName= newName
         self.isRename= isRename
         self.dir = f"{DOWNLOAD_DIR}{self.uid}"
-        self.isPrivate = message.chat.type == ChatType.PRIVATE
-        self.user_id= user_id
-        self.__isLeech= isLeech
+        self.isPrivate = message.chat.type in ['PRIVATE', 'GROUP']
+        self.__isLeech = isLeech
         self.__suproc = None
-    
+
     async def clean(self):
         try:
             Interval[0].cancel()
@@ -275,7 +275,6 @@ class MirrorLeechListener:
                     fmsg = ''
             if fmsg != '':
                 await sendMessage(msg + fmsg, self.message)
-            return
         clean_download(self.dir)
         async with status_dict_lock:
             try:

@@ -25,16 +25,16 @@ class RcloneMirror:
 
     async def mirror(self):
         base_dir = get_rc_user_value('MIRRORSET_BASE_DIR', self.__user_id)
-        mirror_drive = get_rc_user_value('MIRRORSET_DRIVE', self.__user_id)
+        drive = get_rc_user_value('MIRRORSET_DRIVE', self.__user_id)
         conf_path = get_rclone_config(self.__user_id)
         conf = ConfigParser()
         conf.read(conf_path)
         for i in conf.sections():
-            if mirror_drive == str(i):
+            if drive == str(i):
                 if conf[i]['type'] == 'drive':
                     self.__isGdrive = True
                     break
-        cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path), f"{mirror_drive}:{base_dir}", '-P']
+        cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path), f"{drive}:{base_dir}", '-P']
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         async with status_dict_lock:
             status_dict[self.__listener.uid] = RcloneStatus(self, gid)
@@ -43,7 +43,7 @@ class RcloneMirror:
         await self.process.wait()
         if self.process.returncode == 0:
             size = get_readable_file_size(self.size)
-            await self.__listener.onRcloneUploadComplete(self.name, size, conf_path, mirror_drive, base_dir, self.__isGdrive)
+            await self.__listener.onRcloneUploadComplete(self.name, size, conf_path, drive, base_dir, self.__isGdrive)
         else:
             await self.__listener.onUploadError("Cancelled by user")
 

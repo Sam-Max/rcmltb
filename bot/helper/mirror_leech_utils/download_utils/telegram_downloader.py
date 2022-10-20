@@ -6,7 +6,7 @@ from bot.helper.mirror_leech_utils.status_utils.tg_download_status import Telegr
 
 class TelegramDownloader:
     def __init__(self, file, client, listener, path) -> None:
-        self._client= client
+        self.__client= client
         self.__listener = listener
         self.name = ""
         self.size = 0
@@ -39,7 +39,7 @@ class TelegramDownloader:
             status_dict[self.__listener.uid] = TelegramStatus(self, self.__listener.message, gid)
         await sendStatusMessage(self.__listener.message)
         try:
-            download= await self._client.download_media(
+            download= await self.__client.download_media(
                 message= self.__file,
                 file_name= self.__path,
                 progress= self.onDownloadProgress)

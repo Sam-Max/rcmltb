@@ -3,11 +3,11 @@
 
 from time import time
 from psutil import cpu_percent, virtual_memory, disk_usage
-from bot import DOWNLOAD_DIR, STATUS_UPDATE_INTERVAL, Bot, Interval, status_dict, status_dict_lock, status_reply_dict_lock, botUptime
-from pyrogram.handlers import MessageHandler
+from bot import DOWNLOAD_DIR, LOGGER, STATUS_UPDATE_INTERVAL, Bot, Interval, status_dict, status_dict_lock, status_reply_dict_lock, botUptime
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval
+from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval, turn
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import auto_delete_message, sendMessage, sendStatusMessage, update_all_messages
@@ -37,10 +37,20 @@ async def status_handler(client, message):
             finally:
                 Interval.append(setInterval(STATUS_UPDATE_INTERVAL, update_all_messages))
 
+async def status_pages(client, callback_query):
+    query = callback_query
+    await query.answer()
+    data = query.data.split()
+    if data[1] == "ref":
+        await update_all_messages(True)
+        return
+    done = await turn(data)
+    if not done:
+        await query.message.delete()
 
 status_handlers = MessageHandler(status_handler, filters= filters.command(BotCommands.StatusCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-#status_pages_handler = CallbackQueryHandler(status_pages, filters= filters.regex("status"))
+status_pages_handler = CallbackQueryHandler(status_pages, filters= filters.regex("status"))
 
 Bot.add_handler(status_handlers)
-#Bot.add_handler(status_pages_handler)
+Bot.add_handler(status_pages_handler)
 

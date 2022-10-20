@@ -1,7 +1,6 @@
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
-from os import path as ospath, getcwd
 from configparser import ConfigParser
-from bot import Bot
+from bot import MULTI_RCLONE_CONFIG, OWNER_ID, Bot
 from json import loads as jsonloads
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
@@ -24,7 +23,13 @@ async def handle_mirrorset(client, message):
         return
     rclone_drive = get_rc_user_value("MIRRORSET_DRIVE", user_id)              
     base_dir= get_rc_user_value("MIRRORSET_BASE_DIR", user_id)
-    await list_drive(message, rclone_drive, base_dir)     
+    if MULTI_RCLONE_CONFIG:
+        await list_drive(message, rclone_drive, base_dir) 
+    else:
+        if user_id == OWNER_ID:  
+            await list_drive(message, rclone_drive, base_dir)  
+        else:
+            await sendMessage("You can't use on current mode", message)        
 
 async def list_drive(message, rclone_drive="", base_dir="", edit=False):
     if message.reply_to_message:
@@ -33,8 +38,7 @@ async def list_drive(message, rclone_drive="", base_dir="", edit=False):
         user_id= message.from_user.id
 
     buttons = ButtonMaker()
-
-    path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
+    path= get_rclone_config(user_id)
     conf = ConfigParser()
     conf.read(path)
 
@@ -59,7 +63,7 @@ async def list_drive(message, rclone_drive="", base_dir="", edit=False):
 
     buttons.cbl_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}")
 
-    msg= f"Select cloud where you want to upload file\n\nPath:`{rclone_drive}:{base_dir}`" 
+    msg= f"<b>Select cloud where you want to upload file</b>\n\n<b>Path:</b><code>{rclone_drive}:{base_dir}</code>" 
 
     if edit:
         await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
@@ -118,7 +122,7 @@ async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
     buttons.cbl_buildbutton("⬅️ Back", f"mirrorsetmenu^{back}^{user_id}")
     buttons.cbl_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}")
 
-    msg= f"Select folder where you want to store files\n\nPath:`{drive_name}:{drive_base}`"
+    msg= f"Select folder where you want to store files\n\n<b>Path:</b><code>{drive_name}:{drive_base}</code>"
 
     if edit:
         await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
@@ -221,7 +225,7 @@ async def next_page_mirrorset(client, callback_query):
 
     mirrorset_drive= get_rc_user_value("MIRRORSET_DRIVE", user_id)
     base_dir= get_rc_user_value("MIRRORSET_BASE_DIR", user_id)
-    await message.edit(f"Select folder where you want to store files\n\nPath:`{mirrorset_drive}:{base_dir}`", reply_markup= InlineKeyboardMarkup(buttons.first_button))
+    await message.edit(f"Select folder where you want to store files\n\n<b>Path:</b><code>{mirrorset_drive}:{base_dir}</code>", reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
  
 mirrorset_handler = MessageHandler(handle_mirrorset, filters= filters.command(BotCommands.MirrorSetCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

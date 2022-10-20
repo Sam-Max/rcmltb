@@ -1,99 +1,108 @@
-#Tg:MaheshChauhan/DroneBots
-#Github.com/Vasusen-code
+# Source: Github.com/Vasusen-code
+# Adapted to Pyrogram and Conversation-Pyrogram Library
 
-import asyncio
-from bot import Bot, bot, app
-from telethon import Button
-from telethon.events import NewMessage
+from asyncio import sleep
+from bot import DOWNLOAD_DIR, Bot, app
 from pyrogram.errors import FloodWait
-from bot.helper.ext_utils.batch_helper import check, get_bulk_msg, get_link
+from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
+from pyrogram import filters
+from bot.helper.ext_utils.filters import CustomFilters
+from pyrogram.handlers import MessageHandler
+from bot.helper.ext_utils.batch_helper import check_link, get_link
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import command_process
+from bot.helper.ext_utils.message_utils import sendMessage
 from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_rclone_drive
+from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import TelegramDownloader
+from bot.helper.mirror_leech_utils.listener import MirrorLeechListener
 
-batch = []
 
-async def get_pvt_content(event, chat, id):
-    msg = await app.get_messages(chat, ids=id)
-    await event.client.send_message(event.chat_id, msg) 
-    
-async def leech_batch(e):
-    if await is_rclone_config(e.sender_id, e) == False:
+
+async def leech_batch(client, message):
+    await _batch(client, message, isLeech=True)
+
+async def mirror_batch(client, message):
+    await _batch(client, message)
+
+async def _batch(client, message, isLeech= False):
+    user_id= message.from_user.id
+    if await is_rclone_config(user_id, message) == False:
         return    
-    await _batch(e, isLeech= True)
-
-async def mirror_batch(e):
-    if await is_rclone_config(e.sender_id, e) == False:
-        return    
-    if await is_rclone_drive(e.sender_id, e) == False:
+    if await is_rclone_drive(user_id, message) == False:
         return
-    await _batch(e)
-
-async def _batch(event, isLeech= False):
     if app is None:
-         return await event.reply("Set USER_SESSION_STRING variable to use this command!")
+        bot= Bot
     else:
-        if not event.is_private:
-            return
-        if f'{event.sender_id}' in batch:
-            return await event.reply("You've already started one batch, wait for it to complete!")
-        async with bot.conversation(event.chat_id) as conv: 
-                await conv.send_message("Send me the message link you want to start saving from, as a reply to this message.", buttons=Button.force_reply())
-                try:
-                    link = await conv.get_reply()
-                    try:
-                        _link = get_link(link.text)
-                    except Exception:
-                        await conv.send_message("No link found.")
-                except Exception as e:
-                    print(e)
-                    return await conv.send_message("Cannot wait more longer for your response!")
-                await conv.send_message("Send me the number of files/range you want to save from the given message, as a reply to this message.", buttons=Button.force_reply())
-                try:
-                    _range = await conv.get_reply()
-                except Exception as e:
-                    print(e)
-                    return await conv.send_message("Cannot wait more longer for your response!")
-                try:
-                    value = int(_range.text)
-                    if value > 100:
-                        return await conv.send_message("You can only get upto 100 files in a single batch.")
-                except ValueError:
-                    return await conv.send_message("Range must be an integer!")
-                s, r = await check(app, Bot, _link)
-                if s != True:
-                    await conv.send_message(r)
-                    return
-                batch.append(f'{event.sender_id}')
-                await run_batch(app, Bot, event.sender_id, _link, value, isLeech= isLeech) 
-                conv.cancel()
-                batch.pop(0)
-                
-async def run_batch(userbot, client, sender, link, _range, isLeech):
-    for i in range(_range):
-        timer = 60
-        if i < 25:
-            timer = 5
-        if i < 50 and i > 25:
-            timer = 10
-        if i < 100 and i > 50:
-            timer = 15
-        if not 't.me/c/' in link:
-            if i < 25:
-                timer = 2
-            else:
-                timer = 3
+        bot= app
+    await sendMessage("Send me the message link you want to start saving from", message)
+    try:
+        link = await client.listen.Message(filters.text, id= filters.user(user_id), timeout = 30)
         try:
-            await get_bulk_msg(userbot, client, sender, link, i, isLeech= isLeech) 
+            _link = get_link(link.text)
+        except Exception:
+            return await sendMessage("No link found.", message)
+    except TimeoutError:
+        return await sendMessage("Too late 30s gone, try again!", message)
+    await sendMessage("Send me the number of files you want to save from the given link", message)
+    try:
+        _range = await client.listen.Message(filters.text, id= filters.user(user_id), timeout = 30)
+    except TimeoutError:
+        return await sendMessage("Too late 30s gone, try again!", message)
+    try:
+        value = int(_range.text)
+    except ValueError:
+        return await sendMessage("Range must be an integer!", message)
+    suceed, msg = await check_link(bot, _link)
+    if suceed != True:
+        await sendMessage(msg, message)
+        return
+    for i in range(value):
+        try:
+            await get_bulk_msg(bot, message, _link, i, isLeech=isLeech) 
         except FloodWait as fw:
-            await asyncio.sleep(fw.seconds + 5)
-            await get_bulk_msg(userbot, client, sender, link, i, isLeech= isLeech)
-        await asyncio.sleep(timer)
-        
+            await sleep(fw.seconds + 5)
+            await get_bulk_msg(bot, message, _link, i, isLeech=isLeech)
+        await sleep(5) 
 
-mirrorbatch_event= NewMessage(incoming=True, pattern= command_process(f"/{BotCommands.MirrorBatchCommand}"))
-bot.add_event_handler(mirror_batch, event= mirrorbatch_event)              
+async def get_bulk_msg(bot, message, msg_link, i, isLeech):
+    msg_id = int(msg_link.split("/")[-1]) + int(i)
+    user_id= message.chat.id
+    tag= ''
+    if message.from_user.username:
+        tag = f"@{message.from_user.username}"
+    listener= MirrorLeechListener(message, tag, user_id, isLeech=isLeech)
+    if 't.me/c/' in msg_link:
+        chat = int('-100' + str(msg_link.split("/")[-2]))
+        try:
+            msg = await bot.get_messages(chat, msg_id)
+            file = msg.document or msg.video or msg.audio or msg.photo or None
+            if file is None:
+                return
+            tg_down= TelegramDownloader(file, bot, listener, f'{DOWNLOAD_DIR}{listener.uid}/')
+            await tg_down.download() 
+        except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
+            await sendMessage("Have you joined the channel?", message)
+        except Exception as e:
+            await sendMessage(f'Failed to save: `{e}`', message)
+    else:
+        chat = msg_link.split("/")[-2]
+        try:
+            msg = await bot.get_messages(chat, msg_id)
+            file = msg.document or msg.video or msg.audio or msg.photo or None
+            if file is None:
+                return
+            tg_down= TelegramDownloader(file, bot, listener, f'{DOWNLOAD_DIR}{listener.uid}/')
+            await tg_down.download()
+        except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
+            await sendMessage("Have you joined the channel?", message)
+            return 
+        except Exception as e:
+            await sendMessage(f'Failed to save: `{e}`', message)
+            return 
 
-leechbatch_event= NewMessage(incoming=True, pattern= command_process(f"/{BotCommands.LeechBatchCommand}"))
-bot.add_event_handler(leech_batch, event= leechbatch_event)   
+mirrorbatch_handler= MessageHandler(mirror_batch, filters=filters.command(BotCommands.MirrorBatchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+leechbatch__handler= MessageHandler(leech_batch, filters=filters.command(BotCommands.LeechBatchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+
+Bot.add_handler(leechbatch__handler)   
+Bot.add_handler(mirrorbatch_handler)   
+
 

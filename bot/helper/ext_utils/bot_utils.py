@@ -158,12 +158,34 @@ async def get_readable_message():
         if STATUS_LIMIT is not None and tasks > STATUS_LIMIT:
             msg += f"<b>Page:</b> {PAGE_NO}/{PAGES} | <b>Tasks:</b> {tasks}\n"
             buttons = ButtonMaker()
-            buttons.cbl_buildbutton("<<", "status pre")
-            buttons.cbl_buildbutton(">>", "status nex")
-            buttons.cbl_buildbutton("♻️", "status ref")
+            buttons.cb_buildbutton("⏪", "status pre")
+            buttons.cb_buildbutton("⏩", "status nex")
+            buttons.cb_buildbutton("♻️", "status ref")
             button = buttons.build_menu(3)
             return msg + bmsg, button
         return msg + bmsg, ""
+
+async def turn(data):
+    try:
+        global COUNT, PAGE_NO
+        async with status_dict_lock:
+            if data[1] == "nex":
+                if PAGE_NO == PAGES:
+                    COUNT = 0
+                    PAGE_NO = 1
+                else:
+                    COUNT += STATUS_LIMIT
+                    PAGE_NO += 1
+            elif data[1] == "pre":
+                if PAGE_NO == 1:
+                    COUNT = STATUS_LIMIT * (PAGES - 1)
+                    PAGE_NO = PAGES
+                else:
+                    COUNT -= STATUS_LIMIT
+                    PAGE_NO -= 1
+        return True
+    except:
+        return False
 
 class setInterval:
     def __init__(self, interval, action):

@@ -30,8 +30,7 @@ async def list_drive(message, edit=False):
         user_id= message.from_user.id
 
     buttons = ButtonMaker()
-
-    path= ospath.join(getcwd(), "users", str(user_id), "rclone.conf")
+    path= get_rclone_config(user_id)
     conf = ConfigParser()
     conf.read(path)
 
@@ -51,9 +50,9 @@ async def list_drive(message, edit=False):
     buttons.cbl_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}")
 
     if edit:
-        await editMessage("Select your drive to see files", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+        await editMessage("<b>Select your drive to see files</b>", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
     else:
-        await sendMarkup("Select your drive to see files", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+        await sendMarkup("<b>Select your drive to see files</b>", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
     user_id= message.reply_to_message.from_user.id
@@ -107,7 +106,7 @@ async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
     buttons.cbl_buildbutton("⬅️ Back", f"myfilesmenu^{back}^{user_id}")
     buttons.cbl_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}")
 
-    msg= f"Your drive files are listed below\n\nPath:`{drive_name}:{drive_base}`"
+    msg= f"<b>Your drive files are listed below</b>\n\n<b>Path:</b><code>{drive_name}:{drive_base}</code>"
 
     if edit:
         await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
@@ -261,7 +260,7 @@ async def next_page_myfiles(client, callback_query):
 
     myfiles_drive= get_rc_user_value("MYFILES_DRIVE", user_id)
     base_dir= get_rc_user_value("MYFILES_BASE_DIR", user_id)
-    await editMessage(f"Your drive files are listed below\n\nPath:`{myfiles_drive}:{base_dir}`", message, 
+    await editMessage(f"<b>Your drive files are listed below</b>\n\n<b>Path:</b><code>{myfiles_drive}:{base_dir}</code>", message, 
                       reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 
