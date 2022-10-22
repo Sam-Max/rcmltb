@@ -21,6 +21,8 @@ from bot.helper.mirror_leech_utils.status_utils.split_status import SplitStatus
 from bot.helper.mirror_leech_utils.status_utils.zip_status import ZipStatus
 from bot.helper.mirror_leech_utils.upload_utils.telegram_uploader import TelegramUploader
 
+
+
 class MirrorLeechListener:
     def __init__(self, message, tag, user_id, newName= None, isRename= False, isZip=False, extract=False, pswd=None, isLeech= False, select=False, seed=False):
         self.message = message
@@ -35,7 +37,7 @@ class MirrorLeechListener:
         self.newName= newName
         self.isRename= isRename
         self.dir = f"{DOWNLOAD_DIR}{self.uid}"
-        self.isPrivate = message.chat.type in ['PRIVATE', 'GROUP']
+        self.isPrivate = message.chat.type in [ChatType.PRIVATE, ChatType.GROUP]
         self.__isLeech = isLeech
         self.__suproc = None
 
