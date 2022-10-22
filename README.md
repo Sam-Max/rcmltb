@@ -1,3 +1,4 @@
+
 # An Rclone Telegram bot to transfer to and from many clouds
 
 ## Features:
@@ -5,7 +6,7 @@
 ### qBittorrent
 - Qbittorrent support for torrent and magnets
 - Select files from Torrent before downloading 
-- Zip and unzip
+- Zip and unzip support
 
 ### Aria2c
 - Aria support for direct download links
@@ -61,11 +62,13 @@
 - Upload files to supergroup/channel.
 - Clone Google Drive files/folders from link
 - Thumbnail support
-- Set upload as document or as media 
+- Upload as document or as media 
 - Update bot at startup and with restart command using UPSTREAM_REPO
 - Own users settings when using bot or added to supergroup (thumbnail, as document/as media, rclone.conf)
 - Direct links Supported:
   > letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
+- Extract filetypes:
+  > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
 
 ## Commands for bot(set through @BotFather)
 
@@ -137,12 +140,16 @@ restart - Restart bot
         - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission separated by spaces. `Str`
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces `Str`
         - `AUTO_MIRROR`: For auto mirroring files sent to the bot. Default is `False`. `Bool`
-        - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
-        - `UPSTREAM_BRANCH`: Upstream branch for update
         - `DATABASE_URL`: Your SQL Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data that will be saved in Database: auth and sudo users, leech settings including thumbnails for each user. `Str`
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10
+        - `STATUS_LIMIT`: No. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Str`
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
+
+   - UPDATE
+     - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
+     - `UPSTREAM_BRANCH`: Upstream branch for update. Default is `master`. `Str`
+    **NOTE**: If any change in docker or requirements you will need to deploy/build again with updated repo for changes to apply.
 
    - RCLONE
      - `DEFAULT_RCLONE_DRIVE`: To set a default drive from your rclone config (for owner) `Str`
@@ -172,20 +179,20 @@ restart - Restart bot
      - `RSS_USER_SESSION_STRING`: To send rss links from your telegram account. To generate session string use this command `python3 generate_string_session.py`. `Str`. **NOTE**: Don't use same session string as `USER_SESSION_STRING`.
      - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` are required, otherwise rss commands will not work. You must use bot in group. You can also add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.    
 
-   - qBittorrent
+   - QBITTORRENT
      - `BASE_URL_OF_BOT`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https). Str
      - `SERVER_PORT`: Port. Str
      - `WEB_PINCODE`: If empty or False means no more pincode required while qbit web selection. Bool
      Qbittorrent NOTE: If your facing ram exceeded issue then set limit for MaxConnecs, decrease AsyncIOThreadsCount in qbittorrent config and set limit of DiskWriteCacheSize to 32
 
-   - Torrent Search
+   - TORRENT SEARCH
      - `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrent-Api-py). `Str`
      - `SEARCH_LIMIT`: Search limit for search api, limit for each site. Default is zero. `Str`
      - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). `Str`
      - Supported Sites:
      >1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooqle, Kickass, Bitsearch, MagnetDL, Libgen, YTS, Limetorrent, TorrentFunk, Glodls, TorrentProject and YourBittorrent
 
-   - Private Files
+   - PRIVATE FILES
      - `YT_COOKIES_URL`: Youtube authentication cookies. Check setup [Here](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl). Use gist raw link and remove commit id from the link, so you can edit it from gists only. `Str`
  
 3. **Deploying on VPS Using Docker**
