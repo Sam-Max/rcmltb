@@ -29,7 +29,6 @@ class _BotCommands:
         self.StatusCommand = f'status{CMD_INDEX}'
         self.StatsCommand = f'stats{CMD_INDEX}'
         self.ShellCommand = f'shell{CMD_INDEX}'
-        self.SpeedtestCommand = f'speedtest{CMD_INDEX}'
         self.CancelAllCommand= f'cancelall{CMD_INDEX}'
         self.CancelCommand= f'cancel{CMD_INDEX}'
         self.RssListCommand = f'rsslist{CMD_INDEX}'

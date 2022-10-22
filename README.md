@@ -104,7 +104,6 @@ search - Search for torrents
 status - Status message of tasks
 stats - Bot stats
 shell - Run cmds in shell
-speedtest - Test server speed
 log - Bot log
 ping - Ping bot
 restart - Restart bot
