@@ -47,13 +47,13 @@ async def leech(client, message, isZip=False, extract=False):
         if message.reply_to_message:
             await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
         else:
-            await sendMarkup("<b>Select from where you want to leech</b>", message, buttons.build_menu(2))  
+            await sendMarkup("Select from where you want to leech", message, buttons.build_menu(2))  
     else:
         if user_id == OWNER_ID:  
             if message.reply_to_message:
                 await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
             else:
-                await sendMarkup("<b>Select from where you want to leech</b>", message, buttons.build_menu(2))  
+                await sendMarkup("Select from where you want to leech", message, buttons.build_menu(2))  
         else:
             if message.reply_to_message:
                 await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
@@ -87,9 +87,9 @@ async def list_drive(message, edit=False):
     buttons.cbl_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}")
 
     if edit:
-        await editMessage("<b>Select cloud where your files are stored</b>", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+        await editMessage("Select cloud where your files are stored", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
     else:
-        await sendMarkup("<b>Select cloud where your files are stored</b>", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+        await sendMarkup("Select cloud where your files are stored", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
 async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
     user_id= message.reply_to_message.from_user.id
@@ -147,11 +147,11 @@ async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
     buttons.cbl_buildbutton("⬅️ Back", data= f"leechmenu^{back}^{user_id}")
     buttons.cbl_buildbutton("✘ Close Menu", data=f"leechmenu^close^{user_id}")
 
-    msg = '<b>Select folder or file that you want to leech</b>\n'
+    msg = 'Select folder or file that you want to leech\n'
     if is_zip:
-        msg = '<b>Select file that you want to zip</b>\n' 
+        msg = 'Select file that you want to zip\n' 
     if extract:
-        msg = '<b>Select file that you want to extract</b>\n'
+        msg = 'Select file that you want to extract\n'
 
     if edit:
         await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
@@ -272,7 +272,7 @@ async def next_page_leech(client, callback_query):
 
     leech_drive= get_rc_user_value("LEECH_DRIVE", user_id)
     base_dir= get_rc_user_value("LEECH_BASE_DIR", user_id)
-    await editMessage(f"<b>Select folder or file that you want to leech</b>\n\n<b>Path:</b><code>{leech_drive}:{base_dir}</code>", message, 
+    await editMessage(f"Select folder or file that you want to leech\n\n<b>Path:</b><code>{leech_drive}:{base_dir}</code>", message, 
                         reply_markup= InlineKeyboardMarkup(buttons.first_button))    
            
 async def selection_callback(client, callback_query):

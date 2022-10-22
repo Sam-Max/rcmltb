@@ -68,9 +68,9 @@ async def list_drive(message, rclone_drive, base_dir, callback, is_second_menu= 
     buttons.cbl_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}")
 
     if is_second_menu:
-        msg= '<b>Select folder where you want to copy</b>' 
+        msg= 'Select folder where you want to copy' 
     else:
-        msg= f"<b>Select cloud where your files are stored</b>\n\n<b>Path: </b><code>{rclone_drive}:{base_dir}</code>"     
+        msg= f"Select cloud where your files are stored\n\n<b>Path: </b><code>{rclone_drive}:{base_dir}</code>"     
 
     if edit:
         await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
@@ -139,9 +139,9 @@ async def list_dir(message, drive_name, drive_base, callback= "", back_callback=
         buttons.cbl_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}")
 
         if is_second_menu:
-            msg=f'<b>Select folder where you want to copy</b>\n\n<b>Path: </b><code>{drive_name}:{drive_base}</code>'
+            msg=f'Select folder where you want to copy\n\n<b>Path: </b><code>{drive_name}:{drive_base}</code>'
         else:    
-            msg= f'<b>Select file or folder which you want to copy</b>\n\n<b>Path: </b><code>{drive_name}:{drive_base}</code>'
+            msg= f'Select file or folder which you want to copy\n\n<b>Path: </b><code>{drive_name}:{drive_base}</code>'
 
         if edit:
             await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
@@ -233,14 +233,14 @@ async def copy_menu_callback(client, callback_query):
 
         if len(origin_dir) > 0: 
             back_cb= cmd[1]  
-            await list_dir(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= back_cb, is_second_menu=True)
+            await list_dir(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= back_cb)
         else:
             back_cb= "back_origin_menu"
-            await list_dir(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= back_cb, is_second_menu=True)
+            await list_dir(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= back_cb)
         await query.answer()  
         
     elif cmd[1]== "back_origin_menu":
-         await list_drive(message, callback="drive_origin", rclone_drive= dest_drive, base_dir= dest_dir, edit=True, is_second_menu=True)        
+         await list_drive(message, callback="drive_origin", rclone_drive= dest_drive, base_dir= dest_dir, edit=True)        
          await query.answer()   
 
     # Destination Menu Back Button

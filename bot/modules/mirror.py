@@ -78,7 +78,7 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
                 buttons= ButtonMaker() 
                 name= file.file_name
                 size= get_readable_size(file.file_size)
-                header_msg = f"<b>Which name do you want to use?</b>\n\n<b>Name</b>: <code>{name}</code>\n\n<b>Size</b>: <code>{size}</code>"
+                header_msg = f"Which name do you want to use?\n\n<b>Name</b>: <code>{name}</code>\n\n<b>Size</b>: <code>{size}</code>"
                 buttons.dbuildbutton("📄 By default", f'mirrormenu^default^{message_id}',
                                     "📝 Rename", f'mirrormenu^rename^{message_id}')
                 buttons.cbl_buildbutton("✘ Close Menu", f"mirrormenu^close^{message_id}")

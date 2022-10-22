@@ -63,7 +63,7 @@ async def list_drive(message, rclone_drive="", base_dir="", edit=False):
 
     buttons.cbl_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}")
 
-    msg= f"<b>Select cloud where you want to upload file</b>\n\n<b>Path:</b><code>{rclone_drive}:{base_dir}</code>" 
+    msg= f"Select cloud where you want to upload file\n\n<b>Path:</b><code>{rclone_drive}:{base_dir}</code>" 
 
     if edit:
         await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
