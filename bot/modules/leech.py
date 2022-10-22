@@ -50,7 +50,10 @@ async def leech(client, message, isZip=False, extract=False):
             await sendMarkup("<b>Select from where you want to leech</b>", message, buttons.build_menu(2))  
     else:
         if user_id == OWNER_ID:  
-            await sendMarkup("<b>Select from where you want to leech</b>", message, buttons.build_menu(2))  
+            if message.reply_to_message:
+                await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
+            else:
+                await sendMarkup("<b>Select from where you want to leech</b>", message, buttons.build_menu(2))  
         else:
             if message.reply_to_message:
                 await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)

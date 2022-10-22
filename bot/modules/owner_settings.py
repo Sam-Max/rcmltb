@@ -12,7 +12,7 @@ from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 
-filter= {"SUDO_USERS", "ALLOWED_CHATS", "DOWNLOAD_DIR", "AUTO_MIRROR", "GDRIVE_FOLDER_ID", "EDIT_SLEEP_SECS", "TORRENT_TIMEOUT","UPTOBOX_TOKEN","UPSTREAM_REPO",
+filter= {"SUDO_USERS", "ALLOWED_CHATS", "DOWNLOAD_DIR", "AUTO_MIRROR", "MULTI_RCLONE_CONFIG", "GDRIVE_FOLDER_ID", "EDIT_SLEEP_SECS", "TORRENT_TIMEOUT","UPTOBOX_TOKEN","UPSTREAM_REPO",
           "UPSTREAM_BRANCH","LEECH_SPLIT_SIZE","AS_DOCUMENT ", "YT_COOKIES_URL", "DATABASE_URL", "DUMP_CHAT","USER_SESSION_STRING", "MEGA_API_KEY","MEGA_EMAIL_ID" ,
           "MEGA_PASSWORD" ,"BASE_URL_OF_BOT","SERVER_PORT", "WEB_PINCODE","SEARCH_API_LINK", "SEARCH_LIMIT"}
 
