@@ -278,9 +278,9 @@ async def next_page_copy(client, callback_query):
     next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset) 
 
     if is_second_menu:
-        buttons.cbl_buildbutton("✅ Select this folder", f"copymenu^start_copy^{user_id}")
+        buttons.cbl_buildbutton("✅ Select this folder", f"copymenu^copy^{user_id}")
     else:
-        buttons.cbl_buildbutton("✅ Select this folder", f"copymenu^rclone_menu_copy^_^False^{user_id}")
+        buttons.cbl_buildbutton("✅ Select this folder", f"copymenu^drive_second^_^False^{user_id}")
     
     if is_second_menu:
         rcloneListButtonMaker(result_list= next_list_info, 
