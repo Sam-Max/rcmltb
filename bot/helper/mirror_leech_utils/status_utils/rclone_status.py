@@ -1,8 +1,8 @@
 from asyncio import sleep
-from bot import botloop
 from re import findall
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
+
 
 
 class RcloneStatus:
@@ -14,35 +14,29 @@ class RcloneStatus:
         self.__transfered_bytes = 0 
         self.__eta= "-"
         self.is_rclone= True
-        botloop.create_task(self.read_stdout())
-    
-    async def read_stdout(self):
-        blank = 0
-        while True:
-            if self.__obj.process is not None:
-                data = await self.__obj.process.stdout.readline()
-                data = data.decode().strip()
-                mat = findall('Transferred:.*ETA.*', data)
-                if len(mat) > 0:
-                    nstr = mat[0].replace('Transferred:', '')
-                    nstr = nstr.strip()
-                    nstr = nstr.split(',')
-                    percent = nstr[1].strip('% ')
-                    try:
-                        self.__percent = int(percent)
-                    except:
-                        pass
-                    self.__transfered_bytes = nstr[0]
-                    self.__speed = nstr[2]
-                    self.__eta = nstr[3].replace('ETA', '')
 
-                if data == '':
-                    blank += 1
-                    if blank == 20:
-                        break
-                else:
-                    blank = 0
-            await sleep(0.5)
+    async def read_stdout(self):
+        blank= 0
+        while True:
+            data = await self.__obj.process.stdout.readline()
+            match = findall('Transferred:.*ETA.*', data.decode().strip())
+            if len(match) > 0:
+                nstr = match[0].replace('Transferred:', '')
+                self.info = nstr.strip().split(',')
+                self.__transfered_bytes = self.info[0]
+                try:
+                    self.__percent = int(self.info[1].strip('% '))
+                except:
+                    pass
+                self.__speed = self.info[2]
+                self.__eta = self.info[3].replace('ETA', '') 
+            if len(match) == 0:
+                blank += 1
+                if blank == 8:
+                    break
+            else:
+                blank = 0
+            await sleep(0.1)
 
     def gid(self):
         return self.__gid
@@ -68,7 +62,7 @@ class RcloneStatus:
         return self.__obj.name
 
     def progress(self):
-        return self.__percent   
+        return self.__percent
 
     def speed(self):
         return f'{self.__speed}'

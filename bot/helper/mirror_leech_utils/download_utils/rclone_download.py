@@ -25,19 +25,20 @@ class RcloneLeech:
         conf_path = get_rclone_config(self.__user_id)
         LOGGER.info(conf_path)
         leech_drive = get_rc_user_value("LEECH_DRIVE", self.__user_id)
-        cmd = ['rclone', 'copy', f'--config={conf_path}', f'{leech_drive}:{self.__origin_path}', 
-              f'{self.__dest_path}', '-P']
+        cmd = ['rclone', 'copy', f'--config={conf_path}', f'{leech_drive}:{self.__origin_path}', f'{self.__dest_path}', '-P']
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10)) 
         if self.__isFolder:
             self.name = self.__dest_path.rsplit("/", 2)[1]
         else:
             self.name = self.__dest_path.rsplit("/", 1)[1]
         async with status_dict_lock:
-            status_dict[self.__listener.uid] = RcloneStatus(self, gid)
+            status = RcloneStatus(self, gid)
+            status_dict[self.__listener.uid] = status
         await sendStatusMessage(self.__listener.message)
-        self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
-        await self.process.wait()
-        if self.process.returncode == 0:
+        self.process = await create_subprocess_exec(*cmd, stdout=PIPE)
+        await status.read_stdout()
+        return_code = await self.process.wait()
+        if return_code == 0:
             await self.__listener.onDownloadComplete()
         else:
             await self.__listener.onDownloadError("Cancelled by user")

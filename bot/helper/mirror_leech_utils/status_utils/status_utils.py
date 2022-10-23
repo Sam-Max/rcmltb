@@ -44,7 +44,7 @@ def get_progress_bar_string(status):
     return p_str
 
 def get_progress_bar_rclone(percentage):
-    return "{0}{1}\n".format(
+    return "{0}{1}".format(
     ''.join(['■' for i in range(floor(percentage / 10))]),
     ''.join(['□' for i in range(10 - floor(percentage / 10))]))
 
