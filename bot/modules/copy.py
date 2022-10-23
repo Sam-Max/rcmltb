@@ -5,7 +5,6 @@ from bot import MULTI_RCLONE_CONFIG, OWNER_ID, Bot
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.types import InlineKeyboardMarkup
-from os import path as ospath
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
@@ -16,9 +15,9 @@ from bot.helper.ext_utils.var_holder import get_rc_user_value, update_rc_user_va
 from bot.helper.mirror_leech_utils.download_utils.rclone_copy import RcloneCopy
 from bot.helper.mirror_leech_utils.listener import MirrorLeechListener
 
-folder_icon= "📁"
 
 listener_dict = {}
+
 
 async def handle_copy(client, message):
     user_id= message.from_user.id
@@ -51,9 +50,9 @@ async def list_drive(message, rclone_drive, base_dir, callback, is_second_menu= 
 
     for j in conf.sections():
         if "team_drive" in list(conf[j]):
-            buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"copymenu^{callback}^{j}^{user_id}")
+            buttons.cb_buildsecbutton(f"📁 {j}", f"copymenu^{callback}^{j}^{user_id}")
         else:
-            buttons.cb_buildsecbutton(f"{folder_icon} {j}", f"copymenu^{callback}^{j}^{user_id}")
+            buttons.cb_buildsecbutton(f"📁 {j}", f"copymenu^{callback}^{j}^{user_id}")
 
     for a, b in pairwise(buttons.second_button):
         row= [] 
@@ -68,16 +67,16 @@ async def list_drive(message, rclone_drive, base_dir, callback, is_second_menu= 
     buttons.cbl_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}")
 
     if is_second_menu:
-        msg= 'Select folder where you want to copy' 
+        msg = 'Select folder where you want to copy' 
     else:
-        msg= f"Select cloud where your files are stored\n\n<b>Path: </b><code>{rclone_drive}:{base_dir}</code>"     
+        msg = f"Select cloud where your files are stored\n\n<b>Path: </b><code>{rclone_drive}:{base_dir}</code>"     
 
     if edit:
         await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
     else:
         await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
-async def list_dir(message, drive_name, drive_base, callback= "", back_callback= "", edit=False, is_second_menu= False):
+async def list_dir(message, drive_name, drive_base, callback= "", back_callback= "", edit=False, is_second_menu=False):
         user_id= message.reply_to_message.from_user.id
         conf_path = get_rclone_config(user_id)
         buttons = ButtonMaker()
@@ -287,14 +286,14 @@ async def next_page_copy(client, callback_query):
         rcloneListButtonMaker(result_list= next_list_info, 
             buttons= buttons,
             menu_type= Menus.COPY,
-            callback= "list_dir_dest",
+            callback= "dir_dest", 
             user_id= user_id,
             is_second_menu= is_second_menu)
     else:
         rcloneListButtonMaker(result_list= next_list_info, 
             buttons= buttons,
             menu_type= Menus.COPY,
-            callback= "list_dir_origin",
+            callback= "origin_dir",
             user_id= user_id,
             is_second_menu=is_second_menu)
 
