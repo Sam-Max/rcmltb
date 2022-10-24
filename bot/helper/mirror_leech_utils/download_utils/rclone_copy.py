@@ -3,7 +3,7 @@ from asyncio.subprocess import PIPE
 from random import SystemRandom
 from string import ascii_letters, digits
 from bot import status_dict, status_dict_lock
-from bot.helper.ext_utils.message_utils import sendMessage, sendStatusMessage
+from bot.helper.ext_utils.message_utils import sendStatusMessage
 from bot.helper.ext_utils.misc_utils import get_rclone_config
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
@@ -15,6 +15,8 @@ class RcloneCopy:
         self._user_id= user_id
         self.size= 0
         self.name= ""
+        self.err_message= ""
+        self.is_user_cancelled= False
         self.process= None
         self.status_type= MirrorStatus.STATUS_COPYING
 
@@ -33,9 +35,13 @@ class RcloneCopy:
         if return_code == 0:
             await self.__listener.onRcloneCopyComplete(conf_path, origin_dir, dest_drive, dest_dir)
         else:
-            err = await self.process.stderr.read()
-            await sendMessage(f'Error: {err}', self.__listener.message)
-            await self.__listener.onDownloadError("Cancelled by user")
-
+            if self.is_user_cancelled:
+                await self.__listener.onDownloadError(self.err_message)
+            else:
+                self.err_message = await self.process.stderr.read()
+                await self.__listener.onDownloadError(str(self.err_message))
+            
     def cancel_download(self):
+        self.is_user_cancelled= True
+        self.err_message= "Cancelled by user"
         self.process.kill()

@@ -185,20 +185,10 @@ class MirrorLeechListener:
             await rc_mirror.mirror()
 
     async def onRcloneCopyComplete(self, conf, origin_dir, dest_drive, dest_dir):
-        #Get Link
-        button= ButtonMaker()
-        cmd = ["rclone", "link", f'--config={conf}', f"{dest_drive}:{dest_dir}{origin_dir}"]
-        process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
-        out, err = await process.communicate()
-        url = out.decode().strip()
-        button.url_buildbutton("Cloud Link 🔗", url)
-        return_code = await process.wait()
-        if return_code != 0:
-             return await sendMessage(err.decode().strip(), self.message)
         #Calculate Size
         cmd = ["rclone", "size", f'--config={conf}', "--json", f"{dest_drive}:{dest_dir}{origin_dir}"]
         process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
-        out, _ = await process.communicate()
+        out, err = await process.communicate()
         output = out.decode().strip()
         return_code = await process.wait()
         if return_code != 0:
@@ -209,7 +199,19 @@ class MirrorLeechListener:
         format_out = f"**Total Files** {files}" 
         format_out += f"\n**Total Size**: {size}"
         format_out += f"\n<b>cc: </b>{self.__tag}"
-        await sendMarkup(format_out, self.message, reply_markup= button.build_menu(1))
+        #Get Link
+        cmd = ["rclone", "link", f'--config={conf}', f"{dest_drive}:{dest_dir}{origin_dir}"]
+        process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+        out, err = await process.communicate()
+        url = out.decode().strip()
+        return_code = await process.wait()
+        if return_code == 0:
+            button= ButtonMaker()
+            button.url_buildbutton("Cloud Link 🔗", url)
+            await sendMarkup(format_out, self.message, reply_markup= button.build_menu(1))
+        else:
+            LOGGER.info(err.decode().strip())
+            await sendMessage(format_out, self.message)
         clean_download(self.dir)
         async with status_dict_lock:
             try:
