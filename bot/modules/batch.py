@@ -33,24 +33,28 @@ async def _batch(client, message, isLeech= False):
         bot= Bot
     else:
         bot= app
-    await sendMessage("Send me the message link you want to start saving from", message)
+    await sendMessage("Send me the message link to start saving from, /ignore to cancel", message)
     try:
         link = await client.listen.Message(filters.text, id= filters.user(user_id), timeout = 30)
         try:
+            if "/ignore" in link.text:
+                 return await client.listen.Cancel(filters.user(user_id))
             _link = get_link(link.text)
         except Exception:
             return await sendMessage("No link found.", message)
     except TimeoutError:
         return await sendMessage("Too late 30s gone, try again!", message)
-    await sendMessage("Send me the number of files you want to save from the given link", message)
+    await sendMessage("Send me the number of files to save from given link, /ignore to cancel", message)
     try:
         _range = await client.listen.Message(filters.text, id= filters.user(user_id), timeout = 30)
+        try:
+            if "/ignore" in _range.text:
+                return await client.listen.Cancel(filters.user(user_id))
+            value = int(_range.text)
+        except ValueError:
+            return await sendMessage("Range must be an integer!", message)
     except TimeoutError:
         return await sendMessage("Too late 30s gone, try again!", message)
-    try:
-        value = int(_range.text)
-    except ValueError:
-        return await sendMessage("Range must be an integer!", message)
     suceed, msg = await check_link(bot, _link)
     if suceed != True:
         await sendMessage(msg, message)
