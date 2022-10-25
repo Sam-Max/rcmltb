@@ -1,10 +1,13 @@
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/generate_drive_token.py
+# Adapted for asyncio framework and pyrogram library
+
 from asyncio import sleep, get_running_loop
 from html import escape
 from math import ceil
 from re import match as re_match, findall as re_findall, IGNORECASE, compile
 from time import time
 from psutil import cpu_percent, disk_usage, virtual_memory
-from bot import DOWNLOAD_DIR, STATUS_LIMIT, status_dict_lock, status_dict, botUptime
+from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict
 from requests import head as rhead
 from threading import Event, Thread
 from urllib.request import urlopen
@@ -95,7 +98,7 @@ def new_thread(fn):
 async def get_readable_message():
     async with status_dict_lock:
         msg = ""
-        if STATUS_LIMIT is not None:
+        if STATUS_LIMIT := config_dict['STATUS_LIMIT']:
             tasks = len(status_dict)
             globals()['PAGES'] = ceil(tasks/STATUS_LIMIT)
             if PAGE_NO > PAGES and PAGES != 0:
@@ -127,7 +130,7 @@ async def get_readable_message():
                 msg += f"\n<b>Size: </b>{download.size()}"
             msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>"
             msg += "\n\n"
-            if STATUS_LIMIT is not None and index == STATUS_LIMIT:
+            if index == STATUS_LIMIT:
                 break
         if len(msg) == 0:
             return None, None
@@ -155,7 +158,7 @@ async def get_readable_message():
         bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
         bmsg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botUptime)}"
         bmsg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
-        if STATUS_LIMIT is not None and tasks > STATUS_LIMIT:
+        if STATUS_LIMIT and tasks > STATUS_LIMIT:
             msg += f"<b>Page:</b> {PAGE_NO}/{PAGES} | <b>Tasks:</b> {tasks}\n"
             buttons = ButtonMaker()
             buttons.cb_buildbutton("⏪", "status pre")
@@ -166,6 +169,7 @@ async def get_readable_message():
         return msg + bmsg, ""
 
 async def turn(data):
+    STATUS_LIMIT = config_dict['STATUS_LIMIT']
     try:
         global COUNT, PAGE_NO
         async with status_dict_lock:

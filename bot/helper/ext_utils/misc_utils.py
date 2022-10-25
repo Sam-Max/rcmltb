@@ -3,7 +3,7 @@ from os import mkdir, path as ospath, remove as osremove, rename as osrename, ma
 from shutil import rmtree
 from bot.helper.ext_utils.zip_utils import get_path_size
 from magic import Magic
-from bot import BASE_URL, DOWNLOAD_DIR, EQUAL_SPLITS, LEECH_SPLIT_SIZE, LOGGER, MULTI_RCLONE_CONFIG, OWNER_ID, TG_MAX_FILE_SIZE, WEB_PINCODE, aria2, get_client, status_dict, status_dict_lock
+from bot import config_dict, DOWNLOAD_DIR, LOGGER, MULTI_RCLONE_CONFIG, OWNER_ID, TG_MAX_FILE_SIZE, aria2, get_client, status_dict, status_dict_lock
 from itertools import zip_longest
 from json import loads as jsnloads
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -102,8 +102,8 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
     dirpath = f"{dirpath}/splited_files"
     if not ospath.exists(dirpath):
         mkdir(dirpath)
-    parts = ceil(size/LEECH_SPLIT_SIZE)
-    if EQUAL_SPLITS and not inLoop:
+    parts = ceil(size/config_dict['LEECH_SPLIT_SIZE'])
+    if config_dict['EQUAL_SPLITS'] and not inLoop:
         split_size = ceil(size/parts) + 1000
     if get_media_streams(path)[0]:
         duration = get_media_info(path)[0]
@@ -260,7 +260,8 @@ def bt_selection_buttons(id_: str):
             break
 
     buttons = ButtonMaker()
-    if WEB_PINCODE:
+    BASE_URL = config_dict['BASE_URL']
+    if config_dict['WEB_PINCODE']:
         buttons.url_buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}")
         buttons.cb_buildbutton("Pincode", f"btsel pin {gid} {pincode}")
     else:

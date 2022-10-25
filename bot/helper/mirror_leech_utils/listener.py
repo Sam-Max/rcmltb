@@ -5,7 +5,7 @@ from json import loads
 from os import listdir, path as ospath, remove, walk
 import os
 from re import search
-from bot import DOWNLOAD_DIR, LOGGER, LEECH_SPLIT_SIZE, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2
+from bot import DOWNLOAD_DIR, LOGGER, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2, config_dict
 from subprocess import Popen
 from pyrogram.enums import ChatType
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
@@ -67,6 +67,7 @@ class MirrorLeechListener:
             path = f"{f_path}.zip" 
             async with status_dict_lock:
                 status_dict[self.uid] = ZipStatus(name, f_size, gid, self)
+            LEECH_SPLIT_SIZE = config_dict['LEECH_SPLIT_SIZE']    
             if self.__pswd is not None:
                 if int(f_size) > LEECH_SPLIT_SIZE:
                     LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
@@ -146,6 +147,7 @@ class MirrorLeechListener:
             o_files = []
             if not self.__isZip:
                 checked = False
+                LEECH_SPLIT_SIZE = config_dict['LEECH_SPLIT_SIZE']
                 for dirpath, subdir, files in walk(up_dir, topdown=False):
                     for file_ in files:
                         f_path = ospath.join(dirpath, file_)

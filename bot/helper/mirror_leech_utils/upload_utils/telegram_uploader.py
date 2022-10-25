@@ -1,7 +1,7 @@
 from asyncio import sleep
 from os import walk, rename, path as ospath, remove as osremove
 from time import time
-from bot import AS_DOC_USERS, AS_DOCUMENT, AS_MEDIA_USERS, DUMP_CHAT, EXTENSION_FILTER, LOGGER, Bot, app, botloop
+from bot import AS_DOC_USERS, AS_MEDIA_USERS, GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, Bot, app, botloop
 from pyrogram.enums.parse_mode import ParseMode
 from pyrogram.errors import FloodWait
 from PIL import Image
@@ -23,7 +23,7 @@ class TelegramUploader():
         self.__is_corrupted = False
         self.__is_cancelled = False
         self.__msgs_dict = {}
-        self.__as_doc = AS_DOCUMENT
+        self.__as_doc = config_dict['AS_DOCUMENT']
         self.__thumb = f"Thumbnails/{listener.message.chat.id}.jpg"
         self.__start_time= time()
         self.uploaded_bytes = 0
@@ -35,7 +35,7 @@ class TelegramUploader():
         if ospath.isdir(self.__path):
             for dirpath, _, filenames in sorted(walk(self.__path)):
                 for file in sorted(filenames):
-                    if not file.lower().endswith(tuple(EXTENSION_FILTER)):
+                    if not file.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
                         self.__total_files += 1   
                         f_path = ospath.join(dirpath, file)
                         f_size = ospath.getsize(f_path)
@@ -46,7 +46,7 @@ class TelegramUploader():
                         await self.__upload_file(f_path, file)
                         if self.__is_cancelled:
                             return
-                        if (not self.__listener.isPrivate or DUMP_CHAT is not None) and not self.__is_corrupted:
+                        if (not self.__listener.isPrivate or config_dict['DUMP_CHAT'] is not None) and not self.__is_corrupted:
                             self.__msgs_dict[self.__sent_msg.link] = file
                         self._last_uploaded = 0
                         await sleep(1)
@@ -158,7 +158,7 @@ class TelegramUploader():
             self.__thumb = None
 
     async def __msg_to_reply(self):
-        if DUMP_CHAT is not None:
+        if DUMP_CHAT:= config_dict['DUMP_CHAT']:
             if self.__listener.isPrivate:
                 msg = self.__listener.message.text
             else:

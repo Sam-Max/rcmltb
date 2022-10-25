@@ -3,7 +3,6 @@ from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.var_holder import update_rc_user_var
 
 
-
 class Menus:
     LEECH= "leechmenu"
     COPY= "copymenu"

@@ -1,7 +1,10 @@
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
+# Adapted for pyrogram library and asyncio
+
 from asyncio import sleep
 from os import remove
 from time import time
-from bot import LOGGER, RSS_CHAT_ID, STATUS_UPDATE_INTERVAL, Bot, Interval, rss_session, status_reply_dict_lock, status_reply_dict
+from bot import LOGGER, Bot, Interval, rss_session, config_dict, status_reply_dict_lock, status_reply_dict
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from pyrogram.enums.parse_mode import ParseMode
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
@@ -59,7 +62,7 @@ async def editMessage(text: str, message, reply_markup=None):
 async def sendRss(text: str):
     if rss_session is None:
         try:
-            return await Bot.send_message(RSS_CHAT_ID, text, disable_web_page_preview=True)
+            return await Bot.send_message(config_dict['RSS_CHAT_ID'], text, disable_web_page_preview=True)
         except FloodWait as e:
             LOGGER.warning(str(e))
             await sleep(e.value * 1.5)
@@ -70,7 +73,7 @@ async def sendRss(text: str):
     else:
         try:
             with rss_session:
-                return rss_session.send_message(RSS_CHAT_ID, text, disable_web_page_preview=True)
+                return rss_session.send_message(config_dict['RSS_CHAT_ID'], text, disable_web_page_preview=True)
         except FloodWait as e:
             LOGGER.warning(str(e))
             await sleep(e.value * 1.5)
@@ -147,7 +150,7 @@ async def sendStatusMessage(msg):
             message = await sendMarkup(progress, msg, buttons)
         status_reply_dict[msg.chat.id] = [message, time()]
         if not Interval:
-            Interval.append(setInterval(STATUS_UPDATE_INTERVAL, update_all_messages))
+            Interval.append(setInterval(config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))
 
 async def auto_delete_message(cmd_message, bot_message):
         await sleep(20)

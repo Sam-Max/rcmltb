@@ -1,3 +1,6 @@
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
+# Added rclone and token.pickle saving
+
 from os import path as ospath, makedirs
 from psycopg2 import connect, DatabaseError
 from bot import ALLOWED_CHATS, DB_URI, AS_DOC_USERS, AS_MEDIA_USERS, LOGGER, SUDO_USERS, rss_dict

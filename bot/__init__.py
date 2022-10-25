@@ -1,11 +1,9 @@
-__version__ = "2.0"
+__version__ = "3.0"
 __author__ = "Sam-Max"
 
 from asyncio import Lock
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from os import environ
-from json import loads as jsonloads
-from requests import get as rget
 from threading import Thread
 from time import sleep, time
 from sys import exit
@@ -35,7 +33,7 @@ def get_client():
 botUptime = time()
 Interval = []
 QbInterval = []
-EXTENSION_FILTER = {'.aria2'}
+GLOBAL_EXTENSION_FILTER = ['.aria2']
 DOWNLOAD_DIR = None
 
 status_dict_lock = Lock()
@@ -55,16 +53,17 @@ rss_dict = {}
 
 rclone_user_dict = {}
 
+# Key: env var
+# Value: env var value
+config_dict = {}
+
 AS_DOC_USERS = set()
 AS_MEDIA_USERS = set()
 
 load_dotenv('config.env')
 
-EDIT_SLEEP_SECS = environ.get('EDIT_SLEEP_SECS', '')  
-EDIT_SLEEP_SECS = 8 if len(EDIT_SLEEP_SECS) == 0 else int(EDIT_SLEEP_SECS)
-
 STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
-STATUS_LIMIT = None if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+STATUS_LIMIT = '' if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
 
 STATUS_UPDATE_INTERVAL = environ.get('STATUS_UPDATE_INTERVAL', '')
 if len(STATUS_UPDATE_INTERVAL) == 0:
@@ -79,24 +78,25 @@ AUTO_MIRROR= environ.get('AUTO_MIRROR', '')
 AUTO_MIRROR= AUTO_MIRROR.lower() == 'true'
 
 DUMP_CHAT = environ.get('DUMP_CHAT', '')
-DUMP_CHAT= None if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
+DUMP_CHAT= '' if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
 
 UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
 if len(UPTOBOX_TOKEN) == 0:
-    UPTOBOX_TOKEN = None
+    UPTOBOX_TOKEN = ''
 
 SEARCH_API_LINK = environ.get('SEARCH_API_LINK', '').rstrip("/")
 if len(SEARCH_API_LINK) == 0:
-    SEARCH_API_LINK = None
+    SEARCH_API_LINK = ''
 
 SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
 SEARCH_LIMIT= 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
     
 SEARCH_PLUGINS = environ.get('SEARCH_PLUGINS', '')
-SEARCH_PLUGINS= None if len(SEARCH_PLUGINS) == 0 else jsonloads(SEARCH_PLUGINS)
+if len(SEARCH_PLUGINS) == 0:
+    SEARCH_PLUGINS = ''
 
 TORRENT_TIMEOUT = environ.get('TORRENT_TIMEOUT', '')
-TORRENT_TIMEOUT= None if len(TORRENT_TIMEOUT) == 0 else int(TORRENT_TIMEOUT)
+TORRENT_TIMEOUT= '' if len(TORRENT_TIMEOUT) == 0 else int(TORRENT_TIMEOUT)
 
 WEB_PINCODE = environ.get('WEB_PINCODE', '')
 WEB_PINCODE = WEB_PINCODE.lower() == 'true'
@@ -125,36 +125,32 @@ else:
 
 CMD_INDEX = environ.get('CMD_INDEX', '')
 
-YT_COOKIES_URL = environ.get('YT_COOKIES_URL', '')
-if len(YT_COOKIES_URL) != 0:
-    try:
-        res = rget(YT_COOKIES_URL)
-        if res.status_code == 200:
-            with open('cookies.txt', 'wb+') as f:
-                f.write(res.content)
-        else:
-            LOGGER.error(f"Failed to download cookies.txt, link got HTTP response: {res.status_code}")
-    except Exception as e:
-        LOGGER.error(f"YT_COOKIES_URL: {e}")
-
 DB_URI = environ.get('DATABASE_URL', '')
 if len(DB_URI) == 0:
     DB_URI = None
 
 RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
-RSS_CHAT_ID = None if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
+RSS_CHAT_ID = '' if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
 
 RSS_DELAY = environ.get('RSS_DELAY', '')
 RSS_DELAY = 900 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
 
 RSS_COMMAND = environ.get('RSS_COMMAND', '')
 if len(RSS_COMMAND) == 0:
-    RSS_COMMAND = None
+    RSS_COMMAND = ''
 
-BASE_URL = environ.get('BASE_URL_OF_BOT', '')
+BASE_URL = environ.get('BASE_URL_OF_BOT', '').rstrip("/")
 if len(BASE_URL) == 0:
     LOGGER.warning('BASE_URL_OF_BOT not provided!')
-    BASE_URL = None
+    BASE_URL = ''
+
+UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
+if len(UPSTREAM_REPO) == 0:
+   UPSTREAM_REPO = ''
+
+UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', '')
+if len(UPSTREAM_BRANCH) == 0:
+    UPSTREAM_BRANCH = 'master'
 
 SERVER_PORT = environ.get('SERVER_PORT', '')
 if len(SERVER_PORT) == 0:
@@ -163,9 +159,9 @@ if len(SERVER_PORT) == 0:
 IS_TEAM_DRIVE = environ.get('IS_TEAM_DRIVE', '')
 IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == 'true'   
 
-PARENT_ID = environ.get('GDRIVE_FOLDER_ID', '')
-if len(PARENT_ID) == 0:
-    PARENT_ID = None
+GDRIVE_FOLDER_ID = environ.get('GDRIVE_FOLDER_ID', '')
+if len(GDRIVE_FOLDER_ID) == 0:
+    GDRIVE_FOLDER_ID = ''
 
 DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
 if len(DOWNLOAD_DIR) == 0:
@@ -188,15 +184,15 @@ aria2 = ariaAPI(
     )
 )
 
-fx = environ.get('EXTENSION_FILTER', '')
-if len(fx) > 0:
-    fx = fx.split()
+EXTENSION_FILTER = environ.get('EXTENSION_FILTER', '')
+if len(EXTENSION_FILTER) > 0:
+    fx = EXTENSION_FILTER.split()
     for x in fx:
-        EXTENSION_FILTER.add(x.strip().lower())
+        GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
 
 try:
-    API_ID = int(getConfig("API_ID"))
-    API_HASH = getConfig("API_HASH")
+    TELEGRAM_API_ID = int(getConfig("TELEGRAM_API_ID"))
+    TELEGRAM_API_HASH = getConfig("TELEGRAM_API_HASH")
     BOT_TOKEN = getConfig("BOT_TOKEN")
     OWNER_ID= int(getConfig('OWNER_ID'))
 except:
@@ -219,21 +215,26 @@ def aria2c_init():
 Thread(target=aria2c_init).start()
 sleep(1.5)
     
-MEGA_KEY = environ.get('MEGA_API_KEY', '')
-if len(MEGA_KEY) == 0:
+MEGA_API_KEY = environ.get('MEGA_API_KEY', '')
+if len(MEGA_API_KEY) == 0:
     LOGGER.warning('MEGA_API_KEY not provided!')
-    MEGA_KEY = None
+    MEGA_API_KEY = ''
 
-if MEGA_KEY is not None:
-    Popen(["megasdkrest", "--apikey", MEGA_KEY])
+MEGA_EMAIL_ID = environ.get('MEGA_EMAIL_ID', '')
+MEGA_PASSWORD = environ.get('MEGA_PASSWORD', '')
+if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
+    LOGGER.warning('MEGA Credentials not provided!')
+    MEGA_EMAIL_ID = ''
+    MEGA_PASSWORD = ''
+
+if len(MEGA_API_KEY) > 0:
+    Popen(["megasdkrest", "--apikey", MEGA_API_KEY])
     sleep(3)
     mega_client = MegaSdkRestClient('http://localhost:6090')
     try:
-        MEGA_USERNAME = getConfig('MEGA_EMAIL_ID')
-        MEGA_PASSWORD = getConfig('MEGA_PASSWORD')
-        if len(MEGA_USERNAME) > 0 and len(MEGA_PASSWORD) > 0:
+        if len(MEGA_EMAIL_ID) > 0 and len(MEGA_PASSWORD) > 0:
             try:
-                mega_client.login(MEGA_USERNAME, MEGA_PASSWORD)
+                mega_client.login(MEGA_EMAIL_ID, MEGA_PASSWORD)
             except errors.MegaSdkRestClientException as e:
                 LOGGER.error(e.message['message'])
                 exit(0)
@@ -246,7 +247,7 @@ else:
 
 #---------------------------
 
-Bot = Client("pyrogram", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+Bot = Client("pyrogram", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, bot_token=BOT_TOKEN)
 Conversation(Bot) 
 try:
     Bot.start()
@@ -262,7 +263,7 @@ if len(RSS_USER_SESSION_STRING) == 0:
     rss_session = None
 else:
     LOGGER.info("Creating client from RSS_USER_SESSION_STRING")
-    rss_session = Client(name='rss_session', api_id=API_ID, api_hash=API_HASH, session_string=RSS_USER_SESSION_STRING, no_updates=True)
+    rss_session = Client(name='rss_session', api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=RSS_USER_SESSION_STRING, no_updates=True)
 
 #---------------------------
 IS_PREMIUM_USER = False
@@ -271,7 +272,7 @@ if len(USER_SESSION_STRING) == 0:
     app = None
 else:
     LOGGER.info("Pyrogram client created from USER_SESSION_STRING")
-    app = Client(name="pyrogram_session", api_id=API_ID, api_hash=API_HASH, session_string=USER_SESSION_STRING)
+    app = Client(name="pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING)
     with app:
         IS_PREMIUM_USER = app.me.is_premium
 
@@ -288,3 +289,39 @@ if len(LEECH_SPLIT_SIZE) == 0 or int(LEECH_SPLIT_SIZE) > TG_MAX_FILE_SIZE:
     LEECH_SPLIT_SIZE = TG_MAX_FILE_SIZE
 else:
     LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE)
+
+if not config_dict:
+    config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
+                   'ALLOWED_CHATS': ALLOWED_CHATS,
+                   'AUTO_MIRROR': AUTO_MIRROR,
+                   'BASE_URL': BASE_URL,
+                   'CMD_INDEX': CMD_INDEX,
+                   'DUMP_CHAT': DUMP_CHAT,
+                   'DEFAULT_RCLONE_DRIVE': DEFAULT_RCLONE_DRIVE,
+                   'EQUAL_SPLITS': EQUAL_SPLITS,
+                   'EXTENSION_FILTER': EXTENSION_FILTER,
+                   'GDRIVE_FOLDER_ID': GDRIVE_FOLDER_ID,
+                   'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
+                   'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
+                   'MEGA_API_KEY': MEGA_API_KEY,
+                   'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
+                   'MEGA_PASSWORD': MEGA_PASSWORD,
+                   'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
+                   'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
+                   'RSS_CHAT_ID': RSS_CHAT_ID,
+                   'RSS_COMMAND': RSS_COMMAND,
+                   'RSS_DELAY': RSS_DELAY,
+                   'SEARCH_API_LINK': SEARCH_API_LINK,
+                   'SEARCH_LIMIT': SEARCH_LIMIT,
+                   'SERVER_PORT': SERVER_PORT,
+                   'STATUS_LIMIT': STATUS_LIMIT,
+                   'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
+                   'SUDO_USERS': SUDO_USERS,
+                   'TELEGRAM_API_ID': TELEGRAM_API_ID,
+                   'TELEGRAM_API_HASH': TELEGRAM_API_HASH,
+                   'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
+                   'UPSTREAM_REPO': UPSTREAM_REPO,
+                   'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
+                   'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
+                   'USER_SESSION_STRING': USER_SESSION_STRING,
+                   'WEB_PINCODE': WEB_PINCODE}

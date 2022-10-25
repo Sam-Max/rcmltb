@@ -17,7 +17,7 @@ from lk21 import Bypass
 from cfscrape import create_scraper
 from bs4 import BeautifulSoup
 from base64 import standard_b64encode
-from bot import LOGGER, UPTOBOX_TOKEN
+from bot import LOGGER, config_dict
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
              'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
 
@@ -94,7 +94,7 @@ def uptobox(url: str) -> str:
         link = re_findall(r'\bhttps?://.*uptobox\.com\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No Uptobox links found\n")
-    if UPTOBOX_TOKEN is None:
+    if UPTOBOX_TOKEN := config_dict['UPTOBOX_TOKEN']:
         LOGGER.error('UPTOBOX_TOKEN not provided!')
         dl_url = link
     else:

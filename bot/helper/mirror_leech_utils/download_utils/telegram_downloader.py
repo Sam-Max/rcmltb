@@ -1,4 +1,3 @@
-
 from time import time
 from bot import Bot, status_dict, status_dict_lock, LOGGER
 from bot.helper.ext_utils.message_utils import sendStatusMessage

@@ -1,3 +1,5 @@
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
+
 from time import time
 from bot import DOWNLOAD_DIR, LOGGER
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus, get_readable_time

@@ -1,9 +1,9 @@
 from os import path as ospath
 from time import time
 from requests import get
-from bot import AUTO_MIRROR, DOWNLOAD_DIR, MEGA_KEY, Bot
-from asyncio import TimeoutError
-from bot import Bot, DOWNLOAD_DIR
+from bot import AUTO_MIRROR, DOWNLOAD_DIR, Bot
+from asyncio import TimeoutError, sleep
+from bot import Bot, DOWNLOAD_DIR, botloop, config_dict
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup
 from re import match as re_match
@@ -36,77 +36,99 @@ async def handle_unzip_mirror(client, message):
     await mirror_leech(client, message, extract=True)
 
 async def mirror_leech(client, message, _link= None, isZip=False, extract=False, isLeech= False):
-        user_id= message.from_user.id
-        message_id= message.id
-        if await is_rclone_config(user_id, message) == False:
+    user_id= message.from_user.id
+    message_id= message.id
+    if await is_rclone_config(user_id, message) == False:
+        return
+    if not isLeech:
+        if await is_rclone_drive(user_id, message) == False:
             return
-        if not isLeech:
-            if await is_rclone_drive(user_id, message) == False:
-                return
-        select = False
-        pswd= None  
-        link= ''
-        tag = ''
-        msg = message.text.split(maxsplit=1)
-        if len(msg) > 1:
-            msg_args = msg[1].split(maxsplit=1)
+    select = False
+    pswd= None  
+    link= ''
+    tag = ''
+    multi= 0
+    msg = message.text.split(maxsplit=1)
+    if len(msg) > 1:
+        msg_args = msg[1].split(maxsplit=1)
+        for x in msg_args:
+            x = x.strip()
+            if x == 's':
+                select = True
+            elif x.isdigit():
+                multi = int(x)
+        
+        if multi == 0:
             for x in msg_args:
                 x = x.strip()
-                if x == 's':
-                   select = True
-                elif is_url(x) or is_magnet(x):
-                   link= x     
+                if is_url(x) or is_magnet(x):
+                    link= x
 
             pswdMsg = msg[1].split(' pswd: ', maxsplit=1)
             if len(pswdMsg) > 1:
                 pswd = pswdMsg[1]
 
-        if message.from_user.username:
-            tag = f"@{message.from_user.username}"
+    if message.from_user.username:
+        tag = f"@{message.from_user.username}"
 
-        reply_message= message.reply_to_message
-        if reply_message is not None:
-            listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, pswd=pswd, isLeech=isLeech)
-            file = reply_message.document or reply_message.video or reply_message.audio or reply_message.photo or None
-            if reply_message.from_user.username:
-                tag = f"@{reply_message.from_user.username}"
+    reply_message= message.reply_to_message
+    if reply_message is not None:
+        listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, pswd=pswd, isLeech=isLeech)
+        file = reply_message.document or reply_message.video or reply_message.audio or reply_message.photo or None
+        if reply_message.from_user.username:
+            tag = f"@{reply_message.from_user.username}"
+        if len(link) == 0 or not is_url(link) and not is_magnet(link):
             if file is None:
                 reply_text= reply_message.text     
                 if is_url(reply_text) or is_magnet(reply_text):     
-                     link = reply_text.strip() 
+                        link = reply_text.strip() 
             elif file.mime_type != "application/x-bittorrent":
-                buttons= ButtonMaker() 
-                name= file.file_name
-                size= get_readable_size(file.file_size)
-                header_msg = f"Which name do you want to use?\n\n<b>Name</b>: <code>{name}</code>\n\n<b>Size</b>: <code>{size}</code>"
-                buttons.dbuildbutton("📄 By default", f'mirrormenu^default^{message_id}',
-                                    "📝 Rename", f'mirrormenu^rename^{message_id}')
-                buttons.cbl_buildbutton("✘ Close Menu", f"mirrormenu^close^{message_id}")
-                menu_msg= await sendMarkup(header_msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
-                listener_dict[message_id] = [listener, file, menu_msg, user_id]
+                if multi:
+                    botloop.create_task(TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/').download()) 
+                    if multi > 1:
+                        await sleep(4)
+                        nextmsg = await client.get_messages(message.chat.id, message.reply_to_message.id + 1)
+                        msg = message.text.split(maxsplit=1+1)
+                        msg[1] = f"{multi - 1}"
+                        nextmsg = await sendMessage(" ".join(msg), nextmsg)
+                        nextmsg = await client.get_messages(message.chat.id, nextmsg.id)
+                        nextmsg.from_user.id = message.from_user.id
+                        await sleep(4)
+                        await mirror_leech(client, nextmsg, isZip= isZip, extract=extract, isLeech=isLeech)
+                else:
+                    buttons= ButtonMaker() 
+                    name= file.file_name
+                    size= get_readable_size(file.file_size)
+                    header_msg = f"Which name do you want to use?\n\n<b>Name</b>: <code>{name}</code>\n\n<b>Size</b>: <code>{size}</code>"
+                    buttons.dbuildbutton("📄 By default", f'mirrormenu^default^{message_id}',
+                                        "📝 Rename", f'mirrormenu^rename^{message_id}')
+                    buttons.cbl_buildbutton("✘ Close Menu", f"mirrormenu^close^{message_id}")
+                    menu_msg= await sendMarkup(header_msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+                    listener_dict[message_id] = [listener, file, menu_msg, user_id]
                 return
             else:
                 link = await client.download_media(file)
-        
-        if _link is not None:
-            msgArgs = _link.split(maxsplit=1)
-            for x in msgArgs:
-                x = x.strip()
-                if x == 's':
-                   select = True
-                if is_url(x) or is_magnet(x):
-                   link= x    
+    
+    if _link is not None:
+        msgArgs = _link.split(maxsplit=1)
+        for x in msgArgs:
+            x = x.strip()
+            if x == 's':
+                select = True
+            if is_url(x) or is_magnet(x):
+                link= x    
 
-        if not is_url(link) and not is_magnet(link):
-            if isLeech:
-                help_msg = '''         
+    if not is_url(link) and not is_magnet(link):
+        if isLeech:
+            help_msg = '''         
 <code>/cmd</code> along with link pswd: xx(zip/unzip)
 
 <b>qBittorrent Selection</b>    
 <b>s</b> along with link 
+
 '''
-            else:
-                help_msg = '''         
+        else:
+            help_msg = '''         
 <code>/cmd</code> along with link
 
 <b>By replying</b>   
@@ -114,53 +136,68 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
 
 <b>qBittorrent Selection</b>    
 <code>/cmd</code> <b>s</b> link or by replying to link
+
+<b>Multi links by replying to first link/file:</b>
+<code>/cmd</code> 5(number of links/files)
+
 '''
-            return await sendMessage(help_msg, message)
+        return await sendMessage(help_msg, message)
 
-        listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, pswd=pswd, select=select, isLeech=isLeech)
+    listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, pswd=pswd, select=select, isLeech=isLeech)
 
-        if not is_mega_link(link) and not is_magnet(link) and not is_gdrive_link(link) \
-            and not link.endswith('.torrent'):
-            content_type = get_content_type(link)
-            if content_type is None or re_match(r'text/html|text/plain', content_type):
-                try:
-                    link = direct_link_generator(link)
-                except DirectDownloadLinkException as e:
-                    if str(e).startswith('ERROR:'):
-                        return await sendMessage(str(e), message)
-        elif not is_magnet(link) and not ospath.exists(link):
-            if link.endswith('.torrent'):
-                content_type = None
-            else:
-                content_type = get_content_type(link)
-            if content_type is None or re_match(r'application/x-bittorrent|application/octet-stream', content_type):
-                try:
-                    resp = get(link, timeout=10, headers = {'user-agent': 'Wget/1.12'})
-                    if resp.status_code == 200:
-                        file_name = str(time()).replace(".", "") + ".torrent"
-                        with open(file_name, "wb") as t:
-                            t.write(resp.content)
-                        link = str(file_name)
-                    else:
-                        return await sendMessage(f"{tag} ERROR: link got HTTP response: {resp.status_code}", message)     
-                except Exception as e:
-                    error = str(e).replace('<', ' ').replace('>', ' ')
-                    if error.startswith('No connection adapters were found for'):
-                        return await sendMessage(tag + " " + error.split("'")[1], message)
-                    else:
-                        return await sendMessage(tag + " " + error, message)
-        if is_gdrive_link(link):
-            gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
-            await sendMessage(gmsg, message)      
-        elif is_mega_link(link):
-            if MEGA_KEY is not None:
-                await MegaDownloader(link, listener).execute(path= f'{DOWNLOAD_DIR}{listener.uid}')   
-            else:
-                await sendMessage("MEGA_API_KEY not provided!", message)
-        elif is_magnet(link) or ospath.exists(link):
-            await add_qb_torrent(link, f'{DOWNLOAD_DIR}{listener.uid}', listener)
+    if not is_mega_link(link) and not is_magnet(link) and not is_gdrive_link(link) \
+        and not link.endswith('.torrent'):
+        content_type = get_content_type(link)
+        if content_type is None or re_match(r'text/html|text/plain', content_type):
+            try:
+                link = direct_link_generator(link)
+            except DirectDownloadLinkException as e:
+                if str(e).startswith('ERROR:'):
+                    return await sendMessage(str(e), message)
+    elif not is_magnet(link) and not ospath.exists(link):
+        if link.endswith('.torrent'):
+            content_type = None
         else:
-            await add_aria2c_download(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, "") 
+            content_type = get_content_type(link)
+        if content_type is None or re_match(r'application/x-bittorrent|application/octet-stream', content_type):
+            try:
+                resp = get(link, timeout=10, headers = {'user-agent': 'Wget/1.12'})
+                if resp.status_code == 200:
+                    file_name = str(time()).replace(".", "") + ".torrent"
+                    with open(file_name, "wb") as t:
+                        t.write(resp.content)
+                    link = str(file_name)
+                else:
+                    return await sendMessage(f"{tag} ERROR: link got HTTP response: {resp.status_code}", message)     
+            except Exception as e:
+                error = str(e).replace('<', ' ').replace('>', ' ')
+                if error.startswith('No connection adapters were found for'):
+                    return await sendMessage(tag + " " + error.split("'")[1], message)
+                else:
+                    return await sendMessage(tag + " " + error, message)
+    if is_gdrive_link(link):
+        gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
+        await sendMessage(gmsg, message)      
+    elif is_mega_link(link):
+        if config_dict['MEGA_API_KEY']:
+            botloop.create_task(MegaDownloader(link, listener).execute(path= f'{DOWNLOAD_DIR}{listener.uid}'))   
+        else:
+            await sendMessage("MEGA_API_KEY not provided!", message)
+    elif is_magnet(link) or ospath.exists(link):
+        botloop.create_task(add_qb_torrent(link, f'{DOWNLOAD_DIR}{listener.uid}', listener))
+    else:
+        botloop.create_task(add_aria2c_download(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, ""))
+
+    if multi > 1:
+        await sleep(4)
+        nextmsg = await client.get_messages(message.chat.id, message.reply_to_message.id + 1)
+        msg = message.text.split(maxsplit=1+1)
+        msg[1] = f"{multi - 1}"
+        nextmsg = await sendMessage(" ".join(msg), nextmsg)
+        nextmsg = await client.get_messages(message.chat.id, nextmsg.id)
+        nextmsg.from_user.id = message.from_user.id
+        await sleep(4)
+        await mirror_leech(client, nextmsg, isZip= isZip, extract=extract, isLeech=isLeech)
 
 async def mirror_menu(client, query):
     cmd = query.data.split("^")

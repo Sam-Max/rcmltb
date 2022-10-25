@@ -4,7 +4,8 @@
 from functools import partial
 from html import escape
 from urllib.parse import quote
-from bot import LOGGER, SEARCH_API_LINK, SEARCH_LIMIT, SEARCH_PLUGINS, Bot, get_client, botloop
+from bot import LOGGER, SEARCH_PLUGINS, Bot, get_client, botloop, config_dict
+from json import loads as jsonloads
 from requests import get as rget
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
@@ -15,28 +16,30 @@ from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendF
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 from bot.helper.ext_utils.html_helper import html_template
 
+PLUGINS = []
+SITES = None
 
+def initiate_search_tools():
+    if SEARCH_PLUGINS:
+        globals()['PLUGINS'] = []
+        src_plugins = jsonloads(SEARCH_PLUGINS)
+        qbclient = get_client()
+        qb_plugins = qbclient.search_plugins()
+        if qb_plugins:
+            for plugin in qb_plugins:
+                qbclient.search_uninstall_plugin(names=plugin['name'])
+        qbclient.search_install_plugin(src_plugins)
+        qbclient.auth_log_out()
 
-if SEARCH_PLUGINS is not None:
-    PLUGINS = []
-    qbclient = get_client()
-    qb_plugins = qbclient.search_plugins()
-    if qb_plugins:
-        for plugin in qb_plugins:
-            qbclient.search_uninstall_plugin(names=plugin['name'])
-    qbclient.search_install_plugin(SEARCH_PLUGINS)
-    qbclient.auth_log_out()
-
-if SEARCH_API_LINK:
-    try:
-        res = rget(f'{SEARCH_API_LINK}/api/v1/sites').json()
-        SITES = {str(site): str(site).capitalize() for site in res['supported_sites']}
-        SITES['all'] = 'All'
-    except Exception as e:
-        LOGGER.error("Can't fetching sites from SEARCH_API_LINK make sure use latest version of API")
-        SITES = None
-else:
-    SITES = None
+    if SEARCH_API_LINK := config_dict['SEARCH_API_LINK']:
+        global SITES
+        try:
+            res = rget(f'{SEARCH_API_LINK}/api/v1/sites').json()
+            SITES = {str(site): str(site).capitalize() for site in res['supported_sites']}
+            SITES['all'] = 'All'
+        except Exception:
+            LOGGER.error("Can't fetching sites from SEARCH_API_LINK make sure use latest version of API")
+            SITES = None
 
 def _api_buttons(user_id, method):
     buttons = ButtonMaker()
@@ -62,8 +65,9 @@ def _plugin_buttons(user_id):
 async def handle_torrent_search(client, message):
     user_id = message.from_user.id
     buttons = ButtonMaker()
+    SEARCH_PLUGINS = config_dict['SEARCH_PLUGINS']
     args = message.text.split(maxsplit=1)
-    if SITES is None and SEARCH_PLUGINS is None:
+    if SITES is None and SEARCH_PLUGINS:
         await sendMessage("No API link or search PLUGINS added for this function", message)
     elif len(args) == 1 and SITES is None:
         await sendMessage("Send a search key along with command", message)
@@ -73,7 +77,7 @@ async def handle_torrent_search(client, message):
         buttons.cb_buildbutton("Cancel", f"torser {user_id} cancl")
         button = buttons.build_menu(2)
         await sendMarkup("Send a search key along with command", message, button)
-    elif SITES is not None and SEARCH_PLUGINS is not None:
+    elif SITES is not None and SEARCH_PLUGINS:
         buttons.cb_buildbutton('Api', f"torser {user_id} apisearch")
         buttons.cb_buildbutton('Plugins', f"torser {user_id} plugin")
         buttons.cb_buildbutton("Cancel", f"torser {user_id} cancl")
@@ -126,6 +130,8 @@ async def torrent_search_but(client, callback_query):
 
 async def _search(key, site, message, method):
     if method.startswith('api'):
+        SEARCH_API_LINK = config_dict['SEARCH_API_LINK']
+        SEARCH_LIMIT = config_dict['SEARCH_LIMIT']
         if method == 'apisearch':
             LOGGER.info(f"API Searching: {key} from {site}")
             if site == 'all':
@@ -236,6 +242,8 @@ def _getResult(search_results, key, method):
                 msg += f"<span class='topmarginxl'><a class='withhover' href='{link}'>Direct Link</a></span>"
         msg += '</span>'
     return msg
+
+initiate_search_tools() 
 
 torrent_search_handler = MessageHandler(handle_torrent_search, filters= filters.command(BotCommands.SearchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 torrent_search_but_handler = CallbackQueryHandler(torrent_search_but, filters= filters.regex("torser"))

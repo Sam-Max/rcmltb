@@ -1,4 +1,4 @@
-#Source: Anasty
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
 
 from os import path as ospath, mkdir
 from PIL import Image

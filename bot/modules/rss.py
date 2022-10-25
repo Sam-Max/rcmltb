@@ -8,7 +8,7 @@ from asyncio import sleep
 from copy import deepcopy
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.filters import regex, command
-from bot import DB_URI, LOGGER, RSS_CHAT_ID, RSS_COMMAND, RSS_DELAY, Bot, rss_dict
+from bot import DB_URI, LOGGER, RSS_DELAY, Bot, rss_dict, config_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.filters import CustomFilters
@@ -230,7 +230,7 @@ async def rss_monitor():
                     url = rss_d.entries[feed_count]['links'][1]['href']
                 except IndexError:
                     url = rss_d.entries[feed_count]['link']
-                if RSS_COMMAND is not None:
+                if RSS_COMMAND := config_dict['RSS_COMMAND']:
                     feed_msg = f"{RSS_COMMAND} {url}"
                 else:
                     feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title'].replace('>', '').replace('<', '')}</code>\n\n"
@@ -247,7 +247,7 @@ async def rss_monitor():
             LOGGER.error(f"{e} Feed Name: {title} - Feed Link: {data['link']}")
             continue
 
-if DB_URI is not None and RSS_CHAT_ID is not None:
+if DB_URI is not None and config_dict['RSS_CHAT_ID']:
     rss_list_handler = MessageHandler(rss_list, filters= command(BotCommands.RssListCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
     rss_get_handler = MessageHandler(rss_get, filters= command(BotCommands.RssGetCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
     rss_sub_handler = MessageHandler(rss_sub, filters= command(BotCommands.RssSubCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

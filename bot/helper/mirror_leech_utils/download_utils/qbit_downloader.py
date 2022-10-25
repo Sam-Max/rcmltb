@@ -1,3 +1,6 @@
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
+# Adapted for asyncio framework and pyrogram library
+
 from functools import partial
 from hashlib import sha1
 from base64 import b16encode, b32decode
@@ -6,7 +9,7 @@ from time import time
 from asyncio import Lock, sleep
 from re import search as re_search
 from os import remove
-from bot import QbInterval, status_dict, status_dict_lock, BASE_URL, get_client, botloop, TORRENT_TIMEOUT, LOGGER
+from bot import QbInterval, status_dict, status_dict_lock, get_client, botloop, config_dict, LOGGER
 from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval
 from bot.helper.ext_utils.message_utils import deleteMessage, sendMarkup, sendMessage, sendStatusMessage, update_all_messages
 from bot.helper.ext_utils.misc_utils import bt_selection_buttons, getDownloadByGid
@@ -77,7 +80,7 @@ async def add_qb_torrent(link, path, listener):
                 periodic = setInterval(5, __qb_listener)
                 QbInterval.append(periodic)
         LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {ext_hash}")
-        if BASE_URL is not None and listener.select:
+        if config_dict['BASE_URL'] and listener.select:
             if link.startswith('magnet:'):
                 metamsg = "Downloading Metadata, wait then you can select files. Use torrent file to avoid this wait."
                 meta = await sendMessage(metamsg, listener.message)
@@ -178,11 +181,13 @@ async def __qb_listener():
         for tor_info in client.torrents_info():
             if tor_info.state == "metaDL":
                 STALLED_TIME[tor_info.hash] = time()
-                if TORRENT_TIMEOUT is not None and time() - tor_info.added_on >= TORRENT_TIMEOUT:
+                TORRENT_TIMEOUT = config_dict['TORRENT_TIMEOUT']
+                if TORRENT_TIMEOUT and time() - tor_info.added_on >= TORRENT_TIMEOUT:
                     await __onDownloadError("Dead Torrent!", client, tor_info)
             elif tor_info.state == "downloading":
                 STALLED_TIME[tor_info.hash] = time()
             elif tor_info.state == "stalledDL":
+                TORRENT_TIMEOUT = config_dict['TORRENT_TIMEOUT']
                 if tor_info.hash not in RECHECKED and 0.99989999999999999 < tor_info.progress < 1:
                     msg = f"Force recheck - Name: {tor_info.name} Hash: "
                     msg += f"{tor_info.hash} Downloaded Bytes: {tor_info.downloaded} "
@@ -190,7 +195,7 @@ async def __qb_listener():
                     LOGGER.error(msg)
                     client.torrents_recheck(torrent_hashes=tor_info.hash)
                     RECHECKED.add(tor_info.hash)
-                elif TORRENT_TIMEOUT is not None and time() - STALLED_TIME.get(tor_info.hash, 0) >= TORRENT_TIMEOUT:
+                elif TORRENT_TIMEOUT and time() - STALLED_TIME.get(tor_info.hash, 0) >= TORRENT_TIMEOUT:
                      await __onDownloadError("Dead Torrent!", client, tor_info)
             elif tor_info.state == "missingFiles":
                 client.torrents_recheck(torrent_hashes=tor_info.hash)

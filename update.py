@@ -1,45 +1,27 @@
-#**************************************************
-# Based on:
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/update.py
-#**************************************************/
 
 import logging
 from os import path as ospath, environ
 from subprocess import run as srun
-from requests import get as rget
+from logging import FileHandler, StreamHandler, INFO, basicConfig
+from os import path as ospath, environ
+from subprocess import run as srun
 
 
 if ospath.exists('botlog.txt'):
     with open('botlog.txt', 'r+') as f:
         f.truncate(0)
 
-CONFIG_FILE_URL = environ.get('CONFIG_FILE_URL')
-try:
-    if len(CONFIG_FILE_URL) == 0:
-        raise TypeError
-    try:
-        res = rget(CONFIG_FILE_URL)
-        if res.status_code == 200:
-            with open('config.env', 'wb+') as f:
-                f.write(res.content)
-        else:
-            logging.error(f"Failed to download config.env {res.status_code}")
-    except Exception as e:
-        logging.error(f"CONFIG_FILE_URL: {e}")
-except TypeError:
-    pass
+basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    handlers=[FileHandler('log.txt'), StreamHandler()],
+                    level=INFO)
 
-UPSTREAM_REPO = environ.get('UPSTREAM_REPO')
-UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH')
-try:
-    if len(UPSTREAM_REPO) == 0:
-       raise TypeError
-except TypeError:
+UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
+if len(UPSTREAM_REPO) == 0:
     UPSTREAM_REPO = None
-try:
-    if len(UPSTREAM_BRANCH) == 0:
-       raise TypeError
-except TypeError:
+
+UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', '')
+if len(UPSTREAM_BRANCH) == 0:
     UPSTREAM_BRANCH = 'master'
 
 if UPSTREAM_REPO is not None:

@@ -9,7 +9,7 @@ from re import search as re_search
 from urllib.parse import parse_qs, urlparse
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError, Error as GCError
-from bot import IS_TEAM_DRIVE, PARENT_ID, EXTENSION_FILTER
+from bot import GLOBAL_EXTENSION_FILTER, config_dict
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, RetryError
@@ -20,7 +20,6 @@ getLogger('googleapiclient.discovery').setLevel(ERROR)
 
 
 class GoogleDriveHelper:
-
     def __init__(self, name=None):
         self.__G_DRIVE_TOKEN_FILE = "token.pickle"
         self.__G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
@@ -143,7 +142,7 @@ class GoogleDriveHelper:
             file_metadata["parents"] = [dest_id]
         file = self.__service.files().create(body=file_metadata, supportsTeamDrives=True).execute()
         file_id = file.get("id")
-        if not IS_TEAM_DRIVE:
+        if not config_dict['IS_TEAM_DRIVE']:
             self.__set_permission(file_id)
         LOGGER.info("Created G-Drive Folder:\nName: {}\nID: {} ".format(file.get("name"), file_id))
         return file_id
@@ -189,7 +188,7 @@ class GoogleDriveHelper:
             meta = self.__getFileMetadata(file_id)
             mime_type = meta.get("mimeType")
             if mime_type == self.__G_DRIVE_DIR_MIME_TYPE:
-                dir_id = self.__create_directory(meta.get('name'), PARENT_ID)
+                dir_id = self.__create_directory(meta.get('name'), config_dict['GDRIVE_FOLDER_ID'])
                 self.__cloneFolder(meta.get('name'), meta.get('name'), meta.get('id'), dir_id)
                 durl = self.__G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
                 if self.is_cancelled:
@@ -206,7 +205,7 @@ class GoogleDriveHelper:
                 buttons = ButtonMaker()
                 buttons.url_buildbutton("Cloud Link 🔗", durl)
             else:
-                file = self.__copyFile(meta.get('id'), PARENT_ID)
+                file = self.__copyFile(meta.get('id'), config_dict['GDRIVE_FOLDER_ID'])
                 msg += f'<b>Name: </b><code>{file.get("name")}</code>'
                 durl = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 buttons = ButtonMaker()
@@ -244,7 +243,7 @@ class GoogleDriveHelper:
                 file_path = ospath.join(local_path, file.get('name'))
                 current_dir_id = self.__create_directory(file.get('name'), dest_id)
                 self.__cloneFolder(file.get('name'), file_path, file.get('id'), current_dir_id)
-            elif not file.get('name').lower().endswith(tuple(EXTENSION_FILTER)):
+            elif not file.get('name').lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
                 self.__total_files += 1
                 self.transferred_size += int(file.get('size', 0))
                 self.__copyFile(file.get('id'), dest_id)

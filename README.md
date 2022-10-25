@@ -50,7 +50,7 @@
 - Renaming of Telegram files
 - Load/change rclone.conf file from bot
 - Load/change token.pickle from bot
-- Change all config variables from bot
+- Change most of the config variables from bot
 - File Manager (size, mkdir, delete, dedupe, rename)
 
 ### From Other Repositories
@@ -141,7 +141,6 @@ restart - Restart bot
         - `AUTO_MIRROR`: For auto mirroring files sent to the bot. Default is `False`. `Bool`
         - `DATABASE_URL`: Your SQL Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data that will be saved in Database: auth and sudo users, leech settings including thumbnails for each user. `Str`
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
-        - `EDIT_SLEEP_SECS`: Seconds for update regulary rclone progress message. Default to 10
         - `STATUS_LIMIT`: No. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Str`
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
 
@@ -191,8 +190,6 @@ restart - Restart bot
      - Supported Sites:
      >1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooqle, Kickass, Bitsearch, MagnetDL, Libgen, YTS, Limetorrent, TorrentFunk, Glodls, TorrentProject and YourBittorrent
 
-   - PRIVATE FILES
-     - `YT_COOKIES_URL`: Youtube authentication cookies. Check setup [Here](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl). Use gist raw link and remove commit id from the link, so you can edit it from gists only. `Str`
  
 3. **Deploying on VPS Using Docker**
 
