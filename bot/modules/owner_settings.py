@@ -5,7 +5,7 @@ from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, SUDO_USERS, TG_MAX_FILE_SIZE, Bot, Interval, aria2, config_dict, status_reply_dict_lock
+from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, LOGGER, SUDO_USERS, TG_MAX_FILE_SIZE, Bot, Interval, aria2, config_dict, status_reply_dict_lock
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval 
 from bot.helper.ext_utils.db_handler import DbManger
@@ -39,7 +39,6 @@ def get_menu_message():
     msg += "\n\n<b>Here is list of variables:</b>"
     for key, value in config_dict.items():
         if key == "LEECH_SPLIT_SIZE":
-            value= 4194304000 if IS_PREMIUM_USER else 2097152000
             msg += f'\n<b>{key.replace("_", " ").lower().capitalize()}:</b> <code>{value} bytes</code> - ({get_readable_file_size(int(value))})'
         else:
             msg += f'\n<b>{key.replace("_", " ").lower().capitalize()}:</b> <code>{value}</code>'
@@ -108,8 +107,12 @@ async def ownerset_next(client, callback_query):
 
     buttons= ButtonMaker()    
     for key, value in list_env:
-        buttons.dbuildbutton(f"➕ ADD {key}", f"ownersetmenu^change^add^{key}^",
-                             f"➖ REMOVE {key}", f"ownersetmenu^change^reset^{key}")
+        if key in ['ALLOWED_CHATS', 'SUDO_USERS']:
+            buttons.dbuildbutton(f"➕ ADD {key}", f"ownersetmenu^change^add^{key}",
+                                 f"➖ DELETE {key}", f"ownersetmenu^change^reset^{key}")
+        else:
+            buttons.dbuildbutton(f"➕ ADD {key}", f"ownersetmenu^change^add^{key}",
+                                 f"➖ RESET {key}", f"ownersetmenu^change^reset^{key}")
 
     if next_offset == 0:
         buttons.dbuildbutton(first_text = f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", first_callback="ownersetmenu^pages", 
@@ -150,7 +153,7 @@ async def owner_set_callback(client, callback_query):
             if cmd[3] == "SUDO_USERS" or cmd[3] == "ALLOWED_CHATS":
                 await start_listener(client, query, user_id, cmd[3], action="rem")
             elif cmd[3] in default_values:
-                value = default_values[data[2]]
+                value = default_values[cmd[3]]
             elif cmd[3] == 'EXTENSION_FILTER':
                 GLOBAL_EXTENSION_FILTER.clear()
                 GLOBAL_EXTENSION_FILTER.append('.aria2')
