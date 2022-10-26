@@ -46,7 +46,7 @@ class TelegramUploader():
                         await self.__upload_file(f_path, file)
                         if self.__is_cancelled:
                             return
-                        if (not self.__listener.isPrivate or config_dict['DUMP_CHAT'] is not None) and not self.__is_corrupted:
+                        if (not self.__listener.isPrivate or config_dict['DUMP_CHAT']) and not self.__is_corrupted:
                             self.__msgs_dict[self.__sent_msg.link] = file
                         self._last_uploaded = 0
                         await sleep(1)
