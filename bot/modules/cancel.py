@@ -2,7 +2,7 @@
 import asyncio
 from time import sleep
 from pyrogram.filters import regex
-from bot import status_dict_lock, OWNER_ID, SUDO_USERS, Bot, status_dict, botloop
+from bot import status_dict_lock, OWNER_ID, SUDO_USERS, bot, status_dict, botloop
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
@@ -66,9 +66,9 @@ cancel_mirror_handler = MessageHandler(cancel_mirror, filters.command(BotCommand
 cancel_all_handler = MessageHandler(cancell_all_buttons, filters= filters.command(BotCommands.CancelAllCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))
 cancel_all_cb = CallbackQueryHandler(cancel_all_update, filters= regex("canall"))
 
-Bot.add_handler(cancel_mirror_handler)  
-Bot.add_handler(cancel_all_handler)
-Bot.add_handler(cancel_all_cb)
+bot.add_handler(cancel_mirror_handler)  
+bot.add_handler(cancel_all_handler)
+bot.add_handler(cancel_all_cb)
 
         
  

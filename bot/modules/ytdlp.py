@@ -3,7 +3,7 @@
 
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import regex, command
-from bot import DOWNLOAD_DIR, Bot
+from bot import DOWNLOAD_DIR, bot
 from re import split as re_split
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import is_url
@@ -263,8 +263,8 @@ ytdl_zipmirror_handler = MessageHandler(ytdlzipmirror, filters= command(BotComma
 ytdl_zipleech_handler = MessageHandler(ytdlzipleech, filters= command(BotCommands.YtdlZipLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 quality_handler = CallbackQueryHandler(select_format, filters= regex("qu"))
 
-Bot.add_handler(ytdl_handler)
-Bot.add_handler(ytdl_leech_handler)
-Bot.add_handler(ytdl_zipmirror_handler)
-Bot.add_handler(ytdl_zipleech_handler)
-Bot.add_handler(quality_handler)
+bot.add_handler(ytdl_handler)
+bot.add_handler(ytdl_leech_handler)
+bot.add_handler(ytdl_zipmirror_handler)
+bot.add_handler(ytdl_zipleech_handler)
+bot.add_handler(quality_handler)

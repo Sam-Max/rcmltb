@@ -3,7 +3,7 @@
 
 from random import SystemRandom
 from string import ascii_letters, digits
-from bot import Bot, LOGGER, status_dict, status_dict_lock, Interval, botloop
+from bot import bot, LOGGER, status_dict, status_dict_lock, Interval, botloop
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import is_gdrive_link
 from bot.helper.ext_utils.filters import CustomFilters
@@ -67,4 +67,5 @@ async def _clone(client, message):
 
 
 clone_handler = MessageHandler(_clone, filters= filters.command(BotCommands.CloneCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-Bot.add_handler(clone_handler)
+
+bot.add_handler(clone_handler)

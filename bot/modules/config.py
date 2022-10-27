@@ -5,7 +5,7 @@ from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from os import path as ospath
-from bot import DB_URI, MULTI_RCLONE_CONFIG, OWNER_ID, Bot
+from bot import DB_URI, MULTI_RCLONE_CONFIG, OWNER_ID, bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.filters import CustomFilters
@@ -132,5 +132,5 @@ async def set_config_listener(client, message, is_rclone= False):
 config_handler = MessageHandler(handle_config, filters= command(BotCommands.ConfigCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 config_cb = CallbackQueryHandler(config_callback, filters= regex(r'configmenu'))
 
-Bot.add_handler(config_handler)
-Bot.add_handler(config_cb)
+bot.add_handler(config_handler)
+bot.add_handler(config_cb)

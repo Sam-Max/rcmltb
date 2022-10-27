@@ -5,7 +5,7 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import InlineKeyboardMarkup
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
-from bot import LOGGER, Bot
+from bot import LOGGER, bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
@@ -114,5 +114,5 @@ def get_used_bar(percentage):
 storage = MessageHandler(handle_storage, filters=command(BotCommands.StorageCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 storage_callback= CallbackQueryHandler(storage_menu_cb, filters= regex("storagemenu"))
 
-Bot.add_handler(storage)
-Bot.add_handler(storage_callback)
+bot.add_handler(storage)
+bot.add_handler(storage_callback)

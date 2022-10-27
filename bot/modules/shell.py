@@ -1,5 +1,5 @@
 from subprocess import Popen, PIPE
-from bot import LOGGER, Bot
+from bot import LOGGER, bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from pyrogram.filters import command
@@ -39,4 +39,4 @@ async def shell(client, message):
 
 
 shell_handler = MessageHandler(shell, filters= command(BotCommands.ShellCommand) & (CustomFilters.owner_filter))
-Bot.add_handler(shell_handler)
+bot.add_handler(shell_handler)

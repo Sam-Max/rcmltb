@@ -7,7 +7,7 @@ from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
-from bot import DOWNLOAD_DIR, MULTI_RCLONE_CONFIG, OWNER_ID, Bot
+from bot import DOWNLOAD_DIR, MULTI_RCLONE_CONFIG, OWNER_ID, bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
@@ -326,9 +326,9 @@ next_page_cb= CallbackQueryHandler(next_page_leech, filters= regex("next_leech")
 leech_callback= CallbackQueryHandler(leech_menu_cb, filters= regex("leechmenu"))
 selection_cb= CallbackQueryHandler(selection_callback, filters= regex("leechselect"))
 
-Bot.add_handler(next_page_cb)
-Bot.add_handler(leech_callback)
-Bot.add_handler(selection_cb)
-Bot.add_handler(leech_handler)
-Bot.add_handler(zip_leech_handler)
-Bot.add_handler(unzip_leech_handler)
+bot.add_handler(next_page_cb)
+bot.add_handler(leech_callback)
+bot.add_handler(selection_cb)
+bot.add_handler(leech_handler)
+bot.add_handler(zip_leech_handler)
+bot.add_handler(unzip_leech_handler)

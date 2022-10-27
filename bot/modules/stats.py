@@ -7,7 +7,7 @@ from time import time
 from os import path as ospath
 from subprocess import check_output
 from bot.helper.ext_utils.message_utils import sendMessage
-from bot import Bot, botUptime
+from bot import bot, botUptime
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import get_readable_time
 from bot.helper.ext_utils.human_format import get_readable_file_size
@@ -40,5 +40,6 @@ async def stats(client, message):
     await sendMessage(stats, message)
         
 stats_handler = MessageHandler(stats, filters= command(BotCommands.StatsCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-Bot.add_handler(stats_handler)
+
+bot.add_handler(stats_handler)
 

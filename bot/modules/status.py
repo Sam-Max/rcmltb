@@ -3,7 +3,7 @@
 
 from time import time
 from psutil import cpu_percent, virtual_memory, disk_usage
-from bot import DOWNLOAD_DIR, Bot, Interval, status_dict, status_dict_lock, status_reply_dict_lock, config_dict, botUptime
+from bot import DOWNLOAD_DIR, bot, Interval, status_dict, status_dict_lock, status_reply_dict_lock, config_dict, botUptime
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
 from bot.helper.ext_utils.bot_commands import BotCommands
@@ -51,6 +51,6 @@ async def status_pages(client, callback_query):
 status_handlers = MessageHandler(status_handler, filters= filters.command(BotCommands.StatusCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 status_pages_handler = CallbackQueryHandler(status_pages, filters= filters.regex("status"))
 
-Bot.add_handler(status_handlers)
-Bot.add_handler(status_pages_handler)
+bot.add_handler(status_handlers)
+bot.add_handler(status_pages_handler)
 

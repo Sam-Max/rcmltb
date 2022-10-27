@@ -247,10 +247,10 @@ else:
 
 #---------------------------
 
-Bot = Client("pyrogram", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, bot_token=BOT_TOKEN)
-Conversation(Bot) 
+bot = Client(name="pyrogram", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, bot_token=BOT_TOKEN)
+Conversation(bot) 
 try:
-    Bot.start()
+    bot.start()
     LOGGER.info("Pyrogram client created")
 except Exception as e:
     print(e)

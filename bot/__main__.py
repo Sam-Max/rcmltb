@@ -1,5 +1,5 @@
 from time import time
-from bot import Interval, QbInterval, Bot, botloop
+from bot import Interval, QbInterval, bot, botloop
 from os import path as ospath, remove as osremove, execl as osexecl
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
@@ -60,7 +60,7 @@ async def main():
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
-        await Bot.edit_message_text(chat_id, msg_id, "Restarted successfully!")     
+        await bot.edit_message_text(chat_id, msg_id, "Restarted successfully!")     
         osremove(".restartmsg")
 
     start_handler = MessageHandler(start, filters= command(BotCommands.StartCommand))
@@ -68,10 +68,10 @@ async def main():
     log_handler = MessageHandler(get_log, filters= command(BotCommands.LogsCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))
     ping_handler = MessageHandler(ping, filters= command(BotCommands.PingCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
    
-    Bot.add_handler(start_handler)
-    Bot.add_handler(restart_handler)
-    Bot.add_handler(log_handler)
-    Bot.add_handler(ping_handler)
+    bot.add_handler(start_handler)
+    bot.add_handler(restart_handler)
+    bot.add_handler(log_handler)
+    bot.add_handler(ping_handler)
 
 botloop.run_until_complete(main())
 botloop.run_forever()

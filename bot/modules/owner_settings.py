@@ -5,7 +5,7 @@ from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, LOGGER, SUDO_USERS, TG_MAX_FILE_SIZE, Bot, Interval, aria2, config_dict, status_reply_dict_lock
+from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, LOGGER, SUDO_USERS, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, status_reply_dict_lock
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval 
 from bot.helper.ext_utils.db_handler import DbManger
@@ -53,7 +53,7 @@ async def get_ownerset_menu():
     list_env_info.extend(list_env)
 
     total = len(list_env)
-    max_results= 8
+    max_results= 10
     offset= 0
     start = offset
     end = max_results + start
@@ -69,10 +69,10 @@ async def get_ownerset_menu():
     buttons= ButtonMaker()    
     for key, _ in list_env:
             if key in ['ALLOWED_CHATS', 'SUDO_USERS']:
-                buttons.dbuildbutton(f"➕ ADD {key}", f"ownersetmenu^change^add^{key}",
+                buttons.dbuildbutton(f"➕ {key}", f"ownersetmenu^change^add^{key}",
                                      f"➖ DELETE {key}", f"ownersetmenu^change^reset^{key}")
             else:
-                buttons.dbuildbutton(f"➕ ADD {key}", f"ownersetmenu^change^add^{key}",
+                buttons.dbuildbutton(f"➕ {key}", f"ownersetmenu^change^add^{key}",
                                      f"➖ RESET {key}", f"ownersetmenu^change^reset^{key}")
 
     if offset == 0 and total <= 10:
@@ -90,10 +90,10 @@ async def ownerset_next(client, callback_query):
     list_env= list_env_info
     total = len(list_env)
     next_offset = int(next_offset)
-    prev_offset = next_offset - 8
+    prev_offset = next_offset - 10
 
     msg= get_menu_message()
-    max_results= 8
+    max_results= 10
     start = next_offset
     end = max_results + start
     _next_offset = end
@@ -108,10 +108,10 @@ async def ownerset_next(client, callback_query):
     buttons= ButtonMaker()    
     for key, value in list_env:
         if key in ['ALLOWED_CHATS', 'SUDO_USERS']:
-            buttons.dbuildbutton(f"➕ ADD {key}", f"ownersetmenu^change^add^{key}",
+            buttons.dbuildbutton(f"➕ {key}", f"ownersetmenu^change^add^{key}",
                                  f"➖ DELETE {key}", f"ownersetmenu^change^reset^{key}")
         else:
-            buttons.dbuildbutton(f"➕ ADD {key}", f"ownersetmenu^change^add^{key}",
+            buttons.dbuildbutton(f"➕ {key}", f"ownersetmenu^change^add^{key}",
                                  f"➖ RESET {key}", f"ownersetmenu^change^reset^{key}")
 
     if next_offset == 0:
@@ -262,6 +262,6 @@ owner_settings_handler = MessageHandler(handle_ownerset, filters= command(BotCom
 owner_settings_cb = CallbackQueryHandler(owner_set_callback, filters= regex(r'ownersetmenu'))
 owner_settings_next = CallbackQueryHandler(ownerset_next, filters= regex(r'ownersetnext'))
 
-Bot.add_handler(owner_settings_handler)
-Bot.add_handler(owner_settings_cb)
-Bot.add_handler(owner_settings_next)
+bot.add_handler(owner_settings_handler)
+bot.add_handler(owner_settings_cb)
+bot.add_handler(owner_settings_next)

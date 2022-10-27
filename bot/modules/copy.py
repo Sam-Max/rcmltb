@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from json import loads as jsonloads
-from bot import MULTI_RCLONE_CONFIG, OWNER_ID, Bot
+from bot import MULTI_RCLONE_CONFIG, OWNER_ID, bot
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.types import InlineKeyboardMarkup
@@ -333,6 +333,6 @@ copy_handler = MessageHandler(handle_copy, filters= command(BotCommands.CopyComm
 next_page_cb= CallbackQueryHandler(next_page_copy, filters= regex("next_copy"))
 copy_menu_cb= CallbackQueryHandler(copy_menu_callback, filters= regex("copymenu"))
 
-Bot.add_handler(copy_handler)
-Bot.add_handler(next_page_cb)
-Bot.add_handler(copy_menu_cb)
+bot.add_handler(copy_handler)
+bot.add_handler(next_page_cb)
+bot.add_handler(copy_menu_cb)

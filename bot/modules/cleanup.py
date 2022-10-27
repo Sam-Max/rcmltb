@@ -3,7 +3,7 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import InlineKeyboardMarkup
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
-from bot import Bot
+from bot import bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
@@ -85,5 +85,6 @@ async def rclone_cleanup(message, drive_name, user_id, tag):
 
 handle_cleanup = MessageHandler(cleanup, filters=command(BotCommands.CleanupCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 cleanup_cb= CallbackQueryHandler(cleanup_callback, filters= regex("cleanupmenu"))
-Bot.add_handler(handle_cleanup)
-Bot.add_handler(cleanup_cb)
+
+bot.add_handler(handle_cleanup)
+bot.add_handler(cleanup_cb)

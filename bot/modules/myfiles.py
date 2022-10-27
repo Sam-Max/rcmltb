@@ -5,7 +5,7 @@ from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.filters import regex
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
-from bot import Bot
+from bot import bot
 from json import loads as jsonloads
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
@@ -269,6 +269,6 @@ myfiles_handler = MessageHandler(handle_myfiles, filters= filters.command(BotCom
 next_page_myfiles_cb= CallbackQueryHandler(next_page_myfiles, filters= regex("next_myfiles"))
 myfiles_cb = CallbackQueryHandler(myfiles_callback, filters= regex("myfilesmenu"))
 
-Bot.add_handler(myfiles_cb)
-Bot.add_handler(next_page_myfiles_cb)
-Bot.add_handler(myfiles_handler)
+bot.add_handler(myfiles_cb)
+bot.add_handler(next_page_myfiles_cb)
+bot.add_handler(myfiles_handler)

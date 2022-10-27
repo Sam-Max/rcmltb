@@ -4,7 +4,7 @@
 from functools import partial
 from html import escape
 from urllib.parse import quote
-from bot import LOGGER, SEARCH_PLUGINS, Bot, get_client, botloop, config_dict
+from bot import LOGGER, SEARCH_PLUGINS, bot, get_client, botloop, config_dict
 from json import loads as jsonloads
 from requests import get as rget
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -248,7 +248,7 @@ initiate_search_tools()
 torrent_search_handler = MessageHandler(handle_torrent_search, filters= filters.command(BotCommands.SearchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 torrent_search_but_handler = CallbackQueryHandler(torrent_search_but, filters= filters.regex("torser"))
 
-Bot.add_handler(torrent_search_handler)
-Bot.add_handler(torrent_search_but_handler)
+bot.add_handler(torrent_search_handler)
+bot.add_handler(torrent_search_but_handler)
         
 

@@ -1,6 +1,6 @@
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from configparser import ConfigParser
-from bot import MULTI_RCLONE_CONFIG, OWNER_ID, Bot
+from bot import MULTI_RCLONE_CONFIG, OWNER_ID, bot
 from json import loads as jsonloads
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
@@ -232,6 +232,6 @@ mirrorset_handler = MessageHandler(handle_mirrorset, filters= filters.command(Bo
 next_mirrorset_cb= CallbackQueryHandler(next_page_mirrorset, filters= regex("next_mirrorset"))
 mirrorset_cb = CallbackQueryHandler(mirrorset_callback, filters= regex("mirrorsetmenu"))
 
-Bot.add_handler(mirrorset_cb)
-Bot.add_handler(next_mirrorset_cb)
-Bot.add_handler(mirrorset_handler)
+bot.add_handler(mirrorset_cb)
+bot.add_handler(next_mirrorset_cb)
+bot.add_handler(mirrorset_handler)

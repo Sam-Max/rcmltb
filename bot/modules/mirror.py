@@ -1,9 +1,9 @@
 from os import path as ospath
 from time import time
 from requests import get
-from bot import AUTO_MIRROR, DOWNLOAD_DIR, Bot
+from bot import AUTO_MIRROR, DOWNLOAD_DIR, bot
 from asyncio import TimeoutError, sleep
-from bot import Bot, DOWNLOAD_DIR, botloop, config_dict
+from bot import bot, DOWNLOAD_DIR, botloop, config_dict
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup
 from re import match as re_match
@@ -264,9 +264,9 @@ auto_mirror_handler = MessageHandler(handle_auto_mirror, filters= filters.video 
 mirror_menu_cb = CallbackQueryHandler(mirror_menu, filters=filters.regex("mirrormenu"))
 
 if AUTO_MIRROR:
-    Bot.add_handler(auto_mirror_handler)
-Bot.add_handler(mirror_handler)   
-Bot.add_handler(zip_mirror_handler)
-Bot.add_handler(unzip_mirror_handler)
-Bot.add_handler(mirror_menu_cb)
+    bot.add_handler(auto_mirror_handler)
+bot.add_handler(mirror_handler)   
+bot.add_handler(zip_mirror_handler)
+bot.add_handler(unzip_mirror_handler)
+bot.add_handler(mirror_menu_cb)
 

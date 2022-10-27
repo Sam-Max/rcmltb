@@ -1,5 +1,5 @@
 from time import time
-from bot import Bot, status_dict, status_dict_lock, LOGGER
+from bot import bot, status_dict, status_dict_lock, LOGGER
 from bot.helper.ext_utils.message_utils import sendStatusMessage
 from bot.helper.mirror_leech_utils.status_utils.tg_download_status import TelegramStatus
 
@@ -22,7 +22,7 @@ class TelegramDownloader:
 
     async def onDownloadProgress(self, current, total):
         if self.__is_cancelled:
-            Bot.stop_transmission()
+            bot.stop_transmission()
             return
         self.downloaded_bytes = current
         try:

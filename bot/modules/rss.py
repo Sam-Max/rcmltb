@@ -8,7 +8,7 @@ from asyncio import sleep
 from copy import deepcopy
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.filters import regex, command
-from bot import DB_URI, LOGGER, RSS_DELAY, Bot, rss_dict, config_dict
+from bot import DB_URI, LOGGER, RSS_DELAY, bot, rss_dict, config_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.filters import CustomFilters
@@ -61,7 +61,7 @@ async def rss_get(client, message):
         else:
             await sendMessage("Send a title/value.", message)
     except (IndexError, ValueError):
-        await sendMessage(f"Use this format to fetch:\n/{BotCommands.RssGetCommand[0]} Title value", message)
+        await sendMessage(f"Use this format to fetch:\n/{Commands.RssGetCommand[0]} Title value", message)
 
 async def rss_sub(client, message):
     try:
@@ -255,12 +255,12 @@ if DB_URI is not None and config_dict['RSS_CHAT_ID']:
     rss_settings_handler = MessageHandler(rss_settings, filters= command(BotCommands.RssSettingsCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
     rss_buttons_handler = CallbackQueryHandler(rss_set_update, filters= regex("rss"))
 
-    Bot.add_handler(rss_list_handler)
-    Bot.add_handler(rss_get_handler)
-    Bot.add_handler(rss_sub_handler)
-    Bot.add_handler(rss_unsub_handler)
-    Bot.add_handler(rss_settings_handler)
-    Bot.add_handler(rss_buttons_handler)
+    bot.add_handler(rss_list_handler)
+    bot.add_handler(rss_get_handler)
+    bot.add_handler(rss_sub_handler)
+    bot.add_handler(rss_unsub_handler)
+    bot.add_handler(rss_settings_handler)
+    bot.add_handler(rss_buttons_handler)
 
     scheduler = AsyncIOScheduler()
     rss_job = scheduler.add_job(rss_monitor, 'interval', id= "RSS", seconds=RSS_DELAY)

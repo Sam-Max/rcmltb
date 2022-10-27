@@ -1,7 +1,7 @@
 from pyrogram.handlers import CallbackQueryHandler
 from pyrogram import filters
 from os import remove, path as ospath
-from bot import Bot, aria2, LOGGER
+from bot import bot, aria2, LOGGER
 from bot.helper.ext_utils.message_utils import sendStatusMessage
 from bot.helper.ext_utils.misc_utils import getDownloadByGid
 
@@ -58,4 +58,4 @@ async def get_confirm(client, callback_query):
 
 
 confirm_handler = CallbackQueryHandler(get_confirm, filters= filters.regex("btsel"))
-Bot.add_handler(confirm_handler)
+bot.add_handler(confirm_handler)

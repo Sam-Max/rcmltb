@@ -2,7 +2,7 @@
 # Adapted to Pyrogram and Conversation-Pyrogram Library
 
 from asyncio import sleep
-from bot import DOWNLOAD_DIR, Bot, app
+from bot import DOWNLOAD_DIR, app, bot
 from pyrogram.errors import FloodWait
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 from pyrogram import filters
@@ -30,7 +30,7 @@ async def _batch(client, message, isLeech= False):
     if await is_rclone_drive(user_id, message) == False:
         return
     if app is None:
-        bot= Bot
+        bot= client
     else:
         bot= app
     await sendMessage("Send me the message link to start saving from, /ignore to cancel", message)
@@ -106,7 +106,7 @@ async def get_bulk_msg(bot, message, msg_link, i, isLeech):
 mirrorbatch_handler= MessageHandler(mirror_batch, filters=filters.command(BotCommands.MirrorBatchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 leechbatch__handler= MessageHandler(leech_batch, filters=filters.command(BotCommands.LeechBatchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 
-Bot.add_handler(leechbatch__handler)   
-Bot.add_handler(mirrorbatch_handler)   
+bot.add_handler(leechbatch__handler)   
+bot.add_handler(mirrorbatch_handler)   
 
 
