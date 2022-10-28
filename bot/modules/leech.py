@@ -209,21 +209,17 @@ async def leech_menu_cb(client, callback_query):
         await RcloneLeech(base_dir, dest_dir, listener, isFolder=True).leech()
           
     elif cmd[1] == "back":
+        if len(base_dir) == 0:
+            await query.answer() 
+            await list_drive(message, edit=True)
+            return 
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
         for dir in base_dir_split: 
             base_dir_string += dir + "/"
         base_dir = base_dir_string
         update_rclone_var("LEECH_BASE_DIR", base_dir, user_id)
-        
-        if len(base_dir) > 0: 
-            await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
-        else:
-            await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, back= "back_drive", edit=True)     
-        await query.answer()      
-
-    elif cmd[1] == "back_drive":
-        await list_drive(message, edit=True)
+        await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
         await query.answer()
 
     elif cmd[1] == "close":

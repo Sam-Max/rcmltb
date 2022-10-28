@@ -75,7 +75,7 @@ async def list_drive(message, rclone_drive="", base_dir="", edit=False):
     else:
         await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
-async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
+async def list_dir(message, drive_name, drive_base, edit=False):
     user_id= message.reply_to_message.from_user.id
     buttons = ButtonMaker()
     path = get_rclone_config(user_id)
@@ -122,9 +122,9 @@ async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
             buttons.cbl_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"mirrorsetmenu^pages^{user_id}") 
         else:
             buttons.dbuildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"mirrorsetmenu^pages^{user_id}",
-                                "NEXT ⏩", f"next_mirrorset {next_offset} {back}")
+                                "NEXT ⏩", f"next_mirrorset {next_offset} back")
 
-    buttons.cbl_buildbutton("⬅️ Back", f"mirrorsetmenu^{back}^{user_id}")
+    buttons.cbl_buildbutton("⬅️ Back", f"mirrorsetmenu^back^{user_id}")
     buttons.cbl_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}")
 
     msg= f"Select folder where you want to store files\n\n<b>Path:</b><code>{drive_name}:{drive_base}</code>"
@@ -168,23 +168,19 @@ async def mirrorset_callback(client, callback_query):
         await query.answer()
 
     elif cmd[1] == "back":
+        if len(base_dir) == 0: 
+            await query.answer() 
+            await list_drive(message, edit=True)
+            return 
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
         for dir in base_dir_split: 
             base_dir_string += dir + "/"
         base_dir = base_dir_string
         update_rclone_var("MIRRORSET_BASE_DIR", base_dir, user_id)
-
-        if len(base_dir) > 0: 
-            await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
-        else:
-            await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, back= "back_drive", edit=True)     
+        await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
         await query.answer() 
 
-    elif cmd[1] == "back_drive":   
-        await list_drive(message, edit=True)
-        await query.answer()
-        
     elif cmd[1] == "close":
         await query.answer("Closed")
         await message.delete()

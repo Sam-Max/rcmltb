@@ -4,7 +4,7 @@ from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.filters import regex
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
-from bot import bot
+from bot import LOGGER, bot
 from json import loads as jsonloads
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
@@ -53,7 +53,7 @@ async def list_drive(message, edit=False):
     else:
         await sendMarkup("Select your drive to list files", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
-async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
+async def list_dir(message, drive_name, drive_base, edit=False):
     user_id= message.reply_to_message.from_user.id
     buttons = ButtonMaker()
     path = get_rclone_config(user_id)
@@ -102,7 +102,7 @@ async def list_dir(message, drive_name, drive_base, back= "back", edit=False):
             buttons.dbuildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", "myfilesmenu^pages",
                                     "NEXT ⏩", f"next_myfiles {next_offset} back")   
 
-    buttons.cbl_buildbutton("⬅️ Back", f"myfilesmenu^{back}^{user_id}")
+    buttons.cbl_buildbutton("⬅️ Back", f"myfilesmenu^back^{user_id}")
     buttons.cbl_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}")
 
     msg= f"Your drive files are listed below\n\n<b>Path:</b><code>{drive_name}:{drive_base}</code>"
@@ -147,25 +147,20 @@ async def myfiles_callback(client, callback_query):
 
     # Handle back button
     elif cmd[1] == "back":
+        if len(base_dir) == 0: 
+            await query.answer()
+            await list_drive(message, edit=True)
+            return 
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
         for dir in base_dir_split: 
             base_dir_string += dir + "/"
         base_dir = base_dir_string
         update_rclone_var("MYFILES_BASE_DIR", base_dir, user_id)
+        await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
+        await query.answer()
         
-        if len(base_dir) > 0: 
-            await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
-        else:
-            await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, back= "back_drive", edit=True)     
-        await query.answer()
-
-    elif cmd[1] == "back_drive":   
-        await list_drive(message, edit=True)
-        await query.answer()
-    
     #Handle actions
-
     elif cmd[1] == "file_actions":
         path = get_rclone_val(cmd[2], user_id)
         base_dir += path

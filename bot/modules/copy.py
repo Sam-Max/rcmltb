@@ -226,46 +226,34 @@ async def copy_menu_callback(client, callback_query):
 
     # Origin Menu Back Button
     elif cmd[1] == "back_origin":
+        if len(origin_dir) == 0:
+            await query.answer() 
+            await list_drive(message, rclone_drive= dest_drive, base_dir= dest_dir,  callback="drive_origin", edit=True) 
+            return
         origin_dir_list= origin_dir.split("/")[:-2]
         origin_dir_string = "" 
         for dir in origin_dir_list: 
             origin_dir_string += dir + "/" 
         origin_dir= origin_dir_string
         update_rclone_var("COPY_ORIGIN_DIR", origin_dir, user_id)
-
-        if len(origin_dir) > 0: 
-            back_cb= cmd[1]  
-            await list_dir(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= back_cb)
-        else:
-            back_cb= "back_origin_menu"
-            await list_dir(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= back_cb)
-        await query.answer()  
+        await list_dir(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= cmd[1])
+        await query.answer() 
         
-    elif cmd[1]== "back_origin_menu":
-         await list_drive(message, callback="drive_origin", rclone_drive= dest_drive, base_dir= dest_dir, edit=True)        
-         await query.answer()   
-
     # Destination Menu Back Button
     elif cmd[1] == "back_dest":
+        if len(dest_dir) == 0:
+            await query.answer() 
+            await list_drive(message, rclone_drive= dest_drive, base_dir= dest_dir, callback="drive_dest", edit=True, is_second_menu=True)             
+            return
         dest_dir_list= dest_dir.split("/")[:-2]
         dest_dir_string = "" 
         for dir in dest_dir_list: 
             dest_dir_string += dir + "/"
         dest_dir= dest_dir_string
         update_rclone_var("COPY_DESTINATION_DIR", dest_dir, user_id)
-        
-        if len(dest_dir) > 0: 
-            back_cb= cmd[1]  
-            await list_dir(message, drive_name= dest_drive, drive_base= dest_dir, callback="dir_dest", edit=True, back_callback= back_cb, is_second_menu=True)
-        else:
-            back_cb= "back_dest_menu"
-            await list_dir(message, drive_name= dest_drive, drive_base= dest_dir, callback="dir_dest", edit=True, back_callback= back_cb, is_second_menu=True)
+        await list_dir(message, drive_name= dest_drive, drive_base= dest_dir, callback="dir_dest", edit=True, back_callback= cmd[1] , is_second_menu=True)
         await query.answer() 
 
-    elif cmd[1]== "back_dest_menu":
-         await list_drive(message, callback="drive_dest", rclone_drive= dest_drive, base_dir= dest_dir, edit=True, is_second_menu=True)             
-         await query.answer() 
-        
 async def next_page_copy(client, callback_query):
     query= callback_query
     data= query.data
