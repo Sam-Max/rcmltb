@@ -61,7 +61,7 @@ async def rss_get(client, message):
         else:
             await sendMessage("Send a title/value.", message)
     except (IndexError, ValueError):
-        await sendMessage(f"Use this format to fetch:\n/{Commands.RssGetCommand[0]} Title value", message)
+        await sendMessage(f"Use this format to fetch:\n/{BotCommands.RssGetCommand[0]} Title value", message)
 
 async def rss_sub(client, message):
     try:

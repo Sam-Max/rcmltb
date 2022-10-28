@@ -1,7 +1,7 @@
 from os import path as ospath
 from time import time
 from requests import get
-from bot import AUTO_MIRROR, DOWNLOAD_DIR, bot
+from bot import DOWNLOAD_DIR, bot
 from asyncio import TimeoutError, sleep
 from bot import bot, DOWNLOAD_DIR, botloop, config_dict
 from pyrogram import filters
@@ -263,7 +263,7 @@ unzip_mirror_handler = MessageHandler(handle_unzip_mirror,filters=filters.comman
 auto_mirror_handler = MessageHandler(handle_auto_mirror, filters= filters.video | filters.document | filters.audio | filters.photo)
 mirror_menu_cb = CallbackQueryHandler(mirror_menu, filters=filters.regex("mirrormenu"))
 
-if AUTO_MIRROR:
+if config_dict['AUTO_MIRROR']:
     bot.add_handler(auto_mirror_handler)
 bot.add_handler(mirror_handler)   
 bot.add_handler(zip_mirror_handler)

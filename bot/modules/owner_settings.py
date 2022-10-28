@@ -142,10 +142,10 @@ async def owner_set_callback(client, callback_query):
     user_id= query.from_user.id
 
     if cmd[1] == "change":
-        if cmd[2] == "add":
-            if cmd[3] in ['RSS_USER_SESSION_STRING', 'CMD_INDEX', 'USER_SESSION_STRING', 
+        if cmd[3] in ['RSS_USER_SESSION_STRING', 'AUTO_MIRROR', 'CMD_INDEX', 'USER_SESSION_STRING', 
                             'TELEGRAM_API_HASH', 'TELEGRAM_API_ID', 'RSS_DELAY']:
                 await query.answer(text='Restart required for this to apply!', show_alert=True)
+        if cmd[2] == "add":
             await query.answer()
             await start_listener(client, query, user_id, cmd[3])
         elif cmd[2] == "reset":

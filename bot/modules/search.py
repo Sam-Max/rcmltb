@@ -65,9 +65,8 @@ def _plugin_buttons(user_id):
 async def handle_torrent_search(client, message):
     user_id = message.from_user.id
     buttons = ButtonMaker()
-    SEARCH_PLUGINS = config_dict['SEARCH_PLUGINS']
     args = message.text.split(maxsplit=1)
-    if SITES is None and SEARCH_PLUGINS:
+    if SITES is None and not SEARCH_PLUGINS:
         await sendMessage("No API link or search PLUGINS added for this function", message)
     elif len(args) == 1 and SITES is None:
         await sendMessage("Send a search key along with command", message)
