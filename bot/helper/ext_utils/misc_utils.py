@@ -3,7 +3,7 @@ from os import mkdir, path as ospath, remove as osremove, rename as osrename, ma
 from shutil import rmtree
 from bot.helper.ext_utils.zip_utils import get_path_size
 from magic import Magic
-from bot import config_dict, DOWNLOAD_DIR, LOGGER, MULTI_RCLONE_CONFIG, OWNER_ID, TG_MAX_FILE_SIZE, aria2, get_client, status_dict, status_dict_lock
+from bot import config_dict, DOWNLOAD_DIR, LOGGER, OWNER_ID, TG_MAX_FILE_SIZE, aria2, get_client, status_dict, status_dict_lock
 from itertools import zip_longest
 from json import loads as jsnloads
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -74,7 +74,7 @@ def rename_file(path, new_name):
     return new_path
 
 def get_rclone_config(user_id):
-    if MULTI_RCLONE_CONFIG:
+    if config_dict['MULTI_RCLONE_CONFIG']:
         rc_path = ospath.join("users", str(user_id), "rclone.conf")  
         if rc_path is not None:
             if ospath.exists(rc_path):

@@ -51,8 +51,6 @@ status_reply_dict = {}
 # value: [rss_feed, last_link, last_title, filter]
 rss_dict = {}
 
-rclone_user_dict = {}
-
 # Key: env var
 # Value: env var value
 config_dict = {}

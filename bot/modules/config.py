@@ -5,7 +5,7 @@ from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from os import path as ospath
-from bot import DB_URI, MULTI_RCLONE_CONFIG, OWNER_ID, bot
+from bot import DB_URI, OWNER_ID, bot, config_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.filters import CustomFilters
@@ -15,13 +15,13 @@ from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
 
 async def handle_config(client, message):
      user_id= message.from_user.id
-     if MULTI_RCLONE_CONFIG:
-        await config_menu(user_id, message)    
+     if config_dict['MULTI_RCLONE_CONFIG']: 
+          await config_menu(user_id, message)    
      else:
         if user_id == OWNER_ID:  
-           await config_menu(user_id, message) 
+          await config_menu(user_id, message) 
         else:
-           await sendMessage("You can't use on current mode", message)
+          await sendMessage("You can't use on current mode", message)
 
 async def config_callback(client, callback_query):
      query= callback_query

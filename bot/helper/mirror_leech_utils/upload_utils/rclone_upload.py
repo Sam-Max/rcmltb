@@ -7,7 +7,7 @@ from bot import LOGGER, status_dict, status_dict_lock
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import sendStatusMessage
 from bot.helper.ext_utils.misc_utils import get_rclone_config
-from bot.helper.ext_utils.var_holder import get_rc_user_value
+from bot.helper.ext_utils.var_holder import get_rclone_val
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
@@ -24,8 +24,8 @@ class RcloneMirror:
         self.__isGdrive = False
 
     async def mirror(self):
-        base_dir = get_rc_user_value('MIRRORSET_BASE_DIR', self.__user_id)
-        drive = get_rc_user_value('MIRRORSET_DRIVE', self.__user_id)
+        base_dir = get_rclone_val('MIRRORSET_BASE_DIR', self.__user_id)
+        drive = get_rclone_val('MIRRORSET_DRIVE', self.__user_id)
         conf_path = get_rclone_config(self.__user_id)
         conf = ConfigParser()
         conf.read(conf_path)

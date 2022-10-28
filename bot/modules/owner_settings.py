@@ -5,7 +5,7 @@ from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, SUDO_USERS, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, status_reply_dict_lock
+from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, LOGGER, SUDO_USERS, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, status_reply_dict_lock
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval 
 from bot.helper.ext_utils.db_handler import DbManger
@@ -13,6 +13,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, update_all_messages
 from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.var_holder import update_rclone_var
 from bot.modules.search import initiate_search_tools
 
 
@@ -149,12 +150,14 @@ async def owner_set_callback(client, callback_query):
             await query.answer()
             await start_listener(client, query, user_id, cmd[3])
         elif cmd[2] == "reset":
-            await query.answer()
             value = ''
             if cmd[3] == "SUDO_USERS" or cmd[3] == "ALLOWED_CHATS":
                 await start_listener(client, query, user_id, cmd[3], action="rem")
             elif cmd[3] in default_values:
                 value = default_values[cmd[3]]
+            elif cmd[3] == 'DEFAULT_RCLONE_DRIVE':
+                update_rclone_var("MIRRORSET_DRIVE", value, user_id)
+                update_rclone_var("MIRRORSET_BASE_DIR", value, user_id)
             elif cmd[3] == 'EXTENSION_FILTER':
                 GLOBAL_EXTENSION_FILTER.clear()
                 GLOBAL_EXTENSION_FILTER.append('.aria2')
@@ -165,6 +168,7 @@ async def owner_set_callback(client, callback_query):
             elif cmd[3] == 'SERVER_PORT':
                 srun(["pkill", "-9", "-f", "gunicorn"])
                 Popen("gunicorn web.wserver:app --bind 0.0.0.0:80", shell=True)
+            await query.answer(f"{cmd[3]} reseted")
             config_dict[cmd[3]] = value
             environ[cmd[3]]= str(value)
             await edit_settings(client, message)  
@@ -215,6 +219,9 @@ async def start_listener(client, query, user_id, key, action=""):
                         value = int(value)
                         config_dict[key] = value
                         aria2.set_global_options({'bt-stop-timeout': value})
+                    elif key == 'DEFAULT_RCLONE_DRIVE':
+                        config_dict[key] = value
+                        update_rclone_var("MIRRORSET_DRIVE", value, user_id)
                     elif key == 'LEECH_SPLIT_SIZE':
                         value = int(value)
                         value = min(value, TG_MAX_FILE_SIZE)
