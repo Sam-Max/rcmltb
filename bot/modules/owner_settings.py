@@ -5,7 +5,7 @@ from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, LOGGER, SUDO_USERS, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, status_reply_dict_lock
+from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, SUDO_USERS, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, status_reply_dict_lock
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval 
 from bot.helper.ext_utils.db_handler import DbManger
@@ -16,7 +16,7 @@ from bot.helper.ext_utils.misc_utils import ButtonMaker
 from bot.modules.search import initiate_search_tools
 
 
-list_env_info= []
+listener = {}
 
 default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'UPSTREAM_BRANCH': 'master',
@@ -49,10 +49,9 @@ def get_menu_message():
 
 async def get_ownerset_menu():
     msg= get_menu_message()
-    list_env = sorted(config_dict.items())
-    list_env_info.extend(list_env)
-
-    total = len(list_env)
+    config_list= list(sorted(config_dict.items()))
+    listener['config_list'] = config_list
+    total = len(config_list)
     max_results= 10
     offset= 0
     start = offset
@@ -60,11 +59,11 @@ async def get_ownerset_menu():
     next_offset = end
 
     if end > total:
-        list_env= list_env[offset:]    
+        list_env= config_list[offset:]    
     elif offset >= total:
         list_env= []    
     else:
-        list_env= list_env[start:end]
+        list_env= config_list[start:end]
 
     buttons= ButtonMaker()    
     for key, _ in list_env:
@@ -84,11 +83,13 @@ async def get_ownerset_menu():
     return msg, buttons
 
 async def ownerset_next(client, callback_query):
-    data = callback_query.data
-    message= callback_query.message
+    query= callback_query
+    data = query.data
+    message= query.message
+    await query.answer()
     _, next_offset, data_back= data.split()
-    list_env= list_env_info
-    total = len(list_env)
+    config_list = listener['config_list'] 
+    total = len(config_list)
     next_offset = int(next_offset)
     prev_offset = next_offset - 10
 
@@ -98,12 +99,12 @@ async def ownerset_next(client, callback_query):
     end = max_results + start
     _next_offset = end
 
-    if end > len(list_env):
-        list_env = list_env[start:]    
-    elif start >= len(list_env):
+    if end > len(config_list):
+        list_env = config_list[start:]    
+    elif start >= len(config_list):
         list_env= []    
     else:
-        list_env= list_env[start:end] 
+        list_env= config_list[start:end] 
 
     buttons= ButtonMaker()    
     for key, value in list_env:

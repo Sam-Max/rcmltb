@@ -264,8 +264,10 @@ async def copy_menu_callback(client, callback_query):
          await query.answer() 
         
 async def next_page_copy(client, callback_query):
-    data= callback_query.data
-    message= callback_query.message
+    query= callback_query
+    data= query.data
+    message= query.message
+    await query.answer()
     user_id= message.reply_to_message.from_user.id
     _, next_offset, is_second_menu, data_back_cb = data.split()
     is_second_menu = is_second_menu.lower() == 'true'

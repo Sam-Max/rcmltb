@@ -184,8 +184,10 @@ async def mirrorset_callback(client, callback_query):
         await message.delete()
 
 async def next_page_mirrorset(client, callback_query):
-    data= callback_query.data
-    message= callback_query.message
+    query= callback_query
+    data= query.data
+    message= query.message
+    await query.answer()
     user_id= message.reply_to_message.from_user.id
     _, next_offset, data_back_cb = data.split()
     list_info = get_rc_user_value("driveInfo", user_id)

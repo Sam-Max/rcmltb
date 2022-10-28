@@ -54,14 +54,14 @@ async def is_rclone_config(user_id, message):
     rc_path= ospath.join("users", str(user_id), "rclone.conf")
     if MULTI_RCLONE_CONFIG:
         if not ospath.exists(rc_path):
-            await sendMessage("Send rclone config file, use /config", message)
+            await sendMessage("Send a rclone config file, use /config", message)
             return False
         else:
             return True
     else:
         if user_id == OWNER_ID:
             if not ospath.exists(rc_path):
-                await sendMessage("Send rclone config file, use /config", message)
+                await sendMessage("Send a rclone config file, use /config", message)
                 return False
             else:
                 return True

@@ -118,8 +118,7 @@ async def set_config_listener(client, message, is_rclone= False):
                               path= await client.download_media(response, file_name=rclone_path)
                               if DB_URI is not None:
                                    DbManger().user_saveconfig(user_id, path)
-                              msg = "Use /mirrorset to select a drive"
-                              await sendMessage(msg, message)
+                              await client.send_message(message.chat.id, text="Select a drive now, use /mirrorset")
                          else:
                               path= await client.download_media(response, file_name= "./")
                               if DB_URI is not None:
