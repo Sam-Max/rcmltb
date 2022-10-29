@@ -14,9 +14,8 @@ from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessa
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
 
 async def handle_storage(client, message):
-     if await is_rclone_config(message.from_user.id, message) == False:
-        return  
-     await list_drive(message)
+     if await is_rclone_config(message.from_user.id, message):
+          await list_drive(message)
 
 async def list_drive(message, edit= False):
      if message.reply_to_message:

@@ -34,6 +34,8 @@ botUptime = time()
 Interval = []
 QbInterval = []
 GLOBAL_EXTENSION_FILTER = ['.aria2']
+aria2_options = {}
+qbit_options = {}
 DOWNLOAD_DIR = None
 
 status_dict_lock = Lock()
@@ -106,6 +108,9 @@ DEFAULT_RCLONE_DRIVE = environ.get('DEFAULT_RCLONE_DRIVE', '')
 
 MULTI_RCLONE_CONFIG = environ.get('MULTI_RCLONE_CONFIG', '')
 MULTI_RCLONE_CONFIG = MULTI_RCLONE_CONFIG.lower() == 'true'  
+
+RCLONE_SERVER_SIDE_COPY = environ.get('RCLONE_SERVER_SIDE_COPY', '')
+RCLONE_SERVER_SIDE_COPY = RCLONE_SERVER_SIDE_COPY.lower() == 'true' 
 
 aid = environ.get('ALLOWED_CHATS', '')
 if len(aid) != 0:
@@ -305,6 +310,7 @@ if not config_dict:
                    'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                    'MEGA_PASSWORD': MEGA_PASSWORD,
                    'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
+                   'RCLONE_SERVER_SIDE_COPY': RCLONE_SERVER_SIDE_COPY,
                    'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                    'RSS_CHAT_ID': RSS_CHAT_ID,
                    'RSS_COMMAND': RSS_COMMAND,
@@ -323,3 +329,19 @@ if not config_dict:
                    'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
                    'USER_SESSION_STRING': USER_SESSION_STRING,
                    'WEB_PINCODE': WEB_PINCODE}
+
+aria2c_global = ['bt-max-open-files', 'download-result', 'keep-unfinished-download-result', 'log', 'log-level',
+                 'max-concurrent-downloads', 'max-download-result', 'max-overall-download-limit', 'save-session',
+                 'max-overall-upload-limit', 'optimize-concurrent-downloads', 'save-cookies', 'server-stat-of']
+                                    
+if not aria2_options:
+    aria2_options = aria2.client.get_global_option()
+    del aria2_options['dir']
+    del aria2_options['max-download-limit']
+    del aria2_options['lowest-speed-limit']
+
+qb_client = get_client()
+if not qbit_options:
+    qbit_options = dict(qb_client.app_preferences())
+else:
+    qb_client.app_set_preferences(qbit_options)

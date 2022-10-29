@@ -33,7 +33,7 @@ async def config_callback(client, callback_query):
      if int(cmd[-1]) != user_id:
           return await query.answer("This menu is not for you!", show_alert=True)
 
-     if cmd[1] == "get_config":
+     elif cmd[1] == "get_config":
           path= get_rclone_config(user_id)
           try:
                await client.send_document(document=path, chat_id=message.chat.id)
@@ -41,22 +41,22 @@ async def config_callback(client, callback_query):
                await sendMessage(str(err), message)
           await query.answer()
 
-     if cmd[1] == "get_pickle":
+     elif cmd[1] == "get_pickle":
           try:
                await client.send_document(document="token.pickle", chat_id=message.chat.id)
           except ValueError as err:
                await sendMessage(str(err), message)
           await query.answer()
 
-     if cmd[1] == "change_config":
+     elif cmd[1] == "change_config":
           await query.answer()
-          await set_config_listener(client, message, is_rclone=True)
+          await set_config_listener(client, message, True)
 
-     if cmd[1] == "change_pickle":
+     elif cmd[1] == "change_pickle":
           await query.answer()
           await set_config_listener(client, message)
 
-     if cmd[1] == "close":
+     elif cmd[1] == "close":
         await query.answer("Closed")
         await message.delete()
 
@@ -94,7 +94,7 @@ async def config_menu(user_id, message ):
      buttons.cbl_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}")
      await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
 
-async def set_config_listener(client, message, is_rclone= False):
+async def set_config_listener(client, message, is_rclone=False):
      if message.reply_to_message:
           user_id= message.reply_to_message.from_user.id
      else:

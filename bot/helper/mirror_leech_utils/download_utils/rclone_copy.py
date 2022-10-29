@@ -2,7 +2,7 @@ from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 from random import SystemRandom
 from string import ascii_letters, digits
-from bot import status_dict, status_dict_lock
+from bot import status_dict, status_dict_lock, config_dict
 from bot.helper.ext_utils.message_utils import sendStatusMessage
 from bot.helper.ext_utils.misc_utils import get_rclone_config
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
@@ -22,7 +22,11 @@ class RcloneCopy:
 
     async def copy(self, origin_drive, origin_dir, dest_drive, dest_dir):
         conf_path = get_rclone_config(self._user_id)
-        cmd = ['rclone', 'copyto', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
+        if config_dict['RCLONE_SERVER_SIDE_COPY']:
+            cmd = ['rclone', 'copyto', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
+            f'{dest_drive}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '-P']
+        else:
+            cmd = ['rclone', 'copyto', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
             f'{dest_drive}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '--drive-server-side-across-configs', '-P']
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))

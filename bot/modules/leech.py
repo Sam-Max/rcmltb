@@ -33,33 +33,36 @@ async def handle_leech(client, message):
 
 async def leech(client, message, isZip=False, extract=False):
     user_id= message.from_user.id
-    message_id= message.id
     tag = f"@{message.from_user.username}"
-    if await is_rclone_config(user_id, message) == False:
-        return
-    listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, isLeech=True)
-    listener_dict[message_id] = [listener, isZip, extract]
-    buttons= ButtonMaker()
-    buttons.cb_buildbutton("🔗 From Link", f"leechselect^link^{user_id}")
-    buttons.cb_buildbutton("📁 From Cloud", f"leechselect^cloud^{user_id}")
-    buttons.cb_buildbutton("✘ Close Menu", f"leechselect^close^{user_id}")    
-    if config_dict['MULTI_RCLONE_CONFIG']: 
-        if message.reply_to_message:
-            await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
-        else:
-            await sendMarkup("Select from where you want to leech", message, buttons.build_menu(2))  
-    else:
-        if user_id == OWNER_ID:  
+    if await is_rclone_config(user_id, message, isLeech=True):
+        listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, isLeech=True)
+        listener_dict[message.id] = [listener, isZip, extract]
+        buttons= ButtonMaker()
+        buttons.cb_buildbutton("🔗 From Link", f"leechselect^link^{user_id}")
+        buttons.cb_buildbutton("📁 From Cloud", f"leechselect^cloud^{user_id}")
+        buttons.cb_buildbutton("✘ Close Menu", f"leechselect^close^{user_id}")    
+        if config_dict['MULTI_RCLONE_CONFIG']: 
             if message.reply_to_message:
                 await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
             else:
                 await sendMarkup("Select from where you want to leech", message, buttons.build_menu(2))  
         else:
-            if message.reply_to_message:
-                await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
+            if user_id == OWNER_ID:  
+                if message.reply_to_message:
+                    await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
+                else:
+                    await sendMarkup("Select from where you want to leech", message, buttons.build_menu(2))  
             else:
-                await sendMessage("Reply to a link/file to leech", message)
-
+                if message.reply_to_message:
+                    await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
+                else:
+                    await sendMessage("Reply to a link/file", message)
+    else:
+        if message.reply_to_message:
+            await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
+        else:
+            await sendMessage("Reply to a link/file", message)
+            
 async def list_drive(message, edit=False):
     if message.reply_to_message:
         user_id= message.reply_to_message.from_user.id

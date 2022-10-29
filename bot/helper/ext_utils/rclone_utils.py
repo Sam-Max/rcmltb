@@ -14,20 +14,16 @@ async def get_gid(drive_name, drive_base, ent_name, conf_path, isdir=True):
     else:
         cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--files-only",
                         "-f", f"+ {name}", "-f", "- *"]
-
     process = await asyncio.create_subprocess_exec(
         *cmd,
         stdout= asyncio.subprocess.PIPE,
         stderr= asyncio.subprocess.PIPE)
-
     stdout, stderr = await process.communicate()
     return_code = await process.wait()
     stdout = stdout.decode().strip()
-
     if return_code != 0:
         err = stderr.decode().strip()
         LOGGER.error(f'Error: {err}') 
-
     try:
         data = json.loads(stdout)
         id = data[0]["ID"]
@@ -51,20 +47,25 @@ async def is_rclone_drive(user_id, message):
             else:
                 return True
 
-async def is_rclone_config(user_id, message):
-    rc_path= ospath.join("users", str(user_id), "rclone.conf")
+async def is_rclone_config(user_id, message, isLeech= False):
+    path= ospath.join("users", str(user_id), "rclone.conf")
     if config_dict['MULTI_RCLONE_CONFIG']:
-        if not ospath.exists(rc_path):
+        if not ospath.exists(path):
+            if isLeech:
+                return False
             await sendMessage("Send a rclone config file, use /config", message)
             return False
         else:
             return True
     else:
         if user_id == OWNER_ID:
-            if not ospath.exists(rc_path):
+            if not ospath.exists(path):
                 await sendMessage("Send a rclone config file, use /config", message)
                 return False
             else:
                 return True
         else:
             return True
+
+
+        

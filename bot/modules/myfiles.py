@@ -18,9 +18,8 @@ from bot.modules.myfilesset import calculate_size, delete_selected, delete_selec
 folder_icon= "📁"
 
 async def handle_myfiles(client, message):
-    if await is_rclone_config(message.from_user.id, message) == False:
-        return
-    await list_drive(message)
+    if await is_rclone_config(message.from_user.id, message):
+        await list_drive(message)
 
 async def list_drive(message, edit=False):
     if message.reply_to_message:

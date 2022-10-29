@@ -23,19 +23,18 @@ async def handle_copy(client, message):
     user_id= message.from_user.id
     message_id= message.id
     tag = f"@{message.from_user.username}"
-    if await is_rclone_config(user_id, message) == False:
-        return
-    origin_drive = get_rclone_val("COPY_ORIGIN_DRIVE", user_id)      
-    origin_dir= get_rclone_val("COPY_ORIGIN_DIR", user_id)
-    listener= MirrorLeechListener(message, tag, user_id)
-    listener_dict[message_id] = [listener]
-    if config_dict['MULTI_RCLONE_CONFIG']: 
-        await list_drive(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
-    else:
-        if user_id == OWNER_ID:  
-           await list_drive(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
+    if await is_rclone_config(user_id, message):
+        origin_drive = get_rclone_val("COPY_ORIGIN_DRIVE", user_id)      
+        origin_dir= get_rclone_val("COPY_ORIGIN_DIR", user_id)
+        listener= MirrorLeechListener(message, tag, user_id)
+        listener_dict[message_id] = [listener]
+        if config_dict['MULTI_RCLONE_CONFIG']: 
+            await list_drive(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
         else:
-           await sendMessage("You can't use on current mode", message)
+            if user_id == OWNER_ID:  
+                await list_drive(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
+            else:
+                await sendMessage("You can't use on current mode", message)
 
 async def list_drive(message, rclone_drive, base_dir, callback, is_second_menu= False, edit=False):
     if message.reply_to_message:

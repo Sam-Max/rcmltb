@@ -138,7 +138,7 @@ restart - Restart bot
         - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
         - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission separated by spaces. `Str`
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces `Str`
-        - `AUTO_MIRROR`: For auto mirroring files sent to the bot. Default is `False`. `Bool`
+        - `AUTO_MIRROR`: For auto mirroring files sent to the bot. **NOTE**: If you add bot to group(not channel), you can also use this feature. Default is `False`. `Bool`
         - `DATABASE_URL`: Your SQL Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data that will be saved in Database: auth and sudo users, leech settings including thumbnails for each user. `Str`
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `STATUS_LIMIT`: No. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Str`
@@ -152,6 +152,7 @@ restart - Restart bot
    - RCLONE
      - `DEFAULT_RCLONE_DRIVE`: To set a default drive from your rclone config (for owner) `Str`
      - `MULTI_RCLONE_DRIVE`: For using one rclone config for all users or each user with their own rclone config. Default to True. `Bool` 
+     - `RCLONE_SERVER_SIDE_COPY`= For enabling or desabling rclone server side copy. Set to `False` if problem when copying between team drives. Default to True. `Bool` 
 
    - CLONE
      - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Str`

@@ -18,20 +18,19 @@ from pyrogram.types import InlineKeyboardMarkup
 
 async def handle_mirrorset(client, message):
     user_id= message.from_user.id
-    if await is_rclone_config(user_id, message) == False:
-        return
-    if DEFAULT_RCLONE_DRIVE := config_dict['DEFAULT_RCLONE_DRIVE']:
-        if user_id == OWNER_ID:
-            update_rclone_var("MIRRORSET_DRIVE", DEFAULT_RCLONE_DRIVE, user_id)
-    rclone_drive = get_rclone_val("MIRRORSET_DRIVE", user_id)              
-    base_dir= get_rclone_val("MIRRORSET_BASE_DIR", user_id)
-    if config_dict['MULTI_RCLONE_CONFIG']: 
-        await list_drive(message, rclone_drive, base_dir) 
-    else:
-        if user_id == OWNER_ID:  
-            await list_drive(message, rclone_drive, base_dir)  
+    if await is_rclone_config(user_id, message):
+        if DEFAULT_RCLONE_DRIVE := config_dict['DEFAULT_RCLONE_DRIVE']:
+            if user_id == OWNER_ID:
+                update_rclone_var("MIRRORSET_DRIVE", DEFAULT_RCLONE_DRIVE, user_id)
+        rclone_drive = get_rclone_val("MIRRORSET_DRIVE", user_id)              
+        base_dir= get_rclone_val("MIRRORSET_BASE_DIR", user_id)
+        if config_dict['MULTI_RCLONE_CONFIG']: 
+            await list_drive(message, rclone_drive, base_dir) 
         else:
-            await sendMessage("You can't use on current mode", message)        
+            if user_id == OWNER_ID:  
+                await list_drive(message, rclone_drive, base_dir)  
+            else:
+                await sendMessage("You can't use on current mode", message)        
 
 async def list_drive(message, rclone_drive="", base_dir="", edit=False):
     if message.reply_to_message:

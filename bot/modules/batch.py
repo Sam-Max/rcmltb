@@ -23,12 +23,17 @@ async def leech_batch(client, message):
 async def mirror_batch(client, message):
     await _batch(client, message)
 
-async def _batch(client, message, isLeech= False):
+async def _batch(client, message, isLeech=False):
     user_id= message.from_user.id
-    if await is_rclone_config(user_id, message) == False:
-        return    
-    if await is_rclone_drive(user_id, message) == False:
-        return
+    if not isLeech:
+        if await is_rclone_config(user_id, message):
+            pass
+        else:
+            return
+        if await is_rclone_drive(user_id, message):
+            pass
+        else:
+            return
     if app is None:
         bot= client
     else:

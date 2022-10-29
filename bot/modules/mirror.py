@@ -35,13 +35,17 @@ async def handle_zip_mirror(client, message):
 async def handle_unzip_mirror(client, message):
     await mirror_leech(client, message, extract=True)
 
-async def mirror_leech(client, message, _link= None, isZip=False, extract=False, isLeech= False):
+async def mirror_leech(client, message, _link= None, isZip=False, extract=False, isLeech=False):
     user_id= message.from_user.id
     message_id= message.id
-    if await is_rclone_config(user_id, message) == False:
-        return
     if not isLeech:
-        if await is_rclone_drive(user_id, message) == False:
+        if await is_rclone_config(user_id, message):
+            pass
+        else: 
+            return
+        if await is_rclone_drive(user_id, message):
+            pass
+        else: 
             return
     select = False
     pswd= None  

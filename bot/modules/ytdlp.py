@@ -22,14 +22,15 @@ async def _ytdl(client, message, isZip= False, isLeech=False):
     mssg = message.text
     user_id = message.from_user.id
     msg_id = message.id
-
-    if await is_rclone_config(user_id, message) == False:
-        return
-
     if not isLeech:
-        if await is_rclone_drive(user_id, message) == False:
+        if await is_rclone_config(user_id, message):
+            pass
+        else:
+            return 
+        if await is_rclone_drive(user_id, message):
+            pass
+        else:
             return
-
     link = mssg.split()
     if len(link) > 1:
         link = link[1].strip()
