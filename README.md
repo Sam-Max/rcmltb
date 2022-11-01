@@ -6,30 +6,39 @@
 ### qBittorrent
 - Qbittorrent support for torrent and magnets
 - Select files from Torrent before downloading 
-- Zip and unzip support
+- Edit Global Options from bot settings
 
 ### Aria2c
 - Aria support for direct download links
+- Netrc support
+- Edit Global Options from bot settings
+
+### Rclone
+- Copy File/Folder from Cloud to Cloud
+- Leech File/Folder from Cloud to Telegram
+- Mirror from Telegram to a selected cloud
+- Telegram Navigation Menus to interact with clouds
+- File Manager: size, mkdir, delete, dedupe, rename
+- Clean remote cloud trash
+- Get cloud storage info 
 
 ### Mirror
 - From Telegram to cloud
-- Torrent/magnets to cloud using qBittorrent
-- Mega.nz and directs links to cloud
-- Files in batch from Telegram to cloud
+- Link/Torrent/Magnets/Mega to cloud 
+- Files in batch from Telegram restricted channels
 
 ### Leech
-- File/folder from cloud to Telegram
-- Link/magnets to Telegram using qBittorrent
-- Mega.nz and directs links to Telegram
-- Files in batch from Telegram to Telegram
+- Link/Torrent/Magnets/Mega to Telegram 
+- Thumbnail for each user
+- Set upload as document or as media for each user
+- Files in batch from Telegram restricted channels
+- Upload files to a superGroup/channel.
 - 4gb file with premium account
 
-### Copy
-- Copy file/folder from cloud to cloud
-
 ### Status
-- Progress bar for download and upload
-- Status for tasks
+- Status while downloading and uploading
+- Status Pages for unlimited tasks
+- Cancel all buttons for choosing specific tasks status to cancel
 
 ### Archives
 - Extract and Zip link/file from Telegram to cloud
@@ -43,20 +52,19 @@
 - Save user leech settings(thumbnails, sudo and allowed users, etc) on db
 
 ### RSS
-- Rss feed with filter.
+- Rss feed with filter support
 
 ### Others
-- Telegram Navigation Bottom Menus to interact with Cloud
 - Renaming of Telegram files
-- Load/change rclone.conf file from bot
-- Load/change token.pickle from bot
+- Load/change token.pickle and rclone.conf from bot
 - Change most of the config variables from bot
-- File Manager (size, mkdir, delete, dedupe, rename)
 
 ### From Other Repositories
 - Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
 - SQL Database support
 - Ytdl support
+- Docker support
+- Extensions Filter for the files to be uploaded/cloned
 - Select files from Torrent before downloading 
 - Save restricted messages from private channels.
 - Upload files to supergroup/channel.
@@ -64,7 +72,7 @@
 - Thumbnail support
 - Upload as document or as media 
 - Update bot at startup and with restart command using UPSTREAM_REPO
-- Own users settings when using bot or added to supergroup (thumbnail, as document/as media, rclone.conf)
+- Own users settings when using bot or added to supergroup
 - Direct links Supported:
   > letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
 - Extract filetypes:
@@ -162,6 +170,7 @@ restart - Restart bot
    
    - LEECH
      - `LEECH_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
+     - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (not working with zip cmd). Default is `False`. `Bool`
      - `USER_SESSION_STRING`: Pyrogram session string for batch commands and to upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: When using string session, you have to use with supergroup/channel not with bot. You can also use batch commands without string session, but you can't save messages from private/restricted channels.
       - `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/supergroup id. Add bot in that channel/group as Admin
 
