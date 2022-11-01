@@ -1,10 +1,13 @@
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/bot_settings.py
+# Some minor modifications from source
+
 from asyncio import TimeoutError
 from os import environ
 from subprocess import Popen, run as srun
 from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, LOGGER, SUDO_USERS, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, aria2_options, aria2c_global, get_client, qbit_options, status_reply_dict_lock
+from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, SUDO_USERS, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, aria2_options, aria2c_global, get_client, qbit_options, status_reply_dict_lock
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval 
 from bot.helper.ext_utils.db_handler import DbManger

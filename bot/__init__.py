@@ -3,7 +3,7 @@ __author__ = "Sam-Max"
 
 from asyncio import Lock
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
-from os import environ
+from os import environ, path as ospath
 from threading import Thread
 from time import sleep, time
 from sys import exit
@@ -53,8 +53,6 @@ status_reply_dict = {}
 # value: [rss_feed, last_link, last_title, filter]
 rss_dict = {}
 
-# Key: env var
-# Value: env var value
 config_dict = {}
 
 AS_DOC_USERS = set()
@@ -175,6 +173,10 @@ else:
 
 Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
 srun(["qbittorrent-nox", "-d", "--profile=."])
+if not ospath.exists('.netrc'):
+    srun(["touch", ".netrc"])
+srun(["cp", ".netrc", "/root/.netrc"])
+srun(["chmod", "600", ".netrc"])
 srun(["chmod", "+x", "aria.sh"])
 srun("./aria.sh", shell=True)
 sleep(0.5)

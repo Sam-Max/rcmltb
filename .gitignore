@@ -1,22 +1,14 @@
-# you know these
 venv
-__pycache__
-
-# Telethon sessions
-*.session
-*.session-journal
-
-# tests
-test*.*
-splfil/
-
-# runtime files
-Downloads/
-userdata/
+downloads
+users
 botlog.txt
-sa_accounts/
-sa_files*
+cookies.txt
 rclone.conf
 config.env
-app.json
-Procfile
+*.json
+*.pickle
+*.pyc
+.netrc
+.vscode
+Thumbnails/*
+

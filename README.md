@@ -270,6 +270,23 @@ sudo docker-compose start
 
 ------
 
+## Yt-dlp and Aria2c Authentication Using .netrc File
+For using your premium accounts in yt-dlp or for protected Index Links, create .netrc and not netrc, this file will be hidden, so view hidden files to edit it after creation. Use following format on file: 
+
+Format:
+```
+machine host login username password my_password
+```
+Example:
+```
+machine example.workers.dev login index_username password index_password
+```
+**Note**: Using aria2c you can also use without username. Multiple accounts of different hosts can be added each separated by a new line.
+
+**Youtube Note**: For `youtube` authentication use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
+
+-----
+
 ## How to create rclone config file
 
 **Check this youtube video (not mine, credits to author):** 
