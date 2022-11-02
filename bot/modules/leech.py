@@ -7,7 +7,7 @@ from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
-from bot import DOWNLOAD_DIR, OWNER_ID, bot, config_dict
+from bot import DOWNLOAD_DIR, LOGGER, OWNER_ID, bot, config_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
@@ -304,8 +304,9 @@ async def selection_callback(client, callback_query):
                     if "/ignore" in response.text:
                         await client.listen.Cancel(filters.user(user_id))
                     else:
-                        link= response.text
-                        await mirror_leech(client, listener.message, _link= link, isZip=is_zip, extract=extract, isLeech=True)
+                        message= listener.message
+                        message.text = f"/leech {response.text}"
+                        await mirror_leech(client, message, isZip=is_zip, extract=extract, isLeech=True)
                 except Exception as ex:
                         await sendMessage(str(ex), message) 
         finally:

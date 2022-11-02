@@ -11,6 +11,7 @@
 ### Aria2c
 - Aria support for direct download links
 - Netrc support
+- Direct link authentication from bot
 - Edit Global Options from bot settings
 
 ### Rclone
@@ -25,6 +26,7 @@
 ### Mirror
 - From Telegram to cloud
 - Link/Torrent/Magnets/Mega to cloud 
+- Renaming for Telegram files
 - Files in batch from Telegram restricted channels
 
 ### Leech
@@ -55,7 +57,6 @@
 - Rss feed with filter support
 
 ### Others
-- Renaming of Telegram files
 - Load/change token.pickle and rclone.conf from bot
 - Change most of the config variables from bot
 
@@ -66,6 +67,8 @@
 - Docker support
 - Extensions Filter for the files to be uploaded/cloned
 - Select files from Torrent before downloading 
+- Direct link authentication for specific link while using the bot (it will work even if only username or password)
+- Custom name for all links except torrents and mega. 
 - Save restricted messages from private channels.
 - Upload files to supergroup/channel.
 - Clone Google Drive files/folders from link

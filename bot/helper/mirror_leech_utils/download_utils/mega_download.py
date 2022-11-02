@@ -16,7 +16,7 @@ class MegaDownloader():
     def __init__(self, link, listener):
         super().__init__()
         self._link = link
-        self.__name = ""
+        self.__name = ''
         self.__gid = ''
         self.__mega_client = MegaSdkRestClient('http://localhost:6090')
         self.__listener = listener
@@ -50,6 +50,16 @@ class MegaDownloader():
         if self.gid is not None:
             return self.__mega_client.getDownloadInfo(self.gid)['speed']
 
+    async def __onDownloadStart(self, name, size, gid):
+        self.__periodic = setInterval(self.POLLING_INTERVAL, self.__onInterval)
+        async with status_dict_lock:
+            status_dict[self.__listener.uid] = MegaDownloadStatus(self, self.__listener)
+            self.__name = name
+            self.__size = size
+            self.__gid = gid
+        self.__listener.onDownloadStart()
+        await sendStatusMessage(self.__listener.message)
+
     async def execute(self, path):
         Path(path).mkdir(parents=True, exist_ok=True)
         LOGGER.info("MegaDownload Started...")
@@ -59,15 +69,12 @@ class MegaDownloader():
             return await sendMessage(str(er), self.__listener.message)
         gid = dl["gid"]
         info = await botloop.run_in_executor(None, self.__mega_client.getDownloadInfo, gid)
-        file_name = info['name']
-        file_size = info['total_length']
-        self.__periodic = setInterval(self.POLLING_INTERVAL, self.__onInterval)
+        name = info['name']
+        size = info['total_length']
         async with status_dict_lock:  
             status_dict[self.__listener.uid] = MegaDownloadStatus(self, self.__listener)
-        self.__name = file_name
-        self.__size = file_size
-        self.__gid = gid
-        await sendStatusMessage(self.__listener.message)
+        await self.__onDownloadStart(name, size, gid)
+        LOGGER.info(f'Mega download started with gid: {gid}')
 
     async def __onDownloadError(self, error):
         await self.__listener.onDownloadError(error)

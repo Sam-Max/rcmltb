@@ -24,7 +24,7 @@ from bot.helper.mirror_leech_utils.upload_utils.telegram_uploader import Telegra
 
 
 class MirrorLeechListener:
-    def __init__(self, message, tag, user_id, newName= None, isRename= False, isZip=False, extract=False, pswd=None, isLeech= False, select=False, seed=False):
+    def __init__(self, message, tag, user_id, isZip=False, extract=False, pswd=None, isLeech= False, select=False, seed=False):
         self.message = message
         self.uid = self.message.id
         self.user_id = user_id
@@ -34,8 +34,6 @@ class MirrorLeechListener:
         self.__tag = tag
         self.seed = seed
         self.select = select
-        self.newName= newName
-        self.isRename= isRename
         self.dir = f"{DOWNLOAD_DIR}{self.uid}"
         self.isPrivate = message.chat.type in [ChatType.PRIVATE, ChatType.GROUP]
         self.__isLeech = isLeech
@@ -137,10 +135,7 @@ class MirrorLeechListener:
                 LOGGER.info("Not any valid archive, uploading file as it is.")
                 path = f_path
         else:
-            if self.isRename:
-                path = rename_file(f_path, self.newName) 
-            else:
-                path= f_path 
+            path= f_path 
         up_dir, up_name = path.rsplit('/', 1)
         if self.__isLeech:
             m_size = []

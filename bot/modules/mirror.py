@@ -1,3 +1,4 @@
+from base64 import b64encode
 from os import path as ospath
 from time import time
 from requests import get
@@ -6,7 +7,7 @@ from asyncio import TimeoutError, sleep
 from bot import bot, DOWNLOAD_DIR, botloop, config_dict
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup
-from re import match as re_match
+from re import match as re_match, split as re_split
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
 from bot.helper.ext_utils.bot_commands import BotCommands
@@ -35,9 +36,18 @@ async def handle_zip_mirror(client, message):
 async def handle_unzip_mirror(client, message):
     await mirror_leech(client, message, extract=True)
 
-async def mirror_leech(client, message, _link= None, isZip=False, extract=False, isLeech=False):
+''' /cmd link | newname pswd: xx(zip/unzip) 
+         username 
+         password '''
+
+# /cmd |newname pswd: xx(zip/unzip)
+
+async def mirror_leech(client, message, isZip=False, extract=False, isLeech=False):
     user_id= message.from_user.id
     message_id= message.id
+    mesg = message.text.split('\n')
+    message_args = mesg[0].split(maxsplit=1)
+    name_args = mesg[0].split('|', maxsplit=1)
     if not isLeech:
         if await is_rclone_config(user_id, message):
             pass
@@ -48,29 +58,47 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
         else: 
             return
     select = False
-    pswd= None  
-    link= ''
-    tag = ''
+    index = 1
     multi= 0
-    msg = message.text.split(maxsplit=1)
-    if len(msg) > 1:
-        msg_args = msg[1].split(maxsplit=1)
-        for x in msg_args:
+    tag= ''
+    if len(message_args) > 1:
+        args = mesg[0].split(maxsplit=3)
+        for x in args:
             x = x.strip()
             if x == 's':
                 select = True
+                index += 1
             elif x.isdigit():
                 multi = int(x)
-        
+                mi = index
         if multi == 0:
-            for x in msg_args:
-                x = x.strip()
-                if is_url(x) or is_magnet(x):
-                    link= x
+            message_args = mesg[0].split(maxsplit=index)
+            if len(message_args) > index:
+                link = message_args[index].strip()
+                if link.startswith(("|", "pswd:")):
+                    link = ''
+            else:
+                link = ''
+        else:
+            link = ''
+    else:
+        link = ''
 
-            pswdMsg = msg[1].split(' pswd: ', maxsplit=1)
-            if len(pswdMsg) > 1:
-                pswd = pswdMsg[1]
+    if len(name_args) > 1:
+        name = name_args[1]
+        name = name.split(' pswd:')[0]
+        name = name.strip()
+    else:
+        name = ''
+
+    link = re_split(r"pswd:|\|", link)[0]
+    link = link.strip()
+
+    pswd_arg = mesg[0].split(' pswd: ')
+    if len(pswd_arg) > 1:
+        pswd = pswd_arg[1]
+    else:
+        pswd = None
 
     if message.from_user.username:
         tag = f"@{message.from_user.username}"
@@ -83,17 +111,17 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
             tag = f"@{reply_message.from_user.username}"
         if len(link) == 0 or not is_url(link) and not is_magnet(link):
             if file is None:
-                reply_text= reply_message.text     
+                reply_text= reply_message.text.split(maxsplit=1)[0].strip()     
                 if is_url(reply_text) or is_magnet(reply_text):     
-                        link = reply_text.strip() 
+                        link = reply_message.text.strip() 
             elif file.mime_type != "application/x-bittorrent":
                 if multi:
-                    botloop.create_task(TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/').download()) 
+                    botloop.create_task(TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', name).download()) 
                     if multi > 1:
                         await sleep(4)
                         nextmsg = await client.get_messages(message.chat.id, message.reply_to_message.id + 1)
-                        msg = message.text.split(maxsplit=1+1)
-                        msg[1] = f"{multi - 1}"
+                        msg = message.text.split(maxsplit=mi+1)
+                        msg[mi] = f"{multi - 1}"
                         nextmsg = await sendMessage(" ".join(msg), nextmsg)
                         nextmsg = await client.get_messages(message.chat.id, nextmsg.id)
                         nextmsg.from_user.id = message.from_user.id
@@ -101,11 +129,11 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
                         await mirror_leech(client, nextmsg, isZip= isZip, extract=extract, isLeech=isLeech)
                 else:
                     buttons= ButtonMaker() 
-                    name= file.file_name
+                    file_name= file.file_name
                     size= get_readable_size(file.file_size)
-                    header_msg = f"Which name do you want to use?\n\n<b>Name</b>: <code>{name}</code>\n\n<b>Size</b>: <code>{size}</code>"
+                    header_msg = f"Which name do you want to use?\n\n<b>Name</b>: <code>{file_name}</code>\n\n<b>Size</b>: <code>{size}</code>"
                     buttons.dbuildbutton("📄 By default", f'mirrormenu^default^{message_id}',
-                                        "📝 Rename", f'mirrormenu^rename^{message_id}')
+                                         "📝 Rename", f'mirrormenu^rename^{message_id}')
                     buttons.cbl_buildbutton("✘ Close Menu", f"mirrormenu^close^{message_id}")
                     menu_msg= await sendMarkup(header_msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
                     listener_dict[message_id] = [listener, file, menu_msg, user_id]
@@ -113,36 +141,24 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
             else:
                 link = await client.download_media(file)
     
-    if _link is not None:
-        msgArgs = _link.split(maxsplit=1)
-        for x in msgArgs:
-            x = x.strip()
-            if x == 's':
-                select = True
-            if is_url(x) or is_magnet(x):
-                link= x    
-
     if not is_url(link) and not is_magnet(link):
-        if isLeech:
-            help_msg = '''         
-<code>/cmd</code> along with link pswd: xx(zip/unzip)
-
-<b>qBittorrent Selection</b>    
-<b>s</b> along with link 
-
-'''
-        else:
-            help_msg = '''         
-<code>/cmd</code> along with link
+        help_msg = '''         
+<code>/cmd</code> link |newname pswd: xx(zip/unzip)
 
 <b>By replying</b>   
-<code>/cmd</code> link/file pswd: xx(zip/unzip)
+<code>/cmd</code> |newname pswd: xx(zip/unzip)
+
+<b>Direct link authorization:</b>
+<code>/cmd</code> link |newname pswd: xx(zip/unzip)
+<b>username</b>
+<b>password</b>
 
 <b>qBittorrent Selection</b>    
 <code>/cmd</code> <b>s</b> link or by replying to link
 
 <b>Multi links by replying to first link/file:</b>
 <code>/cmd</code> 5(number of links/files)
+Number should be always before |newname or pswd:
 
 '''
         return await sendMessage(help_msg, message)
@@ -190,13 +206,23 @@ async def mirror_leech(client, message, _link= None, isZip=False, extract=False,
     elif is_magnet(link) or ospath.exists(link):
         botloop.create_task(add_qb_torrent(link, f'{DOWNLOAD_DIR}{listener.uid}', listener))
     else:
-        botloop.create_task(add_aria2c_download(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, ""))
+        if len(mesg) > 1:
+            ussr = mesg[1]
+            if len(mesg) > 2:
+                pssw = mesg[2]
+            else:
+                pssw = ''
+            auth = f"{ussr}:{pssw}"
+            auth = "Basic " + b64encode(auth.encode()).decode('ascii')
+        else:
+            auth = ''
+        botloop.create_task(add_aria2c_download(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name, auth))
 
     if multi > 1:
         await sleep(4)
         nextmsg = await client.get_messages(message.chat.id, message.reply_to_message.id + 1)
-        msg = message.text.split(maxsplit=1+1)
-        msg[1] = f"{multi - 1}"
+        msg = message.text.split(maxsplit=mi+1)
+        msg[mi] = f"{multi - 1}"
         nextmsg = await sendMessage(" ".join(msg), nextmsg)
         nextmsg = await client.get_messages(message.chat.id, nextmsg.id)
         nextmsg.from_user.id = message.from_user.id
@@ -217,7 +243,7 @@ async def mirror_menu(client, query):
 
     elif cmd[1] == "default" :
        await deleteMessage(info[2]) 
-       tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/')
+       tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', '')
        await tg_down.download() 
 
     elif cmd[1] == "rename": 
@@ -232,10 +258,9 @@ async def mirror_menu(client, query):
                     await question.reply("Okay cancelled!")
                     await client.listen.Cancel(filters.user(user_id))
                 else:
-                    listener.newName= response.text
-                    listener.isRename= True
+                    name = response.text.strip()
                     await deleteMessage(info[2]) 
-                    tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/')
+                    tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', name)
                     await tg_down.download() 
         finally:
             await question.delete()
@@ -258,7 +283,7 @@ async def handle_auto_mirror(client, message):
     if file is not None:
         if file.mime_type != "application/x-bittorrent":
             listener= MirrorLeechListener(message, tag, user_id)
-            tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/')
+            tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', '')
             await tg_down.download()  
 
 mirror_handler = MessageHandler(handle_mirror,filters=filters.command(BotCommands.MirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

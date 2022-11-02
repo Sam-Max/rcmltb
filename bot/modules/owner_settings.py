@@ -430,7 +430,7 @@ async def start_env_listener(client, query, user_id, key, action=""):
             except KeyError:
                 return await query.answer("Value doesn't exist") 
 
-owner_settings_handler = MessageHandler(handle_ownerset, filters= command(BotCommands.OwnerSetCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))
+owner_settings_handler = MessageHandler(handle_ownerset, filters= command(BotCommands.OwnerSetCommand) & (CustomFilters.owner_filter))
 owner_settings_cb = CallbackQueryHandler(ownerset_callback, filters= regex(r'ownersetmenu'))
 
 bot.add_handler(owner_settings_handler)

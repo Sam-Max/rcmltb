@@ -4,21 +4,31 @@ from bot.helper.ext_utils.message_utils import sendStatusMessage
 from bot.helper.mirror_leech_utils.status_utils.tg_download_status import TelegramStatus
 
 class TelegramDownloader:
-    def __init__(self, file, client, listener, path) -> None:
+    def __init__(self, file, client, listener, path, name) -> None:
         self.__client= client
         self.__listener = listener
-        self.name = ""
+        self.name = name
+        self.gid = ''
         self.size = 0
         self.progress = 0
         self.downloaded_bytes = 0
-        self.__start_time = time()
-        self.__is_cancelled = False
         self.__file = file
         self.__path= path
+        self.__start_time = time()
+        self.__is_cancelled = False
 
     @property
     def download_speed(self):
         return self.downloaded_bytes / (time() - self.__start_time)
+
+    async def __onDownloadStart(self, name, size, file_id):
+        self.name = name
+        self.size = size
+        self.gid = file_id
+        async with status_dict_lock:
+            status_dict[self.__listener.uid] = TelegramStatus(self, self.__listener.message, self.gid)
+        self.__listener.onDownloadStart()
+        await sendStatusMessage(self.__listener.message)
 
     async def onDownloadProgress(self, current, total):
         if self.__is_cancelled:
@@ -31,12 +41,15 @@ class TelegramDownloader:
             pass
 
     async def download(self):
-        self.name= self.__file.file_name
-        self.size = self.__file.file_size
+        if self.name == "":
+            name = self.__file.file_name
+        else:
+            name = self.name
+            self.__path =  self.__path + name
+        size = self.__file.file_size   
         gid = self.__file.file_unique_id
-        async with status_dict_lock:
-            status_dict[self.__listener.uid] = TelegramStatus(self, self.__listener.message, gid)
-        await sendStatusMessage(self.__listener.message)
+        await self.__onDownloadStart(name, size, gid)
+        LOGGER.info(f'Downloading Telegram file with id: {gid}')
         try:
             download= await self.__client.download_media(
                 message= self.__file,
