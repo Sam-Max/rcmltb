@@ -36,9 +36,9 @@ async def is_rclone_drive(user_id, message):
     if get_rclone_val("MIRRORSET_DRIVE", user_id):
         return True
     else:
-        if DEFAULT_RCLONE_DRIVE := config_dict['DEFAULT_RCLONE_DRIVE']:
+        if DEFAULT_REMOTE := config_dict['DEFAULT_REMOTE']:
             if user_id == OWNER_ID:
-                update_rclone_var("MIRRORSET_DRIVE", DEFAULT_RCLONE_DRIVE, user_id)
+                update_rclone_var("MIRRORSET_DRIVE", DEFAULT_REMOTE, user_id)
                 return True
         else:
             if config_dict['MULTI_RCLONE_CONFIG']:

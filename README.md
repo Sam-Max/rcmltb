@@ -15,13 +15,14 @@
 - Edit Global Options from bot settings
 
 ### Rclone
-- Copy File/Folder from Cloud to Cloud
-- Leech File/Folder from Cloud to Telegram
+- Copy file/folder from cloud to cloud
+- Leech file/folder from cloud to Telegram
 - Mirror from Telegram to a selected cloud
-- Telegram Navigation Menus to interact with clouds
+- Telegram Navigation Button Menus to interact with clouds
 - File Manager: size, mkdir, delete, dedupe, rename
-- Clean remote cloud trash
-- Get cloud storage info 
+- Service Accounts support with automatic switching
+- Clean remote trash
+- View storage info 
 
 ### Mirror
 - From Telegram to cloud
@@ -161,9 +162,11 @@ restart - Restart bot
     **NOTE**: If any change in docker or requirements you will need to deploy/build again with updated repo for changes to apply.
 
    - RCLONE
-     - `DEFAULT_RCLONE_DRIVE`: To set a default drive from your rclone config (for owner) `Str`
-     - `MULTI_RCLONE_DRIVE`: For using one rclone config for all users or each user with their own rclone config. Default to True. `Bool` 
-     - `RCLONE_SERVER_SIDE_COPY`= For enabling or desabling rclone server side copy. Set to `False` if problem when copying between team drives. Default to True. `Bool` 
+     - `DEFAULT_REMOTE`: To set a default remote from your rclone config for mirroring (only for owner). `Str`
+     - `MULTI_RCLONE_CONFIG`: For using owner rclone config for all users or each user with their own rclone config. Default to False. `Bool` 
+     - `USE_SERVICE_ACCOUNTS`: For enabling Service Accounts for rclone copy. Default to False. `Bool`.
+     - `SERVICE_ACCOUNTS_REMOTE`= To set remote (teamdrive with id) from your rclone config with the service accounts added. `Str`
+     - `SERVER_SIDE_COPY`= For enabling or desabling rclone server side copy. Default to False. **NOTE**: if you get any error while copy set this to `False`. `Bool`.
 
    - CLONE
      - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Str`
@@ -282,23 +285,6 @@ sudo docker-compose start
 
 ------
 
-## Yt-dlp and Aria2c Authentication Using .netrc File
-For using your premium accounts in yt-dlp or for protected Index Links, create .netrc and not netrc, this file will be hidden, so view hidden files to edit it after creation. Use following format on file: 
-
-Format:
-```
-machine host login username password my_password
-```
-Example:
-```
-machine example.workers.dev login index_username password index_password
-```
-**Note**: Using aria2c you can also use without username. Multiple accounts of different hosts can be added each separated by a new line.
-
-**Youtube Note**: For `youtube` authentication use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
-
------
-
 ## How to create rclone config file
 
 **Check this youtube video (not mine, credits to author):** 
@@ -332,6 +318,96 @@ pip3 install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 python3 generate_drive_token.py
 ```
 ------
+
+## Using Service Accounts to avoid user rate limit [For Google Drive Remotes]
+
+>**NOTE**: Using Service Accounts is only recommended for Team Drive.
+
+### 1. Generate Service Accounts. 
+
+**Warning**: Abuse of this feature is not the aim of this project and we do not recommend that you make a lot of projects, just one project and 100 SAs allow you plenty of use, its also possible that over abuse might get your projects banned by Google.
+
+>**NOTE**: If you have created SAs in past from this script, you can also just re download the keys by running:
+```
+python3 gen_sa_accounts.py --download-keys $PROJECTID
+```
+>**NOTE:** 1 Service Account can copy around 750 GB a day, 1 project can make 100 Service Accounts so you can copy 75 TB a day.
+
+#### Two methods to create service accounts
+Choose one of these methods
+
+##### 1. Create Service Accounts in existed Project (Recommended Method)
+
+- List your projects ids
+```
+python3 gen_sa_accounts.py --list-projects
+```
+- Enable services automatically by this command
+```
+python3 gen_sa_accounts.py --enable-services $PROJECTID
+```
+- Create Sevice Accounts to current project
+```
+python3 gen_sa_accounts.py --create-sas $PROJECTID
+```
+- Download Sevice Accounts as accounts folder
+```
+python3 gen_sa_accounts.py --download-keys $PROJECTID
+```
+##### 2. Create Service Accounts in New Project
+```
+python3 gen_sa_accounts.py --quick-setup 1 --new-only
+```
+A folder named accounts will be created which will contain keys for the Service Accounts.
+
+### 2. Add Service Accounts
+
+#### Two methods to add service accounts
+Choose one of these methods
+
+##### 1. Add Them To Google Group then to Team Drive (Recommended)
+- Mount accounts folder
+```
+cd accounts
+```
+- Grab emails form all accounts to emails.txt file that would be created in accounts folder
+- `For Windows using PowerShell`
+```
+$emails = Get-ChildItem .\**.json |Get-Content -Raw |ConvertFrom-Json |Select -ExpandProperty client_email >>emails.txt
+```
+- `For Linux`
+```
+grep -oPh '"client_email": "\K[^"]+' *.json > emails.txt
+```
+- Unmount acounts folder
+```
+cd ..
+```
+Then add emails from emails.txt to Google Group, after that add this Google Group to your Shared Drive and promote it to manager and delete email.txt file from accounts folder
+
+##### 2. Add Them To Team Drive Directly
+- Run:
+```
+python3 add_to_team_drive.py -d SharedTeamDriveSrcID
+```
+------
+
+## Yt-dlp and Aria2c Authentication Using .netrc File
+For using your premium accounts in yt-dlp or for protected Index Links, create .netrc and not netrc, this file will be hidden, so view hidden files to edit it after creation. Use following format on file: 
+
+Format:
+```
+machine host login username password my_password
+```
+Example:
+```
+machine example.workers.dev login index_username password index_password
+```
+**Note**: Using aria2c you can also use without username. Multiple accounts of different hosts can be added each separated by a new line.
+
+**Youtube Note**: For `youtube` authentication use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
+
+-----
 
 ## Bot Screenshot: 
 

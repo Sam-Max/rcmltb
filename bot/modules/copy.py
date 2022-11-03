@@ -198,13 +198,13 @@ async def copy_menu_callback(client, callback_query):
 
     elif cmd[1] == "drive_dest":
         #Clean Menu
+        await query.answer() 
         update_rclone_var("COPY_DESTINATION_DIR", "", user_id)
         dest_dir= get_rclone_val("COPY_DESTINATION_DIR", user_id) 
 
         dest_drive= cmd[2]
         update_rclone_var("COPY_DESTINATION_DRIVE", dest_drive, user_id)
         await list_dir(message, drive_name= dest_drive, drive_base= dest_dir, callback="dir_dest", edit=True, back_callback= "back_dest", is_second_menu=True)
-        await query.answer() 
 
     elif cmd[1] == "dir_dest":
         path = get_rclone_val(cmd[2], user_id)

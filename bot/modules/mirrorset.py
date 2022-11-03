@@ -19,9 +19,9 @@ from pyrogram.types import InlineKeyboardMarkup
 async def handle_mirrorset(client, message):
     user_id= message.from_user.id
     if await is_rclone_config(user_id, message):
-        if DEFAULT_RCLONE_DRIVE := config_dict['DEFAULT_RCLONE_DRIVE']:
+        if DEFAULT_REMOTE := config_dict['DEFAULT_REMOTE']:
             if user_id == OWNER_ID:
-                update_rclone_var("MIRRORSET_DRIVE", DEFAULT_RCLONE_DRIVE, user_id)
+                update_rclone_var("MIRRORSET_DRIVE", DEFAULT_REMOTE, user_id)
         rclone_drive = get_rclone_val("MIRRORSET_DRIVE", user_id)              
         base_dir= get_rclone_val("MIRRORSET_BASE_DIR", user_id)
         if config_dict['MULTI_RCLONE_CONFIG']: 
@@ -155,7 +155,7 @@ async def mirrorset_callback(client, callback_query):
 
         drive_name= cmd[2]
         update_rclone_var("MIRRORSET_DRIVE", drive_name, user_id)
-        config_dict['DEFAULT_RCLONE_DRIVE']= drive_name
+        config_dict['DEFAULT_REMOTE']= drive_name
         await list_dir(message, drive_name= drive_name, drive_base=base_dir, edit=True)
         await query.answer()
 

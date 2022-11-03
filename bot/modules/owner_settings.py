@@ -180,7 +180,7 @@ async def ownerset_callback(client, callback_query):
                 await start_env_listener(client, query, user_id, cmd[3], action="rem")
             elif cmd[3] in default_values:
                 value = default_values[cmd[3]]
-            elif cmd[3] == 'DEFAULT_RCLONE_DRIVE':
+            elif cmd[3] == 'DEFAULT_REMOTE':
                 update_rclone_var("MIRRORSET_DRIVE", value, user_id)
                 update_rclone_var("MIRRORSET_BASE_DIR", value, user_id)
             elif cmd[3] == 'EXTENSION_FILTER':
@@ -392,7 +392,7 @@ async def start_env_listener(client, query, user_id, key, action=""):
                         if downloads:
                             aria2.set_options({'bt-stop-timeout': f'{value}'}, downloads)
                         aria2_options['bt-stop-timeout'] = f'{value}'
-                    elif key == 'DEFAULT_RCLONE_DRIVE':
+                    elif key == 'DEFAULT_REMOTE':
                         update_rclone_var("MIRRORSET_DRIVE", value, user_id)
                     elif key == 'LEECH_SPLIT_SIZE':
                         value = min(int(value), TG_MAX_FILE_SIZE)

@@ -102,13 +102,18 @@ WEB_PINCODE = WEB_PINCODE.lower() == 'true'
 EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '')
 EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
 
-DEFAULT_RCLONE_DRIVE = environ.get('DEFAULT_RCLONE_DRIVE', '')
+DEFAULT_REMOTE = environ.get('DEFAULT_REMOTE', '')
+
+USE_SERVICE_ACCOUNTS = environ.get('USE_SERVICE_ACCOUNTS', '')
+USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == 'true'
+
+SERVICE_ACCOUNTS_REMOTE = environ.get('SERVICE_ACCOUNTS_REMOTE', '')
 
 MULTI_RCLONE_CONFIG = environ.get('MULTI_RCLONE_CONFIG', '')
-MULTI_RCLONE_CONFIG = MULTI_RCLONE_CONFIG.lower() == 'true'  
+MULTI_RCLONE_CONFIG = MULTI_RCLONE_CONFIG.lower() == 'true' 
 
-RCLONE_SERVER_SIDE_COPY = environ.get('RCLONE_SERVER_SIDE_COPY', '')
-RCLONE_SERVER_SIDE_COPY = RCLONE_SERVER_SIDE_COPY.lower() == 'true' 
+SERVER_SIDE_COPY = environ.get('SERVER_SIDE_COPY', '')
+SERVER_SIDE_COPY = SERVER_SIDE_COPY.lower() == 'true' 
 
 aid = environ.get('ALLOWED_CHATS', '')
 if len(aid) != 0:
@@ -302,7 +307,7 @@ if not config_dict:
                    'BASE_URL': BASE_URL,
                    'CMD_INDEX': CMD_INDEX,
                    'DUMP_CHAT': DUMP_CHAT,
-                   'DEFAULT_RCLONE_DRIVE': DEFAULT_RCLONE_DRIVE,
+                   'DEFAULT_REMOTE': DEFAULT_REMOTE,
                    'EQUAL_SPLITS': EQUAL_SPLITS,
                    'EXTENSION_FILTER': EXTENSION_FILTER,
                    'GDRIVE_FOLDER_ID': GDRIVE_FOLDER_ID,
@@ -312,7 +317,7 @@ if not config_dict:
                    'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                    'MEGA_PASSWORD': MEGA_PASSWORD,
                    'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
-                   'RCLONE_SERVER_SIDE_COPY': RCLONE_SERVER_SIDE_COPY,
+                   'SERVER_SIDE_COPY': SERVER_SIDE_COPY,
                    'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                    'RSS_CHAT_ID': RSS_CHAT_ID,
                    'RSS_COMMAND': RSS_COMMAND,
@@ -320,6 +325,7 @@ if not config_dict:
                    'SEARCH_API_LINK': SEARCH_API_LINK,
                    'SEARCH_LIMIT': SEARCH_LIMIT,
                    'SERVER_PORT': SERVER_PORT,
+                   'SERVICE_ACCOUNTS_REMOTE': SERVICE_ACCOUNTS_REMOTE,
                    'STATUS_LIMIT': STATUS_LIMIT,
                    'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
                    'SUDO_USERS': SUDO_USERS,
@@ -330,6 +336,7 @@ if not config_dict:
                    'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
                    'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
                    'USER_SESSION_STRING': USER_SESSION_STRING,
+                   'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
                    'WEB_PINCODE': WEB_PINCODE}
 
 aria2c_global = ['bt-max-open-files', 'download-result', 'keep-unfinished-download-result', 'log', 'log-level',
@@ -345,5 +352,6 @@ if not aria2_options:
 qb_client = get_client()
 if not qbit_options:
     qbit_options = dict(qb_client.app_preferences())
+    del qbit_options['scan_dirs']
 else:
     qb_client.app_set_preferences(qbit_options)

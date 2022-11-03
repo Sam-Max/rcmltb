@@ -32,12 +32,12 @@ class RcloneStatus:
                 self.__eta = self.info[3].replace('ETA', '') 
             if len(match) == 0:
                 blank += 1
-                if blank == 8:
+                if blank == 15:
                     break
             else:
                 blank = 0
-            await sleep(0.1)
-
+            await sleep(0)
+    
     def gid(self):
         return self.__gid
 

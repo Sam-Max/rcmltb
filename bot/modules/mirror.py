@@ -36,12 +36,8 @@ async def handle_zip_mirror(client, message):
 async def handle_unzip_mirror(client, message):
     await mirror_leech(client, message, extract=True)
 
-''' /cmd link | newname pswd: xx(zip/unzip) 
-         username 
-         password '''
-
-# /cmd |newname pswd: xx(zip/unzip)
-
+# Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/mirror_leech.py
+# Adapted for asyncio and pyrogram and minor modifications
 async def mirror_leech(client, message, isZip=False, extract=False, isLeech=False):
     user_id= message.from_user.id
     message_id= message.id
