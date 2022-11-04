@@ -101,7 +101,7 @@ ytdlzipleech - Leech and zip yt-dlp supported link
 myfiles - File manager
 clone - Clone gdrive file/folder from link
 copy - Copy from cloud to cloud
-config - Rclone config
+config - Load config files
 usetting - User settings
 ownsetting - Owner settings
 rsslist - List all subscribed rss feed 
