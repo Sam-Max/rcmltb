@@ -109,7 +109,7 @@ SERVE_USER = environ.get('SERVE_USER', '')
 SERVE_PASS= environ.get('SERVE_PASS', '')
 
 SERVE_IP = environ.get('SERVE_IP', '')
-SERVE_IP = 'localhost' if len(SERVE_IP) == 0 else int(SERVE_IP)
+SERVE_IP = 'localhost' if len(SERVE_IP) == 0 else SERVE_IP
 
 SERVE_PORT = environ.get('SERVE_PORT', '')
 SERVE_PORT= 23457 if len(SERVE_PORT) == 0 else int(SERVE_PORT)
