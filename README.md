@@ -112,6 +112,7 @@ rssset - Rss settings
 cleanup - Clean drive trash
 cancelall - Cancel all tasks
 storage - Drive details
+serve - serve remote as index
 search - Search for torrents
 status - Status message of tasks
 stats - Bot stats
@@ -166,7 +167,11 @@ restart - Restart bot
      - `MULTI_RCLONE_CONFIG`: For using owner rclone config for all users or each user with their own rclone config. Default to False. `Bool` 
      - `USE_SERVICE_ACCOUNTS`: For enabling Service Accounts for rclone copy. Default to False. `Bool`.
      - `SERVICE_ACCOUNTS_REMOTE`= To set remote (teamdrive with id) from your rclone config with the service accounts added. `Str`
-     - `SERVER_SIDE_COPY`= For enabling or desabling rclone server side copy. Default to False. **NOTE**: if you get any error while copy set this to `False`. `Bool`.
+     - `SERVER_SIDE_COPY`= For enabling or desabling rclone server side copy. Default to False. **NOTE**: if you get any error while copy set this to `False`. `Bool`
+    - `SERVE_IP`: IP/Domain(public) of your vps for remote index. Default to localhost. `Str`
+    - `SERVE_PORT`: Port to use. Default to 23457. `Str`
+    - `SERVE_USER`: User for remote index. Optional. `Str`
+    - `SERVE_PASS`: Password for remote index. Optional. `Str`
 
    - CLONE
      - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Str`
