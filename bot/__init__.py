@@ -105,14 +105,16 @@ EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
 DEFAULT_REMOTE = environ.get('DEFAULT_REMOTE', '')
 
 SERVE_USER = environ.get('SERVE_USER', '')
+SERVE_USER = 'admin' if len(SERVE_USER) == 0 else SERVE_USER
 
 SERVE_PASS= environ.get('SERVE_PASS', '')
+SERVE_PASS = 'admin' if len(SERVE_PASS) == 0 else SERVE_PASS
 
 SERVE_IP = environ.get('SERVE_IP', '')
-SERVE_IP = 'localhost' if len(SERVE_IP) == 0 else SERVE_IP
+SERVE_IP = '' if len(SERVE_IP) == 0 else SERVE_IP
 
 SERVE_PORT = environ.get('SERVE_PORT', '')
-SERVE_PORT= 23457 if len(SERVE_PORT) == 0 else int(SERVE_PORT)
+SERVE_PORT= 8080 if len(SERVE_PORT) == 0 else int(SERVE_PORT)
 
 USE_SERVICE_ACCOUNTS = environ.get('USE_SERVICE_ACCOUNTS', '')
 USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == 'true'
@@ -155,10 +157,14 @@ RSS_COMMAND = environ.get('RSS_COMMAND', '')
 if len(RSS_COMMAND) == 0:
     RSS_COMMAND = ''
 
-BASE_URL = environ.get('BASE_URL_OF_BOT', '').rstrip("/")
+BASE_URL = environ.get('BASE_URL', '').rstrip("/")
 if len(BASE_URL) == 0:
-    LOGGER.warning('BASE_URL_OF_BOT not provided!')
+    LOGGER.warning('BASE_URL not provided!')
     BASE_URL = ''
+
+SERVER_PORT = environ.get('SERVER_PORT', '')
+if len(SERVER_PORT) == 0:
+    SERVER_PORT = 80
 
 UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
 if len(UPSTREAM_REPO) == 0:
@@ -167,10 +173,6 @@ if len(UPSTREAM_REPO) == 0:
 UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', '')
 if len(UPSTREAM_BRANCH) == 0:
     UPSTREAM_BRANCH = 'master'
-
-SERVER_PORT = environ.get('SERVER_PORT', '')
-if len(SERVER_PORT) == 0:
-    SERVER_PORT = 80
 
 IS_TEAM_DRIVE = environ.get('IS_TEAM_DRIVE', '')
 IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == 'true'   

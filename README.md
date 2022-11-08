@@ -18,9 +18,10 @@
 - Copy file/folder from cloud to cloud
 - Leech file/folder from cloud to Telegram
 - Mirror from Telegram to a selected cloud
-- Telegram Navigation Button Menus to interact with clouds
-- File Manager: size, mkdir, delete, dedupe, rename
+- Telegram Navigation Button Menus to interact with cloud
+- File Manager: size, mkdir, delete, dedupe and rename
 - Service Accounts support with automatic switching
+- Serve remote as http or webdav index
 - Clean remote trash
 - View storage info 
 
@@ -168,10 +169,10 @@ restart - Restart bot
      - `USE_SERVICE_ACCOUNTS`: For enabling Service Accounts for rclone copy. Default to False. `Bool`.
      - `SERVICE_ACCOUNTS_REMOTE`= To set remote (teamdrive with id) from your rclone config with the service accounts added. `Str`
      - `SERVER_SIDE_COPY`= For enabling or desabling rclone server side copy. Default to False. **NOTE**: if you get any error while copy set this to `False`. `Bool`
-    - `SERVE_IP`: IP/Domain(public) of your vps for remote index. Default to localhost. `Str`
-    - `SERVE_PORT`: Port to use. Default to 23457. `Str`
-    - `SERVE_USER`: User for remote index. Optional. `Str`
-    - `SERVE_PASS`: Password for remote index. Optional. `Str`
+    - `SERVE_IP`= "Ip (public) of your vps where bot is running. `Str`
+    - `SERVE_PORT`: Port to use for remote index. Default to `8080`. `Str`
+    - `SERVE_USER`: User for remote index. Default to `admin`. `Str`
+    - `SERVE_PASS`: Password for remote index. Default to `admin`. `Str`
 
    - CLONE
      - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Str`
@@ -198,7 +199,7 @@ restart - Restart bot
      - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` are required, otherwise rss commands will not work. You must use bot in group. You can also add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.    
 
    - QBITTORRENT
-     - `BASE_URL_OF_BOT`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https). Str
+     - `BASE_URL`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https). Str
      - `SERVER_PORT`: Port. Str
      - `WEB_PINCODE`: If empty or False means no more pincode required while qbit web selection. Bool
      Qbittorrent NOTE: If your facing ram exceeded issue then set limit for MaxConnecs, decrease AsyncIOThreadsCount in qbittorrent config and set limit of DiskWriteCacheSize to 32

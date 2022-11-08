@@ -10,11 +10,11 @@ from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessa
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
 
 SREMOTE = []
-PID= 0
-STATE= 'inactive'
+process_dict= {'state':"inactive",
+               'pid':0}
 
 async def serve(client, message):
-  if STATE == 'inactive':
+  if process_dict['state'] == 'inactive':
     await list_remotes(message)
   else:
     button= ButtonMaker()
@@ -39,17 +39,18 @@ async def serve_cb(client, callbackQuery):
     SREMOTE.append(data[2]) 
     await protocol_selection(message)
   elif data[1] == "http":
-    await query.answer()
-    cmd = ["rclone", "serve", "http", f"--addr={SERVE_IP}:{SERVE_PORT}", f"--user={SERVE_USER}", f"--pass={SERVE_PASS}", f'--config={path}', f"{SREMOTE[0]}:"] 
+    cmd = ["rclone", "serve", "http", f"--addr=:{SERVE_PORT}", f"--user={SERVE_USER}", f"--pass={SERVE_PASS}", f'--config={path}', f"{SREMOTE[0]}:"] 
     await rclone_serve(cmd, data[1], message)
   elif data[1] == "webdav":
-    await query.answer()
-    cmd = ["rclone", "serve", "webdav", f"--addr={SERVE_IP}:{SERVE_PORT}", f"--user={SERVE_USER}", f"--pass={SERVE_PASS}", f'--config={path}', f"{SREMOTE[0]}:"] 
+    cmd = ["rclone", "serve", "webdav", f"--addr=:{SERVE_PORT}", f"--user={SERVE_USER}", f"--pass={SERVE_PASS}", f'--config={path}', f"{SREMOTE[0]}:"] 
     await rclone_serve(cmd, data[1], message)
   elif data[1] == "stop":
-    LOGGER.info(f"Killing process with pid: {PID}")
-    srun(["kill", "-9", f"{PID}"])
-    await query.answer()
+    pid= process_dict['pid']
+    LOGGER.info(f"Killing process with pid: {pid}")
+    process_dict['state'] = 'inactive'
+    status= srun(["kill", "-9", f"{pid}"])
+    if status.returncode == 0:
+        await query.answer('Server stopped')
   elif data[1] == "close":
     await query.answer()
     await message.delete()
@@ -57,19 +58,23 @@ async def serve_cb(client, callbackQuery):
 async def rclone_serve(cmd, protocol, message):
   process = await subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
   button= ButtonMaker()
-  msg= f'Serving {protocol} on <code>http://{SERVE_IP}:{SERVE_PORT}/</code>'
+  serve_address= f"http://{SERVE_IP}:{SERVE_PORT}"
+  msg= f'Serving {protocol} on <a href={serve_address}>{serve_address}</a>'
   msg+= f'\n<b>User</b>: <code>{SERVE_USER}</code>'
   msg+= f'\n<b>Pass</b>: <code>{SERVE_PASS}</code>'
   button.cb_buildbutton("Stop", "servemenu^stop")
-  await sendMarkup(msg, message, button.build_menu(1))
-  globals()['STATE']= 'active'
-  globals()['PID'] = process.pid
+  await editMarkup(msg, message, button.build_menu(1))
+  process_dict['state']= 'active'
+  process_dict['pid']= process.pid
   return_code = await process.wait()
   if return_code != 0:
-    globals()['STATE']= 'inactive'
     err= await process.stderr.read()
     err = err.decode()
-    await sendMessage(f'Error: {err}', message)
+    if process_dict['state'] == 'inactive':
+      await message.delete()
+    else:
+      await sendMessage(f'Error: {err}', message)
+      process_dict['state']= 'inactive'
 
 async def list_remotes(message):
     SREMOTE.clear()
@@ -77,8 +82,8 @@ async def list_remotes(message):
     path= get_rclone_config(OWNER_ID)
     conf = ConfigParser()
     conf.read(path)
-    for j in conf.sections():
-        button.cb_buildbutton(f"📁{j}", f"servemenu^drive^{j}")
+    for remote in conf.sections():
+        button.cb_buildbutton(f"📁{remote}", f"servemenu^drive^{remote}")
     button.cb_buildbutton("✘ Close Menu", f"servemenu^close")
     await sendMarkup("Select cloud to serve as a remote", message, reply_markup= button.build_menu(2))
 

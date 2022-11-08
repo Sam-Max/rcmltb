@@ -1,6 +1,7 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/ytdlp.py
 # Adapted for asyncio framework and pyrogram library
 
+from asyncio import sleep
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import regex, command
 from bot import DOWNLOAD_DIR, bot
@@ -31,34 +32,42 @@ async def _ytdl(client, message, isZip= False, isLeech=False):
             pass
         else:
             return
-    link = mssg.split()
-    if len(link) > 1:
-        link = link[1].strip()
-    else:
-        link = ""
+    tag= ''
+    multi = 0
+    index = 1
+    link = ''
 
+    args = mssg.split(maxsplit=2)
+    if len(args) > 1:
+        for x in args:
+            x = x.strip()
+            if x.strip().isdigit():
+                multi = int(x)
+                mi = index
+        if multi == 0:
+            args = mssg.split(maxsplit=index)
+            if len(args) > index:
+                link = args[index].strip()
+                if link.startswith(("|", "pswd:", "opt:")):
+                    link = ''
+    
     name = mssg.split('|', maxsplit=1)
     if len(name) > 1:
-        if 'opt: ' in name[0]:
+        if 'opt:' in name[0] or 'pswd:' in name[0]:
             name = ''
         else:
-            name = name[1]
-        if name != '':
-            name = re_split('pswd:|opt:', name)[0]
-            name = name.strip()
+            name = re_split('pswd:|opt:', name[1])[0].strip()
     else:
         name = ''
 
+    pswd = mssg.split(' pswd: ')
+    pswd = pswd[1].split(' opt: ')[0] if len(pswd) > 1 else None
+
     opt = mssg.split(' opt: ')
-    if len(opt) > 1:
-        opt = opt[1]
-    else:
-        opt = None
+    opt = opt[1] if len(opt) > 1 else ''
 
     if message.from_user.username:
         tag = f"@{message.from_user.username}"
-    else:
-        tag = message.from_user.first_name
 
     reply_to = message.reply_to_message
     if reply_to is not None:
@@ -66,35 +75,43 @@ async def _ytdl(client, message, isZip= False, isLeech=False):
             link = reply_to.text.split(maxsplit=1)[0].strip()
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
-        else:
-            tag = reply_to.from_user.first_name
 
     if not is_url(link):
         help_msg = """
 <b>Send link along with command line:</b>
-<code>/cmd</code> link opt: x:y|x1:y1
+<code>/cmd</code> link |newname pswd: xx(zip) opt: x:y|x1:y1
 
 <b>By replying to link:</b>
-<code>/cmd</code> opt: x:y|x1:y1
+<code>/cmd</code> |newname pswd: xx(zip) opt: x:y|x1:y1
 
 <b>Options Example:</b> opt: playliststart:^10|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)
 
+<b>Multi links only by replying to first link:</b>
+<code>/cmd</code> 10(number of links)
+Number should be always before |newname, pswd: and opt:
+
 <b>Options Note:</b> Add `^` before integer, some values must be integer and some string.
-Like playlist_items: 10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
+Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
 You can add tuple and dict also. Use double quotes inside dict.
-        """
+
+<b>NOTE:</b>
+You can add perfix randomly before link those for select (s) and mutli links (number).
+You can't add perfix randomly after link. They should be arranged like exmaple above, rename then pswd then opt. If you don't want to add pswd for example then it will be (|newname opt:), just don't change the arrangement.
+You can always add video quality from yt-dlp api options. 
+"""
         return await sendMessage(help_msg, message)
 
-    listener = MirrorLeechListener(message, tag, user_id, isZip= isZip, isLeech=isLeech)
-    buttons = ButtonMaker()
-    best_video = "bv*+ba/b"
-    best_audio = "ba/b"
+    listener = MirrorLeechListener(message, tag, user_id, isZip=isZip, pswd=pswd, isLeech=isLeech)
     ydl = YoutubeDLHelper(message)
     try:
         result = ydl.extractMetaData(link, name, opt, True)
     except Exception as e:
         msg = str(e).replace('<', ' ').replace('>', ' ')
         return await sendMessage(tag + " " + msg, message)
+    buttons = ButtonMaker()
+    best_video = "bv*+ba/b"
+    best_audio = "ba/b"
+    formats_dict = {}
     if 'entries' in result:
         for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
             video_format = f"bv*[height<={i}][ext=mp4]+ba[ext=m4a]/b[height<={i}]"
@@ -165,6 +182,17 @@ You can add tuple and dict also. Use double quotes inside dict.
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict]
         await sendMarkup('Choose Video Quality:', message, YTBUTTONS)
 
+    if multi > 1:
+        await sleep(4)
+        nextmsg = await client.get_messages(message.chat.id, message.reply_to_message.id + 1)
+        ymsg = message.text.split(maxsplit=mi+1)
+        ymsg[mi] = f"{multi - 1}"
+        nextmsg = await sendMessage(" ".join(ymsg), nextmsg)
+        nextmsg = await client.get_messages(message.chat.id, nextmsg.id)
+        nextmsg.from_user.id = message.from_user.id
+        await sleep(4)
+        await _ytdl(client, nextmsg, isZip, isLeech)
+
 async def _qual_subbuttons(task_id, b_name, msg):
     buttons = ButtonMaker()
     task_info = listener_dict[task_id]
@@ -216,11 +244,8 @@ async def select_format(client, callback_query):
         await query.answer()
         return await editMessage('Choose Video Quality:', message, task_info[3])
     elif data[2] == "mp3":
-        await query.answer()
-        if len(data) == 4:
-            playlist = True
-        else:
-            playlist = False
+        query.answer()
+        playlist = len(data) == 4
         await _mp3_subbuttons(task_id, message, playlist)
         return
     elif data[2] == "close":

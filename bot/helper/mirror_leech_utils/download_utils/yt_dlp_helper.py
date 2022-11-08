@@ -4,6 +4,7 @@
 from logging import getLogger
 from random import SystemRandom
 from string import ascii_letters, digits
+from os import listdir, path as ospath
 from yt_dlp import YoutubeDL, DownloadError
 from re import search as re_search
 from json import loads as jsonloads
@@ -113,7 +114,7 @@ class YoutubeDLHelper:
         await self.__listener.onDownloadError(error)
 
     def extractMetaData(self, link, name, args, get_info=False):
-        if args is not None:
+        if args:
             self.__set_args(args)
         if get_info:
             self.opts['playlist_items'] = '0'
@@ -145,10 +146,12 @@ class YoutubeDLHelper:
             else:
                 self.name = name
         else:
-            ext = realName.split('.')[-1]
+            outtmpl_ ='%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s'
+            realName = ydl.prepare_filename(result, outtmpl=outtmpl_)
+            ext = realName.rsplit('.', 1)[-1]
             if name == "":
                 newname = realName.split(f" [{result['id'].replace('*', '_')}]")
-                self.name = newname[0] + '.' + ext if len(newname) > 1 else newname[0]
+                self.name = f'{newname[0]}.{ext}' if len(newname) > 1 else newname[0]
             else:
                 self.name = f"{name}.{ext}"
 
@@ -174,20 +177,23 @@ class YoutubeDLHelper:
         if self.is_cancelled:
             return
         if self.is_playlist:
-            self.opts['outtmpl'] = f"{path}/{self.name}/%(title)s.%(ext)s"
+            self.opts['outtmpl'] = f"{path}/{self.name}/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"
         elif args is None:
             self.opts['outtmpl'] = f"{path}/{self.name}"
         else:
             folder_name = self.name.rsplit('.', 1)[0]
             self.opts['outtmpl'] = f"{path}/{folder_name}/{self.name}"
             self.name = folder_name
-        await self.__download(link)
+        await self.__download(link, path)
 
-    async def __download(self, link):
+    async def __download(self, link, path):
         try:
             with YoutubeDL(self.opts) as ydl:
                 try:
                     await botloop.run_in_executor(None, ydl.download, [link]) 
+                    if self.is_playlist and (not ospath.exists(path) or len(listdir(path)) == 0):
+                        await self.__onDownloadError("No video available to download from this playlist. Check logs for more details")
+                        return
                 except DownloadError as e:
                     if not self.is_cancelled:
                         await self.__onDownloadError(str(e))
@@ -209,7 +215,9 @@ class YoutubeDLHelper:
         for arg in args:
             xy = arg.split(':', 1)
             karg = xy[0].strip()
-            varg = xy[1].strip()
+            if karg == 'format':
+                continue
+            varg = xy[1].strip()    
             if varg.startswith('^'):
                 varg = int(varg.split('^')[1])
             elif varg.lower() == 'true':
