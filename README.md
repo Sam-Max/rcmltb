@@ -167,12 +167,12 @@ restart - Restart bot
      - `DEFAULT_REMOTE`: To set a default remote from your rclone config for mirroring (only for owner). `Str`
      - `MULTI_RCLONE_CONFIG`: For using owner rclone config for all users or each user with their own rclone config. Default to False. `Bool` 
      - `USE_SERVICE_ACCOUNTS`: For enabling Service Accounts for rclone copy. Default to False. `Bool`.
-     - `SERVICE_ACCOUNTS_REMOTE`= To set remote (teamdrive with id) from your rclone config with the service accounts added. `Str`
+     - `SERVICE_ACCOUNTS_REMOTE`= To set remote (teamdrive) from your rclone config with the service accounts added. `Str`. **Note**: teamdrive remote must have team_drive field with id
      - `SERVER_SIDE_COPY`= For enabling or desabling rclone server side copy. Default to False. **NOTE**: if you get any error while copy set this to `False`. `Bool`
-    - `SERVE_IP`= "Ip (public) of your vps where bot is running. `Str`
-    - `SERVE_PORT`: Port to use for remote index. Default to `8080`. `Str`
-    - `SERVE_USER`: User for remote index. Default to `admin`. `Str`
-    - `SERVE_PASS`: Password for remote index. Default to `admin`. `Str`
+     - `SERVE_IP`= "Ip (public) of your vps where bot is running. `Str`
+     - `SERVE_PORT`: Port to use for remote index. Default to `8080`. `Str`
+     - `SERVE_USER`: User for remote index. Default to `admin`. `Str`
+     - `SERVE_PASS`: Password for remote index. Default to `admin`. `Str`
 
    - CLONE
      - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Str`
