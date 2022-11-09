@@ -20,6 +20,7 @@ feedparser
 APScheduler
 pillow
 tenacity
+telegraph
 python-magic
 python-dotenv
 requests
