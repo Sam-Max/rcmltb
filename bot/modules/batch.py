@@ -86,7 +86,7 @@ async def get_bulk_msg(bot, message, msg_link, i, isLeech):
             file = msg.document or msg.video or msg.audio or msg.photo or None
             if file is None:
                 return
-            tg_down= TelegramDownloader(file, bot, listener, f'{DOWNLOAD_DIR}{listener.uid}/')
+            tg_down= TelegramDownloader(file, bot, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
             await tg_down.download() 
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await sendMessage("Have you joined the channel?", message)
@@ -99,7 +99,7 @@ async def get_bulk_msg(bot, message, msg_link, i, isLeech):
             file = msg.document or msg.video or msg.audio or msg.photo or None
             if file is None:
                 return
-            tg_down= TelegramDownloader(file, bot, listener, f'{DOWNLOAD_DIR}{listener.uid}/')
+            tg_down= TelegramDownloader(file, bot, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
             await tg_down.download()
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await sendMessage("Have you joined the channel?", message)

@@ -2,7 +2,6 @@ from asyncio import TimeoutError
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex, command
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardMarkup
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from os import path as ospath, remove
 from subprocess import run as srun
@@ -61,7 +60,7 @@ async def config_callback(client, callback_query):
           await set_config_listener(client, message)
 
      elif cmd[1] == "close":
-        await query.answer("Closed")
+        await query.answer()
         await message.delete()
 
 async def config_menu(user_id, message ):
@@ -86,18 +85,18 @@ async def config_menu(user_id, message ):
      msg+= f"\n{fstr}"
      path= ospath.join("users", str(user_id), "rclone.conf")
      if ospath.exists(path):
-          buttons.dbuildbutton("🗂 Get rclone.conf", f"configmenu^get_config^{user_id}",
-                              "📃 Change rclone.conf", f"configmenu^change_config^{user_id}")
+          buttons.cb_buildbutton("🗂 Get rclone.conf", f"configmenu^get_config^{user_id}")
+          buttons.cb_buildbutton("📃Change rclone.conf", f"configmenu^change_config^{user_id}")
      else:
-          buttons.cbl_buildbutton("📃 Load rclone.conf", f"configmenu^change_config^{user_id}")
+          buttons.cb_buildbutton("📃 Load rclone.conf", f"configmenu^change_config^{user_id}")
      if ospath.exists("token.pickle"):
-          buttons.dbuildbutton("🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}",
-                              "📃 Change token.pickle", f"configmenu^change_pickle^{user_id}")
+          buttons.cb_buildbutton("🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}")
+          buttons.cb_buildbutton("📃 Change token.pickle", f"configmenu^change_pickle^{user_id}")
      else:
-          buttons.cbl_buildbutton("📃 Load token.pickle", f"configmenu^change_pickle^{user_id}")
-     buttons.cbl_buildbutton("📃 Load accounts.zip", f"configmenu^change_acc^{user_id}")
-     buttons.cbl_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}")
-     await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+          buttons.cb_buildbutton("📃 Load token.pickle", f"configmenu^change_pickle^{user_id}")
+     buttons.cb_buildbutton("📃 Load accounts.zip", f"configmenu^change_acc^{user_id}")
+     buttons.cb_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}", 'footer')
+     await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
 async def set_config_listener(client, message, is_rclone=False):
      if message.reply_to_message:

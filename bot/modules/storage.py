@@ -66,7 +66,7 @@ async def storage_menu_cb(client, callback_query):
           await query.answer()
 
      elif cmd[1] == "close":
-          await query.answer("Closed")
+          await query.answer()
           await message.delete()     
 
 async def rclone_about(message, query, drive_name, user_id):

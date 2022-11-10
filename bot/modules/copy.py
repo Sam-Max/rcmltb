@@ -4,12 +4,11 @@ from json import loads as jsonloads
 from bot import OWNER_ID, bot, config_dict
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
-from pyrogram.types import InlineKeyboardMarkup
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
+from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
 from bot.helper.ext_utils.rclone_utils import is_rclone_config
 from bot.helper.ext_utils.var_holder import get_rclone_val, update_rclone_var
 from bot.helper.mirror_leech_utils.download_utils.rclone_copy import RcloneCopy
@@ -29,14 +28,14 @@ async def handle_copy(client, message):
         listener= MirrorLeechListener(message, tag, user_id)
         listener_dict[message_id] = [listener]
         if config_dict['MULTI_RCLONE_CONFIG']: 
-            await list_drive(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
+            await list_remotes(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
         else:
             if user_id == OWNER_ID:  
-                await list_drive(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
+                await list_remotes(message, rclone_drive=origin_drive, base_dir=origin_dir, callback="drive_origin")
             else:
                 await sendMessage("You can't use on current mode", message)
 
-async def list_drive(message, rclone_drive, base_dir, callback, is_second_menu= False, edit=False):
+async def list_remotes(message, rclone_drive, base_dir, callback, is_second_menu= False, edit=False):
     if message.reply_to_message:
         user_id= message.reply_to_message.from_user.id
     else:
@@ -46,55 +45,40 @@ async def list_drive(message, rclone_drive, base_dir, callback, is_second_menu= 
     path= get_rclone_config(user_id)
     conf = ConfigParser()
     conf.read(path)
-
-    for j in conf.sections():
-        if "team_drive" in list(conf[j]):
-            buttons.cb_buildsecbutton(f"📁 {j}", f"copymenu^{callback}^{j}^{user_id}")
-        else:
-            buttons.cb_buildsecbutton(f"📁 {j}", f"copymenu^{callback}^{j}^{user_id}")
-
-    for a, b in pairwise(buttons.second_button):
-        row= [] 
-        if b == None:
-            row.append(a)  
-            buttons.ap_buildbutton(row)
-            break
-        row.append(a)
-        row.append(b)
-        buttons.ap_buildbutton(row)
-
-    buttons.cbl_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}")
-
+    for remote in conf.sections():
+        buttons.cb_buildbutton(f"📁 {remote}", f"copymenu^{callback}^{remote}^{user_id}")
+    
     if is_second_menu:
         msg = 'Select folder where you want to copy' 
     else:
         if not rclone_drive and not base_dir:
             msg= f"Select cloud where you want to upload file\n\n<b>Path</b><code>:/</code>" 
         else:
-            msg = f"Select cloud where your files are stored\n\n<b>Path: </b><code>{rclone_drive}:{base_dir}</code>"     
+            msg = f"Select cloud where your files are stored\n\n<b>Path: </b><code>{rclone_drive}:{base_dir}</code>" 
+
+    buttons.cb_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}", 'footer')
 
     if edit:
-        await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+        await editMessage(msg, message, reply_markup= buttons.build_menu(2))
     else:
-        await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+        await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
-async def list_dir(message, drive_name, drive_base, callback= "", back_callback= "", edit=False, is_second_menu=False):
+async def list_folder(message, drive_name, drive_base, callback= "", back_callback= "", edit=False, is_second_menu=False):
         user_id= message.reply_to_message.from_user.id
         conf_path = get_rclone_config(user_id)
         buttons = ButtonMaker()
 
         if is_second_menu:
-            buttons.cbl_buildbutton(f"✅ Select this folder", f"copymenu^copy^{user_id}")
+            buttons.cb_buildbutton(f"✅ Select this folder", f"copymenu^copy^{user_id}")
             cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--dirs-only"] 
         else:
-            buttons.cbl_buildbutton(f"✅ Select this folder", f"copymenu^drive_second^_^False^{user_id}")
+            buttons.cb_buildbutton(f"✅ Select this folder", f"copymenu^drive_second^_^False^{user_id}")
             cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
 
         process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
         out, err = await process.communicate()
         out = out.decode().strip()
         return_code = await process.wait()
-
         if return_code != 0:
            err = err.decode().strip()
            return await sendMessage(f'Error: {err}', message)
@@ -107,7 +91,7 @@ async def list_dir(message, drive_name, drive_base, callback= "", back_callback=
         update_rclone_var("driveInfo", list_info, user_id)
         
         if len(list_info) == 0:
-            buttons.cbl_buildbutton("❌Nothing to show❌", "copymenu^pages^{user_id}")
+            buttons.cb_buildbutton("❌Nothing to show❌", "copymenu^pages^{user_id}")
         else:
             total = len(list_info)
             max_results= 10
@@ -131,13 +115,13 @@ async def list_dir(message, drive_name, drive_base, callback= "", back_callback=
                 user_id= user_id)
 
             if offset == 0 and total <= 10:
-                buttons.cbl_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", "copymenu^pages^{user_id}") 
+                buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", "copymenu^pages^{user_id}", 'footer') 
             else: 
-                buttons.dbuildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", "copymenu^pages^{user_id}",
-                                    "NEXT ⏩", f"next_copy {next_offset} {is_second_menu} {back_callback}")
+                buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", "copymenu^pages^{user_id}", 'footer')
+                buttons.cb_buildbutton("NEXT ⏩", f"next_copy {next_offset} {is_second_menu} {back_callback}", 'footer')
 
-        buttons.cbl_buildbutton("⬅️ Back", f"copymenu^{back_callback}^{user_id}")
-        buttons.cbl_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}")
+        buttons.cb_buildbutton("⬅️ Back", f"copymenu^{back_callback}^{user_id}", 'footer_second')
+        buttons.cb_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}", 'footer_second')
 
         if is_second_menu:
             msg=f'Select folder where you want to copy\n\n<b>Path: </b><code>{drive_name}:{drive_base}</code>'
@@ -145,9 +129,9 @@ async def list_dir(message, drive_name, drive_base, callback= "", back_callback=
             msg= f'Select file or folder which you want to copy\n\n<b>Path: </b><code>{drive_name}:{drive_base}</code>'
 
         if edit:
-            await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+            await editMessage(msg, message, reply_markup= buttons.build_menu(1))
         else:
-            await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+            await sendMarkup(msg, message, reply_markup= buttons.build_menu(1))
 
 async def copy_menu_callback(client, callback_query):
     query= callback_query
@@ -177,14 +161,14 @@ async def copy_menu_callback(client, callback_query):
         
         origin_drive= cmd[2]
         update_rclone_var("COPY_ORIGIN_DRIVE", origin_drive, user_id)
-        await list_dir(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= "back_origin")
+        await list_folder(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= "back_origin")
         await query.answer()
 
     elif cmd[1] == "origin_dir":
         path = get_rclone_val(cmd[2], user_id)
         origin_dir_= origin_dir + path  + "/"
         update_rclone_var("COPY_ORIGIN_DIR", origin_dir_, user_id)
-        await list_dir(message, drive_name= origin_drive, drive_base= origin_dir_, callback="origin_dir", edit=True, back_callback= "back_origin")
+        await list_folder(message, drive_name= origin_drive, drive_base= origin_dir_, callback="origin_dir", edit=True, back_callback= "back_origin")
         await query.answer()     
 
     #Second Menu
@@ -193,24 +177,24 @@ async def copy_menu_callback(client, callback_query):
             path = get_rclone_val(cmd[2], user_id)
             origin_dir_= origin_dir + path  
             update_rclone_var("COPY_ORIGIN_DIR", origin_dir_, user_id)
-        await list_drive(message, callback="drive_dest", rclone_drive= dest_drive, base_dir= dest_dir, edit=True, is_second_menu=True)   
+        await list_remotes(message, callback="drive_dest", rclone_drive= dest_drive, base_dir= dest_dir, edit=True, is_second_menu=True)   
         await query.answer()   
 
     elif cmd[1] == "drive_dest":
         #Clean Menu
-        await query.answer() 
         update_rclone_var("COPY_DESTINATION_DIR", "", user_id)
         dest_dir= get_rclone_val("COPY_DESTINATION_DIR", user_id) 
 
         dest_drive= cmd[2]
         update_rclone_var("COPY_DESTINATION_DRIVE", dest_drive, user_id)
-        await list_dir(message, drive_name= dest_drive, drive_base= dest_dir, callback="dir_dest", edit=True, back_callback= "back_dest", is_second_menu=True)
-
+        await list_folder(message, drive_name= dest_drive, drive_base= dest_dir, callback="dir_dest", edit=True, back_callback= "back_dest", is_second_menu=True)
+        await query.answer() 
+        
     elif cmd[1] == "dir_dest":
         path = get_rclone_val(cmd[2], user_id)
         dest_dir_= f"{dest_dir}{path}/"
         update_rclone_var("COPY_DESTINATION_DIR", dest_dir_, user_id)
-        await list_dir(message, drive_name= dest_drive, drive_base= dest_dir_, callback="dir_dest", edit=True, back_callback= "back_dest", is_second_menu=True)
+        await list_folder(message, drive_name= dest_drive, drive_base= dest_dir_, callback="dir_dest", edit=True, back_callback= "back_dest", is_second_menu=True)
         await query.answer()     
 
     elif cmd[1] == "copy":
@@ -220,14 +204,14 @@ async def copy_menu_callback(client, callback_query):
         await rclone_copy.copy(origin_drive, origin_dir, dest_drive, dest_dir)
 
     elif cmd[1] == "close":
-        await query.answer("Closed")
+        await query.answer()
         await message.delete()
 
     # Origin Menu Back Button
     elif cmd[1] == "back_origin":
         if len(origin_dir) == 0:
             await query.answer() 
-            await list_drive(message, rclone_drive= dest_drive, base_dir= dest_dir,  callback="drive_origin", edit=True) 
+            await list_remotes(message, rclone_drive= dest_drive, base_dir= dest_dir,  callback="drive_origin", edit=True) 
             return
         origin_dir_list= origin_dir.split("/")[:-2]
         origin_dir_string = "" 
@@ -235,14 +219,14 @@ async def copy_menu_callback(client, callback_query):
             origin_dir_string += dir + "/" 
         origin_dir= origin_dir_string
         update_rclone_var("COPY_ORIGIN_DIR", origin_dir, user_id)
-        await list_dir(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= cmd[1])
+        await list_folder(message, drive_name= origin_drive, drive_base= origin_dir, callback="origin_dir", edit=True, back_callback= cmd[1])
         await query.answer() 
         
     # Destination Menu Back Button
     elif cmd[1] == "back_dest":
         if len(dest_dir) == 0:
             await query.answer() 
-            await list_drive(message, rclone_drive= dest_drive, base_dir= dest_dir, callback="drive_dest", edit=True, is_second_menu=True)             
+            await list_remotes(message, rclone_drive= dest_drive, base_dir= dest_dir, callback="drive_dest", edit=True, is_second_menu=True)             
             return
         dest_dir_list= dest_dir.split("/")[:-2]
         dest_dir_string = "" 
@@ -250,7 +234,7 @@ async def copy_menu_callback(client, callback_query):
             dest_dir_string += dir + "/"
         dest_dir= dest_dir_string
         update_rclone_var("COPY_DESTINATION_DIR", dest_dir, user_id)
-        await list_dir(message, drive_name= dest_drive, drive_base= dest_dir, callback="dir_dest", edit=True, back_callback= cmd[1] , is_second_menu=True)
+        await list_folder(message, drive_name= dest_drive, drive_base= dest_dir, callback="dir_dest", edit=True, back_callback= cmd[1] , is_second_menu=True)
         await query.answer() 
 
 async def next_page_copy(client, callback_query):
@@ -270,9 +254,9 @@ async def next_page_copy(client, callback_query):
     next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset) 
 
     if is_second_menu:
-        buttons.cbl_buildbutton("✅ Select this folder", f"copymenu^copy^{user_id}")
+        buttons.cb_buildbutton("✅ Select this folder", f"copymenu^copy^{user_id}")
     else:
-        buttons.cbl_buildbutton("✅ Select this folder", f"copymenu^drive_second^_^False^{user_id}")
+        buttons.cb_buildbutton("✅ Select this folder", f"copymenu^drive_second^_^False^{user_id}")
     
     if is_second_menu:
         rcloneListButtonMaker(result_list= next_list_info, 
@@ -290,35 +274,34 @@ async def next_page_copy(client, callback_query):
             is_second_menu=is_second_menu)
 
     if next_offset == 0:
-        buttons.dbuildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "copymenu^pages",
-                            "NEXT ⏩", f"next_copy {_next_offset} {is_second_menu} {data_back_cb}")
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "copymenu^pages", 'footer')
+        buttons.cb_buildbutton("NEXT ⏩", f"next_copy {_next_offset} {is_second_menu} {data_back_cb}", 'footer')
     
     elif next_offset >= total:
-        buttons.dbuildbutton("⏪ BACK", f"next_copy {prev_offset} {is_second_menu} {data_back_cb}",
-                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}",
-                                   "setting pages")
+        buttons.cb_buildbutton("⏪ BACK", f"next_copy {prev_offset} {is_second_menu} {data_back_cb}", 'footer')
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "setting pages", 'footer')
 
     elif next_offset + 10 > total:
-        buttons.dbuildbutton("⏪ BACK", f"next_copy {prev_offset} {is_second_menu} {data_back_cb}",
-                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}","copymenu^pages")                               
+        buttons.cb_buildbutton("⏪ BACK", f"next_copy {prev_offset} {is_second_menu} {data_back_cb}", 'footer') 
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "copymenu^pages", 'footer')                              
     else:
-        buttons.tbuildbutton("⏪ BACK", f"next_copy {prev_offset} {is_second_menu} {data_back_cb}",
-                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "copymenu^pages",
-                            "NEXT ⏩", f"next_copy {_next_offset} {is_second_menu} {data_back_cb}")
+        buttons.cb_buildbutton("⏪ BACK", f"next_copy {prev_offset} {is_second_menu} {data_back_cb}", 'footer_second')
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "copymenu^pages", 'footer')
+        buttons.cb_buildbutton("NEXT ⏩", f"next_copy {_next_offset} {is_second_menu} {data_back_cb}", 'footer_second')
 
-    buttons.cbl_buildbutton("⬅️ Back", f"copymenu^{data_back_cb}^{user_id}")
-    buttons.cbl_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}")
+    buttons.cb_buildbutton("⬅️ Back", f"copymenu^{data_back_cb}^{user_id}", 'footer_third')
+    buttons.cb_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}", 'footer_third')
                             
     if is_second_menu:
         dest_drive= get_rclone_val("COPY_DESTINATION_DRIVE", user_id)
         dest_dir= get_rclone_val("COPY_DESTINATION_DIR", user_id)
         await editMessage(f"Select folder where you want to copy\n\nPath:<code>{dest_drive}:{dest_dir}</code>", message, 
-                        reply_markup= InlineKeyboardMarkup(buttons.first_button))
+                        reply_markup= buttons.build_menu(1))
     else:
         origin_drive= get_rclone_val("COPY_ORIGIN_DRIVE", user_id)
         origin_dir= get_rclone_val("COPY_ORIGIN_DIR", user_id)
         await editMessage(f"Select file or folder which you want to copy\n\nPath:<code>{origin_drive}:{origin_dir}</code>", message, 
-                        reply_markup= InlineKeyboardMarkup(buttons.first_button))
+                        reply_markup= buttons.build_menu(1))
 
 
 copy_handler = MessageHandler(handle_copy, filters= command(BotCommands.CopyCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

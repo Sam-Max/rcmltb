@@ -1,13 +1,12 @@
 import asyncio
-from pyrogram.types import InlineKeyboardMarkup
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from json import loads as jsonloads
 from os.path import splitext
-from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
+from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, get_readable_size
 from pyrogram import filters
 
-async def myfiles_settings(message, edit= False, drive_name= "", drive_base="", is_folder= False):
+async def myfiles_settings(message, drive_name, drive_base, edit=False, is_folder=False):
      if message.reply_to_message:
         user_id= message.reply_to_message.from_user.id
      else:
@@ -15,53 +14,55 @@ async def myfiles_settings(message, edit= False, drive_name= "", drive_base="", 
      
      buttons= ButtonMaker()
 
-     if drive_base == "":
-          buttons.dbuildbutton("📁 Calculate folder size", f"myfilesmenu^size_action^{user_id}",
-                               "📁 Create empty directory", f"myfilesmenu^mkdir_action^{user_id}")
-          buttons.cbl_buildbutton("📁 Delete duplicate files", f"myfilesmenu^dedupe_action^{user_id}")   
+     if len(drive_base) == 0:
+          buttons.cb_buildbutton("📁 Calculate folder size", f"myfilesmenu^size_action^{user_id}")
+          buttons.cb_buildbutton("📁 Create empty directory", f"myfilesmenu^mkdir_action^{user_id}")
+          buttons.cb_buildbutton("📁 Delete duplicate files", f"myfilesmenu^dedupe_action^{user_id}")   
      else:
           if is_folder:
-               buttons.dbuildbutton(f"📁 Calculate folder size", f"myfilesmenu^size_action^{user_id}",
-                                    "📁 Create empty directory", f"myfilesmenu^mkdir_action^{user_id}")    
-               buttons.dbuildbutton(f"🗑 Delete folder", f"myfilesmenu^delete_action^folder^{user_id}",
-                                    "📁 Delete duplicate files", f"myfilesmenu^dedupe_action^{user_id}")                         
+               buttons.cb_buildbutton(f"📁 Calculate folder size", f"myfilesmenu^size_action^{user_id}")
+               buttons.cb_buildbutton("📁 Create empty directory", f"myfilesmenu^mkdir_action^{user_id}")    
+               buttons.cb_buildbutton(f"🗑 Delete folder", f"myfilesmenu^delete_action^folder^{user_id}")
+               buttons.cb_buildbutton("📁 Delete duplicate files", f"myfilesmenu^dedupe_action^{user_id}")                         
           else:
-               buttons.dbuildbutton("📝 Rename", f"myfilesmenu^rename_action^file^{user_id}",
-                                    "🗑 Delete", f"myfilesmenu^delete_action^file^{user_id}")
+               buttons.cb_buildbutton("📝 Rename", f"myfilesmenu^rename_action^file^{user_id}")
+               buttons.cb_buildbutton("🗑 Delete", f"myfilesmenu^delete_action^file^{user_id}")
      
-     buttons.cbl_buildbutton("⬅️ Back", f"myfilesmenu^back_drive^{user_id}")
-     buttons.cbl_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}")
+     buttons.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
+     buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer')
      
      msg= f"<b>Path:</b><code>{drive_name}:{drive_base}</code>"
 
      if edit:
-          await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+          await editMessage(msg, message, reply_markup= buttons.build_menu(2))
      else:
-          await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+          await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
-async def calculate_size(message, drive_base="", drive_name="", user_id= ""):
+async def calculate_size(message, drive_base, drive_name, user_id):
      buttons= ButtonMaker()
      path = get_rclone_config(user_id)
-     files_count, total_size = await rclone_size(message, drive_base, drive_name, path)
-     total_size = get_readable_size(total_size)
-     msg= f"Total Files: {files_count}\nFolder Size: {total_size}"
-     buttons.cbl_buildbutton("⬅️ Back", f"myfilesmenu^back_drive^{user_id}")
-     buttons.cbl_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}")
-     await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+     data = await rclone_size(message, drive_base, drive_name, path)
+     if data is not None:
+          total_size = get_readable_size(data[1])
+          msg= f"Total Files: {data[0]}\nFolder Size: {total_size}"
+          buttons.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
+          buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer')
+          await editMessage(msg, message, reply_markup= buttons.build_menu(1))
 
-async def delete_selection(message, user_id= "", is_folder= False):
+async def delete_selection(message, user_id, is_folder=False):
      buttons= ButtonMaker()
      msg= ""
      if is_folder:
-          buttons.dbuildbutton("Yes", f"myfilesmenu^yes^folder^{user_id}", "No", f"myfilesmenu^no^folder^{user_id}")
+          buttons.cb_buildbutton("Yes", f"myfilesmenu^yes^folder^{user_id}")
+          buttons.cb_buildbutton( "No", f"myfilesmenu^no^folder^{user_id}")
           msg += f"Are you sure you want to delete this folder permanently?"
      else:
-          buttons.dbuildbutton("Yes", f"myfilesmenu^yes^file^{user_id}", "No", f"myfilesmenu^no^file^{user_id}")
+          buttons.cb_buildbutton("Yes", f"myfilesmenu^yes^file^{user_id}")
+          buttons.cb_buildbutton("No", f"myfilesmenu^no^file^{user_id}")
           msg += f"Are you sure you want to delete this file permanently?"
+     await editMessage(msg, message, reply_markup= buttons.build_menu(2))
 
-     await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
-
-async def delete_selected(message, user_id, drive_base="", drive_name="", is_folder= False):   
+async def delete_selected(message, user_id, drive_base, drive_name, is_folder=False):   
      buttons= ButtonMaker()
      msg= ""
      conf_path = get_rclone_config(user_id)
@@ -71,9 +72,9 @@ async def delete_selected(message, user_id, drive_base="", drive_name="", is_fol
      else:
           await rclone_delete(message, drive_base, drive_name, conf_path)  
           msg += f"The file has been deleted successfully!!"
-     buttons.cbl_buildbutton("⬅️ Back", f"myfilesmenu^back_drive^{user_id}")
-     buttons.cbl_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}")
-     await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+     buttons.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
+     buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer')
+     await editMessage(msg, message, reply_markup= buttons.build_menu(1))
 
 async def rclone_size(message, drive_base, drive_name, conf_path):
      await editMessage("**⏳Calculating Folder Size...**\n\nPlease wait, it will take some time depending on number of files", message)
@@ -84,11 +85,12 @@ async def rclone_size(message, drive_base, drive_name, conf_path):
      return_code = await process.wait()
      if return_code != 0:
           err = stderr.decode().strip()
-          return await sendMessage(f'Error: {err}', message)
+          await sendMessage(f'Error: {err}', message)
+          return
      data = jsonloads(stdout)
      files = data["count"]
      size = data["bytes"]
-     return files, size
+     return (files, size)
 
 async def rclone_purge(message,drive_base, drive_name, conf_path):
      cmd = ["rclone", "purge", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
@@ -159,7 +161,9 @@ async def rclone_dedupe(message, rclone_drive, drive_base, user_id, tag):
           return await sendMessage(f'Error: {err}', message)
      msg= "<b>Dedupe completed successfully ✅</b>\n"
      msg += f'<b>cc:</b> {tag}\n'
-     await editMessage(msg, edit_msg)
+     button= ButtonMaker()
+     button.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
+     await editMarkup(msg, edit_msg, reply_markup=button.build_menu(1))
 
 async def rclone_rename(client, message, rclone_drive, drive_base, tag):
      user_id= message.reply_to_message.from_user.id

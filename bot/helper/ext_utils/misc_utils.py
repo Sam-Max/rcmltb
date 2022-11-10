@@ -286,10 +286,10 @@ async def getAllDownload(req_status: str):
 class ButtonMaker:
     def __init__(self):
         self.first_button = []
-        self.second_button= []
         self.__header_button = []
         self.__footer_button = []
-        self.__footer_second_button= []
+        self.__footer_second_button = []
+        self.__footer_third_button = []
 
     def url_buildbutton(self, key, link):
         self.first_button.append(InlineKeyboardButton(text = key, url = link))
@@ -302,25 +302,9 @@ class ButtonMaker:
         elif position == 'footer':
             self.__footer_button.append(InlineKeyboardButton(text = key, callback_data = data))
         elif position == 'footer_second':
-            self.__footer_second_button.append(InlineKeyboardButton(text = key, callback_data = data))    
-
-    def cbl_buildbutton(self, key, data):
-        self.first_button.append([InlineKeyboardButton(text = key, callback_data = data)])
-
-    def ap_buildbutton(self, data):
-        self.first_button.append(data)
-
-    def cb_buildsecbutton(self, key, data):
-        self.second_button.append(InlineKeyboardButton(text = key, callback_data = data))
-
-    def dbuildbutton(self, first_text, first_callback, second_text, second_callback):
-        self.first_button.append([InlineKeyboardButton(text = first_text, callback_data = first_callback), 
-                            InlineKeyboardButton(text = second_text, callback_data = second_callback)])
-    
-    def tbuildbutton(self, first_text, first_callback, second_text, second_callback, third_text, third_callback):
-        self.first_button.append([InlineKeyboardButton(text = first_text, callback_data = first_callback), 
-                    InlineKeyboardButton(text = second_text, callback_data = second_callback),
-                    InlineKeyboardButton(text = third_text, callback_data = third_callback)])
+            self.__footer_second_button.append(InlineKeyboardButton(text = key, callback_data = data))  
+        elif position == 'footer_third':
+            self.__footer_third_button.append(InlineKeyboardButton(text = key, callback_data = data))  
 
     def build_menu(self, n_cols):
         menu = [self.first_button[i: i + n_cols] for i in range(0, len(self.first_button), n_cols)]
@@ -333,6 +317,8 @@ class ButtonMaker:
                 menu.append(self.__footer_button)
         if self.__footer_second_button:
             menu.append(self.__footer_second_button)
+        if self.__footer_third_button:
+            menu.append(self.__footer_third_button)
         return InlineKeyboardMarkup(menu)
 
 

@@ -249,7 +249,7 @@ async def select_format(client, callback_query):
         await _mp3_subbuttons(task_id, message, playlist)
         return
     elif data[2] == "close":
-        await query.answer("Closed")
+        await query.answer()
         await message.delete()
     else:
         await query.answer()

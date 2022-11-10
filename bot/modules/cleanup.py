@@ -64,7 +64,7 @@ async def cleanup_callback(client, callback_query):
           await query.answer()
 
      elif cmd[1] == "close":
-          await query.answer("Closed")
+          await query.answer()
           await message.delete()     
 
 async def rclone_cleanup(message, drive_name, user_id, tag):

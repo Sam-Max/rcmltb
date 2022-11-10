@@ -13,12 +13,14 @@ SREMOTE = []
 process_dict= {'state':"inactive",
                'pid':0}
 
+
 async def serve(client, message):
   if process_dict['state'] == 'inactive':
     await list_remotes(message)
   else:
     button= ButtonMaker()
-    msg= f'Serving on <code>http://{SERVE_IP}:{SERVE_PORT}/</code>'
+    url= f"http://{SERVE_IP}:{SERVE_PORT}"
+    msg= f'Serving on <a href={url}>{url}</a>'
     button.cb_buildbutton("Stop", "servemenu^stop")
     await sendMarkup(msg, message, button.build_menu(1))
 
@@ -50,7 +52,7 @@ async def serve_cb(client, callbackQuery):
     process_dict['state'] = 'inactive'
     status= srun(["kill", "-9", f"{pid}"])
     if status.returncode == 0:
-        await query.answer('Server stopped')
+        await query.answer('Server stopped', show_alert=True)
   elif data[1] == "close":
     await query.answer()
     await message.delete()
@@ -58,8 +60,8 @@ async def serve_cb(client, callbackQuery):
 async def rclone_serve(cmd, protocol, message):
   process = await subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
   button= ButtonMaker()
-  serve_address= f"http://{SERVE_IP}:{SERVE_PORT}"
-  msg= f'Serving {protocol} on <a href={serve_address}>{serve_address}</a>'
+  url= f"http://{SERVE_IP}:{SERVE_PORT}"
+  msg= f'Serving {protocol} on <a href={url}>{url}</a>'
   msg+= f'\n<b>User</b>: <code>{SERVE_USER}</code>'
   msg+= f'\n<b>Pass</b>: <code>{SERVE_PASS}</code>'
   button.cb_buildbutton("Stop", "servemenu^stop")

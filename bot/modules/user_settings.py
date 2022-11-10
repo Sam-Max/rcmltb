@@ -104,10 +104,10 @@ async def handle_leech_set_type(client, callback_query):
             finally: 
                 await editLeechType(message, query)
     elif data[2] == "close":
-        await query.answer("Closed")
+        await query.answer()
         await message.delete()
     else:
-        await query.answer("Closed")
+        await query.answer()
         try:
             await query.message.delete()
         except:

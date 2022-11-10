@@ -262,7 +262,7 @@ async def mirror_menu(client, query):
             await question.delete()
 
     elif cmd[1] == "close":
-        await query.answer("Closed")
+        await query.answer()
         await message.delete()
         return
 

@@ -286,7 +286,7 @@ async def ownerset_callback(client, callback_query):
     elif cmd[1] == "close":
         globals()['START'] = 0
         globals()['STATE'] = 'view'
-        await query.answer("Closed")
+        await query.answer()
         await message.delete()
 
 async def start_aria_listener(client, query, user_id, key):

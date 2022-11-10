@@ -24,7 +24,8 @@ async def check_link(app, link):
         except ValueError:
             return False, "**Invalid Link!**"
         except Exception:
-            return False, "Have you joined the channel?"
+            msg= "Make sure you joined the channel or/and you set string session variable"
+            return False, msg
     else:
         try:
             chat = str(link.split("/")[-2])

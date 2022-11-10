@@ -6,13 +6,12 @@ from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
+from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
 from bot.helper.ext_utils.rclone_utils import is_rclone_config
 from bot.helper.ext_utils.var_holder import get_rclone_val, update_rclone_var
 from pyrogram.filters import regex
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
-from pyrogram.types import InlineKeyboardMarkup
 
 
 
@@ -25,14 +24,14 @@ async def handle_mirrorset(client, message):
         rclone_drive = get_rclone_val("MIRRORSET_DRIVE", user_id)              
         base_dir= get_rclone_val("MIRRORSET_BASE_DIR", user_id)
         if config_dict['MULTI_RCLONE_CONFIG']: 
-            await list_drive(message, rclone_drive, base_dir) 
+            await list_remotes(message, rclone_drive, base_dir) 
         else:
             if user_id == OWNER_ID:  
-                await list_drive(message, rclone_drive, base_dir)  
+                await list_remotes(message, rclone_drive, base_dir)  
             else:
                 await sendMessage("You can't use on current mode", message)        
 
-async def list_drive(message, rclone_drive="", base_dir="", edit=False):
+async def list_remotes(message, rclone_drive="", base_dir="", edit=False):
     if message.reply_to_message:
         user_id= message.reply_to_message.from_user.id
     else:
@@ -42,43 +41,29 @@ async def list_drive(message, rclone_drive="", base_dir="", edit=False):
     path= get_rclone_config(user_id)
     conf = ConfigParser()
     conf.read(path)
-
-    for drive in conf.sections():
+    for remote in conf.sections():
         prev = ""
-        if drive == get_rclone_val("MIRRORSET_DRIVE", user_id):
+        if remote == get_rclone_val("MIRRORSET_DRIVE", user_id):
             prev = "✅"
-        if "team_drive" in list(conf[drive]):
-            buttons.cb_buildsecbutton(f"{prev} 📁 {drive}", f"mirrorsetmenu^drive^{drive}^{user_id}")
-        else:
-            buttons.cb_buildsecbutton(f"{prev} 📁 {drive}", f"mirrorsetmenu^drive^{drive}^{user_id}")
-
-    for a, b in pairwise(buttons.second_button):
-        row= [] 
-        if b == None:
-            row.append(a)  
-            buttons.ap_buildbutton(row)
-            break
-        row.append(a)
-        row.append(b)
-        buttons.ap_buildbutton(row)
-
-    buttons.cbl_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}")
+        buttons.cb_buildbutton(f"{prev} 📁 {remote}", f"mirrorsetmenu^drive^{remote}^{user_id}")
 
     if not rclone_drive and not base_dir:
         msg= f"Select cloud where you want to upload file\n\n<b>Path</b><code>:/</code>" 
     else:
         msg= f"Select cloud where you want to upload file\n\n<b>Path:</b><code>{rclone_drive}:{base_dir}</code>" 
 
-    if edit:
-        await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
-    else:
-        await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+    buttons.cb_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}", 'footer')
 
-async def list_dir(message, drive_name, drive_base, edit=False):
+    if edit:
+        await editMessage(msg, message, reply_markup= buttons.build_menu(2))
+    else:
+        await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
+
+async def list_folder(message, drive_name, drive_base, edit=False):
     user_id= message.reply_to_message.from_user.id
     buttons = ButtonMaker()
     path = get_rclone_config(user_id)
-    buttons.cbl_buildbutton(f"✅ Select this folder", f"mirrorsetmenu^close^{user_id}")
+    buttons.cb_buildbutton(f"✅ Select this folder", f"mirrorsetmenu^close^{user_id}")
 
     cmd = ["rclone", "lsjson", '--dirs-only', f'--config={path}', f"{drive_name}:{drive_base}" ] 
     process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
@@ -95,7 +80,7 @@ async def list_dir(message, drive_name, drive_base, edit=False):
     update_rclone_var("driveInfo", list_info, user_id)
 
     if len(list_info) == 0:
-        buttons.cbl_buildbutton("❌Nothing to show❌", "mirrorsetmenu^pages^{user_id}")
+        buttons.cb_buildbutton("❌Nothing to show❌", "mirrorsetmenu^pages^{user_id}")
     else:
         total = len(list_info)
         max_results= 10
@@ -118,20 +103,20 @@ async def list_dir(message, drive_name, drive_base, edit=False):
                 user_id= user_id)
 
         if offset == 0 and total <= 10:
-            buttons.cbl_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"mirrorsetmenu^pages^{user_id}") 
+            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"mirrorsetmenu^pages^{user_id}", 'footer') 
         else:
-            buttons.dbuildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"mirrorsetmenu^pages^{user_id}",
-                                "NEXT ⏩", f"next_mirrorset {next_offset} back")
+            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"mirrorsetmenu^pages^{user_id}", 'footer')
+            buttons.cb_buildbutton("NEXT ⏩", f"next_mirrorset {next_offset} back", 'footer')
 
-    buttons.cbl_buildbutton("⬅️ Back", f"mirrorsetmenu^back^{user_id}")
-    buttons.cbl_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}")
+    buttons.cb_buildbutton("⬅️ Back", f"mirrorsetmenu^back^{user_id}", 'footer_second')
+    buttons.cb_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}", 'footer_second')
 
     msg= f"Select folder where you want to store files\n\n<b>Path:</b><code>{drive_name}:{drive_base}</code>"
 
     if edit:
-        await editMessage(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+        await editMessage(msg, message, reply_markup= buttons.build_menu(1))
     else:
-        await sendMarkup(msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+        await sendMarkup(msg, message, reply_markup= buttons.build_menu(1))
 
 async def mirrorset_callback(client, callback_query):
     query= callback_query
@@ -156,20 +141,20 @@ async def mirrorset_callback(client, callback_query):
         drive_name= cmd[2]
         update_rclone_var("MIRRORSET_DRIVE", drive_name, user_id)
         config_dict['DEFAULT_REMOTE']= drive_name
-        await list_dir(message, drive_name= drive_name, drive_base=base_dir, edit=True)
+        await list_folder(message, drive_name= drive_name, drive_base=base_dir, edit=True)
         await query.answer()
 
     elif cmd[1] == "dir":
         path = get_rclone_val(cmd[2], user_id)
         base_dir += path + "/"
         update_rclone_var("MIRRORSET_BASE_DIR", base_dir, user_id)
-        await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
+        await list_folder(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
         await query.answer()
 
     elif cmd[1] == "back":
         if len(base_dir) == 0: 
             await query.answer() 
-            await list_drive(message, edit=True)
+            await list_remotes(message, edit=True)
             return 
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
@@ -177,11 +162,11 @@ async def mirrorset_callback(client, callback_query):
             base_dir_string += dir + "/"
         base_dir = base_dir_string
         update_rclone_var("MIRRORSET_BASE_DIR", base_dir, user_id)
-        await list_dir(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
+        await list_folder(message, drive_name= rclone_drive, drive_base=base_dir, edit=True)
         await query.answer() 
 
     elif cmd[1] == "close":
-        await query.answer("Closed")
+        await query.answer()
         await message.delete()
 
 async def next_page_mirrorset(client, callback_query):
@@ -197,7 +182,7 @@ async def next_page_mirrorset(client, callback_query):
     prev_offset = next_offset - 10 
 
     buttons = ButtonMaker()
-    buttons.cbl_buildbutton("✅ Select this folder", f"mirrorsetmenu^close^{user_id}")
+    buttons.cb_buildbutton("✅ Select this folder", f"mirrorsetmenu^close^{user_id}")
 
     next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset) 
     rcloneListButtonMaker(result_list= next_list_info, 
@@ -207,28 +192,27 @@ async def next_page_mirrorset(client, callback_query):
             user_id= user_id)
 
     if next_offset == 0:
-        buttons.dbuildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages",
-                            "NEXT ⏩", f"next_mirrorset {_next_offset} {data_back_cb}")
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages", 'footer')
+        buttons.cb_buildbutton("NEXT ⏩", f"next_mirrorset {_next_offset} {data_back_cb}", 'footer')
 
     elif next_offset >= total:
-        buttons.dbuildbutton("⏪ BACK", f"next_mirrorset {prev_offset} {data_back_cb}",
-                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages")
+        buttons.cb_buildbutton("⏪ BACK", f"next_mirrorset {prev_offset} {data_back_cb}", 'footer')
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages", 'footer')
 
     elif next_offset + 10 > total:
-        buttons.dbuildbutton("⏪ BACK", f"next_mirrorset {prev_offset} {data_back_cb}",
-                             f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages")                              
-
+        buttons.cb_buildbutton("⏪ BACK", f"next_mirrorset {prev_offset} {data_back_cb}", 'footer')                              
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages", 'footer')
     else:
-        buttons.tbuildbutton("⏪ BACK", f"next_mirrorset {prev_offset} {data_back_cb}",
-                            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages",
-                            "NEXT ⏩", f"next_mirrorset {_next_offset} {data_back_cb}")
+        buttons.cb_buildbutton("⏪ BACK", f"next_mirrorset {prev_offset} {data_back_cb}", 'footer_second')
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "mirrorsetmenu^pages", 'footer')
+        buttons.cb_buildbutton("NEXT ⏩", f"next_mirrorset {_next_offset} {data_back_cb}", 'footer_second')
 
-    buttons.cbl_buildbutton("⬅️ Back", f"mirrorsetmenu^{data_back_cb}^{user_id}")
-    buttons.cbl_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}")
+    buttons.cb_buildbutton("⬅️ Back", f"mirrorsetmenu^{data_back_cb}^{user_id}", 'footer_third')
+    buttons.cb_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}", 'footer_third')
 
     mirrorset_drive= get_rclone_val("MIRRORSET_DRIVE", user_id)
     base_dir= get_rclone_val("MIRRORSET_BASE_DIR", user_id)
-    await message.edit(f"Select folder where you want to store files\n\n<b>Path:</b><code>{mirrorset_drive}:{base_dir}</code>", reply_markup= InlineKeyboardMarkup(buttons.first_button))
+    await message.edit(f"Select folder where you want to store files\n\n<b>Path:</b><code>{mirrorset_drive}:{base_dir}</code>", reply_markup= buttons.build_menu(1))
 
  
 mirrorset_handler = MessageHandler(handle_mirrorset, filters= filters.command(BotCommands.MirrorSetCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
