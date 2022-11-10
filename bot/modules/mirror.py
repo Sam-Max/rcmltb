@@ -19,6 +19,7 @@ from bot.helper.ext_utils.message_utils import deleteMessage, sendMarkup, sendMe
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_readable_size
 from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_rclone_drive
 from bot.helper.mirror_leech_utils.download_utils.aria2_download import add_aria2c_download
+from bot.helper.mirror_leech_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_leech_utils.download_utils.mega_download import MegaDownloader
 from bot.helper.mirror_leech_utils.download_utils.qbit_downloader import add_qb_torrent
 from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import TelegramDownloader
@@ -192,8 +193,7 @@ Number should be always before |newname or pswd:
                 else:
                     return await sendMessage(tag + " " + error, message)
     if is_gdrive_link(link):
-        gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
-        await sendMessage(gmsg, message)      
+        await add_gd_download(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name)   
     elif is_mega_link(link):
         if config_dict['MEGA_API_KEY']:
             botloop.create_task(MegaDownloader(link, listener).execute(path= f'{DOWNLOAD_DIR}{listener.uid}'))   
