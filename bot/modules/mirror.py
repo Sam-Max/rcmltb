@@ -6,7 +6,6 @@ from bot import DOWNLOAD_DIR, bot
 from asyncio import TimeoutError, sleep
 from bot import bot, DOWNLOAD_DIR, botloop, config_dict
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardMarkup
 from re import match as re_match, split as re_split
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
@@ -129,10 +128,10 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
                     file_name= file.file_name
                     size= get_readable_size(file.file_size)
                     header_msg = f"Which name do you want to use?\n\n<b>Name</b>: <code>{file_name}</code>\n\n<b>Size</b>: <code>{size}</code>"
-                    buttons.dbuildbutton("📄 By default", f'mirrormenu^default^{message_id}',
-                                         "📝 Rename", f'mirrormenu^rename^{message_id}')
-                    buttons.cbl_buildbutton("✘ Close Menu", f"mirrormenu^close^{message_id}")
-                    menu_msg= await sendMarkup(header_msg, message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+                    buttons.cb_buildbutton("📄 By default", f'mirrormenu^default^{message_id}')
+                    buttons.cb_buildbutton("📝 Rename", f'mirrormenu^rename^{message_id}')
+                    buttons.cb_buildbutton("✘ Close Menu", f"mirrormenu^close^{message_id}", 'footer')
+                    menu_msg= await sendMarkup(header_msg, message, reply_markup= buttons.build_menu(2))
                     listener_dict[message_id] = [listener, file, menu_msg, user_id]
                 return
             else:
@@ -260,6 +259,7 @@ async def mirror_menu(client, query):
                     await tg_down.download() 
         finally:
             await question.delete()
+            
 
     elif cmd[1] == "close":
         await query.answer()

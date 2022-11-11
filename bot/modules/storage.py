@@ -3,7 +3,6 @@ from json import loads
 from math import floor
 from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from pyrogram.types import InlineKeyboardMarkup
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from bot import LOGGER, bot
 from bot.helper.ext_utils.bot_commands import BotCommands
@@ -11,7 +10,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.rclone_utils import is_rclone_config
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
+from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
 
 async def handle_storage(client, message):
      if await is_rclone_config(message.from_user.id, message):
@@ -27,26 +26,15 @@ async def list_drive(message, edit= False):
      conf_path = get_rclone_config(user_id)
      conf = ConfigParser()
      conf.read(conf_path)
+     for remote in conf.sections():
+          buttons.cb_buildbutton(f"📁{remote}", f"storagemenu^drive^{remote}^{user_id}") 
 
-     for j in conf.sections():
-          buttons.cb_buildsecbutton(f"📁{j}", f"storagemenu^drive^{j}^{user_id}") 
-
-     for a, b in pairwise(buttons.second_button):
-          row= [] 
-          if b == None:
-               row.append(a)  
-               buttons.ap_buildbutton(row)
-               break
-          row.append(a)
-          row.append(b)
-          buttons.ap_buildbutton(row)
-
-     buttons.cbl_buildbutton("✘ Close Menu", f"storagemenu^close^{user_id}")
+     buttons.cb_buildbutton("✘ Close Menu", f"storagemenu^close^{user_id}")
     
      if edit:
-          await editMarkup("Select cloud to view storage info", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+          await editMarkup("Select cloud to view storage info", message, reply_markup= buttons.build_menu(2))
      else:
-          await sendMarkup("Select cloud to view storage info", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+          await sendMarkup("Select cloud to view storage info", message, reply_markup= buttons.build_menu(2))
 
 async def storage_menu_cb(client, callback_query):
      query= callback_query
@@ -101,13 +89,13 @@ async def rclone_about(message, query, drive_name, user_id):
           result_msg += f"<b>\nStorage free:</b> {free_percentage}"
      except KeyError:
           result_msg += f"<b>\nN/A:</b>"
-     button.cbl_buildbutton("⬅️ Back", f"storagemenu^back^{user_id}")
-     button.cbl_buildbutton("✘ Close Menu", f"storagemenu^close^{user_id}")
-     await editMarkup(result_msg, message, reply_markup= InlineKeyboardMarkup(button.first_button))
+     button.cb_buildbutton("⬅️ Back", f"storagemenu^back^{user_id}", 'footer')
+     button.cb_buildbutton("✘ Close Menu", f"storagemenu^close^{user_id}", 'footer_second')
+     await editMarkup(result_msg, message, reply_markup= button.build_menu(1))
 
 def get_used_bar(percentage):
      return "{0}{1}".format(''.join(["■" for i in range(floor(percentage / 10))]),
-                              ''.join(["□" for i in range(10 - floor(percentage / 10))]))
+                            ''.join(["□" for i in range(10 - floor(percentage / 10))]))
 
 
 storage = MessageHandler(handle_storage, filters=command(BotCommands.StorageCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

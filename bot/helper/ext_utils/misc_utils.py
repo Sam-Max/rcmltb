@@ -18,11 +18,6 @@ ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".
 
 ZIP_EXT = (".zip", ".7z", ".gzip2", ".iso", ".wim", ".rar")
 
-def pairwise(iterable):
-    "s -> (s0, s1), (s2, s3), (s4, s5), ..."
-    a = iter(iterable)
-    return zip_longest(a, a)
-
 def clean_download(path):
     LOGGER.info(f"Cleaning Download")
     if ospath.isdir(path):

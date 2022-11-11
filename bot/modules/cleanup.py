@@ -1,20 +1,19 @@
 from configparser import ConfigParser
 from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from pyrogram.types import InlineKeyboardMarkup
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from bot import bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, pairwise
+from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
 from bot.helper.ext_utils.rclone_utils import is_rclone_config
 
 async def cleanup(client, message):
      if await is_rclone_config(message.from_user.id, message):
-          await list_drive(message)
+          await list_remotes(message)
 
-async def list_drive(message, edit= False):
+async def list_remotes(message, edit= False):
      if message.reply_to_message:
         user_id= message.reply_to_message.from_user.id
      else:
@@ -25,25 +24,15 @@ async def list_drive(message, edit= False):
      conf = ConfigParser()
      conf.read(conf_path)
 
-     for j in conf.sections():
-          buttons.cb_buildsecbutton(f"📁{j}", f"cleanupmenu^drive^{j}^{user_id}") 
+     for remote in conf.sections():
+          buttons.cb_buildbutton(f"📁{remote}", f"cleanupmenu^drive^{remote}^{user_id}") 
 
-     for a, b in pairwise(buttons.second_button):
-          row= [] 
-          if b == None:
-               row.append(a)  
-               buttons.ap_buildbutton(row)
-               break
-          row.append(a)
-          row.append(b)
-          buttons.ap_buildbutton(row)
-
-     buttons.cbl_buildbutton("✘ Close Menu", f"cleanupmenu^close^{user_id}")
+     buttons.cb_buildbutton("✘ Close Menu", f"cleanupmenu^close^{user_id}", 'footer')
     
      if edit:
-          await editMarkup("Select cloud to delete trash", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+          await editMarkup("Select cloud to delete trash", message, reply_markup= buttons.build_menu(2))
      else:
-          await sendMarkup("Select cloud to delete trash", message, reply_markup= InlineKeyboardMarkup(buttons.first_button))
+          await sendMarkup("Select cloud to delete trash", message, reply_markup= buttons.build_menu(2))
 
 async def cleanup_callback(client, callback_query):
      query= callback_query
@@ -60,7 +49,7 @@ async def cleanup_callback(client, callback_query):
           await rclone_cleanup(message, cmd[2], user_id, tag)
 
      elif cmd[1] == "back":
-          await list_drive(message, edit=True)
+          await list_remotes(message, edit=True)
           await query.answer()
 
      elif cmd[1] == "close":
@@ -69,7 +58,9 @@ async def cleanup_callback(client, callback_query):
 
 async def rclone_cleanup(message, drive_name, user_id, tag):
      conf_path = get_rclone_config(user_id)
-     edit_msg= await editMessage("⏳ Cleaning remote trash", message)
+     msg= "**⏳Cleaning remote trash**\n"
+     msg += "\nIt may take some time depending on number of files"
+     edit_msg= await editMessage(msg, message)
      cmd = ["rclone", "cleanup", f'--config={conf_path}', f"{drive_name}:"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
