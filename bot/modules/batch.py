@@ -2,7 +2,7 @@
 # Adapted to Pyrogram and Conversation-Pyrogram Library
 
 from asyncio import sleep
-from bot import DOWNLOAD_DIR, app, bot
+from bot import DOWNLOAD_DIR, LOGGER, app, bot, botloop
 from pyrogram.errors import FloodWait
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 from pyrogram import filters
@@ -34,10 +34,7 @@ async def _batch(client, message, isLeech=False):
             pass
         else:
             return
-    if app is None:
-        bot= client
-    else:
-        bot= app
+    
     await sendMessage("Send me the message link to start saving from, /ignore to cancel", message)
     try:
         link = await client.listen.Message(filters.text, id= filters.user(user_id), timeout = 30)
@@ -55,39 +52,59 @@ async def _batch(client, message, isLeech=False):
         try:
             if "/ignore" in _range.text:
                 return await client.listen.Cancel(filters.user(user_id))
-            value = int(_range.text)
+            multi = int(_range.text)
         except ValueError:
             return await sendMessage("Range must be an integer!", message)
     except TimeoutError:
         return await sendMessage("Too late 30s gone, try again!", message)
-    suceed, msg = await check_link(bot, _link)
+    suceed, msg = await check_link(_link)
     if suceed != True:
         await sendMessage(msg, message)
         return
-    for i in range(value):
-        try:
-            await get_bulk_msg(bot, message, _link, i, isLeech=isLeech) 
-        except FloodWait as fw:
-            await sleep(fw.seconds + 5)
-            await get_bulk_msg(bot, message, _link, i, isLeech=isLeech)
-        await sleep(5) 
+    try:
+        await get_bulk_msg(message, _link, multi, isLeech=isLeech) 
+    except FloodWait as fw:
+        await sleep(fw.seconds + 5)
+        await get_bulk_msg(message, _link, multi, isLeech=isLeech)
 
-async def get_bulk_msg(bot, message, msg_link, i, isLeech):
-    msg_id = int(msg_link.split("/")[-1]) + int(i)
-    user_id= message.chat.id
-    tag= ''
+async def get_bulk_msg(message, msg_link, multi, isLeech, value=0):
+    msg_id = int(msg_link.split("/")[-1]) + int(value)
+    user_id= message.from_user.id
     if message.from_user.username:
         tag = f"@{message.from_user.username}"
+    else:
+        tag = "N/A"
+    if app is not None:
+        client= app
+    else:
+        client= bot
     listener= MirrorLeechListener(message, tag, user_id, isLeech=isLeech)
     if 't.me/c/' in msg_link:
         chat = int('-100' + str(msg_link.split("/")[-2]))
         try:
-            msg = await bot.get_messages(chat, msg_id)
+            if app is not None:
+                msg = await client.get_messages(chat, msg_id)
+            else:
+                msg = await bot.get_messages(chat, msg_id)
             file = msg.document or msg.video or msg.audio or msg.photo or None
             if file is None:
                 return
-            tg_down= TelegramDownloader(file, bot, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
-            await tg_down.download() 
+            if multi:
+                tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
+                botloop.create_task(tg_down.download()) 
+                if multi > 1:
+                    msg = f"{multi - 1}"
+                    await sleep(4)
+                    nextmsg = await sendMessage(msg, message)
+                    nextmsg = await bot.get_messages(message.chat.id, nextmsg.id)
+                    nextmsg.from_user.id = message.from_user.id
+                    value += 1
+                    multi -= 1
+                    try:
+                        await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value) 
+                    except FloodWait as fw:
+                        await sleep(fw.seconds + 5)
+                        await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value)  
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await sendMessage("Have you joined the channel?", message)
         except Exception as e:
@@ -95,12 +112,30 @@ async def get_bulk_msg(bot, message, msg_link, i, isLeech):
     else:
         chat = msg_link.split("/")[-2]
         try:
-            msg = await bot.get_messages(chat, msg_id)
+            if app is not None:
+                msg = await client.get_messages(chat, msg_id)
+            else:
+                msg = await bot.get_messages(chat, msg_id)
             file = msg.document or msg.video or msg.audio or msg.photo or None
             if file is None:
                 return
-            tg_down= TelegramDownloader(file, bot, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
-            await tg_down.download()
+            if multi:
+                tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
+                botloop.create_task(tg_down.download())
+                if multi > 1:
+                    msg = f"{multi - 1}"
+                    await sleep(4)
+                    nextmsg = await sendMessage(msg, message)
+                    nextmsg = await bot.get_messages(message.chat.id, nextmsg.id)
+                    nextmsg.from_user.id = message.from_user.id
+                    value += 1
+                    multi -= 1
+                    try:
+                        await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value) 
+                    except FloodWait as fw:
+                        LOGGER.info("2")
+                        await sleep(fw.seconds + 5)
+                        await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value)     
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await sendMessage("Have you joined the channel?", message)
             return 

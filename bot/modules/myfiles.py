@@ -12,7 +12,7 @@ from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMess
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
 from bot.helper.ext_utils.rclone_utils import is_rclone_config
 from bot.helper.ext_utils.var_holder import get_rclone_val, update_rclone_var
-from bot.modules.myfilesset import calculate_size, delete_selected, delete_selection, myfiles_settings, rclone_dedupe, rclone_mkdir, rclone_rename
+from bot.modules.myfilesset import calculate_size, delete_empty_dir, delete_selected, delete_selection, myfiles_settings, rclone_dedupe, rclone_mkdir, rclone_rename
 
 
 
@@ -108,13 +108,10 @@ async def myfiles_callback(client, callback_query):
     base_dir= get_rclone_val("MYFILES_BASE_DIR", user_id)
     rclone_drive = get_rclone_val("MYFILES_DRIVE", user_id)
 
-    if cmd[1] == "pages":
-        return await query.answer()
-
     if int(cmd[-1]) != user_id:
-        return await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("This menu is not for you!", show_alert=True)
 
-    if cmd[1] == "drive":
+    elif cmd[1] == "drive":
         #Reset Menu
         update_rclone_var("MYFILES_BASE_DIR", "", user_id)
         base_dir= get_rclone_val("MYFILES_BASE_DIR", user_id)
@@ -162,7 +159,7 @@ async def myfiles_callback(client, callback_query):
         await myfiles_settings(message, rclone_drive, base_dir, edit=True, is_folder=True)
         await query.answer()
 
-    if cmd[1] == "delete_action":
+    elif cmd[1] == "delete_action":
         if cmd[2] == "folder":
             is_folder= True
         elif cmd[2] == "file":
@@ -175,7 +172,12 @@ async def myfiles_callback(client, callback_query):
         await query.answer()
 
     elif cmd[1] == "mkdir_action":
+        await query.answer()   
         await rclone_mkdir(client, query, message, rclone_drive, base_dir, tag)
+
+    elif cmd[1] == "rmdir_action":
+        await query.answer()   
+        await delete_empty_dir(message, user_id, rclone_drive, base_dir)
 
     elif cmd[1] == "dedupe_action":
         await query.answer()     
@@ -185,7 +187,7 @@ async def myfiles_callback(client, callback_query):
         await query.answer()     
         await rclone_rename(client, message, rclone_drive, base_dir, tag)
 
-    if cmd[1]== "yes":
+    elif cmd[1]== "yes":
         if cmd[2] == "folder":
             is_folder= True
         elif cmd[2] == "file":
@@ -197,9 +199,12 @@ async def myfiles_callback(client, callback_query):
         await query.answer() 
         await message.delete()
     
-    if cmd[1] == "close":
+    elif cmd[1] == "close":
         await query.answer()
         await message.delete()
+    
+    elif cmd[1] == "pages":
+        await query.answer()
 
 async def next_page_myfiles(client, callback_query):
     query= callback_query

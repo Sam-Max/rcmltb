@@ -108,7 +108,7 @@ async def get_readable_message():
             msg += f"<b>Status: </b> {download.status()}"
             msg += f"\n<b>Name: </b><code>{escape(str(download.name()))}</code>"
             if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
-                if download.type() == TaskType.RCLONE:
+                if download.type() == TaskType.RCLONE or download.type() == TaskType.RCLONE_SYNC:
                     msg += f"\n{get_progress_bar_rclone(download.progress())} {download.progress()}%"
                     msg += f"\n<b>Processed:</b> {download.processed_bytes()}"
                 else:
@@ -128,7 +128,10 @@ async def get_readable_message():
                 msg += f" | <b>Time: </b>{download.seeding_time()}"
             else:
                 msg += f"\n<b>Size: </b>{download.size()}"
-            msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>"
+            if download.status() == MirrorStatus.STATUS_SEEDING:
+                msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>"
+            else:
+                msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>"
             msg += "\n\n"
             if index == STATUS_LIMIT:
                 break

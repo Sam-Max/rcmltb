@@ -10,8 +10,7 @@ from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessa
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
 
 SREMOTE = []
-process_dict= {'state':"inactive",
-               'pid':0}
+process_dict= {'state': "inactive", 'pid': 0}
 
 
 async def serve(client, message):
@@ -47,10 +46,9 @@ async def serve_cb(client, callbackQuery):
     cmd = ["rclone", "serve", "webdav", f"--addr=:{SERVE_PORT}", f"--user={SERVE_USER}", f"--pass={SERVE_PASS}", f'--config={path}', f"{SREMOTE[0]}:"] 
     await rclone_serve(cmd, data[1], message)
   elif data[1] == "stop":
-    pid= process_dict['pid']
-    LOGGER.info(f"Killing process with pid: {pid}")
+    LOGGER.info(f"Killing process...")
     process_dict['state'] = 'inactive'
-    status= srun(["kill", "-9", f"{pid}"])
+    status= srun(["kill", "-9", f"{process_dict['pid']}"])
     if status.returncode == 0:
         await query.answer('Server stopped', show_alert=True)
   elif data[1] == "close":
@@ -59,6 +57,7 @@ async def serve_cb(client, callbackQuery):
   
 async def rclone_serve(cmd, protocol, message):
   process = await subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+  process_dict['pid']= process.pid
   button= ButtonMaker()
   url= f"http://{SERVE_IP}:{SERVE_PORT}"
   msg= f'Serving {protocol} on <a href={url}>{url}</a>'
@@ -67,7 +66,6 @@ async def rclone_serve(cmd, protocol, message):
   button.cb_buildbutton("Stop", "servemenu^stop")
   await editMarkup(msg, message, button.build_menu(1))
   process_dict['state']= 'active'
-  process_dict['pid']= process.pid
   return_code = await process.wait()
   if return_code != 0:
     err= await process.stderr.read()

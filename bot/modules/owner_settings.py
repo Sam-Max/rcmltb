@@ -7,7 +7,7 @@ from subprocess import Popen, run as srun
 from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, SUDO_USERS, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, aria2_options, aria2c_global, get_client, qbit_options, status_reply_dict_lock
+from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, STATUS_UPDATE_INTERVAL, SUDO_USERS, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, aria2_options, aria2c_global, get_client, qbit_options, status_reply_dict_lock, status_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval 
 from bot.helper.ext_utils.db_handler import DbManger
@@ -22,12 +22,14 @@ START = 0
 STATE = 'view'
 
 default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
+                  'DOWNLOAD_DIR': '/usr/src/app/downloads/',  
                   'UPSTREAM_BRANCH': 'master',
                   'STATUS_UPDATE_INTERVAL': 10,
                   'LEECH_SPLIT_SIZE': TG_MAX_FILE_SIZE,
                   'SEARCH_LIMIT': 0,
                   'SERVER_PORT': 80,
                   'RSS_DELAY': 900}
+
 
 async def handle_ownerset(client, message):
     text, buttons= get_env_menu()
@@ -48,9 +50,7 @@ def get_env_menu():
     msg= f"❇️<b>Config Variables Settings</b>"
     msg += f"\n\n<b>State: {STATE.upper()} </b>"
     msg += "\n\n<b>Notes:</b>"
-    msg += "\n1. Use database for sudo and allowed users to persist when bot restarted"
-    msg += "\n2. OWNER_ID, BOT_TOKEN, DOWNLOAD_DIR and DATABASE_URL, are non-editable while bot is running"
-    msg += "\n3. Aria and qbit settings won't be saved after restart (no db support yet)"
+    msg += "\n1. Aria and qbit settings won't be saved after restart (no db support yet)"
     buttons= ButtonMaker() 
     for k in list(config_dict.keys())[START: 10 + START]:
         buttons.cb_buildbutton(k, f"ownersetmenu^env^editenv^{k}")
@@ -115,7 +115,7 @@ async def update_buttons(message, key, edit_type=None):
     msg= ""
     if edit_type == 'editenv':  
         buttons.cb_buildbutton('Back', "ownersetmenu^back^env")
-        if key not in ['TELEGRAM_HASH', 'TELEGRAM_API']:
+        if key not in ['TELEGRAM_HASH', 'TELEGRAM_API', 'OWNER_ID', 'BOT_TOKEN']:
             buttons.cb_buildbutton('Default', f"ownersetmenu^env^resetenv^{key}")
         buttons.cb_buildbutton('Close', "ownersetmenu^close")
         msg= "Send new value for selected variable, /ignore to cancel. Timeout: 60 sec"
@@ -155,8 +155,8 @@ async def ownerset_callback(client, callback_query):
                 globals()['START'] += 10
             await edit_menus(message, 'env')
         elif cmd[2] == "editenv" and STATE == 'edit':
-            if cmd[3] in ['RSS_USER_SESSION_STRING', 'AUTO_MIRROR', 'CMD_INDEX', 'USER_SESSION_STRING', 
-                            'TELEGRAM_API_HASH', 'TELEGRAM_API_ID', 'RSS_DELAY']:
+            if cmd[3] in ['RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
+                          'TELEGRAM_API_HASH', 'TELEGRAM_API_ID', 'BOT_TOKEN', 'OWNER_ID', 'DOWNLOAD_DIR', 'DATABASE_URL']:
                 await query.answer(text='Restart required for this to apply!', show_alert=True)
             else:
                 await query.answer()
@@ -180,6 +180,12 @@ async def ownerset_callback(client, callback_query):
                 await start_env_listener(client, query, user_id, cmd[3], action="rem")
             elif cmd[3] in default_values:
                 value = default_values[cmd[3]]
+                if cmd[3] == "STATUS_UPDATE_INTERVAL" and len(status_dict) != 0:
+                    async with status_reply_dict_lock:
+                        if Interval:
+                            Interval[0].cancel()
+                            Interval.clear()
+                            Interval.append(setInterval(value, update_all_messages))
             elif cmd[3] == 'DEFAULT_REMOTE':
                 update_rclone_var("MIRRORSET_DRIVE", value, user_id)
                 update_rclone_var("MIRRORSET_BASE_DIR", value, user_id)
@@ -394,6 +400,9 @@ async def start_env_listener(client, query, user_id, key, action=""):
                         aria2_options['bt-stop-timeout'] = f'{value}'
                     elif key == 'DEFAULT_REMOTE':
                         update_rclone_var("MIRRORSET_DRIVE", value, user_id)
+                    elif key == 'DOWNLOAD_DIR':
+                        if not value.endswith('/'):
+                            value = f'{value}/'
                     elif key == 'LEECH_SPLIT_SIZE':
                         value = min(int(value), TG_MAX_FILE_SIZE)
                     elif key == 'SERVER_PORT':

@@ -20,6 +20,7 @@ class MirrorStatus:
     STATUS_CLONING= "Cloning"
     STATUS_DOWNLOADING = "Downloading"
     STATUS_COPYING= "Copying"
+    STATUS_SYNCING= "Syncing"
     STATUS_ARCHIVING = "Archiving 🔐"
     STATUS_EXTRACTING = "Extracting 📂"
     STATUS_SPLITTING = "Splitting ✂️"
@@ -30,6 +31,7 @@ class MirrorStatus:
 
 class TaskType():
     RCLONE= "Rclone"
+    RCLONE_SYNC= "RcloneSync"
     TELEGRAM= "Telegram"
 
 def get_progress_bar_string(status):

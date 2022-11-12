@@ -221,31 +221,56 @@ class MirrorLeechListener:
         else:
             await update_all_messages()
 
+    async def onRcloneSyncComplete(self, msg):
+        await sendMessage(msg, self.message)
+        clean_download(self.dir)
+        async with status_dict_lock:
+            try:
+                del status_dict[self.uid]
+            except Exception as e:
+                LOGGER.error(str(e))
+            count = len(status_dict)
+        if count == 0:
+            await self.clean()
+        else:
+            await update_all_messages()
+
     async def onRcloneUploadComplete(self, name, size, conf, drive, base, isGdrive):
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
         button= ButtonMaker()
-        if self.__extract:
-            if isGdrive:
-                gid = await get_gid(drive, base, f"{name}/", conf)
-                if gid is not None:
-                    link = f"https://drive.google.com/folderview?id={gid[0]}"
-                    button.url_buildbutton('Cloud Link 🔗', link)
-                    await sendMarkup(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message, button.build_menu(1))
-                else:
-                    LOGGER.info("Gid not found")  
-            else:
-                await sendMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message) 
+        cmd = ["rclone", "link", f'--config={conf}', f"{drive}:{base}/{name}"]
+        process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+        out, _ = await process.communicate()
+        url = out.decode().strip()
+        return_code = await process.wait()
+        if return_code == 0:
+            button.url_buildbutton("Cloud Link 🔗", url)
+            await sendMarkup(msg, self.message, reply_markup= button.build_menu(1))
         else:
-            if isGdrive:
-                gid = await get_gid(drive, base, name, conf, False)
-                if gid is not None:
-                    link = f"https://drive.google.com/file/d/{gid[0]}/view"
-                    button.url_buildbutton('Cloud Link 🔗', link)
-                    await sendMarkup(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message, button.build_menu(1))
+            if self.__extract:
+                if isGdrive:
+                    gid = await get_gid(drive, base, f"{name}/", conf)
+                    if gid is not None:
+                        link = f"https://drive.google.com/folderview?id={gid[0]}"
+                        button.url_buildbutton('Cloud Link 🔗', link)
+                        await sendMarkup(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message, button.build_menu(1))
+                    else:
+                        msg += "\n\nFailed to generate link"
+                        await sendMessage(f"{msg}\n<b>cc: </b>{self.__tag}", self.message)  
                 else:
-                    LOGGER.info("Gid not found")  
+                    await sendMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message) 
             else:
-                await sendMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message)
+                if isGdrive:
+                    gid = await get_gid(drive, base, name, conf, False)
+                    if gid is not None:
+                        link = f"https://drive.google.com/file/d/{gid[0]}/view"
+                        button.url_buildbutton('Cloud Link 🔗', link)
+                        await sendMarkup(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message, button.build_menu(1))
+                    else:
+                        msg += "\n\nFailed to generate link"
+                        await sendMessage(f"{msg}\n<b>cc: </b>{self.__tag}", self.message)  
+                else:
+                    await sendMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message)
         clean_download(self.dir)
         async with status_dict_lock:
             try:

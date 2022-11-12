@@ -27,7 +27,10 @@ async def cancel_mirror(client, message):
     if OWNER_ID != user_id and user_id not in SUDO_USERS:
         return await sendMessage("This is not for you!", message)
 
-    dl.download().cancel_download()
+    if dl.type() == "RcloneSync":
+        dl.download().kill()
+    else:
+        dl.download().cancel_download()
 
 async def cancell_all_buttons(client, message):
     async with status_dict_lock:

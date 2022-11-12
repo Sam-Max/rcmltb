@@ -47,7 +47,7 @@ class RcloneCopy:
                     config.write(configfile)
             else:
                 return await sendMessage("You need to set SERVICE_ACCOUNTS_REMOTE variable", self.__listener.message)
-        if config_dict['SERVER_SIDE_COPY']:
+        if config_dict['SERVER_SIDE']:
             cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
             f'{dest_drive}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '--drive-server-side-across-configs', '-P']
         else:

@@ -6,13 +6,13 @@
 ### qBittorrent
 - Qbittorrent support for torrent and magnets
 - Select files from Torrent before downloading 
-- Edit Global Options from bot settings
+- Edit global options from bot settings
 
 ### Aria2c
 - Aria support for direct download links
 - Netrc support
 - Direct link authentication from bot
-- Edit Global Options from bot settings
+- Edit global options from bot settings
 
 ### Rclone
 - Copy file/folder from cloud to cloud
@@ -22,6 +22,7 @@
 - File Manager: size, mkdir, delete, dedupe and rename
 - Service Accounts support with automatic switching
 - Serve remote as http or webdav index
+- Sync remotes
 - Clean remote trash
 - View storage info 
 
@@ -53,14 +54,14 @@
 ### Database
 - SQL Database
 - Save rclone.conf and token.pickle files on db
-- Save user leech settings(thumbnails, sudo and allowed users, etc) on db
+- Save user leech settings(thumbnails, sudo and allowed users) on db
 
 ### RSS
 - Rss feed with filter support
 
 ### Others
-- Load/change token.pickle and rclone.conf from bot
-- Change most of the config variables from bot
+- Load and overwrite token.pickle, rclone.conf, config.env and accounts.zip from bot
+- Edit most of the config variables from bot
 
 ### From Other Repositories
 - Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
@@ -91,29 +92,26 @@ unzipmirror - Mirror and extract to cloud
 zipmirror - Mirror and zip to cloud 
 mirrorset - Select cloud/folder where to mirror
 mirrorbatch - Mirror Telegram files in batch to cloud 
-ytdlmirror - Mirror ytdlp supported link
-ytdlzipmirror- Mirror and zip ytdlp supported link
 leech - Leech from cloud to Telegram
 unzipleech - Leech and extract to Telegram 
 zipleech - Leech and zip to Telegram 
 leechbatch - Leech Telegram files in batch to Telegram 
+ytdl - Mirror ytdlp supported link
+ytdlzip- Mirror and zip ytdlp supported link
 ytdlleech - Leech yt-dlp supported link
 ytdlzipleech - Leech and zip yt-dlp supported link
 myfiles - File manager
-clone - Clone gdrive file/folder from link
+config - bot config files
 copy - Copy from cloud to cloud
-config - Load config files
+clone - Clone gdrive link file/folder 
 usetting - User settings
 ownsetting - Owner settings
-rsslist - List all subscribed rss feed 
-rssget - Get specific No. of links from specific rss feed
-rsssub - Subscribe new rss feed
-rssunsub - Unsubscribe rss feed by title
-rssset - Rss settings
+rss - Rss feed
 cleanup - Clean drive trash
 cancelall - Cancel all tasks
 storage - Drive details
-serve - serve remote as index
+serve - Serve remote as index
+sync - Sync two remotes
 search - Search for torrents
 status - Status message of tasks
 stats - Bot stats
@@ -168,7 +166,7 @@ restart - Restart bot
      - `MULTI_RCLONE_CONFIG`: For using owner rclone config for all users or each user with their own rclone config. Default to False. `Bool` 
      - `USE_SERVICE_ACCOUNTS`: For enabling Service Accounts for rclone copy. Default to False. `Bool`.
      - `SERVICE_ACCOUNTS_REMOTE`= To set remote (teamdrive) from your rclone config with the service accounts added. `Str`. **Note**: teamdrive remote must have team_drive field with id
-     - `SERVER_SIDE_COPY`= For enabling or desabling rclone server side copy. Default to False. **NOTE**: if you get any error while copy set this to `False`. `Bool`
+     - `SERVER_SIDE`= For enabling or desabling rclone server side copy. Default to False. **NOTE**: if you get any error while copy set this to `False`. `Bool`
      - `SERVE_IP`= "Ip (public) of your vps where bot is running. `Str`
      - `SERVE_PORT`: Port to use for remote index. Default to `8080`. `Str`
      - `SERVE_USER`: User for remote index. Default to `admin`. `Str`
@@ -207,7 +205,7 @@ restart - Restart bot
    - TORRENT SEARCH
      - `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrent-Api-py). `Str`
      - `SEARCH_LIMIT`: Search limit for search api, limit for each site. Default is zero. `Str`
-     - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). `Str`
+     - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). Add/Delete plugins as you wish. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins).`Str`
      - Supported Sites:
      >1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooqle, Kickass, Bitsearch, MagnetDL, Libgen, YTS, Limetorrent, TorrentFunk, Glodls, TorrentProject and YourBittorrent
 

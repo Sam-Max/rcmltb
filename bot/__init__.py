@@ -24,9 +24,6 @@ basicConfig(level= INFO,
 
 LOGGER = getLogger(__name__)
 
-def getConfig(name: str):
-    return environ[name]
-
 def get_client():
     return qbitClient(host="localhost", port=8090)
 
@@ -124,8 +121,8 @@ SERVICE_ACCOUNTS_REMOTE = environ.get('SERVICE_ACCOUNTS_REMOTE', '')
 MULTI_RCLONE_CONFIG = environ.get('MULTI_RCLONE_CONFIG', '')
 MULTI_RCLONE_CONFIG = MULTI_RCLONE_CONFIG.lower() == 'true' 
 
-SERVER_SIDE_COPY = environ.get('SERVER_SIDE_COPY', '')
-SERVER_SIDE_COPY = SERVER_SIDE_COPY.lower() == 'true' 
+SERVER_SIDE = environ.get('SERVER_SIDE', '')
+SERVER_SIDE = SERVER_SIDE.lower() == 'true' 
 
 aid = environ.get('ALLOWED_CHATS', '')
 if len(aid) != 0:
@@ -143,9 +140,9 @@ else:
 
 CMD_INDEX = environ.get('CMD_INDEX', '')
 
-DB_URI = environ.get('DATABASE_URL', '')
-if len(DB_URI) == 0:
-    DB_URI = None
+DATABASE_URL = environ.get('DATABASE_URL', '')
+if len(DATABASE_URL) == 0:
+    DATABASE_URL = None
 
 RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
 RSS_CHAT_ID = '' if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
@@ -212,13 +209,28 @@ if len(EXTENSION_FILTER) > 0:
     for x in fx:
         GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
 
-try:
-    TELEGRAM_API_ID = int(getConfig("TELEGRAM_API_ID"))
-    TELEGRAM_API_HASH = getConfig("TELEGRAM_API_HASH")
-    BOT_TOKEN = getConfig("BOT_TOKEN")
-    OWNER_ID= int(getConfig('OWNER_ID'))
-except:
-    LOGGER.error("One or more env variables missing! Exiting now")
+OWNER_ID = environ.get('OWNER_ID', '')
+if len(OWNER_ID) == 0:
+    LOGGER.error("OWNER_ID variable is missing! Exiting now")
+    exit(1)
+else:
+    OWNER_ID = int(OWNER_ID)
+
+TELEGRAM_API_ID = environ.get('TELEGRAM_API_ID', '')
+if len(TELEGRAM_API_ID) == 0:
+    LOGGER.error("TELEGRAM_API_ID variable is missing! Exiting now")
+    exit(1)
+else:
+    TELEGRAM_API_ID = int(TELEGRAM_API_ID)
+
+TELEGRAM_API_HASH = environ.get('TELEGRAM_API_HASH', '')
+if len(TELEGRAM_API_HASH) == 0:
+    LOGGER.error("TELEGRAM_API_HASH variable is missing! Exiting now")
+    exit(1)
+
+BOT_TOKEN = environ.get('BOT_TOKEN', '')
+if len(BOT_TOKEN) == 0:
+    LOGGER.error("BOT_TOKEN variable is missing! Exiting now")
     exit(1)
 
 def aria2c_init():
@@ -317,6 +329,7 @@ if not config_dict:
                    'ALLOWED_CHATS': ALLOWED_CHATS,
                    'AUTO_MIRROR': AUTO_MIRROR,
                    'BASE_URL': BASE_URL,
+                   'BOT_TOKEN': BOT_TOKEN,
                    'CMD_INDEX': CMD_INDEX,
                    'DUMP_CHAT': DUMP_CHAT,
                    'DEFAULT_REMOTE': DEFAULT_REMOTE,
@@ -329,7 +342,8 @@ if not config_dict:
                    'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                    'MEGA_PASSWORD': MEGA_PASSWORD,
                    'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
-                   'SERVER_SIDE_COPY': SERVER_SIDE_COPY,
+                   'OWNER_ID': OWNER_ID,
+                   'SERVER_SIDE': SERVER_SIDE,
                    'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                    'RSS_CHAT_ID': RSS_CHAT_ID,
                    'RSS_COMMAND': RSS_COMMAND,
@@ -366,4 +380,9 @@ if not qbit_options:
     qbit_options = dict(qb_client.app_preferences())
     del qbit_options['scan_dirs']
 else:
-    qb_client.app_set_preferences(qbit_options)
+    qb_opt = {**qbit_options}
+    for k, v in list(qb_opt.items()):
+        if v in ["", "*"] or k.startswith('rss'):
+            del qb_opt[k]
+    qb_client.app_set_preferences(qb_opt)
+    

@@ -3,14 +3,238 @@ from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from os import path as ospath, remove
-from subprocess import run as srun
-from bot import DB_URI, LOGGER, OWNER_ID, bot, config_dict
+from os import environ, path as ospath, remove
+from shutil import rmtree
+from dotenv import load_dotenv
+from subprocess import Popen, run as srun
+from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, OWNER_ID, Interval, aria2, aria2_options, bot, config_dict, status_dict, status_reply_dict_lock
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.filters import CustomFilters
-from bot.helper.ext_utils.message_utils import sendMarkup, sendMessage
+from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessage, update_all_messages
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
+
+async def load_config():
+     BOT_TOKEN = environ.get('BOT_TOKEN', '')
+     if len(BOT_TOKEN) == 0:
+          BOT_TOKEN = config_dict['BOT_TOKEN']
+
+     TELEGRAM_API_ID = environ.get('TELEGRAM_API', '')
+     if len(TELEGRAM_API_ID) == 0:
+          TELEGRAM_API_ID = config_dict['TELEGRAM_API_ID']
+     else:
+          TELEGRAM_API_ID = int(TELEGRAM_API_ID)
+
+     TELEGRAM_API_HASH = environ.get('TELEGRAM_API_HASH', '')
+     if len(TELEGRAM_API_HASH) == 0:
+          TELEGRAM_API_HASH = config_dict['TELEGRAM_API_HASH']
+
+     OWNER_ID = environ.get('OWNER_ID', '')
+     if len(OWNER_ID) == 0:
+          OWNER_ID = config_dict['OWNER_ID']
+     else:
+          OWNER_ID = int(OWNER_ID)
+
+     DATABASE_URL = environ.get('DATABASE_URL', '')
+     if len(DATABASE_URL) == 0:
+          DATABASE_URL = ''
+
+     DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
+     if len(DOWNLOAD_DIR) == 0:
+          DOWNLOAD_DIR = '/usr/src/app/downloads/'
+     elif not DOWNLOAD_DIR.endswith("/"):
+          DOWNLOAD_DIR = f'{DOWNLOAD_DIR}/'
+
+     GDRIVE_FOLDER_ID = environ.get('GDRIVE_FOLDER_ID', '')
+     if len(GDRIVE_FOLDER_ID) == 0:
+          GDRIVE_FOLDER_ID = ''
+
+     aid = environ.get('ALLOWED_CHATS', '')
+     if len(aid) != 0:
+          aid = aid.split()
+          ALLOWED_CHATS = {int(_id.strip()) for _id in aid}
+     else:
+          ALLOWED_CHATS = set()
+
+     aid = environ.get('SUDO_USERS', '')
+     if len(aid) != 0:
+          aid = aid.split()
+          SUDO_USERS = {int(_id.strip()) for _id in aid}
+     else:
+          SUDO_USERS= set()
+
+     EXTENSION_FILTER = environ.get('EXTENSION_FILTER', '')
+     if len(EXTENSION_FILTER) > 0:
+          fx = EXTENSION_FILTER.split()
+          GLOBAL_EXTENSION_FILTER.clear()
+          GLOBAL_EXTENSION_FILTER.append('.aria2')
+          for x in fx:
+               GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
+
+     MEGA_API_KEY = environ.get('MEGA_API_KEY', '')
+     if len(MEGA_API_KEY) == 0:
+          MEGA_API_KEY = ''
+
+     MEGA_EMAIL_ID = environ.get('MEGA_EMAIL_ID', '')
+     MEGA_PASSWORD = environ.get('MEGA_PASSWORD', '')
+     if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
+          MEGA_EMAIL_ID = ''
+          MEGA_PASSWORD = ''
+
+     UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
+     if len(UPTOBOX_TOKEN) == 0:
+          UPTOBOX_TOKEN = ''
+
+     SEARCH_API_LINK = environ.get('SEARCH_API_LINK', '').rstrip("/")
+     if len(SEARCH_API_LINK) == 0:
+          SEARCH_API_LINK = ''
+
+     RSS_COMMAND = environ.get('RSS_COMMAND', '')
+     if len(RSS_COMMAND) == 0:
+          RSS_COMMAND = ''
+
+     SEARCH_PLUGINS = environ.get('SEARCH_PLUGINS', '')
+     if len(SEARCH_PLUGINS) == 0:
+          SEARCH_PLUGINS = ''
+
+     TG_MAX_FILE_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
+     LEECH_SPLIT_SIZE = environ.get('LEECH_SPLIT_SIZE', '')
+     if len(LEECH_SPLIT_SIZE) == 0 or int(LEECH_SPLIT_SIZE) > TG_MAX_FILE_SIZE:
+          LEECH_SPLIT_SIZE = TG_MAX_FILE_SIZE
+     else:
+          LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE)
+
+     STATUS_UPDATE_INTERVAL = environ.get('STATUS_UPDATE_INTERVAL', '')
+     if len(STATUS_UPDATE_INTERVAL) == 0:
+          STATUS_UPDATE_INTERVAL = 10
+     else:
+          STATUS_UPDATE_INTERVAL = int(STATUS_UPDATE_INTERVAL)
+     if len(status_dict) != 0:
+          async with status_reply_dict_lock:
+               if Interval:
+                    Interval[0].cancel()
+                    Interval.clear()
+                    Interval.append(setInterval(STATUS_UPDATE_INTERVAL, update_all_messages))
+
+     SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
+     SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
+
+     DUMP_CHAT = environ.get('DUMP_CHAT', '')
+     DUMP_CHAT = '' if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
+
+     STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
+     STATUS_LIMIT = '' if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+
+     RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
+     RSS_CHAT_ID = '' if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
+
+     RSS_DELAY = environ.get('RSS_DELAY', '')
+     RSS_DELAY = 900 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
+
+     USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
+
+     RSS_USER_SESSION_STRING = environ.get('RSS_USER_SESSION_STRING', '')
+
+     TORRENT_TIMEOUT = environ.get('TORRENT_TIMEOUT', '')
+     downloads = aria2.get_downloads()
+     if len(TORRENT_TIMEOUT) == 0:
+          if downloads:
+               aria2.set_options({'bt-stop-timeout': '0'}, downloads)
+          aria2_options['bt-stop-timeout'] = '0'
+     else:
+          if downloads:
+               aria2.set_options({'bt-stop-timeout': TORRENT_TIMEOUT}, downloads)
+          aria2_options['bt-stop-timeout'] = TORRENT_TIMEOUT
+          TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
+
+     IS_TEAM_DRIVE = environ.get('IS_TEAM_DRIVE', '')
+     IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == 'true'
+
+     USE_SERVICE_ACCOUNTS = environ.get('USE_SERVICE_ACCOUNTS', '')
+     USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == 'true'
+
+     WEB_PINCODE = environ.get('WEB_PINCODE', '')
+     WEB_PINCODE = WEB_PINCODE.lower() == 'true'
+
+     AS_DOCUMENT = environ.get('AS_DOCUMENT', '')
+     AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
+
+     EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '')
+     EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
+
+     SERVER_PORT = environ.get('SERVER_PORT', '')
+     SERVER_PORT = 80 if len(SERVER_PORT) == 0 else int(SERVER_PORT)
+     BASE_URL = environ.get('BASE_URL', '').rstrip("/")
+     if len(BASE_URL) == 0:
+          BASE_URL = ''
+          srun(["pkill", "-9", "-f", "gunicorn"])
+     else:
+          srun(["pkill", "-9", "-f", "gunicorn"])
+          Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
+
+     UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
+     if len(UPSTREAM_REPO) == 0:
+          UPSTREAM_REPO = ''
+
+     UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', '')
+     if len(UPSTREAM_BRANCH) == 0:
+          UPSTREAM_BRANCH = 'master'
+
+     AUTO_MIRROR= environ.get('AUTO_MIRROR', '')  
+     AUTO_MIRROR= AUTO_MIRROR.lower() == 'true'
+
+     DEFAULT_REMOTE = environ.get('DEFAULT_REMOTE', '')
+
+     MULTI_RCLONE_CONFIG = environ.get('MULTI_RCLONE_CONFIG', '')
+     MULTI_RCLONE_CONFIG = MULTI_RCLONE_CONFIG.lower() == 'true' 
+
+     SERVER_SIDE = environ.get('SERVER_SIDE', '')
+     SERVER_SIDE = SERVER_SIDE.lower() == 'true' 
+
+     SERVICE_ACCOUNTS_REMOTE = environ.get('SERVICE_ACCOUNTS_REMOTE', '')
+
+     CMD_INDEX = environ.get('CMD_INDEX', '')
+
+     config_dict.update({'AS_DOCUMENT': AS_DOCUMENT,
+                         'ALLOWED_CHATS': ALLOWED_CHATS,
+                         'AUTO_MIRROR': AUTO_MIRROR,
+                         'BASE_URL': BASE_URL,
+                         'BOT_TOKEN': BOT_TOKEN,
+                         'CMD_INDEX': CMD_INDEX,
+                         'DUMP_CHAT': DUMP_CHAT,
+                         'DEFAULT_REMOTE': DEFAULT_REMOTE,
+                         'EQUAL_SPLITS': EQUAL_SPLITS,
+                         'EXTENSION_FILTER': EXTENSION_FILTER,
+                         'GDRIVE_FOLDER_ID': GDRIVE_FOLDER_ID,
+                         'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
+                         'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
+                         'MEGA_API_KEY': MEGA_API_KEY,
+                         'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
+                         'MEGA_PASSWORD': MEGA_PASSWORD,
+                         'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
+                         'OWNER_ID': OWNER_ID,
+                         'SERVER_SIDE': SERVER_SIDE,
+                         'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
+                         'RSS_CHAT_ID': RSS_CHAT_ID,
+                         'RSS_COMMAND': RSS_COMMAND,
+                         'RSS_DELAY': RSS_DELAY,
+                         'SEARCH_API_LINK': SEARCH_API_LINK,
+                         'SEARCH_LIMIT': SEARCH_LIMIT,
+                         'SERVER_PORT': SERVER_PORT,
+                         'SERVICE_ACCOUNTS_REMOTE': SERVICE_ACCOUNTS_REMOTE,
+                         'STATUS_LIMIT': STATUS_LIMIT,
+                         'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
+                         'SUDO_USERS': SUDO_USERS,
+                         'TELEGRAM_API_ID': TELEGRAM_API_ID,
+                         'TELEGRAM_API_HASH': TELEGRAM_API_HASH,
+                         'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
+                         'UPSTREAM_REPO': UPSTREAM_REPO,
+                         'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
+                         'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
+                         'USER_SESSION_STRING': USER_SESSION_STRING,
+                         'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
+                         'WEB_PINCODE': WEB_PINCODE})
 
 async def handle_config(client, message):
      user_id= message.from_user.id
@@ -31,39 +255,55 @@ async def config_callback(client, callback_query):
 
      if int(cmd[-1]) != user_id:
           return await query.answer("This menu is not for you!", show_alert=True)
-
-     elif cmd[1] == "get_config":
+     if cmd[1] == "get_config":
           path= get_rclone_config(user_id)
           try:
                await client.send_document(document=path, chat_id=message.chat.id)
           except ValueError as err:
                await sendMessage(str(err), message)
           await query.answer()
-
      elif cmd[1] == "get_pickle":
           try:
                await client.send_document(document="token.pickle", chat_id=message.chat.id)
           except ValueError as err:
                await sendMessage(str(err), message)
           await query.answer()
-
+     elif cmd[1] == "get_config_env":
+          try:
+               await client.send_document(document="config.env", chat_id=message.chat.id)
+          except ValueError as err:
+               await sendMessage(str(err), message)
+          await query.answer()
      elif cmd[1] == "change_config":
+          await set_config_listener(client, query, message)
+     elif cmd[1] == "change_pickle" and user_id == OWNER_ID:
+          await set_config_listener(client, query,message)
+     elif cmd[1] == "change_acc" and user_id == OWNER_ID:
+          await set_config_listener(client, query, message)
+     elif cmd[1] == 'change_env' and user_id == OWNER_ID:
+          await set_config_listener(client, query, message)
+     elif cmd[1] == "delete_config":
+          path= get_rclone_config(user_id)
+          remove(path)
+          if DATABASE_URL is not None:
+               DbManger().user_rmconfig(user_id)
           await query.answer()
-          await set_config_listener(client, message, True)
-
-     elif cmd[1] == "change_pickle":
+          await config_menu(user_id, message, True)
+     elif cmd[1] == "delete_pickle":
+          remove("token.pickle")
+          if DATABASE_URL is not None:
+               DbManger().user_rmpickle(user_id)
+          await query.answer()     
+          await config_menu(user_id, message, True)
+     elif cmd[1] == "delete_acc":
+          rmtree("accounts")
           await query.answer()
-          await set_config_listener(client, message)
-
-     elif cmd[1] == "change_acc":
-          await query.answer()
-          await set_config_listener(client, message)
-
+          await config_menu(user_id, message, True)
      elif cmd[1] == "close":
-        await query.answer()
-        await message.delete()
+          await query.answer()
+          await message.delete()
 
-async def config_menu(user_id, message ):
+async def config_menu(user_id, message, edit=False):
      conf_path= get_rclone_config(user_id)
      buttons= ButtonMaker()
      fstr= ''
@@ -80,25 +320,36 @@ async def config_menu(user_id, message ):
           if return_code != 0:
                err = stderr.decode().strip()
                return await sendMessage(f'Error: {err}', message)  
-     msg= "❇️ **Rclone configuration**"
-     msg+= "\n\n**Here is list of drives in config file:**"
-     msg+= f"\n{fstr}"
      path= ospath.join("users", str(user_id), "rclone.conf")
+     msg= "❇️ **Rclone configuration**"
      if ospath.exists(path):
+          msg+= "\n\n**Here is list of drives in config file:**"
+          msg+= f"\n{fstr}"
           buttons.cb_buildbutton("🗂 Get rclone.conf", f"configmenu^get_config^{user_id}")
-          buttons.cb_buildbutton("📃Change rclone.conf", f"configmenu^change_config^{user_id}")
+          buttons.cb_buildbutton("🗑 Delete rclone.conf", f"configmenu^delete_config^{user_id}")
      else:
           buttons.cb_buildbutton("📃 Load rclone.conf", f"configmenu^change_config^{user_id}")
-     if ospath.exists("token.pickle"):
-          buttons.cb_buildbutton("🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}")
-          buttons.cb_buildbutton("📃 Change token.pickle", f"configmenu^change_pickle^{user_id}")
-     else:
-          buttons.cb_buildbutton("📃 Load token.pickle", f"configmenu^change_pickle^{user_id}")
-     buttons.cb_buildbutton("📃 Load accounts.zip", f"configmenu^change_acc^{user_id}")
+     if user_id == OWNER_ID:
+          if ospath.exists("token.pickle"):
+               buttons.cb_buildbutton("🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}")
+               buttons.cb_buildbutton("🗑 Delete token.pickle", f"configmenu^delete_pickle^{user_id}")
+          else:
+               buttons.cb_buildbutton("📃 Load token.pickle", f"configmenu^change_pickle^{user_id}")
+          if ospath.exists("accounts"):
+               buttons.cb_buildbutton("🗑 Delete accounts folder", f"configmenu^delete_acc^{user_id}")
+          else:
+               buttons.cb_buildbutton("📃 Load accounts.zip", f"configmenu^change_acc^{user_id}")
+          if ospath.exists("config.env"):
+               buttons.cb_buildbutton("🗂 Get config.env", f"configmenu^get_config_env^{user_id}")
+               buttons.cb_buildbutton("📃 Change config.env", f"configmenu^change_env^{user_id}")
      buttons.cb_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}", 'footer')
-     await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
-async def set_config_listener(client, message, is_rclone=False):
+     if edit:
+          await editMarkup(msg, message, reply_markup= buttons.build_menu(2))
+     else:
+          await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
+
+async def set_config_listener(client, query, message):
      if message.reply_to_message:
           user_id= message.reply_to_message.from_user.id
      else:
@@ -113,24 +364,27 @@ async def set_config_listener(client, message, is_rclone=False):
                if response.text:
                     if "/ignore" in response.text:
                          await client.listen.Cancel(filters.user(user_id))
+                         await query.answer()
                else:
-                    if is_rclone:
+                    file_name = response.document.file_name
+                    path= await client.download_media(response, file_name='./')
+                    if file_name == "rclone.conf":
                          rclone_path = ospath.join("users", str(user_id), "rclone.conf" )
                          path= await client.download_media(response, file_name=rclone_path)
-                         if DB_URI is not None:
+                         if DATABASE_URL is not None:
                               DbManger().user_saveconfig(user_id, path)
-                         await client.send_message(message.chat.id, text="Select a drive now, use /mirrorset")
-                    else:
-                         file_name = response.document.file_name
-                         path= await client.download_media(response, file_name='./')
-                         if file_name == 'accounts.zip':
-                              srun(["unzip", "-q", "-o", "accounts.zip"])
-                              srun(["chmod", "-R", "777", "accounts"])
-                         elif file_name == "token.pickle":
-                              if DB_URI is not None:
-                                   DbManger().user_savepickle(user_id, path)
-                         if ospath.exists('accounts.zip'):
-                              remove('accounts.zip')
+                    if file_name == 'accounts.zip':
+                         srun(["unzip", "-q", "-o", "accounts.zip"])
+                         srun(["chmod", "-R", "777", "accounts"])
+                    elif file_name == "token.pickle":
+                         if DATABASE_URL is not None:
+                              DbManger().user_savepickle(user_id, path)
+                    elif file_name == "config.env":
+                         load_dotenv('config.env', override=True)
+                         await load_config()       
+                    if ospath.exists('accounts.zip'):
+                         remove('accounts.zip')
+               await query.answer("Okay", show_alert=True)
           except Exception as ex:
                await sendMessage(str(ex), message) 
      finally:
