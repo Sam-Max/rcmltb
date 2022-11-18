@@ -16,6 +16,7 @@ megasdkrestclient
 pillow
 psutil
 psycopg2-binary
+pymongo
 pyrogram
 python-dotenv
 python-magic

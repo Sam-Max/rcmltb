@@ -1,10 +1,9 @@
 from math import ceil
-from os import mkdir, path as ospath, remove as osremove, rename as osrename, makedirs
+from os import mkdir, path as ospath, remove as osremove, makedirs
 from shutil import rmtree
 from bot.helper.ext_utils.zip_utils import get_path_size
 from magic import Magic
-from bot import config_dict, DOWNLOAD_DIR, LOGGER, OWNER_ID, TG_MAX_FILE_SIZE, aria2, get_client, status_dict, status_dict_lock
-from itertools import zip_longest
+from bot import config_dict, DOWNLOAD_DIR, LOGGER, TG_MAX_FILE_SIZE, aria2, get_client, status_dict, status_dict_lock
 from json import loads as jsnloads
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from subprocess import Popen, check_output
@@ -59,28 +58,6 @@ def start_cleanup():
     except:
         pass
     makedirs(DOWNLOAD_DIR)
-
-def rename_file(path, new_name):
-    up_dir, up_name = path.rsplit('/', 1)
-    _, ext = ospath.splitext(up_name)
-    new_name= new_name + ext
-    new_path= f'{up_dir}/{new_name}'
-    osrename(path, new_path)
-    return new_path
-
-def get_rclone_config(user_id):
-    if config_dict['MULTI_RCLONE_CONFIG']:
-        rc_path = ospath.join("users", str(user_id), "rclone.conf")  
-        if rc_path is not None:
-            if ospath.exists(rc_path):
-                return rc_path
-        return None
-    else:
-        rc_path = ospath.join("users", str(OWNER_ID), "rclone.conf")      
-        if rc_path is not None:
-            if ospath.exists(rc_path):
-                return rc_path
-        return None
 
 def get_readable_size(size):
     """Get size in readable format"""

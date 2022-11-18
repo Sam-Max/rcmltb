@@ -21,9 +21,10 @@
 - Telegram Navigation Button Menus to interact with cloud
 - File Manager: size, mkdir, delete, dedupe and rename
 - Service Accounts support with automatic switching
-- Serve remote as http or webdav index
-- Sync remotes
-- Clean remote trash
+- Serve cloud as http or webdav index
+- Sync clouds
+- Search file on cloud
+- Clean cloud trash
 - View storage info 
 
 ### Mirror
@@ -52,9 +53,11 @@
 - Extract rar, zip and 7z with or without password
 
 ### Database
-- SQL Database
-- Save rclone.conf and token.pickle files on db
-- Save user leech settings(thumbnails, sudo and allowed users) on db
+- Mongo Database
+- Save owner settings
+- Save user settings, including thumbnails.
+- Save private files (rclone.conf, token.pickle, etc)
+- Save RSS last recorded data
 
 ### RSS
 - Rss feed with filter support
@@ -101,7 +104,7 @@ ytdlzip- Mirror and zip ytdlp supported link
 ytdlleech - Leech yt-dlp supported link
 ytdlzipleech - Leech and zip yt-dlp supported link
 myfiles - File manager
-config - bot config files
+config - Bot config files
 copy - Copy from cloud to cloud
 clone - Clone gdrive link file/folder 
 usetting - User settings
@@ -151,7 +154,7 @@ restart - Restart bot
         - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission separated by spaces. `Str`
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces `Str`
         - `AUTO_MIRROR`: For auto mirroring files sent to the bot. **NOTE**: If you add bot to group(not channel), you can also use this feature. Default is `False`. `Bool`
-        - `DATABASE_URL`: Your SQL Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data that will be saved in Database: auth and sudo users, leech settings including thumbnails for each user. `Str`
+         - `DATABASE_URL`: Your Mongo Database URL (Connection string). Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database (auth and sudo users, owner and user setting, etc) `Str`
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `STATUS_LIMIT`: No. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Str`
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
@@ -162,8 +165,9 @@ restart - Restart bot
     **NOTE**: If any change in docker or requirements you will need to deploy/build again with updated repo for changes to apply.
 
    - RCLONE
-     - `DEFAULT_REMOTE`: To set a default remote from your rclone config for mirroring (only for owner). `Str`
-     - `MULTI_RCLONE_CONFIG`: For using owner rclone config for all users or each user with their own rclone config. Default to False. `Bool` 
+     - `DEFAULT_OWNER_REMOTE`: default remote from your rclone config for mirror. (for owner) `Str`
+     - `MULTI_RCLONE_CONFIG`: For allowing the use of a global rclone config for all users (no sudo or owner affected) or each user with their own rclone config. Default to False. `Bool` 
+     - `DEFAULT_GLOBAL_REMOTE`: default remote from global rclone config for mirror. Use this when `MULTI_RCLONE_CONFIG` is `False` and if you loaded a global rclone config. `Str`
      - `USE_SERVICE_ACCOUNTS`: For enabling Service Accounts for rclone copy. Default to False. `Bool`.
      - `SERVICE_ACCOUNTS_REMOTE`= To set remote (teamdrive) from your rclone config with the service accounts added. `Str`. **Note**: teamdrive remote must have team_drive field with id
      - `SERVER_SIDE`= For enabling or desabling rclone server side copy. Default to False. **NOTE**: if you get any error while copy set this to `False`. `Bool`

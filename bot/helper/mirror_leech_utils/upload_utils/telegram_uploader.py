@@ -1,8 +1,7 @@
 from asyncio import sleep
 from os import walk, rename, path as ospath, remove as osremove
 from time import time
-from bot import AS_DOC_USERS, AS_MEDIA_USERS, GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, bot, app, botloop
-from pyrogram.enums.parse_mode import ParseMode
+from bot import GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, bot, app, botloop, user_data
 from pyrogram.errors import FloodWait
 from PIL import Image
 from bot.helper.ext_utils.human_format import get_readable_file_size
@@ -189,10 +188,10 @@ class TelegramUploader():
         self.uploaded_bytes += chunk_size
         
     def __set__user_settings(self):
-        if self.__listener.message.chat.id in AS_DOC_USERS:
-            self.__as_doc = True
-        elif self.__listener.message.chat.id in AS_MEDIA_USERS:
-            self.__as_doc = False
+        user_id = self.__listener.message.from_user.id
+        user_dict = user_data.get(user_id, False)
+        if user_dict:
+            self.__as_doc = user_dict.get('as_doc', False)
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 

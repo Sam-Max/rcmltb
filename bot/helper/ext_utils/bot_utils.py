@@ -7,7 +7,7 @@ from math import ceil
 from re import match as re_match, findall as re_findall, IGNORECASE, compile
 from time import time
 from psutil import cpu_percent, disk_usage, virtual_memory
-from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict
+from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict, user_data
 from requests import head as rhead
 from threading import Event, Thread
 from urllib.request import urlopen
@@ -234,5 +234,8 @@ class setIntervalThreaded:
 def command_process(cmd):
     return compile(cmd, IGNORECASE)
 
-
-
+def update_user_ldata(id_, key, value):
+    if id_ in user_data:
+        user_data[id_][key] = value
+    else:
+        user_data[id_] = {key: value}

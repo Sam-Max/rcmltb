@@ -3,17 +3,18 @@ from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from os import environ, path as ospath, remove
+from os import environ, path as ospath, remove, rename
 from shutil import rmtree
 from dotenv import load_dotenv
 from subprocess import Popen, run as srun
-from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, OWNER_ID, Interval, aria2, aria2_options, bot, config_dict, status_dict, status_reply_dict_lock
+from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, OWNER_ID, Interval, aria2, aria2_options, bot, config_dict, status_dict, status_reply_dict_lock, user_data
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval
-from bot.helper.ext_utils.db_handler import DbManger
+from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessage, update_all_messages
-from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config
+from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.rclone_utils import get_rclone_config
 
 async def load_config():
      BOT_TOKEN = environ.get('BOT_TOKEN', '')
@@ -50,19 +51,17 @@ async def load_config():
      if len(GDRIVE_FOLDER_ID) == 0:
           GDRIVE_FOLDER_ID = ''
 
-     aid = environ.get('ALLOWED_CHATS', '')
-     if len(aid) != 0:
-          aid = aid.split()
-          ALLOWED_CHATS = {int(_id.strip()) for _id in aid}
-     else:
-          ALLOWED_CHATS = set()
+     ALLOWED_CHATS = environ.get('ALLOWED_CHATS', '')
+     if len(ALLOWED_CHATS) != 0:
+          aid = ALLOWED_CHATS.split()
+          for id_ in aid:
+               user_data[int(id_.strip())] = {'is_auth': True}
 
-     aid = environ.get('SUDO_USERS', '')
-     if len(aid) != 0:
-          aid = aid.split()
-          SUDO_USERS = {int(_id.strip()) for _id in aid}
-     else:
-          SUDO_USERS= set()
+     SUDO_USERS = environ.get('SUDO_USERS', '')
+     if len(SUDO_USERS) != 0:
+          aid = SUDO_USERS.split()
+          for id_ in aid:
+               user_data[int(id_.strip())] = {'is_sudo': True}
 
      EXTENSION_FILTER = environ.get('EXTENSION_FILTER', '')
      if len(EXTENSION_FILTER) > 0:
@@ -184,7 +183,7 @@ async def load_config():
      AUTO_MIRROR= environ.get('AUTO_MIRROR', '')  
      AUTO_MIRROR= AUTO_MIRROR.lower() == 'true'
 
-     DEFAULT_REMOTE = environ.get('DEFAULT_REMOTE', '')
+     DEFAULT_OWNER_REMOTE = environ.get('DEFAULT_OWNER_REMOTE', '')
 
      MULTI_RCLONE_CONFIG = environ.get('MULTI_RCLONE_CONFIG', '')
      MULTI_RCLONE_CONFIG = MULTI_RCLONE_CONFIG.lower() == 'true' 
@@ -203,7 +202,7 @@ async def load_config():
                          'BOT_TOKEN': BOT_TOKEN,
                          'CMD_INDEX': CMD_INDEX,
                          'DUMP_CHAT': DUMP_CHAT,
-                         'DEFAULT_REMOTE': DEFAULT_REMOTE,
+                         'DEFAULT_OWNER_REMOTE': DEFAULT_OWNER_REMOTE,
                          'EQUAL_SPLITS': EQUAL_SPLITS,
                          'EXTENSION_FILTER': EXTENSION_FILTER,
                          'GDRIVE_FOLDER_ID': GDRIVE_FOLDER_ID,
@@ -236,72 +235,8 @@ async def load_config():
                          'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
                          'WEB_PINCODE': WEB_PINCODE})
 
-async def handle_config(client, message):
-     user_id= message.from_user.id
-     if config_dict['MULTI_RCLONE_CONFIG']: 
-          await config_menu(user_id, message)    
-     else:
-        if user_id == OWNER_ID:  
-          await config_menu(user_id, message) 
-        else:
-          await sendMessage("You can't use on current mode", message)
-
-async def config_callback(client, callback_query):
-     query= callback_query
-     data = query.data
-     cmd = data.split("^")
-     message = query.message
-     user_id= query.from_user.id
-
-     if int(cmd[-1]) != user_id:
-          return await query.answer("This menu is not for you!", show_alert=True)
-     if cmd[1] == "get_config":
-          path= get_rclone_config(user_id)
-          try:
-               await client.send_document(document=path, chat_id=message.chat.id)
-          except ValueError as err:
-               await sendMessage(str(err), message)
-          await query.answer()
-     elif cmd[1] == "get_pickle":
-          try:
-               await client.send_document(document="token.pickle", chat_id=message.chat.id)
-          except ValueError as err:
-               await sendMessage(str(err), message)
-          await query.answer()
-     elif cmd[1] == "get_config_env":
-          try:
-               await client.send_document(document="config.env", chat_id=message.chat.id)
-          except ValueError as err:
-               await sendMessage(str(err), message)
-          await query.answer()
-     elif cmd[1] == "change_config":
-          await set_config_listener(client, query, message)
-     elif cmd[1] == "change_pickle" and user_id == OWNER_ID:
-          await set_config_listener(client, query,message)
-     elif cmd[1] == "change_acc" and user_id == OWNER_ID:
-          await set_config_listener(client, query, message)
-     elif cmd[1] == 'change_env' and user_id == OWNER_ID:
-          await set_config_listener(client, query, message)
-     elif cmd[1] == "delete_config":
-          path= get_rclone_config(user_id)
-          remove(path)
-          if DATABASE_URL is not None:
-               DbManger().user_rmconfig(user_id)
-          await query.answer()
-          await config_menu(user_id, message, True)
-     elif cmd[1] == "delete_pickle":
-          remove("token.pickle")
-          if DATABASE_URL is not None:
-               DbManger().user_rmpickle(user_id)
-          await query.answer()     
-          await config_menu(user_id, message, True)
-     elif cmd[1] == "delete_acc":
-          rmtree("accounts")
-          await query.answer()
-          await config_menu(user_id, message, True)
-     elif cmd[1] == "close":
-          await query.answer()
-          await message.delete()
+     if DATABASE_URL:
+          DbManager().update_config(config_dict)                        
 
 async def config_menu(user_id, message, edit=False):
      conf_path= get_rclone_config(user_id)
@@ -320,36 +255,136 @@ async def config_menu(user_id, message, edit=False):
           if return_code != 0:
                err = stderr.decode().strip()
                return await sendMessage(f'Error: {err}', message)  
-     path= ospath.join("users", str(user_id), "rclone.conf")
+     path= ospath.join("users", f"{user_id}", "rclone.conf")
      msg= "❇️ **Rclone configuration**"
      if ospath.exists(path):
           msg+= "\n\n**Here is list of drives in config file:**"
           msg+= f"\n{fstr}"
-          buttons.cb_buildbutton("🗂 Get rclone.conf", f"configmenu^get_config^{user_id}")
+          buttons.cb_buildbutton("🗂 Get rclone.conf", f"configmenu^get_rclone_conf^{user_id}")
           buttons.cb_buildbutton("🗑 Delete rclone.conf", f"configmenu^delete_config^{user_id}")
      else:
-          buttons.cb_buildbutton("📃 Load rclone.conf", f"configmenu^change_config^{user_id}")
+          buttons.cb_buildbutton("📃 Load rclone.conf", f"configmenu^change_rclone_conf^{user_id}", 'footer')
      if user_id == OWNER_ID:
+          if ospath.exists(ospath.join("users", "global_rclone", "rclone.conf")):
+               buttons.cb_buildbutton("🗂 Get global rclone.conf", f"configmenu^get_global_rclone_conf^{user_id}")
+               buttons.cb_buildbutton("🗑 Delete global rclone.conf", f"configmenu^delete_global_rclone_conf^{user_id}")
+          else:
+               buttons.cb_buildbutton("📃 Load global rclone.conf", f"configmenu^change_global_rclone_conf^{user_id}", 'footer')
           if ospath.exists("token.pickle"):
                buttons.cb_buildbutton("🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}")
                buttons.cb_buildbutton("🗑 Delete token.pickle", f"configmenu^delete_pickle^{user_id}")
           else:
-               buttons.cb_buildbutton("📃 Load token.pickle", f"configmenu^change_pickle^{user_id}")
+               buttons.cb_buildbutton("📃 Load token.pickle", f"configmenu^change_pickle^{user_id}", 'footer' )
           if ospath.exists("accounts"):
                buttons.cb_buildbutton("🗑 Delete accounts folder", f"configmenu^delete_acc^{user_id}")
           else:
-               buttons.cb_buildbutton("📃 Load accounts.zip", f"configmenu^change_acc^{user_id}")
+               buttons.cb_buildbutton("📃 Load accounts.zip", f"configmenu^change_acc^{user_id}", 'footer')
           if ospath.exists("config.env"):
                buttons.cb_buildbutton("🗂 Get config.env", f"configmenu^get_config_env^{user_id}")
-               buttons.cb_buildbutton("📃 Change config.env", f"configmenu^change_env^{user_id}")
-     buttons.cb_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}", 'footer')
+               buttons.cb_buildbutton("🗑 Delete config.env", f"configmenu^delete_config_env^{user_id}")
+          else:
+               buttons.cb_buildbutton("📃 Load config.env", f"configmenu^change_config_env^{user_id}", 'footer')
 
+     buttons.cb_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}", 'footer_second')
      if edit:
           await editMarkup(msg, message, reply_markup= buttons.build_menu(2))
      else:
           await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
-async def set_config_listener(client, query, message):
+async def handle_config(client, message):
+     user_id= message.from_user.id
+     if config_dict['MULTI_RCLONE_CONFIG']: 
+          await config_menu(user_id, message)    
+     else:
+        if CustomFilters._owner_query(user_id):  
+          await config_menu(user_id, message) 
+        else:
+          await sendMessage("You can't use on current mode", message)
+
+async def config_callback(client, callback_query):
+     query= callback_query
+     data = query.data
+     cmd = data.split("^")
+     message = query.message
+     user_id= query.from_user.id
+
+     if int(cmd[-1]) != user_id:
+          return await query.answer("This menu is not for you!", show_alert=True)
+     if cmd[1] == "get_rclone_conf":
+          path= get_rclone_config(user_id)
+          try:
+               await client.send_document(document=path, chat_id=message.chat.id)
+          except ValueError as err:
+               await sendMessage(str(err), message)
+          await query.answer()
+     elif cmd[1] == "get_global_rclone_conf":
+          path= ospath.join("users", "global_rclone", "rclone.conf")    
+          try:
+               await client.send_document(document=path, chat_id=message.chat.id)
+          except ValueError as err:
+               await sendMessage(str(err), message)
+          await query.answer()
+     elif cmd[1] == "get_pickle":
+          try:
+               await client.send_document(document="token.pickle", chat_id=message.chat.id)
+          except ValueError as err:
+               await sendMessage(str(err), message)
+          await query.answer()
+     elif cmd[1] == "get_config_env":
+          try:
+               await client.send_document(document="config.env", chat_id=message.chat.id)
+          except ValueError as err:
+               await sendMessage(str(err), message)
+          await query.answer()
+     elif cmd[1] == "change_rclone_conf":
+          await set_config_listener(client, query, message)
+          await config_menu(user_id, message, True)
+     elif cmd[1] == "change_global_rclone_conf" and user_id == OWNER_ID:
+          await set_config_listener(client, query, message, True)
+          await config_menu(user_id, message, True)
+     elif cmd[1] == "change_pickle" or cmd[1] == "change_acc" or cmd[1] == 'change_config_env' and user_id == OWNER_ID:
+          await set_config_listener(client, query, message)
+          await config_menu(user_id, message, True)
+     elif cmd[1] == "delete_config":
+          path= get_rclone_config(user_id)
+          try:
+               remove(path)
+          except FileNotFoundError as err:
+               await sendMessage(str(err), message)
+          await query.answer()
+          await config_menu(user_id, message, True)
+     elif cmd[1] == "delete_global_rclone_conf":
+          path= ospath.join("users", "global_rclone", "rclone.conf")    
+          try:
+               remove(path)
+          except FileNotFoundError as err:
+               await sendMessage(str(err), message)
+          await query.answer()
+          await config_menu(user_id, message, True)
+     elif cmd[1] == "delete_config_env":
+          try:
+               remove("config.env")
+          except FileNotFoundError as err:
+               await sendMessage(str(err), message)
+          await query.answer()
+          await config_menu(user_id, message, True)
+     elif cmd[1] == "delete_pickle":
+          try:
+               remove("token.pickle")
+          except FileNotFoundError as err:
+               await sendMessage(str(err), message)
+          await query.answer()     
+          await config_menu(user_id, message, True)
+     elif cmd[1] == "delete_acc":
+          rmtree("accounts")
+          await query.answer()
+          await config_menu(user_id, message, True)
+     else:
+          await query.answer()
+          await message.delete()
+
+
+async def set_config_listener(client, query, message, global_rclone=False):
      if message.reply_to_message:
           user_id= message.reply_to_message.from_user.id
      else:
@@ -367,24 +402,34 @@ async def set_config_listener(client, query, message):
                          await query.answer()
                else:
                     file_name = response.document.file_name
-                    path= await client.download_media(response, file_name='./')
                     if file_name == "rclone.conf":
-                         rclone_path = ospath.join("users", str(user_id), "rclone.conf" )
+                         if global_rclone:
+                              rclone_path = ospath.join("users", "global_rclone", "rclone.conf" )
+                         else:
+                              rclone_path = ospath.join("users", f"{user_id}", "rclone.conf" )
                          path= await client.download_media(response, file_name=rclone_path)
-                         if DATABASE_URL is not None:
-                              DbManger().user_saveconfig(user_id, path)
-                    if file_name == 'accounts.zip':
-                         srun(["unzip", "-q", "-o", "accounts.zip"])
-                         srun(["chmod", "-R", "777", "accounts"])
-                    elif file_name == "token.pickle":
-                         if DATABASE_URL is not None:
-                              DbManger().user_savepickle(user_id, path)
-                    elif file_name == "config.env":
-                         load_dotenv('config.env', override=True)
-                         await load_config()       
+                         if DATABASE_URL:
+                              DbManager().update_private_file(path) 
+                    else:
+                         await client.download_media(response, file_name='./')
+                         if file_name == 'accounts.zip':
+                              if ospath.exists('accounts'):
+                                   srun(["rm", "-rf", "accounts"])
+                              srun(["unzip", "-q", "-o", "accounts.zip"])
+                              srun(["chmod", "-R", "777", "accounts"])
+                         elif file_name in ['.netrc', 'netrc']:
+                              if file_name == 'netrc':
+                                   rename('netrc', '.netrc')
+                                   file_name = '.netrc'
+                              srun(["cp", ".netrc", "/root/.netrc"])
+                              srun(["chmod", "600", ".netrc"])
+                         elif file_name == "config.env":
+                              load_dotenv('config.env', override=True)
+                              await load_config()
+                         if DATABASE_URL and file_name != 'config.env':
+                              DbManager().update_private_file(file_name)       
                     if ospath.exists('accounts.zip'):
                          remove('accounts.zip')
-               await query.answer("Okay", show_alert=True)
           except Exception as ex:
                await sendMessage(str(ex), message) 
      finally:

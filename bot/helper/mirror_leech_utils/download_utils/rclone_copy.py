@@ -6,7 +6,7 @@ from random import SystemRandom, randrange
 from string import ascii_letters, digits
 from bot import LOGGER, status_dict, status_dict_lock, config_dict
 from bot.helper.ext_utils.message_utils import sendMessage, sendStatusMessage
-from bot.helper.ext_utils.misc_utils import get_rclone_config
+from bot.helper.ext_utils.rclone_utils import get_rclone_config
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 

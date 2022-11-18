@@ -1,5 +1,5 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/bot_settings.py
-# Some minor modifications from source
+# Some modifications from source
 
 from asyncio import TimeoutError
 from os import environ
@@ -7,14 +7,14 @@ from subprocess import Popen, run as srun
 from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot import ALLOWED_CHATS, GLOBAL_EXTENSION_FILTER, STATUS_UPDATE_INTERVAL, SUDO_USERS, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, aria2_options, aria2c_global, get_client, qbit_options, status_reply_dict_lock, status_dict
+from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, aria2_options, aria2c_global, get_client, qbit_options, status_reply_dict_lock, status_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval 
-from bot.helper.ext_utils.db_handler import DbManger
+from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, sendFile, sendMarkup, update_all_messages
 from bot.helper.ext_utils.misc_utils import ButtonMaker
-from bot.helper.ext_utils.var_holder import update_rclone_var
+from bot.helper.ext_utils.rclone_data_holder import update_rclone_data
 from bot.modules.search import initiate_search_tools
 
 
@@ -49,8 +49,6 @@ async def edit_menus(message, edit_type="env"):
 def get_env_menu():
     msg= f"❇️<b>Config Variables Settings</b>"
     msg += f"\n\n<b>State: {STATE.upper()} </b>"
-    msg += "\n\n<b>Notes:</b>"
-    msg += "\n1. Aria and qbit settings won't be saved after restart (no db support yet)"
     buttons= ButtonMaker() 
     for k in list(config_dict.keys())[START: 10 + START]:
         buttons.cb_buildbutton(k, f"ownersetmenu^env^editenv^{k}")
@@ -64,8 +62,8 @@ def get_env_menu():
     for x in range(0, len(config_dict)-1, 10):
         pages = int(x/10)
     buttons.cb_buildbutton(f"🗓 {int(START/10)}/{pages}", "ownersetmenu^page")  
-    buttons.cb_buildbutton('⏪ BACK', "ownersetmenu^env^back", "footer")
-    buttons.cb_buildbutton("NEXT ⏩", f"ownersetmenu^env^next", "footer")
+    buttons.cb_buildbutton('⏪ BACK', "ownersetmenu^back^env", "footer")
+    buttons.cb_buildbutton("NEXT ⏩", f"ownersetmenu^next^env", "footer")
     buttons.cb_buildbutton("✘ Close Menu", "ownersetmenu^close", "footer_second") 
     return msg, buttons
 
@@ -83,10 +81,10 @@ def get_qbit_menu():
     for x in range(0, len(qbit_options)-1, 10):
         pages = int(x/10)
     buttons.cb_buildbutton(f"🗓 {int(START/10)}/{pages}", "ownersetmenu^page")
-    buttons.cb_buildbutton('⬅️ Back', "ownersetmenu^back", "footer")  
-    buttons.cb_buildbutton('⏪ BACK', "ownersetmenu^qbit^back", "footer")
-    buttons.cb_buildbutton("NEXT ⏩", f"ownersetmenu^qbit^next", "footer")
-    buttons.cb_buildbutton("✘ Close Menu", "ownersetmenu^close", "footer_second") 
+    buttons.cb_buildbutton('⏪ BACK', "ownersetmenu^back^qbit", "footer")
+    buttons.cb_buildbutton("NEXT ⏩", f"ownersetmenu^next^qbit", "footer")
+    buttons.cb_buildbutton('⬅️ Back', "ownersetmenu^back_menu", "footer_second")
+    buttons.cb_buildbutton("✘ Close Menu", "ownersetmenu^close", "footer_third") 
     return msg, buttons
 
 def get_aria_menu():
@@ -104,10 +102,10 @@ def get_aria_menu():
     for x in range(0, len(aria2_options)-1, 10):
         pages = int(x/10)
     buttons.cb_buildbutton(f"🗓 {int(START/10)}/{pages}", "ownersetmenu^page") 
-    buttons.cb_buildbutton('⬅️ Back', "ownersetmenu^back")  
-    buttons.cb_buildbutton('⏪ BACK', "ownersetmenu^aria^back", "footer")
-    buttons.cb_buildbutton("NEXT ⏩", f"ownersetmenu^aria^next", "footer")
-    buttons.cb_buildbutton("✘ Close Menu", "ownersetmenu^close", "footer_second") 
+    buttons.cb_buildbutton('⏪ BACK', "ownersetmenu^back^aria", "footer")
+    buttons.cb_buildbutton("NEXT ⏩", f"ownersetmenu^next^aria", "footer")
+    buttons.cb_buildbutton('⬅️ Back', "ownersetmenu^back_menu", 'footer_second') 
+    buttons.cb_buildbutton("✘ Close Menu", "ownersetmenu^close", "footer_third") 
     return msg, buttons
 
 async def update_buttons(message, key, edit_type=None): 
@@ -137,33 +135,21 @@ async def update_buttons(message, key, edit_type=None):
 async def ownerset_callback(client, callback_query):
     query= callback_query
     data = query.data
-    cmd = data.split("^")
+    data = data.split("^")
     message = query.message
     user_id= query.from_user.id
 
-    if cmd[1] == "env":
-        if cmd[2] == "next":
-            await query.answer()
-            globals()['START'] += 10
-            if START > len(config_dict):
-                globals()['START'] = START - 10
-            await edit_menus(message, 'env')
-        elif cmd[2] == "back":
-            await query.answer()
-            globals()['START'] -= 10
-            if START < 0:
-                globals()['START'] += 10
-            await edit_menus(message, 'env')
-        elif cmd[2] == "editenv" and STATE == 'edit':
-            if cmd[3] in ['RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
+    if data[1] == "env":
+        if data[2] == "editenv" and STATE == 'edit':
+            if data[3] in ['RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
                           'TELEGRAM_API_HASH', 'TELEGRAM_API_ID', 'BOT_TOKEN', 'OWNER_ID', 'DOWNLOAD_DIR', 'DATABASE_URL']:
                 await query.answer(text='Restart required for this to apply!', show_alert=True)
             else:
                 await query.answer()
-            await update_buttons(message, cmd[3], cmd[2]) 
-            await start_env_listener(client, query, user_id, cmd[3])
-        elif cmd[2] == 'editenv' and STATE == 'view':
-            value = config_dict[cmd[3]]
+            await update_buttons(message, data[3], data[2]) 
+            await start_env_listener(client, query, user_id, data[3])
+        elif data[2] == 'editenv' and STATE == 'view':
+            value = config_dict[data[3]]
             if len(str(value)) > 200:
                 await query.answer()
                 filename = f"{data[2]}.txt"
@@ -174,68 +160,48 @@ async def ownerset_callback(client, callback_query):
             if value == '':
                 value = None
             await query.answer(text=f'{value}', show_alert=True)
-        elif cmd[2] == "resetenv":
+        elif data[2] == "resetenv":
             value = ''
-            if cmd[3] == "SUDO_USERS" or cmd[3] == "ALLOWED_CHATS":
-                await start_env_listener(client, query, user_id, cmd[3], action="rem")
-            elif cmd[3] in default_values:
-                value = default_values[cmd[3]]
-                if cmd[3] == "STATUS_UPDATE_INTERVAL" and len(status_dict) != 0:
+            if data[3] == "SUDO_USERS" or data[3] == "ALLOWED_CHATS":
+                await start_env_listener(client, query, user_id, data[3], action="rem")
+            elif data[3] in default_values:
+                value = default_values[data[3]]
+                if data[3] == "STATUS_UPDATE_INTERVAL" and len(status_dict) != 0:
                     async with status_reply_dict_lock:
                         if Interval:
                             Interval[0].cancel()
                             Interval.clear()
                             Interval.append(setInterval(value, update_all_messages))
-            elif cmd[3] == 'DEFAULT_REMOTE':
-                update_rclone_var("MIRRORSET_DRIVE", value, user_id)
-                update_rclone_var("MIRRORSET_BASE_DIR", value, user_id)
-            elif cmd[3] == 'EXTENSION_FILTER':
+            elif data[3] == 'DEFAULT_OWNER_REMOTE':
+                update_rclone_data("MIRRORSET_REMOTE", value, user_id)
+                update_rclone_data("MIRRORSET_BASE_DIR", value, user_id)
+            elif data[3] == 'EXTENSION_FILTER':
                 GLOBAL_EXTENSION_FILTER.clear()
                 GLOBAL_EXTENSION_FILTER.append('.aria2')
-            elif cmd[3] == 'TORRENT_TIMEOUT':
+            elif data[3] == 'TORRENT_TIMEOUT':
                 aria2.set_global_options({'bt-stop-timeout': 0})
-            elif cmd[3] == 'BASE_URL':
+            elif data[3] == 'BASE_URL':
                 srun(["pkill", "-9", "-f", "gunicorn"])
-            elif cmd[3] == 'SERVER_PORT':
+            elif data[3] == 'SERVER_PORT':
                 srun(["pkill", "-9", "-f", "gunicorn"])
                 Popen("gunicorn web.wserver:app --bind 0.0.0.0:80", shell=True)
-            await query.answer(f"{cmd[3]} reseted")    
-            config_dict[cmd[3]] = value
-            environ[cmd[3]]= str(value)
+            await query.answer(f"{data[3]} reseted")    
+            config_dict[data[3]] = value
+            if DATABASE_URL:
+                DbManager().update_config({data[3]: value})
             await edit_menus(message, 'env')
-    elif cmd[1] == "aria":
-        if cmd[2] == 'aria_menu':
+    elif data[1] == "aria":
+        if data[2] == 'aria_menu':
             globals()['START'] = 0
             await edit_menus(message, "aria")
-        if cmd[2] == "next":
-            await query.answer()
-            globals()['START'] += 10
-            if START > len(aria2_options):
-                globals()['START'] = START - 10
-            await edit_menus(message, "aria")
-        elif cmd[2] == "back":
-            await query.answer()
-            globals()['START'] -= 10
-            if START < 0:
-                globals()['START'] += 10
-            await edit_menus(message, "aria")
-        elif cmd[2] == 'resetaria':
-            aria2_defaults = aria2.client.get_global_option()
-            if aria2_defaults[cmd[3]] == aria2_options[cmd[3]]:
-                await query.answer(text='Value already same as you added in aria.sh!', show_alert= True)
-                return
-            await query.answer()
-            value = aria2_defaults[cmd[3]]
-            aria2_options[cmd[3]] = value
-            await edit_menus(message, "aria")
-        elif cmd[2] == "editaria" and (STATE == 'edit' or cmd[3] == 'newkey'):
-            await update_buttons(message, cmd[3], cmd[2]) 
-            await start_aria_listener(client, query, user_id, cmd[3])
-        elif cmd[2] == 'editaria' and STATE == 'view':
-            value = aria2_options[cmd[3]]
+        elif data[2] == "editaria" and (STATE == 'edit' or data[3] == 'newkey'):
+            await update_buttons(message, data[3], data[2]) 
+            await start_aria_listener(client, query, user_id, data[3])
+        elif data[2] == 'editaria' and STATE == 'view':
+            value = aria2_options[data[3]]
             if len(value) > 200:
                 await query.answer()
-                filename = f"{cmd[2]}.txt"
+                filename = f"{data[2]}.txt"
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(f'{value}')
                 await sendFile(message, filename)
@@ -243,53 +209,84 @@ async def ownerset_callback(client, callback_query):
             elif value == '':
                 value = None
             await query.answer(text=f'{value}', show_alert=True)
-    elif cmd[1] == "qbit":
-        if cmd[2] == 'qbit_menu':
+        elif data[2] == 'resetaria':
+            aria2_defaults = aria2.client.get_global_option()
+            if aria2_defaults[data[3]] == aria2_options[data[3]]:
+                await query.answer(text='Value already same as you added in aria.sh!', show_alert= True)
+                return
+            await query.answer()
+            value = aria2_defaults[data[3]]
+            aria2_options[data[3]] = value
+            await edit_menus(message, "aria")
+            downloads = aria2.get_downloads()
+            if downloads:
+                aria2.set_options({data[3]: value}, downloads)
+            if DATABASE_URL:
+               DbManager().update_aria2(data[3], value)
+        elif data[2] == 'emptyaria':
+            await query.answer()
+            aria2_options[data[3]] = ''
+            await edit_menus(message, 'aria')
+            downloads = aria2.get_downloads()
+            if downloads:
+                aria2.set_options({data[3]: ''}, downloads)
+            if DATABASE_URL:
+                DbManager().update_aria2(data[3], '')
+    elif data[1] == "qbit":
+        if data[2] == 'qbit_menu':
             globals()['START'] = 0
             await edit_menus(message, "qbit")
-        elif cmd[2] == "next":
-            await query.answer()
-            globals()['START'] += 10
-            if START > len(qbit_options):
-                globals()['START'] = START - 10
-            await edit_menus(message, "qbit")
-        elif cmd[2] == "back":
-            await query.answer()
-            globals()['START'] -= 10
-            if START < 0:
-                globals()['START'] += 10
-            await edit_menus(message, "qbit")
-        elif cmd[2] == "editqbit" and STATE == 'edit':
-            await update_buttons(message, cmd[3], cmd[2]) 
-            await start_qbit_listener(client, query, user_id, cmd[3])  
-        elif cmd[2] == 'editqbit' and STATE == 'view':
-            value = qbit_options[cmd[3]]
+        elif data[2] == "editqbit" and STATE == 'edit':
+            await update_buttons(message, data[3], data[2]) 
+            await start_qbit_listener(client, query, user_id, data[3])  
+        elif data[2] == 'editqbit' and STATE == 'view':
+            value = qbit_options[data[3]]
             if len(str(value)) > 200:
                 await query.answer()
-                filename = f"{cmd[2]}.txt"
+                filename = f"{data[2]}.txt"
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(f'{value}')
                 await sendFile(message, filename)
                 return
             if value == '':
                 value = None
-            await query.answer(text=f'{value}', show_alert=True)   
-    elif cmd[1] == 'edit':
+            await query.answer(text=f'{value}', show_alert=True) 
+        elif data[2] == 'emptyqbit':
+            await query.answer()
+            client = get_client()
+            client.app_set_preferences({data[3]: ''})
+            qbit_options[data[3]] = ''
+            await edit_menus(message, 'qbit')
+            if DATABASE_URL:
+                DbManger().update_qbittorrent(data[2], '')  
+    elif data[1] == 'edit':
         await query.answer()
         globals()['STATE'] = 'edit'
-        await edit_menus(message, cmd[2])
-    elif cmd[1] == 'view':
+        await edit_menus(message, data[2])
+    elif data[1] == 'view':
         await query.answer()
         globals()['STATE'] = 'view'
-        await edit_menus(message, cmd[2])
-    elif cmd[1] == "back":
+        await edit_menus(message, data[2])
+    elif data[1] == "next":
+        await query.answer()
+        globals()['START'] += 10
+        if START > len(config_dict):
+            globals()['START'] = START - 10
+        await edit_menus(message, data[2])
+    elif data[1] == "back":
+        await query.answer()
+        globals()['START'] -= 10
+        if START < 0:
+            globals()['START'] += 10
+        await edit_menus(message,  data[2])
+    elif data[1] == "back_menu":
         await query.answer()
         globals()['START'] = 0
-        key = cmd[2] if len(cmd) == 3 else "env"
+        key = data[2] if len(data) == 3 else "env"
         await edit_menus(message, key)
-    elif cmd[1] == "page":
+    elif data[1] == "page":
         await query.answer()
-    elif cmd[1] == "close":
+    elif data[1] == "close":
         globals()['START'] = 0
         globals()['STATE'] = 'view'
         await query.answer()
@@ -324,7 +321,9 @@ async def start_aria_listener(client, query, user_id, key):
                         if downloads:
                             aria2.set_options({key: value}, downloads)
                     aria2_options[key] = value
-                    await edit_menus(message, 'aria')       
+                    await edit_menus(message, 'aria')   
+                    if DATABASE_URL:
+                        DbManager().update_aria2(key, value)    
             except KeyError:
                 return await query.answer("Value doesn't exist") 
 
@@ -355,7 +354,9 @@ async def start_qbit_listener(client, query, user_id, key):
                     client = get_client()
                     client.app_set_preferences({key: value})
                     qbit_options[key] = value
-                    await edit_menus(message, 'qbit')       
+                    await edit_menus(message, 'qbit')   
+                    if DATABASE_URL:
+                        DbManager().update_qbittorrent(key, value)    
             except KeyError:
                 return await query.answer("Value doesn't exist") 
 
@@ -398,8 +399,8 @@ async def start_env_listener(client, query, user_id, key, action=""):
                         if downloads:
                             aria2.set_options({'bt-stop-timeout': f'{value}'}, downloads)
                         aria2_options['bt-stop-timeout'] = f'{value}'
-                    elif key == 'DEFAULT_REMOTE':
-                        update_rclone_var("MIRRORSET_DRIVE", value, user_id)
+                    elif key == 'DEFAULT_OWNER_REMOTE':
+                        update_rclone_data("MIRRORSET_REMOTE", value, user_id)
                     elif key == 'DOWNLOAD_DIR':
                         if not value.endswith('/'):
                             value = f'{value}/'
@@ -417,25 +418,11 @@ async def start_env_listener(client, query, user_id, key, action=""):
                             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
                     elif key == 'SEARCH_API_LINK':
                         initiate_search_tools()
-                    elif key == "SUDO_USERS":
-                        value= int(value)
-                        if action == "rem":
-                            SUDO_USERS.remove(value)
-                            DbManger().user_rmsudo(value)
-                        else:
-                            SUDO_USERS.add(value)  
-                            DbManger().user_addsudo(value)
-                    elif key == "ALLOWED_CHATS":
-                        value= int(value)
-                        if action == "rem":
-                            ALLOWED_CHATS.remove(value)
-                            DbManger().user_unauth(value)
-                        else:
-                            ALLOWED_CHATS.add(value) 
-                            DbManger().user_auth(value)
                     config_dict[key] = value
                     environ[key]= str(value)
                     await edit_menus(message, 'env')       
+                    if DATABASE_URL:
+                        DbManager().update_config({key: value})
             except KeyError:
                 return await query.answer("Value doesn't exist") 
 

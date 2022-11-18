@@ -11,9 +11,9 @@ from pyrogram.handlers import MessageHandler
 from bot.helper.ext_utils.batch_helper import check_link, get_link
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.message_utils import sendMessage
-from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_rclone_drive
+from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected
 from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import TelegramDownloader
-from bot.helper.mirror_leech_utils.listener import MirrorLeechListener
+from bot.modules.listener import MirrorLeechListener
 
 
 
@@ -30,7 +30,7 @@ async def _batch(client, message, isLeech=False):
             pass
         else:
             return
-        if await is_rclone_drive(user_id, message):
+        if await is_remote_selected(user_id, message):
             pass
         else:
             return

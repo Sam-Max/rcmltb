@@ -11,7 +11,7 @@ from pyrogram.enums import ChatType
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.human_format import human_readable_bytes
 from bot.helper.ext_utils.message_utils import delete_all_messages, sendMarkup, sendMessage, update_all_messages
-from bot.helper.ext_utils.misc_utils import ButtonMaker, clean_download, clean_target, rename_file, split_file
+from bot.helper.ext_utils.misc_utils import ButtonMaker, clean_download, clean_target, split_file
 from bot.helper.ext_utils.rclone_utils import get_gid
 from bot.helper.ext_utils.zip_utils import get_base_name, get_path_size
 from bot.helper.mirror_leech_utils.status_utils.tg_upload_status import TgUploadStatus

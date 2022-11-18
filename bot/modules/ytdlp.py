@@ -12,9 +12,9 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker
-from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_rclone_drive
+from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected
 from bot.helper.mirror_leech_utils.download_utils.yt_dlp_helper import YoutubeDLHelper
-from bot.helper.mirror_leech_utils.listener import MirrorLeechListener
+from bot.modules.listener import MirrorLeechListener
 
 listener_dict = {}
 
@@ -28,7 +28,7 @@ async def _ytdl(client, message, isZip= False, isLeech=False):
             pass
         else:
             return 
-        if await is_rclone_drive(user_id, message):
+        if await is_remote_selected(user_id, message):
             pass
         else:
             return

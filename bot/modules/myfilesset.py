@@ -1,10 +1,13 @@
-import asyncio
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from json import loads as jsonloads
+from asyncio import sleep, TimeoutError
 from os.path import splitext
+from bot import LOGGER
 from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker, get_rclone_config, get_readable_size
+from bot.helper.ext_utils.misc_utils import ButtonMaker, get_readable_size
 from pyrogram import filters
+
+from bot.helper.ext_utils.rclone_utils import get_rclone_config
 
 async def myfiles_settings(message, drive_name, drive_base, edit=False, is_folder=False):
      if message.reply_to_message:
@@ -15,20 +18,20 @@ async def myfiles_settings(message, drive_name, drive_base, edit=False, is_folde
      buttons= ButtonMaker()
 
      if len(drive_base) == 0:
-          buttons.cb_buildbutton("📁 Calculate folder size", f"myfilesmenu^size_action^{user_id}")
-          buttons.cb_buildbutton("📁 Create empty directory", f"myfilesmenu^mkdir_action^{user_id}")
-          buttons.cb_buildbutton("🗑 Delete empty directories", f"myfilesmenu^rmdir_action^{user_id}")
-          buttons.cb_buildbutton("🗑 Delete duplicate files", f"myfilesmenu^dedupe_action^{user_id}")   
+          buttons.cb_buildbutton("📁 Calculate folder size", f"myfilesmenu^size^{user_id}")
+          buttons.cb_buildbutton("📁 Create empty directory", f"myfilesmenu^mkdir^{user_id}")
+          buttons.cb_buildbutton("🗑 Delete empty directories", f"myfilesmenu^rmdir^{user_id}")
+          buttons.cb_buildbutton("🗑 Delete duplicate files", f"myfilesmenu^dedupe^{user_id}")   
      else:
           if is_folder:
-               buttons.cb_buildbutton(f"📁 Calculate folder size", f"myfilesmenu^size_action^{user_id}")
-               buttons.cb_buildbutton("🗑 Delete duplicate files", f"myfilesmenu^dedupe_action^{user_id}")      
-               buttons.cb_buildbutton(f"🗑 Delete folder", f"myfilesmenu^delete_action^folder^{user_id}")
-               buttons.cb_buildbutton("📁 Create empty directory", f"myfilesmenu^mkdir_action^{user_id}")                       
-               buttons.cb_buildbutton("🗑 Delete empty directories", f"myfilesmenu^rmdir_action^{user_id}")                         
+               buttons.cb_buildbutton(f"📁 Calculate folder size", f"myfilesmenu^size^{user_id}")
+               buttons.cb_buildbutton("🗑 Delete duplicate files", f"myfilesmenu^dedupe^{user_id}")      
+               buttons.cb_buildbutton(f"🗑 Delete folder", f"myfilesmenu^delete^folder^{user_id}")
+               buttons.cb_buildbutton("📁 Create empty directory", f"myfilesmenu^mkdir^{user_id}")                       
+               buttons.cb_buildbutton("🗑 Delete empty directories", f"myfilesmenu^rmdir^{user_id}")                         
           else:
-               buttons.cb_buildbutton("📝 Rename", f"myfilesmenu^rename_action^file^{user_id}")
-               buttons.cb_buildbutton("🗑 Delete", f"myfilesmenu^delete_action^file^{user_id}")
+               buttons.cb_buildbutton("📝 Rename", f"myfilesmenu^rename^file^{user_id}")
+               buttons.cb_buildbutton("🗑 Delete", f"myfilesmenu^delete^file^{user_id}")
      
      buttons.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
      buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer')
@@ -50,6 +53,59 @@ async def calculate_size(message, drive_base, drive_name, user_id):
           buttons.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
           buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer')
           await editMessage(msg, message, reply_markup= buttons.build_menu(1))
+
+async def search_action(client, message, query, drive_name, user_id):
+     conf_path = get_rclone_config(user_id)
+     question= await sendMessage("Send file name to search, /ignore to cancel", message)
+     try:
+          response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout=60)
+     except TimeoutError:
+          await sendMessage("Too late 60s gone, try again!", message)
+     else:
+          if response:
+               text= response.text
+               try:
+                    if "/ignore" in text:
+                         await query.answer("Okay cancelled!")
+                         await client.listen.Cancel(filters.user(user_id))
+                    else:
+                         search_msg= await sendMessage("**⏳Searching file on remote...**\n\nPlease wait, it may take some time", question)
+                         conf_path = get_rclone_config(user_id)
+                         cmd = ["rclone", "lsjson", "--files-only", "-R", f'--config={conf_path}', "--include", f"*{text}*", f"{drive_name}:"] 
+                         process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
+                         out, err = await process.communicate()
+                         out = out.decode().strip()
+                         LOGGER.info(out)
+                         return_code = await process.wait()
+                         if return_code != 0:
+                              err = err.decode().strip()
+                              await sendMessage(f'Error: {err}', message)
+                              return
+                         if len(out) > 0:
+                              data= jsonloads(out)
+                              msg= f"<b>Found {len(data)} files:\n\n</b>"
+                              for index, file in enumerate(data, start=1):
+                                   name= file['Name']
+                                   path= file['Path']
+                                   cmd = ["rclone", "link", f'--config={conf_path}', f"{drive_name}:{path}"]
+                                   process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
+                                   out, err = await process.communicate()
+                                   link = out.decode().strip()
+                                   LOGGER.info(link)
+                                   return_code = await process.wait()
+                                   if return_code == 0:
+                                        msg += f"{index}. <a href='{link}'>{name}</a>\n"
+                                   else:
+                                        msg += f"{index}. <code>{name}</code>\n"
+                                   await sleep(0.5)
+                              await search_msg.delete()
+                              await sendMessage(msg, message)
+                         else:
+                              await sendMessage("No file found", message)
+               except Exception as ex:
+                    await sendMessage(str(ex), message) 
+     finally:
+          await question.delete()
 
 async def delete_selection(message, user_id, is_folder=False):
      buttons= ButtonMaker()
@@ -134,19 +190,18 @@ async def rclone_rmdirs(message, drive_name, drive_base, conf_path):
           err = stderr.decode().strip()
           return await sendMessage(f'Error: {err}', message)
 
-async def rclone_mkdir(client, query, message, drive_name, base_dir, tag):
+async def rclone_mkdir(client, message, drive_name, base_dir, tag):
      user_id= message.reply_to_message.from_user.id
      conf_path = get_rclone_config(user_id)
      question= await sendMessage("Send name for directory, /ignore to cancel", message)
      try:
           response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout= 30)
-     except asyncio.TimeoutError:
+     except TimeoutError:
           await sendMessage("Too late 30s gone, try again!", message)
      else:
           if response:
                try:
                     if "/ignore" in response.text:
-                         await query.answer("Okay cancelled!")
                          await client.listen.Cancel(filters.user(user_id))
                     else:
                          edit_mgs= await sendMessage("⏳Creating Directory...", message)
@@ -193,7 +248,7 @@ async def rclone_rename(client, message, rclone_drive, drive_base, tag):
      question= await sendMessage("Send new name for file, /ignore to cancel", message)
      try:
           response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout= 30)
-     except asyncio.TimeoutError:
+     except TimeoutError:
           await sendMessage("Too late 30s gone, try again!", message)
      else:
           if response:

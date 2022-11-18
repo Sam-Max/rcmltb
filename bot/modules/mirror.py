@@ -2,7 +2,7 @@ from base64 import b64encode
 from os import path as ospath
 from time import time
 from requests import get
-from bot import DOWNLOAD_DIR, bot
+from bot import DOWNLOAD_DIR, LOGGER, bot
 from asyncio import TimeoutError, sleep
 from bot import bot, DOWNLOAD_DIR, botloop, config_dict
 from pyrogram import filters
@@ -16,13 +16,13 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import deleteMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_readable_size
-from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_rclone_drive
+from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected
 from bot.helper.mirror_leech_utils.download_utils.aria2_download import add_aria2c_download
 from bot.helper.mirror_leech_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_leech_utils.download_utils.mega_download import MegaDownloader
 from bot.helper.mirror_leech_utils.download_utils.qbit_downloader import add_qb_torrent
 from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import TelegramDownloader
-from bot.helper.mirror_leech_utils.listener import MirrorLeechListener
+from bot.modules.listener import MirrorLeechListener
 
 
 listener_dict = {}
@@ -49,7 +49,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
             pass
         else: 
             return
-        if await is_rclone_drive(user_id, message):
+        if await is_remote_selected(user_id, message):
             pass
         else: 
             return
@@ -260,7 +260,6 @@ async def mirror_menu(client, query):
         finally:
             await question.delete()
             
-
     elif cmd[1] == "close":
         await query.answer()
         await message.delete()
@@ -272,7 +271,7 @@ async def handle_auto_mirror(client, message):
     user_id= message.from_user.id
     if await is_rclone_config(user_id, message) == False:
         return
-    if await is_rclone_drive(user_id, message) == False:
+    if await is_remote_selected(user_id, message) == False:
         return
     file = message.document or message.video or message.audio or message.photo or None
     tag = f"@{message.from_user.username}"
@@ -289,6 +288,7 @@ auto_mirror_handler = MessageHandler(handle_auto_mirror, filters= filters.video 
 mirror_menu_cb = CallbackQueryHandler(mirror_menu, filters=filters.regex("mirrormenu"))
 
 if config_dict['AUTO_MIRROR']:
+    LOGGER.info(config_dict['AUTO_MIRROR'])
     bot.add_handler(auto_mirror_handler)
 bot.add_handler(mirror_handler)   
 bot.add_handler(zip_mirror_handler)

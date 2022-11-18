@@ -2,16 +2,15 @@
 # Adapted for asyncio framework and pyrogram library and some extra modifications
 
 from asyncio import Lock
+from bot.helper.ext_utils.db_handler import DbManager
 from feedparser import parse as feedparse
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from asyncio import sleep
-from copy import deepcopy
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.filters import regex, command
 from pyrogram import filters as pfilters
 from bot import DATABASE_URL, LOGGER, RSS_DELAY, bot, rss_dict, config_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage, sendRss
 from bot.helper.ext_utils.misc_utils import ButtonMaker
@@ -154,7 +153,7 @@ async def rss_sub(client, message):
                                 rss_job.resume()
                                 globals()['rss_job_enabled'] = True
                             rss_dict[title] = {'link': feed_link, 'last_feed': last_link, 'last_title': last_title, 'filters': f_lists}
-                        DbManger().rss_add(title, feed_link, last_link, last_title, filters)
+                        DbManager().rss_update(title)
                         await sendMessage(sub_msg, message)
                         LOGGER.info(f"Rss Feed Added: {title} - {feed_link} - {filters}")
                     except (IndexError, AttributeError) as e:
@@ -187,7 +186,7 @@ async def rss_unsub(client, message):
                         msg = "Rss link not exists! Nothing removed!"
                         await sendMessage(msg, message)
                     else:
-                        DbManger().rss_delete(title)
+                        DbManager().rss_delete(title)
                         async with rss_dict_lock:
                             del rss_dict[title]
                         await sendMessage(f"Rss link with Title: <code>{title}</code> has been removed!", message)
@@ -234,7 +233,7 @@ async def rss_set_update(client, callback_query):
     elif data[1] == 'unsuball':
         await query.answer()
         if len(rss_dict) > 0:
-            DbManger().trunc_table('rss')
+            DbManager().trunc_table('rss')
             async with rss_dict_lock:
                 rss_dict.clear()
             rss_job.pause()
@@ -283,8 +282,8 @@ async def rss_monitor():
                     LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {title}. Maybe you need to use less RSS_DELAY to not miss some torrents")
                     break
                 parse = True
-                for list in data['filters']:
-                    if all(x not in str(rss_d.entries[feed_count]['title']).lower() for x in list):
+                for flist in data['filters']:
+                    if all(x not in str(rss_d.entries[feed_count]['title']).lower() for x in flist):
                         parse = False
                         feed_count += 1
                         break
@@ -306,7 +305,7 @@ async def rss_monitor():
                 if title not in rss_dict:
                     continue
                 rss_dict[title].update({'last_feed': last_link, 'last_title': last_title})
-            DbManger().rss_update(title, str(last_link), str(last_title))
+            DbManager().rss_update(title)
             LOGGER.info(f"Feed Name: {title}")
             LOGGER.info(f"Last item: {last_link}")
         except Exception as e:
