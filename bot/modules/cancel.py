@@ -2,7 +2,7 @@
 import asyncio
 from time import sleep
 from pyrogram.filters import regex
-from bot import status_dict_lock, OWNER_ID, SUDO_USERS, bot, status_dict, botloop
+from bot import status_dict_lock, OWNER_ID, bot, status_dict, botloop, user_data
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
@@ -24,7 +24,8 @@ async def cancel_mirror(client, message):
         msg = f"send <code>/{BotCommands.CancelCommand} GID</code> to cancel task"
         return await sendMessage(msg, message)
 
-    if OWNER_ID != user_id and user_id not in SUDO_USERS:
+    if OWNER_ID != user_id and dl.message.from_user.id != user_id and \
+       (user_id not in user_data or not user_data[user_id].get('is_sudo')):
         return await sendMessage("This is not for you!", message)
 
     if dl.type() == "RcloneSync":

@@ -2,7 +2,6 @@
 # Some modifications from source
 
 from asyncio import TimeoutError
-from os import environ
 from subprocess import Popen, run as srun
 from pyrogram.filters import regex, command
 from pyrogram import filters
@@ -141,7 +140,7 @@ async def ownerset_callback(client, callback_query):
 
     if data[1] == "env":
         if data[2] == "editenv" and STATE == 'edit':
-            if data[3] in ['RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
+            if data[3] in ['SUDO_USERS','ALLOWED_CHATS', 'RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
                           'TELEGRAM_API_HASH', 'TELEGRAM_API_ID', 'BOT_TOKEN', 'OWNER_ID', 'DOWNLOAD_DIR', 'DATABASE_URL']:
                 await query.answer(text='Restart required for this to apply!', show_alert=True)
             else:
@@ -162,9 +161,7 @@ async def ownerset_callback(client, callback_query):
             await query.answer(text=f'{value}', show_alert=True)
         elif data[2] == "resetenv":
             value = ''
-            if data[3] == "SUDO_USERS" or data[3] == "ALLOWED_CHATS":
-                await start_env_listener(client, query, user_id, data[3], action="rem")
-            elif data[3] in default_values:
+            if data[3] in default_values:
                 value = default_values[data[3]]
                 if data[3] == "STATUS_UPDATE_INTERVAL" and len(status_dict) != 0:
                     async with status_reply_dict_lock:
@@ -360,7 +357,7 @@ async def start_qbit_listener(client, query, user_id, key):
             except KeyError:
                 return await query.answer("Value doesn't exist") 
 
-async def start_env_listener(client, query, user_id, key, action=""):
+async def start_env_listener(client, query, user_id, key):
     message= query.message
     try:
         response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout= 60)
@@ -373,7 +370,6 @@ async def start_env_listener(client, query, user_id, key, action=""):
                 if "/ignore" in response.text:
                     await client.listen.Cancel(filters.user(user_id))
                     await query.answer("Canceled")
-                    return
                 else:
                     value= response.text.strip() 
                     if value.lower() == 'true':
@@ -406,6 +402,8 @@ async def start_env_listener(client, query, user_id, key, action=""):
                             value = f'{value}/'
                     elif key == 'LEECH_SPLIT_SIZE':
                         value = min(int(value), TG_MAX_FILE_SIZE)
+                    elif key == 'DUMP_CHAT':
+                        value = int(value)   
                     elif key == 'SERVER_PORT':
                         value = int(value)
                         srun(["pkill", "-9", "-f", "gunicorn"])
@@ -419,7 +417,6 @@ async def start_env_listener(client, query, user_id, key, action=""):
                     elif key == 'SEARCH_API_LINK':
                         initiate_search_tools()
                     config_dict[key] = value
-                    environ[key]= str(value)
                     await edit_menus(message, 'env')       
                     if DATABASE_URL:
                         DbManager().update_config({key: value})

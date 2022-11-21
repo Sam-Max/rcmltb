@@ -25,13 +25,6 @@ LOGGER = getLogger(__name__)
 
 load_dotenv('config.env', override=True)
 
-BOT_TOKEN = environ.get('BOT_TOKEN', '')
-if len(BOT_TOKEN) == 0:
-    LOGGER.error("BOT_TOKEN variable is missing! Exiting now")
-    exit(1)
-
-bot_id = int(BOT_TOKEN.split(':', 1)[0])
-
 basicConfig(level= INFO,
     format= "%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s",
     handlers=[StreamHandler(), FileHandler("botlog.txt")])
@@ -42,9 +35,9 @@ def get_client():
 Interval = []
 QbInterval = []
 GLOBAL_EXTENSION_FILTER = ['.aria2']
+user_data = {}
 aria2_options = {}
 qbit_options = {}
-DOWNLOAD_DIR = None
 
 status_dict_lock = Lock()
 status_reply_dict_lock = Lock()
@@ -61,10 +54,74 @@ status_reply_dict = {}
 # value: [rss_feed, last_link, last_title, filter]
 rss_dict = {}
 
-user_data = {}
+BOT_TOKEN = environ.get('BOT_TOKEN', '')
+if len(BOT_TOKEN) == 0:
+    LOGGER.error("BOT_TOKEN variable is missing! Exiting now")
+    exit(1)
 
-AS_DOC_USERS = set()
-AS_MEDIA_USERS = set()
+bot_id = int(BOT_TOKEN.split(':', 1)[0])
+
+DATABASE_URL = environ.get('DATABASE_URL', '')
+if len(DATABASE_URL) == 0:
+    DATABASE_URL = None
+
+if DATABASE_URL:
+    conn = MongoClient(DATABASE_URL)
+    db = conn.rcmltb
+    if config_dict := db.settings.config.find_one({'_id': bot_id}):  #return config dict (all env vars)
+        del config_dict['_id']
+        for key, value in config_dict.items():
+            environ[key] = str(value)
+    if pf_dict := db.settings.files.find_one({'_id': bot_id}):
+        del pf_dict['_id']
+        for key, value in pf_dict.items():
+            if value:
+                file_ = key.replace('__', '.')
+                with open(file_, 'wb+') as f:
+                    f.write(value)
+    if a2c_options := db.settings.aria2c.find_one({'_id': bot_id}):
+        del a2c_options['_id']
+        aria2_options = a2c_options
+    if qbit_opt := db.settings.qbittorrent.find_one({'_id': bot_id}):
+        del qbit_opt['_id']
+        qbit_options = qbit_opt
+    conn.close()
+    BOT_TOKEN = environ.get('BOT_TOKEN', '')
+    bot_id = int(BOT_TOKEN.split(':', 1)[0])
+    DATABASE_URL = environ.get('DATABASE_URL', '')
+else:
+    config_dict = {}
+
+OWNER_ID = environ.get('OWNER_ID', '')
+if len(OWNER_ID) == 0:
+    LOGGER.error("OWNER_ID variable is missing! Exiting now")
+    exit(1)
+else:
+    OWNER_ID = int(OWNER_ID)
+
+TELEGRAM_API_ID = environ.get('TELEGRAM_API_ID', '')
+if len(TELEGRAM_API_ID) == 0:
+    LOGGER.error("TELEGRAM_API_ID variable is missing! Exiting now")
+    exit(1)
+else:
+    TELEGRAM_API_ID = int(TELEGRAM_API_ID)
+
+TELEGRAM_API_HASH = environ.get('TELEGRAM_API_HASH', '')
+if len(TELEGRAM_API_HASH) == 0:
+    LOGGER.error("TELEGRAM_API_HASH variable is missing! Exiting now")
+    exit(1)
+
+ALLOWED_CHATS = environ.get('ALLOWED_CHATS', '')
+if len(ALLOWED_CHATS) != 0:
+    aid = ALLOWED_CHATS.split()
+    for id_ in aid:
+        user_data[int(id_.strip())] = {'is_auth': True}
+
+SUDO_USERS = environ.get('SUDO_USERS', '')
+if len(SUDO_USERS) != 0:
+    aid = SUDO_USERS.split()
+    for id_ in aid:
+        user_data[int(id_.strip())] = {'is_sudo': True}
 
 STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
 STATUS_LIMIT = '' if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
@@ -135,50 +192,7 @@ MULTI_RCLONE_CONFIG = MULTI_RCLONE_CONFIG.lower() == 'true'
 SERVER_SIDE = environ.get('SERVER_SIDE', '')
 SERVER_SIDE = SERVER_SIDE.lower() == 'true' 
 
-ALLOWED_CHATS = environ.get('ALLOWED_CHATS', '')
-if len(ALLOWED_CHATS) != 0:
-    aid = ALLOWED_CHATS.split()
-    for id_ in aid:
-        user_data[int(id_.strip())] = {'is_auth': True}
-
-SUDO_USERS = environ.get('SUDO_USERS', '')
-if len(SUDO_USERS) != 0:
-    aid = SUDO_USERS.split()
-    for id_ in aid:
-        user_data[int(id_.strip())] = {'is_sudo': True}
-
 CMD_INDEX = environ.get('CMD_INDEX', '')
-
-DATABASE_URL = environ.get('DATABASE_URL', '')
-if len(DATABASE_URL) == 0:
-    DATABASE_URL = None
-
-if DATABASE_URL:
-    conn = MongoClient(DATABASE_URL)
-    db = conn.rcmltb
-    if config_dict := db.settings.config.find_one({'_id': bot_id}):  #return config dict (all env vars)
-        del config_dict['_id']
-        for key, value in config_dict.items():
-            environ[key] = str(value)
-    if pf_dict := db.settings.files.find_one({'_id': bot_id}):
-        del pf_dict['_id']
-        for key, value in pf_dict.items():
-            if value:
-                file_ = key.replace('__', '.')
-                with open(file_, 'wb+') as f:
-                    f.write(value)
-    if a2c_options := db.settings.aria2c.find_one({'_id': bot_id}):
-        del a2c_options['_id']
-        aria2_options = a2c_options
-    if qbit_opt := db.settings.qbittorrent.find_one({'_id': bot_id}):
-        del qbit_opt['_id']
-        qbit_options = qbit_opt
-    conn.close()
-    BOT_TOKEN = environ.get('BOT_TOKEN', '')
-    bot_id = int(BOT_TOKEN.split(':', 1)[0])
-    DATABASE_URL = environ.get('DATABASE_URL', '')
-else:
-    config_dict = {}
 
 RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
 RSS_CHAT_ID = '' if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
@@ -239,50 +253,19 @@ if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
     MEGA_EMAIL_ID = ''
     MEGA_PASSWORD = ''
 
-OWNER_ID = environ.get('OWNER_ID', '')
-if len(OWNER_ID) == 0:
-    LOGGER.error("OWNER_ID variable is missing! Exiting now")
-    exit(1)
-else:
-    OWNER_ID = int(OWNER_ID)
-
-TELEGRAM_API_ID = environ.get('TELEGRAM_API_ID', '')
-if len(TELEGRAM_API_ID) == 0:
-    LOGGER.error("TELEGRAM_API_ID variable is missing! Exiting now")
-    exit(1)
-else:
-    TELEGRAM_API_ID = int(TELEGRAM_API_ID)
-
-TELEGRAM_API_HASH = environ.get('TELEGRAM_API_HASH', '')
-if len(TELEGRAM_API_HASH) == 0:
-    LOGGER.error("TELEGRAM_API_HASH variable is missing! Exiting now")
-    exit(1)
-
 bot = Client(name="pyrogram", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, bot_token=BOT_TOKEN)
 Conversation(bot) 
-try:
-    bot.start()
-    LOGGER.info("Pyrogram client created")
-except Exception as e:
-    print(e)
-    exit(1)
+LOGGER.info("Creating Pyrogram client")
 
 IS_PREMIUM_USER = False
 USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 if len(USER_SESSION_STRING) == 0:
     app = None
 else:
-    LOGGER.info("Pyrogram client created from USER_SESSION_STRING")
+    LOGGER.info("Creating Pyrogram client from USER_SESSION_STRING")
     app = Client(name="pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING)
     with app:
         IS_PREMIUM_USER = app.me.is_premium
-
-if app is not None:
-    try:
-        app.start()
-    except Exception as e:
-        print(e)
-        exit(1)
 
 RSS_USER_SESSION_STRING = environ.get('RSS_USER_SESSION_STRING', '')
 if len(RSS_USER_SESSION_STRING) == 0:

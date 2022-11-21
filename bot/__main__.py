@@ -1,5 +1,5 @@
 from time import time
-from bot import Interval, QbInterval, bot, botloop
+from bot import Interval, QbInterval, bot, botloop, app, bot
 from os import path as ospath, remove as osremove, execl as osexecl
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
@@ -76,6 +76,10 @@ async def main():
     bot.add_handler(log_handler)
     bot.add_handler(ping_handler)
 
+bot.start()
+if app is not None:
+    app.start()
+    
 botloop.run_until_complete(main())
 botloop.run_forever()
 
