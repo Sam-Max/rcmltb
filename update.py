@@ -4,6 +4,7 @@ from logging import FileHandler, StreamHandler, INFO, basicConfig, error as log_
 from os import path as ospath, environ
 from subprocess import run as srun
 from pymongo import MongoClient
+from dotenv import load_dotenv
 from subprocess import run as srun
 
 if ospath.exists('botlog.txt'):
@@ -13,6 +14,8 @@ if ospath.exists('botlog.txt'):
 basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[FileHandler('log.txt'), StreamHandler()],
                     level=INFO)
+
+load_dotenv('config.env', override=True)
 
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
 if len(BOT_TOKEN) == 0:

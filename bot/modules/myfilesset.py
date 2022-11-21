@@ -2,7 +2,6 @@ from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from json import loads as jsonloads
 from asyncio import sleep, TimeoutError
 from os.path import splitext
-from bot import LOGGER
 from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_readable_size
 from pyrogram import filters
@@ -75,7 +74,6 @@ async def search_action(client, message, query, drive_name, user_id):
                          process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
                          out, err = await process.communicate()
                          out = out.decode().strip()
-                         LOGGER.info(out)
                          return_code = await process.wait()
                          if return_code != 0:
                               err = err.decode().strip()
@@ -91,7 +89,6 @@ async def search_action(client, message, query, drive_name, user_id):
                                    process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
                                    out, err = await process.communicate()
                                    link = out.decode().strip()
-                                   LOGGER.info(link)
                                    return_code = await process.wait()
                                    if return_code == 0:
                                         msg += f"{index}. <a href='{link}'>{name}</a>\n"
