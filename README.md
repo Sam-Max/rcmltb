@@ -23,7 +23,7 @@
 - Service Accounts support with automatic switching
 - Serve cloud as http or webdav index
 - Sync clouds
-- Search file on cloud
+- Search files on cloud
 - Clean cloud trash
 - View storage info 
 

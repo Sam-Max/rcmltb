@@ -8,7 +8,7 @@ from pyrogram import filters
 
 from bot.helper.ext_utils.rclone_utils import get_rclone_config
 
-async def myfiles_settings(message, drive_name, drive_base, edit=False, is_folder=False):
+async def myfiles_settings(message, remote, remote_path, edit=False, is_folder=False):
      if message.reply_to_message:
         user_id= message.reply_to_message.from_user.id
      else:
@@ -16,7 +16,7 @@ async def myfiles_settings(message, drive_name, drive_base, edit=False, is_folde
      
      buttons= ButtonMaker()
 
-     if len(drive_base) == 0:
+     if len(remote_path) == 0:
           buttons.cb_buildbutton("📁 Calculate folder size", f"myfilesmenu^size^{user_id}")
           buttons.cb_buildbutton("📁 Create empty directory", f"myfilesmenu^mkdir^{user_id}")
           buttons.cb_buildbutton("🗑 Delete empty directories", f"myfilesmenu^rmdir^{user_id}")
@@ -35,17 +35,17 @@ async def myfiles_settings(message, drive_name, drive_base, edit=False, is_folde
      buttons.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
      buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer')
      
-     msg= f"<b>Path:</b><code>{drive_name}:{drive_base}</code>"
+     msg= f"<b>Path:</b><code>{remote}:{remote_path}</code>"
 
      if edit:
           await editMessage(msg, message, reply_markup= buttons.build_menu(2))
      else:
           await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
-async def calculate_size(message, drive_base, drive_name, user_id):
+async def calculate_size(message, remote_path, remote, user_id):
      buttons= ButtonMaker()
      path = get_rclone_config(user_id)
-     data = await rclone_size(message, drive_base, drive_name, path)
+     data = await rclone_size(message, remote_path, remote, path)
      if data is not None:
           total_size = get_readable_size(data[1])
           msg= f"Total Files: {data[0]}\nFolder Size: {total_size}"
@@ -53,7 +53,7 @@ async def calculate_size(message, drive_base, drive_name, user_id):
           buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer')
           await editMessage(msg, message, reply_markup= buttons.build_menu(1))
 
-async def search_action(client, message, query, drive_name, user_id):
+async def search_action(client, message, query, remote, user_id):
      conf_path = get_rclone_config(user_id)
      question= await sendMessage("Send file name to search, /ignore to cancel", message)
      try:
@@ -68,9 +68,9 @@ async def search_action(client, message, query, drive_name, user_id):
                          await query.answer("Okay cancelled!")
                          await client.listen.Cancel(filters.user(user_id))
                     else:
-                         search_msg= await sendMessage("**⏳Searching file on remote...**\n\nPlease wait, it may take some time", question)
+                         search_msg= await sendMessage("**⏳Searching file(s) on remote...**\n\nPlease wait, it may take some time", question)
                          conf_path = get_rclone_config(user_id)
-                         cmd = ["rclone", "lsjson", "--files-only", "-R", f'--config={conf_path}', "--include", f"*{text}*", f"{drive_name}:"] 
+                         cmd = ["rclone", "lsjson", "--files-only", "--ignore-case", "-R", f'--config={conf_path}', "--include", f"*{text}*", f"{remote}:"] 
                          process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
                          out, err = await process.communicate()
                          out = out.decode().strip()
@@ -85,7 +85,7 @@ async def search_action(client, message, query, drive_name, user_id):
                               for index, file in enumerate(data, start=1):
                                    name= file['Name']
                                    path= file['Path']
-                                   cmd = ["rclone", "link", f'--config={conf_path}', f"{drive_name}:{path}"]
+                                   cmd = ["rclone", "link", f'--config={conf_path}', f"{remote}:{path}"]
                                    process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
                                    out, err = await process.communicate()
                                    link = out.decode().strip()
@@ -98,7 +98,7 @@ async def search_action(client, message, query, drive_name, user_id):
                               await search_msg.delete()
                               await sendMessage(msg, message)
                          else:
-                              await sendMessage("No file found", message)
+                              await sendMessage("No file(s) found", message)
                except Exception as ex:
                     await sendMessage(str(ex), message) 
      finally:
@@ -117,32 +117,32 @@ async def delete_selection(message, user_id, is_folder=False):
           msg += f"Are you sure you want to delete this file permanently?"
      await editMessage(msg, message, reply_markup= buttons.build_menu(2))
 
-async def delete_selected(message, user_id, drive_base, drive_name, is_folder=False):   
+async def delete_selected(message, user_id, remote_path, remote, is_folder=False):   
      buttons= ButtonMaker()
      msg= ""
      conf_path = get_rclone_config(user_id)
      if is_folder:
-          await rclone_purge(message, drive_base, drive_name, conf_path)    
+          await rclone_purge(message, remote_path, remote, conf_path)    
           msg += f"The folder has been deleted successfully!!"
      else:
-          await rclone_delete(message, drive_base, drive_name, conf_path)  
+          await rclone_delete(message, remote_path, remote, conf_path)  
           msg += f"The file has been deleted successfully!!"
      buttons.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
      buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer')
      await editMessage(msg, message, reply_markup= buttons.build_menu(1))
 
-async def delete_empty_dir(message, user_id, rclone_drive, base_dir):
+async def delete_empty_dir(message, user_id, remote, remote_path):
      buttons= ButtonMaker()
      conf_path = get_rclone_config(user_id)
-     await rclone_rmdirs(message, rclone_drive, base_dir, conf_path)
+     await rclone_rmdirs(message, remote, remote_path, conf_path)
      buttons.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
      buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer')
      msg = "Directories successfully deleted!!"
      await editMessage(msg, message, reply_markup= buttons.build_menu(1))
 
-async def rclone_size(message, drive_base, drive_name, conf_path):
+async def rclone_size(message, remote_path, remote, conf_path):
      await editMessage("**⏳Calculating Folder Size...**\n\nPlease wait, it will take some time depending on number of files", message)
-     cmd = ["rclone", "size", f'--config={conf_path}', f"{drive_name}:{drive_base}", "--json"] 
+     cmd = ["rclone", "size", f'--config={conf_path}', f"{remote}:{remote_path}", "--json"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
      stdout = stdout.decode().strip()
@@ -156,8 +156,8 @@ async def rclone_size(message, drive_base, drive_name, conf_path):
      size = data["bytes"]
      return (files, size)
 
-async def rclone_purge(message,drive_base, drive_name, conf_path):
-     cmd = ["rclone", "purge", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
+async def rclone_purge(message,remote_path, remote, conf_path):
+     cmd = ["rclone", "purge", f'--config={conf_path}', f"{remote}:{remote_path}"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
      stdout = stdout.decode().strip()
@@ -166,8 +166,8 @@ async def rclone_purge(message,drive_base, drive_name, conf_path):
           err = stderr.decode().strip()
           return await sendMessage(f'Error: {err}', message)
 
-async def rclone_delete(message, drive_base, drive_name, conf_path):
-     cmd = ["rclone", "delete", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
+async def rclone_delete(message, remote_path, remote, conf_path):
+     cmd = ["rclone", "delete", f'--config={conf_path}', f"{remote}:{remote_path}"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
      stdout = stdout.decode().strip()
@@ -176,9 +176,9 @@ async def rclone_delete(message, drive_base, drive_name, conf_path):
           err = stderr.decode().strip()
           return await sendMessage(f'Error: {err}', message)
 
-async def rclone_rmdirs(message, drive_name, drive_base, conf_path):
+async def rclone_rmdirs(message, remote, remote_path, conf_path):
      await editMessage("**⏳Removing empty directories...**\n\nPlease wait, it may take some time depending on number of dirs", message)
-     cmd = ["rclone", "rmdirs", f'--config={conf_path}', f"{drive_name}:{drive_base}"] 
+     cmd = ["rclone", "rmdirs", f'--config={conf_path}', f"{remote}:{remote_path}"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
      stdout = stdout.decode().strip()
@@ -187,7 +187,7 @@ async def rclone_rmdirs(message, drive_name, drive_base, conf_path):
           err = stderr.decode().strip()
           return await sendMessage(f'Error: {err}', message)
 
-async def rclone_mkdir(client, message, drive_name, base_dir, tag):
+async def rclone_mkdir(client, message, remote, remote_path, tag):
      user_id= message.reply_to_message.from_user.id
      conf_path = get_rclone_config(user_id)
      question= await sendMessage("Send name for directory, /ignore to cancel", message)
@@ -202,8 +202,8 @@ async def rclone_mkdir(client, message, drive_name, base_dir, tag):
                          await client.listen.Cancel(filters.user(user_id))
                     else:
                          edit_mgs= await sendMessage("⏳Creating Directory...", message)
-                         path= f'{base_dir}/{response.text}'
-                         cmd = ["rclone", "mkdir", f'--config={conf_path}', f"{drive_name}:{path}"] 
+                         path= f'{remote_path}/{response.text}'
+                         cmd = ["rclone", "mkdir", f'--config={conf_path}', f"{remote}:{path}"] 
                          process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
                          stdout, stderr = await process.communicate()
                          stdout = stdout.decode().strip()
@@ -212,7 +212,7 @@ async def rclone_mkdir(client, message, drive_name, base_dir, tag):
                               err = stderr.decode().strip()
                               return await sendMessage(f'Error: {err}', message)
                          msg = "<b>Directory created successfully.\n\n</b>" 
-                         msg += f"<b>Path: </b><code>{drive_name}:{path}</code>\n\n"
+                         msg += f"<b>Path: </b><code>{remote}:{path}</code>\n\n"
                          msg += f'<b>cc:</b> {tag}\n\n' 
                          await editMessage(msg, edit_mgs)
                except Exception as ex:
@@ -220,12 +220,12 @@ async def rclone_mkdir(client, message, drive_name, base_dir, tag):
      finally:
           await question.delete()
 
-async def rclone_dedupe(message, rclone_drive, drive_base, user_id, tag):
+async def rclone_dedupe(message, remote, remote_path, user_id, tag):
      msg= "**⏳Deleting duplicate files**\n"
      msg += "\nIt may take some time depending on number of duplicates files"
      edit_msg= await editMessage(msg, message)
      conf_path = get_rclone_config(user_id)
-     cmd = ["rclone", "dedupe", "newest", "--tpslimit", "4", "--transfers", "1", "--fast-list", f'--config={conf_path}', f"{rclone_drive}:{drive_base}"] 
+     cmd = ["rclone", "dedupe", "newest", "--tpslimit", "4", "--transfers", "1", "--fast-list", f'--config={conf_path}', f"{remote}:{remote_path}"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
      stdout = stdout.decode().strip()
@@ -239,7 +239,7 @@ async def rclone_dedupe(message, rclone_drive, drive_base, user_id, tag):
      button.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
      await editMarkup(msg, edit_msg, reply_markup=button.build_menu(1))
 
-async def rclone_rename(client, message, rclone_drive, drive_base, tag):
+async def rclone_rename(client, message, remote, remote_path, tag):
      user_id= message.reply_to_message.from_user.id
      conf_path = get_rclone_config(user_id)
      question= await sendMessage("Send new name for file, /ignore to cancel", message)
@@ -256,7 +256,7 @@ async def rclone_rename(client, message, rclone_drive, drive_base, tag):
                     else:
                          new_name= response.text
                          edit_msg= await sendMessage("⏳Renaming file...", message) 
-                         list_base= drive_base.split("/")
+                         list_base= remote_path.split("/")
                          if len(list_base) > 1:
                               dest = list_base[:-1]
                               dest = "/".join(dest)
@@ -267,7 +267,7 @@ async def rclone_rename(client, message, rclone_drive, drive_base, tag):
                               file = list_base[0]
                               _, ext= splitext(file)
                               path = f'{new_name}{ext}'
-                         cmd = ["rclone", "moveto", f'--config={conf_path}', f"{rclone_drive}:{drive_base}", f"{rclone_drive}:{path}"]
+                         cmd = ["rclone", "moveto", f'--config={conf_path}', f"{remote}:{remote_path}", f"{remote}:{path}"]
                          process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
                          stdout, stderr = await process.communicate()
                          stdout = stdout.decode().strip()
@@ -276,8 +276,8 @@ async def rclone_rename(client, message, rclone_drive, drive_base, tag):
                               err = stderr.decode().strip()
                               return await sendMessage(f'Error: {err}', message)
                          msg= "<b>File renamed successfully.</b>\n\n"
-                         msg += f"<b>Old path: </b><code>{rclone_drive}:{drive_base}</code>\n\n"
-                         msg += f"<b>New path: </b><code>{rclone_drive}:{path}</code>\n\n"
+                         msg += f"<b>Old path: </b><code>{remote}:{remote_path}</code>\n\n"
+                         msg += f"<b>New path: </b><code>{remote}:{path}</code>\n\n"
                          msg += f'<b>cc: {tag}</b>'     
                          await editMessage(msg, edit_msg)
                except Exception as ex:
