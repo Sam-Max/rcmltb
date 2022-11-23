@@ -1,5 +1,5 @@
 
-# An Rclone Telegram bot to transfer to and from many clouds
+# An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with rclone support added and other changes from base code.
 
 ## Features:
 
