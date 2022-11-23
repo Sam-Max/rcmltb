@@ -70,7 +70,7 @@ async def rclone_about(message, query, drive_name, user_id):
           return await sendMessage(f'Error: {err}', message)
      info = loads(stdout)
      if len(info) == 0:
-          return await query.answer("Team Drive with Unlimited Storage")
+          return await query.answer("Team Drive with Unlimited Storage", show_alert=True)
      result_msg= "<b>🗂 Storage Details</b>\n"
      try:
           used = get_readable_file_size(info['used'])

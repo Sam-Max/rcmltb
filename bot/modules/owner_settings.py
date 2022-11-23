@@ -27,6 +27,7 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'LEECH_SPLIT_SIZE': TG_MAX_FILE_SIZE,
                   'SEARCH_LIMIT': 0,
                   'SERVER_PORT': 80,
+                  'SERVE_PORT': 8080,
                   'RSS_DELAY': 900}
 
 
@@ -140,7 +141,7 @@ async def ownerset_callback(client, callback_query):
 
     if data[1] == "env":
         if data[2] == "editenv" and STATE == 'edit':
-            if data[3] in ['SUDO_USERS','ALLOWED_CHATS', 'RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
+            if data[3] in ['SUDO_USERS', 'SERVE_USER', 'SERVE_PASS', 'SERVE_IP', 'SERVE_PORT', 'ALLOWED_CHATS', 'RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
                           'TELEGRAM_API_HASH', 'TELEGRAM_API_ID', 'BOT_TOKEN', 'OWNER_ID', 'DOWNLOAD_DIR', 'DATABASE_URL']:
                 await query.answer(text='Restart required for this to apply!', show_alert=True)
             else:
@@ -255,7 +256,7 @@ async def ownerset_callback(client, callback_query):
             qbit_options[data[3]] = ''
             await edit_menus(message, 'qbit')
             if DATABASE_URL:
-                DbManger().update_qbittorrent(data[2], '')  
+                DbManager().update_qbittorrent(data[2], '')  
     elif data[1] == 'edit':
         await query.answer()
         globals()['STATE'] = 'edit'

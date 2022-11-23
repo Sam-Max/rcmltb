@@ -193,6 +193,18 @@ async def load_config():
 
      SERVICE_ACCOUNTS_REMOTE = environ.get('SERVICE_ACCOUNTS_REMOTE', '')
 
+     SERVE_USER = environ.get('SERVE_USER', '')
+     SERVE_USER = 'admin' if len(SERVE_USER) == 0 else SERVE_USER
+
+     SERVE_PASS= environ.get('SERVE_PASS', '')
+     SERVE_PASS = 'admin' if len(SERVE_PASS) == 0 else SERVE_PASS
+
+     SERVE_IP = environ.get('SERVE_IP', '')
+     SERVE_IP = '' if len(SERVE_IP) == 0 else SERVE_IP
+
+     SERVE_PORT = environ.get('SERVE_PORT', '')
+     SERVE_PORT= 8080 if len(SERVE_PORT) == 0 else int(SERVE_PORT)
+
      CMD_INDEX = environ.get('CMD_INDEX', '')
 
      config_dict.update({'AS_DOCUMENT': AS_DOCUMENT,
@@ -201,6 +213,7 @@ async def load_config():
                          'BASE_URL': BASE_URL,
                          'BOT_TOKEN': BOT_TOKEN,
                          'CMD_INDEX': CMD_INDEX,
+                         'DATABASE_URL': DATABASE_URL,
                          'DUMP_CHAT': DUMP_CHAT,
                          'DEFAULT_OWNER_REMOTE': DEFAULT_OWNER_REMOTE,
                          'EQUAL_SPLITS': EQUAL_SPLITS,
@@ -213,7 +226,6 @@ async def load_config():
                          'MEGA_PASSWORD': MEGA_PASSWORD,
                          'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
                          'OWNER_ID': OWNER_ID,
-                         'SERVER_SIDE': SERVER_SIDE,
                          'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                          'RSS_CHAT_ID': RSS_CHAT_ID,
                          'RSS_COMMAND': RSS_COMMAND,
@@ -222,6 +234,11 @@ async def load_config():
                          'SEARCH_LIMIT': SEARCH_LIMIT,
                          'SERVER_PORT': SERVER_PORT,
                          'SERVICE_ACCOUNTS_REMOTE': SERVICE_ACCOUNTS_REMOTE,
+                         'SERVER_SIDE': SERVER_SIDE,
+                         'SERVE_USER':SERVE_USER,
+                         'SERVE_PASS': SERVE_PASS,
+                         'SERVE_IP': SERVE_IP,
+                         'SERVE_PORT': SERVE_PORT,
                          'STATUS_LIMIT': STATUS_LIMIT,
                          'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
                          'SUDO_USERS': SUDO_USERS,
@@ -263,29 +280,29 @@ async def config_menu(user_id, message, edit=False):
           buttons.cb_buildbutton("🗂 Get rclone.conf", f"configmenu^get_rclone_conf^{user_id}")
           buttons.cb_buildbutton("🗑 Delete rclone.conf", f"configmenu^delete_config^{user_id}")
      else:
-          buttons.cb_buildbutton("📃 Load rclone.conf", f"configmenu^change_rclone_conf^{user_id}", 'footer')
+          buttons.cb_buildbutton("📃rclone.conf", f"configmenu^change_rclone_conf^{user_id}", 'footer')
      if user_id == OWNER_ID:
           if ospath.exists(ospath.join("users", "global_rclone", "rclone.conf")):
                buttons.cb_buildbutton("🗂 Get global rclone.conf", f"configmenu^get_global_rclone_conf^{user_id}")
                buttons.cb_buildbutton("🗑 Delete global rclone.conf", f"configmenu^delete_global_rclone_conf^{user_id}")
           else:
-               buttons.cb_buildbutton("📃 Load global rclone.conf", f"configmenu^change_global_rclone_conf^{user_id}", 'footer')
+               buttons.cb_buildbutton("📃global rclone.conf", f"configmenu^change_global_rclone_conf^{user_id}", 'footer')
           if ospath.exists("token.pickle"):
                buttons.cb_buildbutton("🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}")
                buttons.cb_buildbutton("🗑 Delete token.pickle", f"configmenu^delete_pickle^{user_id}")
           else:
-               buttons.cb_buildbutton("📃 Load token.pickle", f"configmenu^change_pickle^{user_id}", 'footer' )
+               buttons.cb_buildbutton("📃token.pickle", f"configmenu^change_pickle^{user_id}", 'footer_second' )
           if ospath.exists("accounts"):
                buttons.cb_buildbutton("🗑 Delete accounts folder", f"configmenu^delete_acc^{user_id}")
           else:
-               buttons.cb_buildbutton("📃 Load accounts.zip", f"configmenu^change_acc^{user_id}", 'footer')
+               buttons.cb_buildbutton("📃accounts.zip", f"configmenu^change_acc^{user_id}", 'footer_second')
           if ospath.exists("config.env"):
                buttons.cb_buildbutton("🗂 Get config.env", f"configmenu^get_config_env^{user_id}")
                buttons.cb_buildbutton("🗑 Delete config.env", f"configmenu^delete_config_env^{user_id}")
           else:
-               buttons.cb_buildbutton("📃 Load config.env", f"configmenu^change_config_env^{user_id}", 'footer')
+               buttons.cb_buildbutton("📃config.env", f"configmenu^change_config_env^{user_id}", 'footer')
 
-     buttons.cb_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}", 'footer_second')
+     buttons.cb_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}", 'footer_third')
      if edit:
           await editMarkup(msg, message, reply_markup= buttons.build_menu(2))
      else:
