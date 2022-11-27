@@ -11,7 +11,7 @@ from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval 
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.filters import CustomFilters
-from bot.helper.ext_utils.message_utils import editMarkup, sendFile, sendMarkup, update_all_messages
+from bot.helper.ext_utils.message_utils import editMarkup, sendFile, sendMarkup, sendMessage, update_all_messages
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 from bot.helper.ext_utils.rclone_data_holder import update_rclone_data
 from bot.modules.search import initiate_search_tools
@@ -110,26 +110,25 @@ def get_aria_menu():
 
 async def update_buttons(message, key, edit_type=None): 
     buttons = ButtonMaker()
-    msg= ""
+    msg= f"Select option for {key}"
     if edit_type == 'editenv':  
-        buttons.cb_buildbutton('Back', "ownersetmenu^back^env")
+        buttons.cb_buildbutton('Send', f"ownersetmenu^send^env^{key}")
         if key not in ['TELEGRAM_HASH', 'TELEGRAM_API', 'OWNER_ID', 'BOT_TOKEN']:
             buttons.cb_buildbutton('Default', f"ownersetmenu^env^resetenv^{key}")
-        buttons.cb_buildbutton('Close', "ownersetmenu^close")
-        msg= "Send new value for selected variable, /ignore to cancel. Timeout: 60 sec"
+        buttons.cb_buildbutton('Back', "ownersetmenu^back^env", 'footer')
+        buttons.cb_buildbutton('Close', "ownersetmenu^close", 'footer')
     elif edit_type == 'editaria':
-        buttons.cb_buildbutton('Back', "ownersetmenu^back^aria")
+        buttons.cb_buildbutton('Send', f"ownersetmenu^send^aria^{key}")
         if key != 'newkey':
+            buttons.cb_buildbutton('Empty String', f"ownersetmenu^aria^emptyaria^{key}")
             buttons.cb_buildbutton('Default', f"ownersetmenu^aria^resetaria^{key}")
-        buttons.cb_buildbutton('Close', "ownersetmenu^close")
-        if key == 'newkey':
-            msg = f'Send a key with value. Example: https-proxy-user:value'
-        else:
-            msg = f'Send a valid value for {key}. Timeout: 60 sec'
+        buttons.cb_buildbutton('Back', "ownersetmenu^back^aria", 'footer')    
+        buttons.cb_buildbutton('Close', "ownersetmenu^close", 'footer')
     elif edit_type == 'editqbit':
-        msg = f'Send a valid value for {key}. Timeout: 60 sec'
-        buttons.cb_buildbutton('Back', "ownersetmenu^back^qbit")
-        buttons.cb_buildbutton('Close', "ownersetmenu^close")
+        buttons.cb_buildbutton('Send', f"ownersetmenu^send^qbit^{key}")
+        buttons.cb_buildbutton('Empty String', f"ownersetmenu^qbit^emptyqbit^{key}")
+        buttons.cb_buildbutton('Back', "ownersetmenu^back^qbit", 'footer')
+        buttons.cb_buildbutton('Close', "ownersetmenu^close", 'footer')
     await editMarkup(msg, message, reply_markup= buttons.build_menu(2))
             
 async def ownerset_callback(client, callback_query):
@@ -147,7 +146,6 @@ async def ownerset_callback(client, callback_query):
             else:
                 await query.answer()
             await update_buttons(message, data[3], data[2]) 
-            await start_env_listener(client, query, user_id, data[3])
         elif data[2] == 'editenv' and STATE == 'view':
             value = config_dict[data[3]]
             if len(str(value)) > 200:
@@ -183,7 +181,7 @@ async def ownerset_callback(client, callback_query):
             elif data[3] == 'SERVER_PORT':
                 srun(["pkill", "-9", "-f", "gunicorn"])
                 Popen("gunicorn web.wserver:app --bind 0.0.0.0:80", shell=True)
-            await query.answer(f"{data[3]} reseted")    
+            await query.answer("Reseted")    
             config_dict[data[3]] = value
             if DATABASE_URL:
                 DbManager().update_config({data[3]: value})
@@ -194,7 +192,6 @@ async def ownerset_callback(client, callback_query):
             await edit_menus(message, "aria")
         elif data[2] == "editaria" and (STATE == 'edit' or data[3] == 'newkey'):
             await update_buttons(message, data[3], data[2]) 
-            await start_aria_listener(client, query, user_id, data[3])
         elif data[2] == 'editaria' and STATE == 'view':
             value = aria2_options[data[3]]
             if len(value) > 200:
@@ -236,7 +233,6 @@ async def ownerset_callback(client, callback_query):
             await edit_menus(message, "qbit")
         elif data[2] == "editqbit" and STATE == 'edit':
             await update_buttons(message, data[3], data[2]) 
-            await start_qbit_listener(client, query, user_id, data[3])  
         elif data[2] == 'editqbit' and STATE == 'view':
             value = qbit_options[data[3]]
             if len(str(value)) > 200:
@@ -276,7 +272,14 @@ async def ownerset_callback(client, callback_query):
         globals()['START'] -= 10
         if START < 0:
             globals()['START'] += 10
-        await edit_menus(message,  data[2])
+        await edit_menus(message, data[2])
+    elif data[1] == "send":
+        if data[2] == 'env':
+            await start_env_listener(client, query, user_id, data[3])
+        elif data[2] == 'aria':
+            await start_aria_listener(client, query, user_id, data[3])
+        else:
+            await start_qbit_listener(client, query, user_id, data[3])
     elif data[1] == "back_menu":
         await query.answer()
         globals()['START'] = 0
@@ -292,6 +295,10 @@ async def ownerset_callback(client, callback_query):
 
 async def start_aria_listener(client, query, user_id, key):
     message= query.message
+    if key == 'newkey':
+        question= await sendMessage("Send a key with value. Example: https-proxy-user:value', /ignore to cancel. Timeout: 60 sec", message)
+    else:
+        question= await sendMessage("Send valid value for selected variable, /ignore to cancel. Timeout: 60 sec", message)
     try:
         response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout= 60)
     except TimeoutError:
@@ -302,7 +309,7 @@ async def start_aria_listener(client, query, user_id, key):
             try:
                 if "/ignore" in response.text:
                     await client.listen.Cancel(filters.user(user_id))
-                    await query.answer("Canceled")
+                    await query.answer("Cancelled question!")
                     return
                 else:
                     value= response.text.strip() 
@@ -324,9 +331,12 @@ async def start_aria_listener(client, query, user_id, key):
                         DbManager().update_aria2(key, value)    
             except KeyError:
                 return await query.answer("Value doesn't exist") 
+    finally:
+        await question.delete()
 
 async def start_qbit_listener(client, query, user_id, key):
     message= query.message
+    question= await sendMessage("Send valid value for selected variable, /ignore to cancel. Timeout: 60 sec", message)
     try:
         response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout= 60)
     except TimeoutError:
@@ -337,7 +347,7 @@ async def start_qbit_listener(client, query, user_id, key):
             try:
                 if "/ignore" in response.text:
                     await client.listen.Cancel(filters.user(user_id))
-                    await query.answer("Canceled")
+                    await query.answer("Cancelled question!")
                     return
                 else:
                     value= response.text.strip() 
@@ -356,10 +366,13 @@ async def start_qbit_listener(client, query, user_id, key):
                     if DATABASE_URL:
                         DbManager().update_qbittorrent(key, value)    
             except KeyError:
-                return await query.answer("Value doesn't exist") 
+                return await query.answer("Value doesn't exist")
+    finally:
+        await question.delete() 
 
 async def start_env_listener(client, query, user_id, key):
     message= query.message
+    question= await sendMessage("Send new value for selected variable, /ignore to cancel. Timeout: 60 sec", message)
     try:
         response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout= 60)
     except TimeoutError:
@@ -370,7 +383,7 @@ async def start_env_listener(client, query, user_id, key):
             try:
                 if "/ignore" in response.text:
                     await client.listen.Cancel(filters.user(user_id))
-                    await query.answer("Canceled")
+                    await query.answer("Cancelled question!")
                 else:
                     value= response.text.strip() 
                     if value.lower() == 'true':
@@ -423,7 +436,9 @@ async def start_env_listener(client, query, user_id, key):
                         DbManager().update_config({key: value})
             except KeyError:
                 return await query.answer("Value doesn't exist") 
-
+    finally:
+        await question.delete()
+        
 owner_settings_handler = MessageHandler(handle_ownerset, filters= command(BotCommands.OwnerSetCommand) & (CustomFilters.owner_filter))
 owner_settings_cb = CallbackQueryHandler(ownerset_callback, filters= regex(r'ownersetmenu'))
 
