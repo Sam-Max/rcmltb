@@ -55,8 +55,6 @@ status_reply_dict = {}
 # value: [rss_feed, last_link, last_title, filter]
 rss_dict = {}
 
-PARALLEL_TASKS = environ.get('PARALLEL_TASKS', '')
-PARALLEL_TASKS = "" if len(PARALLEL_TASKS) == 0 else int(PARALLEL_TASKS)
 m_queue = Queue()
 l_queue = Queue()
 
@@ -137,6 +135,9 @@ if len(STATUS_UPDATE_INTERVAL) == 0:
     STATUS_UPDATE_INTERVAL = 10
 else:
     STATUS_UPDATE_INTERVAL = int(STATUS_UPDATE_INTERVAL)
+
+PARALLEL_TASKS = environ.get('PARALLEL_TASKS', '')
+PARALLEL_TASKS = "" if len(PARALLEL_TASKS) == 0 else int(PARALLEL_TASKS)
 
 AS_DOCUMENT = environ.get('AS_DOCUMENT', '')
 AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
