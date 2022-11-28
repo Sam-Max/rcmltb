@@ -7,7 +7,7 @@ from math import ceil
 from re import match as re_match, findall as re_findall, IGNORECASE, compile
 from time import time
 from psutil import cpu_percent, disk_usage, virtual_memory
-from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict, user_data
+from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict, user_data, m_queue
 from requests import head as rhead
 from threading import Event, Thread
 from urllib.request import urlopen
@@ -113,6 +113,7 @@ async def get_readable_message():
                     msg += f"\n<b>Processed:</b> {download.processed_bytes()}"
                 else:
                     msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
+                    msg += f"\n<b>Queue:</b> {m_queue.qsize()}"
                     msg += f"\n<b>Processed:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
                 msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
                 if hasattr(download, 'seeders_num'):

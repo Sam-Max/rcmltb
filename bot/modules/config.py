@@ -125,6 +125,9 @@ async def load_config():
      STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
      STATUS_LIMIT = '' if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
 
+     PARALLEL_TASKS = environ.get('PARALLEL_TASKS', '')
+     PARALLEL_TASKS = "" if len(PARALLEL_TASKS) == 0 else int(PARALLEL_TASKS)
+
      RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
      RSS_CHAT_ID = '' if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
 
@@ -226,6 +229,7 @@ async def load_config():
                          'MEGA_PASSWORD': MEGA_PASSWORD,
                          'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
                          'OWNER_ID': OWNER_ID,
+                         'PARALLEL_TASKS': PARALLEL_TASKS,
                          'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                          'RSS_CHAT_ID': RSS_CHAT_ID,
                          'RSS_COMMAND': RSS_COMMAND,

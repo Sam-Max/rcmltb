@@ -1,4 +1,4 @@
-import asyncio
+from asyncio import TimeoutError
 from json import loads as jsonloads
 from os import path as ospath
 from configparser import ConfigParser
@@ -27,10 +27,13 @@ async def handle_zip_leech_command(client, message):
 async def handle_unzip_leech_command(client, message):
     await leech(client, message, extract=True)
 
+async def handle_multizip_leech(client, message):
+    await leech(client, message, multiZip=True)       
+
 async def handle_leech(client, message):
      await leech(client, message)
 
-async def leech(client, message, isZip=False, extract=False):
+async def leech(client, message, isZip=False, extract=False, multiZip=False):
     user_id= message.from_user.id
     tag = f"@{message.from_user.username}"
     if await is_rclone_config(user_id, message, isLeech=True):
@@ -41,15 +44,33 @@ async def leech(client, message, isZip=False, extract=False):
         buttons.cb_buildbutton("📁 From Cloud", f"leechselect^cloud^{user_id}")
         buttons.cb_buildbutton("✘ Close Menu", f"leechselect^close^{user_id}")    
         if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id): 
-            if message.reply_to_message:
-                await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
+            if multiZip:
+                if message.reply_to_message:
+                    await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
+                else:
+                    msg= "<b>Multi zip by replying to first file:</b>"
+                    msg+= "\n<code>/cmd</code> 5 (number of files)"
+                    msg+= "\nNumber should be always before | zipname"
+                    await sendMessage(msg, message)
             else:
-                await sendMarkup("Select from where you want to leech", message, buttons.build_menu(2))  
+                if message.reply_to_message:
+                    await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
+                else:
+                    await sendMarkup("Select from where you want to leech", message, buttons.build_menu(2))  
         else:
-            if message.reply_to_message:
-                await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True)
+            if multiZip:
+                if message.reply_to_message:
+                    await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
+                else:
+                    msg= "<b>Multi zip by replying to first file:</b>"
+                    msg+= "\n<code>/cmd</code> 5 (number of files)"
+                    msg+= "\nNumber should be always before | zipname"
+                    await sendMessage(msg, message)
             else:
-                await sendMessage("Reply to a link/file", message)
+                if message.reply_to_message:
+                    await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
+                else:
+                    await sendMessage("Reply to a link/file", message)
             
 async def list_remotes(message, edit=False):
     if message.reply_to_message:
@@ -262,7 +283,7 @@ async def selection_callback(client, callback_query):
         question= await sendMessage("Send link to leech, /ignore to cancel", message)
         try:
             response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout= 30)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             await sendMessage("Too late 30s gone, try again!", message)
         else:
             if response:
@@ -284,10 +305,10 @@ async def selection_callback(client, callback_query):
         await query.answer()
         await message.delete()
 
-
 leech_handler = MessageHandler(handle_leech, filters= command(BotCommands.LeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 zip_leech_handler = MessageHandler(handle_zip_leech_command, filters= command(BotCommands.ZipLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 unzip_leech_handler = MessageHandler(handle_unzip_leech_command, filters= command(BotCommands.UnzipLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+multizip_leech_handler = MessageHandler(handle_multizip_leech, filters=filters.command(BotCommands.MultiZipLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 next_page_cb= CallbackQueryHandler(next_page_leech, filters= regex("next_leech"))
 leech_callback= CallbackQueryHandler(leech_menu_cb, filters= regex("leechmenu"))
 selection_cb= CallbackQueryHandler(selection_callback, filters= regex("leechselect"))
@@ -298,3 +319,4 @@ bot.add_handler(selection_cb)
 bot.add_handler(leech_handler)
 bot.add_handler(zip_leech_handler)
 bot.add_handler(unzip_leech_handler)
+bot.add_handler(multizip_leech_handler)

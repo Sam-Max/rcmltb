@@ -1,10 +1,10 @@
 from time import time
 from bot import bot, status_dict, status_dict_lock, LOGGER
-from bot.helper.ext_utils.message_utils import sendStatusMessage
+from bot.helper.ext_utils.message_utils import sendStatusMessage, update_all_messages
 from bot.helper.mirror_leech_utils.status_utils.tg_download_status import TelegramStatus
 
 class TelegramDownloader:
-    def __init__(self, file, client, listener, path, name) -> None:
+    def __init__(self, file, client, listener, path, name, multi=0, multi_zip=False) -> None:
         self.__client= client
         self.__listener = listener
         self.name = name
@@ -15,6 +15,8 @@ class TelegramDownloader:
         self.__file = file
         self.__path= path
         self.__start_time = time()
+        self.__multi= multi
+        self.__multi_zip= multi_zip
         self.__is_cancelled = False
 
     @property
@@ -41,11 +43,18 @@ class TelegramDownloader:
             pass
 
     async def download(self):
-        if self.name == "":
-            name = self.__file.file_name
+        if self.__multi_zip:
+            if self.name == "":
+                name = "multizip"
+            else:
+                name = self.name
+            self.__path= self.__path
         else:
-            name = self.name
-            self.__path =  self.__path + name
+            if self.name == "":
+                name = self.__file.file_name
+            else:
+                name = self.name
+                self.__path = self.__path + name
         size = self.__file.file_size   
         gid = self.__file.file_unique_id
         await self.__onDownloadStart(name, size, gid)
@@ -58,7 +67,15 @@ class TelegramDownloader:
             if self.__is_cancelled:
                 await self.__onDownloadError("Cancelled by user")
             if download is not None:
-                await self.__listener.onDownloadComplete()
+                if self.__multi_zip:
+                    if self.__multi == 1:
+                        await self.__listener.onMultiZipComplete()
+                    else:
+                        async with status_dict_lock:
+                            del status_dict[self.__listener.uid]
+                        await update_all_messages()
+                else:
+                    await self.__listener.onDownloadComplete()
         except Exception as e:
             await self.__onDownloadError(str(e))
 

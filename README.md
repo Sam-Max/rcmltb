@@ -1,5 +1,5 @@
 
-An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with rclone support added and other changes from base code.
+An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with rclone support added, and other features and changes from base code.
 
 ## Features:
 
@@ -32,6 +32,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Link/Torrent/Magnets/Mega to cloud 
 - Renaming for Telegram files
 - Files in batch from Telegram restricted channels
+- Queue system
 
 ### Leech
 - Link/Torrent/Magnets/Mega to Telegram 
@@ -93,11 +94,13 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 mirror - Mirror to selected cloud 
 unzipmirror - Mirror and extract to cloud 
 zipmirror - Mirror and zip to cloud 
+multizipmirror - Mirror and zip multiple files to cloud 
 mirrorset - Select cloud/folder where to mirror
 mirrorbatch - Mirror Telegram files in batch to cloud 
 leech - Leech from cloud to Telegram
 unzipleech - Leech and extract to Telegram 
 zipleech - Leech and zip to Telegram 
+multizipleech - Leech and zip multiple files to Telegram 
 leechbatch - Leech Telegram files in batch to Telegram 
 ytdl - Mirror ytdlp supported link
 ytdlzip- Mirror and zip ytdlp supported link
@@ -158,6 +161,7 @@ restart - Restart bot
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `STATUS_LIMIT`: No. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Str`
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
+        - `PARALLEL_TASKS`: Number of parallel tasks for queue system. `Str`
 
    - UPDATE
      - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)

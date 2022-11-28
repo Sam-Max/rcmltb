@@ -35,6 +35,7 @@ class MirrorLeechListener:
         self.seed = seed
         self.select = select
         self.dir = f"{DOWNLOAD_DIR}{self.uid}"
+        self.multizip_dir = f"{DOWNLOAD_DIR}{self.user_id}/multizip/"
         self.isPrivate = message.chat.type in [ChatType.PRIVATE, ChatType.GROUP]
         self.__isLeech = isLeech
         self.__suproc = None
@@ -49,7 +50,50 @@ class MirrorLeechListener:
             pass
 
     def onDownloadStart(self):
-        pass
+        LOGGER.info("onDownloadStart")
+    
+    async def onMultiZipComplete(self):
+        async with status_dict_lock:
+            download = status_dict[self.uid]
+            name = str(download.name())
+            gid = download.gid()
+        f_path= self.multizip_dir
+        f_size = get_path_size(f_path)
+        path = f"{f_path}{name}.zip" 
+        async with status_dict_lock:
+            status_dict[self.uid] = ZipStatus(name, f_size, gid, self)
+        LEECH_SPLIT_SIZE = config_dict['LEECH_SPLIT_SIZE']    
+        if self.__pswd is not None:
+            if int(f_size) > LEECH_SPLIT_SIZE:
+                LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
+                self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
+            else:
+                LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
+                self.__suproc = Popen(["7z", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
+        elif int(f_size) > LEECH_SPLIT_SIZE:
+            LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
+            self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, f_path])
+        else:
+            LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
+            self.__suproc = Popen(["7z", "a", "-mx=0", path, f_path])
+        self.__suproc.wait()
+        if self.__suproc.returncode == -9:
+            return
+        fns = listdir(f_path)
+        for fn in fns:
+            if fn != f"{name}.zip":
+                clean_target(f'{self.multizip_dir}/{fn}')
+        up_dir, up_name = path.rsplit('/', 1)
+        size = get_path_size(up_dir)
+        if self.__isLeech:
+            LOGGER.info(f"Leech Name: {up_name}")
+            tg_up= TelegramUploader(up_dir, up_name, size, self)
+            async with status_dict_lock:
+                status_dict[self.uid] = TgUploadStatus(tg_up, size, gid, self)
+            await update_all_messages()
+            await tg_up.upload()    
+        else:
+            await RcloneMirror(up_dir, up_name, size, self.user_id, self).mirror()
 
     async def onDownloadComplete(self):
         async with status_dict_lock:
@@ -137,6 +181,7 @@ class MirrorLeechListener:
         else:
             path= f_path 
         up_dir, up_name = path.rsplit('/', 1)
+        size = get_path_size(up_dir)
         if self.__isLeech:
             m_size = []
             o_files = []
@@ -167,7 +212,6 @@ class MirrorLeechListener:
                             elif res != "errored":
                                 m_size.append(f_size)
                                 o_files.append(file_)
-            size = get_path_size(up_dir)
             for s in m_size:
                 size = size - s
             LOGGER.info(f"Leech Name: {up_name}")
@@ -177,9 +221,7 @@ class MirrorLeechListener:
             await update_all_messages()
             await tg_up.upload()    
         else:
-            size = get_path_size(up_dir)
-            rc_mirror = RcloneMirror(up_dir, up_name, size, self.user_id, self)
-            await rc_mirror.mirror()
+            await RcloneMirror(up_dir, up_name, size, self.user_id, self).mirror()
 
     async def onRcloneCopyComplete(self, conf, origin_dir, dest_drive, dest_dir):
         #Calculate Size

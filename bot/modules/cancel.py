@@ -2,7 +2,7 @@
 import asyncio
 from time import sleep
 from pyrogram.filters import regex
-from bot import status_dict_lock, OWNER_ID, bot, status_dict, botloop, user_data
+from bot import status_dict_lock, OWNER_ID, bot, status_dict, botloop, user_data, m_queue, l_queue
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
@@ -41,6 +41,8 @@ async def cancell_all_buttons(client, message):
     buttons = ButtonMaker()
     buttons.cb_buildbutton("Downloading", f"canall {MirrorStatus.STATUS_DOWNLOADING}")
     buttons.cb_buildbutton("Uploading", f"canall {MirrorStatus.STATUS_UPLOADING}")
+    buttons.cb_buildbutton("Mirror Queue", f"canall mqueue")
+    buttons.cb_buildbutton("Leech Queue", f"canall lqueue")
     buttons.cb_buildbutton("All", "canall all")
     buttons.cb_buildbutton("Close", "canall close")
     await sendMarkup('Choose tasks to cancel.', message, buttons.build_menu(2))
@@ -48,11 +50,29 @@ async def cancell_all_buttons(client, message):
 async def cancel_all_update(client, callbackquery):
     query = callbackquery
     user_id = query.from_user.id
+    message= query.message
+    tag= f"@{message.from_user.username}"
     data = query.data
     data = data.split()
     if CustomFilters._owner_query(user_id):
         await query.answer()
-        if data[1] == 'close':
+        if data[1] == "mqueue":
+            try:
+                while True:
+                    m_queue.get_nowait()
+                    m_queue.task_done()
+            except asyncio.QueueEmpty:
+                await sendMessage(f"{tag} your mirror queue has been cancelled", message)
+            return
+        elif data[1 ] == "lqueue":
+            try:
+                while True:
+                    l_queue.get_nowait()
+                    l_queue.task_done()
+            except asyncio.QueueEmpty:
+                await sendMessage(f"{tag} your mirror queue has been cancelled", message)
+            return
+        elif data[1] == 'close':
             return await query.message.delete()
         botloop.run_in_executor(None, cancel_all_, data[1], botloop)
     else:

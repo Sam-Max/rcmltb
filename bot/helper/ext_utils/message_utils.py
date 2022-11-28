@@ -153,7 +153,7 @@ async def sendStatusMessage(msg):
             Interval.append(setInterval(config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))
 
 async def auto_delete_message(cmd_message, bot_message):
-        await sleep(20)
+        await sleep(15)
         try:
             # Skip if None is passed meaning we don't want to delete bot or cmd message
             await deleteMessage(cmd_message)

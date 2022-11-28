@@ -65,7 +65,7 @@ async def main():
         except:
             pass   
         osremove(".restartmsg")
-
+            
     start_handler = MessageHandler(start, filters= command(BotCommands.StartCommand))
     restart_handler = MessageHandler(restart, filters= command(BotCommands.RestartCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))
     log_handler = MessageHandler(get_log, filters= command(BotCommands.LogsCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))

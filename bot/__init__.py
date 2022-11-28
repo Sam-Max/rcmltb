@@ -2,6 +2,7 @@ __version__ = "3.1"
 __author__ = "Sam-Max"
 
 from asyncio import Lock
+from asyncio import Queue
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from os import environ, remove as osremove, path as ospath
 from threading import Thread
@@ -53,6 +54,11 @@ status_reply_dict = {}
 # key: rss_title
 # value: [rss_feed, last_link, last_title, filter]
 rss_dict = {}
+
+PARALLEL_TASKS = environ.get('PARALLEL_TASKS', '')
+PARALLEL_TASKS = "" if len(PARALLEL_TASKS) == 0 else int(PARALLEL_TASKS)
+m_queue = Queue()
+l_queue = Queue()
 
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
 if len(BOT_TOKEN) == 0:
@@ -302,6 +308,7 @@ if not config_dict:
                    'MEGA_PASSWORD': MEGA_PASSWORD,
                    'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
                    'OWNER_ID': OWNER_ID,
+                   'PARALLEL_TASKS': PARALLEL_TASKS,
                    'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                    'RSS_CHAT_ID': RSS_CHAT_ID,
                    'RSS_COMMAND': RSS_COMMAND,

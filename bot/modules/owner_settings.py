@@ -140,7 +140,7 @@ async def ownerset_callback(client, callback_query):
 
     if data[1] == "env":
         if data[2] == "editenv" and STATE == 'edit':
-            if data[3] in ['SUDO_USERS', 'SERVE_USER', 'SERVE_PASS', 'SERVE_IP', 'SERVE_PORT', 'ALLOWED_CHATS', 'RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
+            if data[3] in ['PARALLEL_TASKS', 'SUDO_USERS', 'SERVE_USER', 'SERVE_PASS', 'SERVE_IP', 'SERVE_PORT', 'ALLOWED_CHATS', 'RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
                           'TELEGRAM_API_HASH', 'TELEGRAM_API_ID', 'BOT_TOKEN', 'OWNER_ID', 'DOWNLOAD_DIR', 'DATABASE_URL']:
                 await query.answer(text='Restart required for this to apply!', show_alert=True)
             else:
@@ -372,7 +372,7 @@ async def start_qbit_listener(client, query, user_id, key):
 
 async def start_env_listener(client, query, user_id, key):
     message= query.message
-    question= await sendMessage("Send new value for selected variable, /ignore to cancel. Timeout: 60 sec", message)
+    question= await sendMessage("Send valid value for selected variable, /ignore to cancel. Timeout: 60 sec", message)
     try:
         response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout= 60)
     except TimeoutError:
