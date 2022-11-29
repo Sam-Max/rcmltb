@@ -161,6 +161,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
         if multiZip:
              help_msg = '''
 <b>Multi zip by replying to first file:</b>
+
 <code>/cmd</code> 5(number of files)
 Number should be always before | zipname
              '''
@@ -320,7 +321,7 @@ async def worker(queue: Queue):
         
 # Create worker tasks to process the queue concurrently.        
 if PARALLEL_TASKS:
-    LOGGER.info("fffffffffffffffffffffffffffffffffffffffffffffffffffff")
+    LOGGER.info("Creating worker tasks")
     for i in range(PARALLEL_TASKS):
         task = botloop.create_task(worker(m_queue))
 

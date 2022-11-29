@@ -43,34 +43,25 @@ async def leech(client, message, isZip=False, extract=False, multiZip=False):
         buttons.cb_buildbutton("🔗 From Link", f"leechselect^link^{user_id}")
         buttons.cb_buildbutton("📁 From Cloud", f"leechselect^cloud^{user_id}")
         buttons.cb_buildbutton("✘ Close Menu", f"leechselect^close^{user_id}")    
+        if multiZip:
+            if message.reply_to_message:
+                await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
+            else:
+                msg= "<b>Multi zip by replying to first file:</b>"
+                msg+= "\n\n<code>/cmd</code> 5 (number of files)"
+                msg+= "\nNumber should be always before | zipname"
+                await sendMessage(msg, message)
+            return
         if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id): 
-            if multiZip:
-                if message.reply_to_message:
-                    await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
-                else:
-                    msg= "<b>Multi zip by replying to first file:</b>"
-                    msg+= "\n<code>/cmd</code> 5 (number of files)"
-                    msg+= "\nNumber should be always before | zipname"
-                    await sendMessage(msg, message)
+            if message.reply_to_message:
+                await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
             else:
-                if message.reply_to_message:
-                    await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
-                else:
-                    await sendMarkup("Select from where you want to leech", message, buttons.build_menu(2))  
+                await sendMarkup("Select from where you want to leech", message, buttons.build_menu(2))  
         else:
-            if multiZip:
-                if message.reply_to_message:
-                    await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
-                else:
-                    msg= "<b>Multi zip by replying to first file:</b>"
-                    msg+= "\n<code>/cmd</code> 5 (number of files)"
-                    msg+= "\nNumber should be always before | zipname"
-                    await sendMessage(msg, message)
+            if message.reply_to_message:
+                await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
             else:
-                if message.reply_to_message:
-                    await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
-                else:
-                    await sendMessage("Reply to a link/file", message)
+                await sendMessage("Reply to a link/file", message)
             
 async def list_remotes(message, edit=False):
     if message.reply_to_message:
