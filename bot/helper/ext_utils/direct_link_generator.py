@@ -8,6 +8,7 @@ from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no c
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
 
+from asyncio import sleep
 from requests import get as rget, head as rhead, post as rpost, Session as rsession
 from re import findall as re_findall, sub as re_sub, match as re_match, search as re_search
 from urllib.parse import urlparse, unquote
@@ -22,7 +23,7 @@ fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.co
              'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
 
 
-def direct_link_generator(link: str):
+async def direct_link_generator(link: str):
     """ direct links generator """
     if 'youtube.com' in link or 'youtu.be' in link:
         raise DirectDownloadLinkException(f"ERROR: Use ytdl commands for Youtube link")
@@ -33,7 +34,7 @@ def direct_link_generator(link: str):
     elif 'mediafire.com' in link:
         return mediafire(link)
     elif 'uptobox.com' in link:
-        return uptobox(link)
+        return await uptobox(link)
     elif 'osdn.net' in link:
         return osdn(link)
     elif 'github.com' in link:
@@ -87,26 +88,40 @@ def yandex_disk(url: str) -> str:
     except KeyError:
         raise DirectDownloadLinkException("ERROR: File not found/Download limit reached\n")
 
-def uptobox(url: str) -> str:
+async def uptobox(url: str) -> str:
     """ Uptobox direct link generator
-    based on https://github.com/jovanzers/WinTenCermin """
+    based on https://github.com/jovanzers/WinTenCermin and https://github.com/sinoobie/noobie-mirror """
     try:
         link = re_findall(r'\bhttps?://.*uptobox\.com\S+', url)[0]
     except IndexError:
-        raise DirectDownloadLinkException("No Uptobox links found\n")
+        raise DirectDownloadLinkException("No Uptobox links found")
     if UPTOBOX_TOKEN := config_dict['UPTOBOX_TOKEN']:
-        LOGGER.error('UPTOBOX_TOKEN not provided!')
-        dl_url = link
-    else:
         try:
             link = re_findall(r'\bhttp?://.*uptobox\.com/dl\S+', url)[0]
             dl_url = link
         except:
             file_id = re_findall(r'\bhttps?://.*uptobox\.com/(\w+)', url)[0]
-            file_link = 'https://uptobox.com/api/link?token=%s&file_code=%s' % (UPTOBOX_TOKEN, file_id)
+            file_link = f'https://uptobox.com/api/link?token={UPTOBOX_TOKEN}&file_code={file_id}'
             req = rget(file_link)
             result = req.json()
-            dl_url = result['data']['dlLink']
+            if result['message'].lower() == 'success':
+                dl_url = result['data']['dlLink']
+            elif result['message'].lower() == 'waiting needed':
+                waiting_time = result["data"]["waiting"] + 1
+                waiting_token = result["data"]["waitingToken"]
+                await sleep(waiting_time)
+                req2 = rget(f"{file_link}&waitingToken={waiting_token}")
+                result2 = req2.json()
+                dl_url = result2['data']['dlLink']
+            elif result['message'].lower() == 'you need to wait before requesting a new download link':
+                cooldown = divmod(result['data']['waiting'], 60)
+                raise DirectDownloadLinkException(f"ERROR: Uptobox is being limited please wait {cooldown[0]} min {cooldown[1]} sec.")
+            else:
+                LOGGER.info(f"UPTOBOX_ERROR: {result}")
+                raise DirectDownloadLinkException(f"ERROR: {result['message']}")
+    else:
+        LOGGER.error('UPTOBOX_TOKEN not provided!')
+        dl_url = link
     return dl_url
 
 def mediafire(url: str) -> str:

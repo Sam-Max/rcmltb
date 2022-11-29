@@ -192,7 +192,7 @@ Number should be always before |newname or pswd:
         content_type = get_content_type(link)
         if content_type is None or re_match(r'text/html|text/plain', content_type):
             try:
-                link = direct_link_generator(link)
+                link = await direct_link_generator(link)
             except DirectDownloadLinkException as e:
                 if str(e).startswith('ERROR:'):
                     return await sendMessage(str(e), message)
@@ -320,6 +320,7 @@ async def worker(queue: Queue):
         
 # Create worker tasks to process the queue concurrently.        
 if PARALLEL_TASKS:
+    LOGGER.info("fffffffffffffffffffffffffffffffffffffffffffffffffffff")
     for i in range(PARALLEL_TASKS):
         task = botloop.create_task(worker(m_queue))
 
