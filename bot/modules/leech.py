@@ -198,9 +198,9 @@ async def list_folder(message, remote_name, remote_base, back= "back", edit=Fals
 
     msg = f'Select folder or file that you want to leech\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>'
     if is_zip:
-        msg = 'Select file that you want to zip\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>' 
+        msg = f'Select file that you want to zip\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>' 
     if extract:
-        msg = 'Select file that you want to extract\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>'
+        msg = f'Select file that you want to extract\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>'
 
     if edit:
         await editMessage(msg, message, reply_markup= buttons.build_menu(1))
