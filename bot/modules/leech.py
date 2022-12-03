@@ -33,7 +33,7 @@ async def handle_multizip_leech(client, message):
 async def handle_leech(client, message):
      await leech(client, message)
 
-async def leech(client, message, isZip=False, extract=False, multiZip=False):
+async def leech(client, message, extract=False, isZip=False, multiZip=False):
     user_id= message.from_user.id
     tag = f"@{message.from_user.username}"
     if await is_rclone_config(user_id, message, isLeech=True):
@@ -41,7 +41,7 @@ async def leech(client, message, isZip=False, extract=False, multiZip=False):
         listener_dict[message.id] = [listener, isZip, extract]
         buttons= ButtonMaker()
         buttons.cb_buildbutton("🔗 From Link", f"leechselect^link^{user_id}")
-        buttons.cb_buildbutton("📁 From Cloud", f"leechselect^cloud^{user_id}")
+        buttons.cb_buildbutton("📁 From Cloud", f"leechselect^remotes^{user_id}")
         buttons.cb_buildbutton("✘ Close Menu", f"leechselect^close^{user_id}")    
         if multiZip:
             if message.reply_to_message:
@@ -62,90 +62,6 @@ async def leech(client, message, isZip=False, extract=False, multiZip=False):
                 await mirror_leech(client, message, isZip=isZip, extract=extract, isLeech=True, multiZip=multiZip)
             else:
                 await sendMessage("Reply to a link/file", message)
-            
-async def list_remotes(message, edit=False):
-    if message.reply_to_message:
-        user_id= message.reply_to_message.from_user.id
-    else:
-        user_id= message.from_user.id
-    buttons = ButtonMaker()
-    path= get_rclone_config(user_id)
-    conf = ConfigParser()
-    conf.read(path)
-    for remote in conf.sections():
-        buttons.cb_buildbutton(f"📁 {remote}", f"leechmenu^remote^{remote}^{user_id}") 
-    buttons.cb_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}")
-    if edit:
-        await editMessage("Select cloud where your files are stored", message, reply_markup= buttons.build_menu(2))
-    else:
-        await sendMarkup("Select cloud where your files are stored", message, reply_markup= buttons.build_menu(2))
-
-async def list_folder(message, remote_name, remote_base, back= "back", edit=False):
-    user_id= message.reply_to_message.from_user.id
-    msg_id= message.reply_to_message.id
-    info= listener_dict[msg_id] 
-    is_zip= info[1]
-    extract= info[2]
-    buttons = ButtonMaker()
-    path = get_rclone_config(user_id)
-    buttons.cb_buildbutton("✅ Select this folder", f"leechmenu^leech_folder^{user_id}")
-
-    cmd = ["rclone", "lsjson", f'--config={path}', f"{remote_name}:{remote_base}" ] 
-    process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
-    out, err = await process.communicate()
-    out = out.decode().strip()
-    return_code = await process.wait()
-    if return_code != 0:
-        err = err.decode().strip()
-        return await sendMessage(f'Error: {err}', message)
-
-    list_info = jsonloads(out)
-    list_info.sort(key=lambda x: x["Size"])
-    update_rclone_data("list_info", list_info, user_id)
-
-    if len(list_info) == 0:
-        buttons.cb_buildbutton("❌Nothing to show❌", f"leechmenu^pages^{user_id}")
-    else:
-        total = len(list_info)
-        max_results= 10
-        offset= 0
-        start = offset
-        end = max_results + start
-        next_offset = offset + max_results
-
-        if end > total:
-            list_info= list_info[offset:]    
-        elif offset >= total:
-            list_info= []    
-        else:
-            list_info= list_info[start:end]       
-        
-        rcloneListButtonMaker(result_list= list_info,
-            buttons=buttons,
-            menu_type= Menus.LEECH, 
-            dir_callback = "remote_dir",
-            file_callback= 'leech_file',
-            user_id= user_id)
-
-        if offset == 0 and total <= 10:
-            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"leechmenu^pages^{user_id}", 'footer')        
-        else: 
-            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"leechmenu^pages^{user_id}", 'footer')
-            buttons.cb_buildbutton("NEXT ⏩", f"next_leech {next_offset} {back}", 'footer')
-
-    buttons.cb_buildbutton("⬅️ Back", f"leechmenu^{back}^{user_id}", 'footer_second')
-    buttons.cb_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}", 'footer_second')
-
-    msg = 'Select folder or file that you want to leech\n'
-    if is_zip:
-        msg = 'Select file that you want to zip\n' 
-    if extract:
-        msg = 'Select file that you want to extract\n'
-
-    if edit:
-        await editMessage(msg, message, reply_markup= buttons.build_menu(1))
-    else:
-        await sendMarkup(msg, message, reply_markup= buttons.build_menu(1))
 
 async def leech_menu_cb(client, callback_query):
     query= callback_query
@@ -206,6 +122,90 @@ async def leech_menu_cb(client, callback_query):
     else:
         await query.answer()
         await message.delete()
+
+async def list_remotes(message, edit=False):
+    if message.reply_to_message:
+        user_id= message.reply_to_message.from_user.id
+    else:
+        user_id= message.from_user.id
+    buttons = ButtonMaker()
+    path= get_rclone_config(user_id)
+    conf = ConfigParser()
+    conf.read(path)
+    for remote in conf.sections():
+        buttons.cb_buildbutton(f"📁 {remote}", f"leechmenu^remote^{remote}^{user_id}") 
+    buttons.cb_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}")
+    if edit:
+        await editMessage("Select cloud where your files are stored\n\n<b>", message, reply_markup= buttons.build_menu(2))
+    else:
+        await sendMarkup("Select cloud where your files are stored\n\n<b>", message, reply_markup= buttons.build_menu(2))
+
+async def list_folder(message, remote_name, remote_base, back= "back", edit=False):
+    user_id= message.reply_to_message.from_user.id
+    msg_id= message.reply_to_message.id
+    info= listener_dict[msg_id] 
+    is_zip= info[1]
+    extract= info[2]
+    buttons = ButtonMaker()
+    path = get_rclone_config(user_id)
+    buttons.cb_buildbutton("✅ Select this folder", f"leechmenu^leech_folder^{user_id}")
+
+    cmd = ["rclone", "lsjson", f'--config={path}', f"{remote_name}:{remote_base}" ] 
+    process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
+    out, err = await process.communicate()
+    out = out.decode().strip()
+    return_code = await process.wait()
+    if return_code != 0:
+        err = err.decode().strip()
+        return await sendMessage(f'Error: {err}', message)
+
+    list_info = jsonloads(out)
+    list_info.sort(key=lambda x: x["Size"])
+    update_rclone_data("list_info", list_info, user_id)
+
+    if len(list_info) == 0:
+        buttons.cb_buildbutton("❌Nothing to show❌", f"leechmenu^pages^{user_id}")
+    else:
+        total = len(list_info)
+        max_results= 10
+        offset= 0
+        start = offset
+        end = max_results + start
+        next_offset = offset + max_results
+
+        if end > total:
+            list_info= list_info[offset:]    
+        elif offset >= total:
+            list_info= []    
+        else:
+            list_info= list_info[start:end]       
+        
+        rcloneListButtonMaker(result_list= list_info,
+            buttons=buttons,
+            menu_type= Menus.LEECH, 
+            dir_callback = "remote_dir",
+            file_callback= 'leech_file',
+            user_id= user_id)
+
+        if offset == 0 and total <= 10:
+            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"leechmenu^pages^{user_id}", 'footer')        
+        else: 
+            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"leechmenu^pages^{user_id}", 'footer')
+            buttons.cb_buildbutton("NEXT ⏩", f"next_leech {next_offset} {back}", 'footer')
+
+    buttons.cb_buildbutton("⬅️ Back", f"leechmenu^{back}^{user_id}", 'footer_second')
+    buttons.cb_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}", 'footer_second')
+
+    msg = f'Select folder or file that you want to leech\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>'
+    if is_zip:
+        msg = 'Select file that you want to zip\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>' 
+    if extract:
+        msg = 'Select file that you want to extract\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>'
+
+    if edit:
+        await editMessage(msg, message, reply_markup= buttons.build_menu(1))
+    else:
+        await sendMarkup(msg, message, reply_markup= buttons.build_menu(1))
  
 async def next_page_leech(client, callback_query):
     query= callback_query
@@ -289,7 +289,7 @@ async def selection_callback(client, callback_query):
                         await sendMessage(str(ex), message) 
         finally:
             await question.delete()
-    elif cmd[1] == "cloud":
+    elif cmd[1] == "remotes":
         await list_remotes(message, edit=True)
         await query.answer()
     else:

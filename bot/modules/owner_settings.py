@@ -6,7 +6,7 @@ from subprocess import Popen, run as srun
 from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, aria2_options, aria2c_global, get_client, qbit_options, status_reply_dict_lock, status_dict
+from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, LOGGER, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, aria2_options, aria2c_global, get_client, qbit_options, status_reply_dict_lock, status_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval 
 from bot.helper.ext_utils.db_handler import DbManager
@@ -175,7 +175,16 @@ async def ownerset_callback(client, callback_query):
                 GLOBAL_EXTENSION_FILTER.clear()
                 GLOBAL_EXTENSION_FILTER.append('.aria2')
             elif data[3] == 'TORRENT_TIMEOUT':
-                aria2.set_global_options({'bt-stop-timeout': 0})
+                downloads = aria2.get_downloads()
+                for download in downloads:
+                  if not download.is_complete:
+                    try:
+                        aria2.client.change_option(download.gid, {'bt-stop-timeout': '0'})
+                    except Exception as e:
+                        LOGGER.error(e)
+                aria2_options['bt-stop-timeout'] = '0'
+                if DATABASE_URL:
+                    DbManager().update_aria2('bt-stop-timeout', '0')
             elif data[3] == 'BASE_URL':
                 srun(["pkill", "-9", "-f", "gunicorn"])
             elif data[3] == 'SERVER_PORT':
@@ -214,8 +223,12 @@ async def ownerset_callback(client, callback_query):
             aria2_options[data[3]] = value
             await edit_menus(message, "aria")
             downloads = aria2.get_downloads()
-            if downloads:
-                aria2.set_options({data[3]: value}, downloads)
+            for download in downloads:
+              if not download.is_complete:
+                try:
+                    aria2.client.change_option(download.gid, {data[2]: value})
+                except Exception as e:
+                    LOGGER.error(e)
             if DATABASE_URL:
                DbManager().update_aria2(data[3], value)
         elif data[2] == 'emptyaria':
@@ -223,8 +236,12 @@ async def ownerset_callback(client, callback_query):
             aria2_options[data[3]] = ''
             await edit_menus(message, 'aria')
             downloads = aria2.get_downloads()
-            if downloads:
-                aria2.set_options({data[3]: ''}, downloads)
+            for download in downloads:
+              if not download.is_complete:
+                try:
+                    aria2.client.change_option(download.gid, {data[2]: ''})
+                except Exception as e:
+                    LOGGER.error(e)
             if DATABASE_URL:
                 DbManager().update_aria2(data[3], '')
     elif data[1] == "qbit":
@@ -323,8 +340,12 @@ async def start_aria_listener(client, query, user_id, key):
                         aria2.set_global_options({key: value})
                     else:
                         downloads = aria2.get_downloads()
-                        if downloads:
-                            aria2.set_options({key: value}, downloads)
+                        for download in downloads:
+                            if not download.is_complete:
+                                try:
+                                    aria2.client.change_option(download.gid, {key: value})
+                                except Exception as e:
+                                    LOGGER.error(e)
                     aria2_options[key] = value
                     await edit_menus(message, 'aria')   
                     if DATABASE_URL:
@@ -406,8 +427,12 @@ async def start_env_listener(client, query, user_id, key):
                     elif key == 'TORRENT_TIMEOUT':
                         value = int(value)
                         downloads = aria2.get_downloads()
-                        if downloads:
-                            aria2.set_options({'bt-stop-timeout': f'{value}'}, downloads)
+                        for download in downloads:
+                            if not download.is_complete:
+                                try:
+                                    aria2.client.change_option(download.gid, {'bt-stop-timeout': f'{value}'})
+                                except Exception as e:
+                                    LOGGER.error(e)
                         aria2_options['bt-stop-timeout'] = f'{value}'
                     elif key == 'DEFAULT_OWNER_REMOTE':
                         update_rclone_data("MIRRORSET_REMOTE", value, user_id)

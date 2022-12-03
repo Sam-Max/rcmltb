@@ -127,7 +127,7 @@ ping - Ping bot
 restart - Restart bot
 ```
 
-## Deploy on VPS: 
+## How to deploy?
 
 1. **Installing requirements**
 
@@ -135,24 +135,35 @@ restart - Restart bot
 
         git clone https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot rclonetgbot/ && cd rclonetgbot
 
- - Install Docker(skip this if deploying without docker).
+ - For Debian based distros
+```
+sudo apt install python3 python3-pip
+```
+Install Docker by following the [official Docker docs](https://docs.docker.com/engine/install/debian/)
 
-        sudo apt install snapd
-        sudo snap install docker
+- For Arch and it's derivatives:
+```
+sudo pacman -S docker python
+
+- Install dependencies for running setup scripts:
+```
+pip3 install -r requirements-cli.txt
+
+```
 
 2. **Set up config file**
 
 - cp config_sample.env config.env 
 
-- Fill up variables:
+- Fill up fields: All values must be filled between quotes, even if `Int` or `Bool`.
 
-   - Mandatory variables:
+   - Mandatory Fields:
         - `API_ID`: get this from https://my.telegram.org. Don't put this in quotes
         - `API_HASH`: get this from https://my.telegram.org
         - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather)
         - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot
 
-   - Non mandatory variables:
+   - Optional Fields:
         - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
         - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission separated by spaces. `Str`
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces `Str`
@@ -218,24 +229,19 @@ restart - Restart bot
      >1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooqle, Kickass, Bitsearch, MagnetDL, Libgen, YTS, Limetorrent, TorrentFunk, Glodls, TorrentProject and YourBittorrent
 
  
-3. **Deploying on VPS Using Docker**
+3. **Deploying with Docker**
 
-- Start Docker daemon (skip if already running), if installed by snap then use 2nd command:
+- Start Docker daemon (skip if already running)
     
         sudo dockerd
-        sudo snap start docker
-
-     Note: If not started or not starting, run the command below then try to start.
-
-        sudo apt install docker.io
 
 - Build Docker image:
 
-        sudo docker build . -t rclonetg-bot 
+        sudo docker build . -t rcmltb 
 
 - Run the image:
 
-        sudo docker run rclonetg-bot 
+        sudo docker run -p 80:80 rcmltb
 
 - To stop the image:
 
@@ -250,7 +256,7 @@ restart - Restart bot
 
         sudo docker image prune -a
 
-4. **Deploying on VPS Using docker-compose**
+4. **Deploying using docker-compose**
 
 **NOTE**: If you want to use port other than 80, change it in docker-compose.yml
 

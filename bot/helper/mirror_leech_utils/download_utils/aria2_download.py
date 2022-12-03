@@ -38,9 +38,13 @@ def __onBtDownloadComplete(api, gid):
     LOGGER.info(f"onBtDownloadComplete: {download.name} - Gid: {gid}")
     if dl := getDownloadByGid(gid):
         listener = dl.listener()
-        api.client.force_pause(gid)
+        try:
+            api.client.force_pause(gid)
+        except Exception as e:
+            LOGGER.error(f"{e} GID: {gid}" )
         future= run_coroutine_threadsafe(listener.onDownloadComplete(), botloop)
         future.result()
+        download = download.live
         api.remove([download], force=True, files=True)
 
 @new_thread

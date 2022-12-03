@@ -3,7 +3,7 @@ from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from os import environ, path as ospath, remove, rename
+from os import environ, path as ospath, remove
 from shutil import rmtree
 from dotenv import load_dotenv
 from subprocess import Popen, run as srun
@@ -141,14 +141,27 @@ async def load_config():
      TORRENT_TIMEOUT = environ.get('TORRENT_TIMEOUT', '')
      downloads = aria2.get_downloads()
      if len(TORRENT_TIMEOUT) == 0:
-          if downloads:
-               aria2.set_options({'bt-stop-timeout': '0'}, downloads)
-          aria2_options['bt-stop-timeout'] = '0'
+        for download in downloads:
+            if not download.is_complete:
+                try:
+                    aria2.client.change_option(download.gid, {'bt-stop-timeout': '0'})
+                except Exception as e:
+                    LOGGER.error(e)
+        aria2_options['bt-stop-timeout'] = '0'
+        if DATABASE_URL:
+            DbManager().update_aria2('bt-stop-timeout', '0')
+        TORRENT_TIMEOUT = ''
      else:
-          if downloads:
-               aria2.set_options({'bt-stop-timeout': TORRENT_TIMEOUT}, downloads)
-          aria2_options['bt-stop-timeout'] = TORRENT_TIMEOUT
-          TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
+        for download in downloads:
+            if not download.is_complete:
+                try:
+                    aria2.client.change_option(download.gid, {'bt-stop-timeout': TORRENT_TIMEOUT})
+                except Exception as e:
+                    LOGGER.error(e)
+        aria2_options['bt-stop-timeout'] = TORRENT_TIMEOUT
+        if DATABASE_URL:
+            DbManager().update_aria2('bt-stop-timeout', TORRENT_TIMEOUT)
+        TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
 
      IS_TEAM_DRIVE = environ.get('IS_TEAM_DRIVE', '')
      IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == 'true'
@@ -439,9 +452,7 @@ async def set_config_listener(client, query, message, global_rclone=False):
                               srun(["unzip", "-q", "-o", "accounts.zip"])
                               srun(["chmod", "-R", "777", "accounts"])
                          elif file_name in ['.netrc', 'netrc']:
-                              if file_name == 'netrc':
-                                   rename('netrc', '.netrc')
-                                   file_name = '.netrc'
+                              srun(["touch", ".netrc"])
                               srun(["cp", ".netrc", "/root/.netrc"])
                               srun(["chmod", "600", ".netrc"])
                          elif file_name == "config.env":

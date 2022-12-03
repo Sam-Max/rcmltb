@@ -117,6 +117,7 @@ async def rss_sub(client, message):
                     title = args[0].strip()
                     feed_link = args[1].strip()
                     f_lists = []
+                    filters = None
 
                     if len(args) == 3:
                         filters = args[2].lstrip().lower()
@@ -128,8 +129,6 @@ async def rss_sub(client, message):
                                 f_lists.append(y)
                         else:
                             filters = None
-                    else:
-                        filters = None
 
                     exists = rss_dict.get(title)
                     if exists:

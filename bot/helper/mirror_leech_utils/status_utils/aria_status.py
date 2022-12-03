@@ -100,10 +100,11 @@ class AriaDownloadStatus:
 
     def cancel_download(self):
         self.__update()
-        if len(self.__download.followed_by_ids) != 0:
+        if downloads := self.__download.followed_by:
             LOGGER.info(f"Cancelling Download: {self.name()}")
-            downloads = aria2.get_downloads(self.__download.followed_by_ids)
+            self.__listener.onDownloadError('Download cancelled by user!')
             aria2.remove(downloads, force=True, files=True)
         else:
             LOGGER.info(f"Cancelling Download: {self.name()}")
-        aria2.remove([self.__download], force=True, files=True)
+            self.__listener.onDownloadError('Download stopped by user!')
+            aria2.remove([self.__download], force=True, files=True)

@@ -382,7 +382,7 @@ def aria2c_init():
         aria2.add_uris([link], {'dir': dire})
         sleep(3)
         downloads = aria2.get_downloads()
-        sleep(20)
+        sleep(15)
         for download in downloads:
             aria2.remove([download], force=True, files=True)
     except Exception as e:
@@ -399,6 +399,12 @@ if not aria2_options:
     del aria2_options['dir']
     del aria2_options['max-download-limit']
     del aria2_options['lowest-speed-limit']
+else:
+    a2c_glo = {}
+    for op in aria2c_global:
+        if op in aria2_options:
+            a2c_glo[op] = aria2_options[op]
+    aria2.set_global_options(a2c_glo)
    
 qb_client = get_client()
 if not qbit_options:

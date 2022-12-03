@@ -60,7 +60,7 @@ async def editMessage(text: str, message, reply_markup=None):
         return str(e)
 
 async def sendRss(text: str):
-    if rss_session is None:
+    if not rss_session:
         try:
             return await bot.send_message(config_dict['RSS_CHAT_ID'], text, disable_web_page_preview=True)
         except FloodWait as e:

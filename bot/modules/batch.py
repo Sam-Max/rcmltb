@@ -1,7 +1,7 @@
 # Source: Github.com/Vasusen-code
 # Adapted to Pyrogram and Conversation-Pyrogram Library
 
-from asyncio import sleep
+from asyncio import sleep, TimeoutError
 from bot import DOWNLOAD_DIR, LOGGER, app, bot, botloop
 from pyrogram.errors import FloodWait
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
