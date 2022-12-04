@@ -104,7 +104,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
 
     reply_message= message.reply_to_message
     if reply_message is not None:
-        listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, pswd=pswd, isLeech=isLeech)
+        listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, isMultiZip=multiZip, extract=extract, pswd=pswd, isLeech=isLeech)
         file = reply_message.document or reply_message.video or reply_message.audio or reply_message.photo or None
         if reply_message.from_user.username:
             tag = f"@{reply_message.from_user.username}"
@@ -115,7 +115,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
                         link = reply_message.text.strip() 
             elif file.mime_type != "application/x-bittorrent":
                 if multi and multiZip:
-                    tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{user_id}/multizip/', name, multi, multi_zip=multiZip)
+                    tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.user_id}/multizip/', name, multi, multi_zip=multiZip)
                     await tg_down.download() 
                     if multi > 1:
                         await sleep(4)

@@ -24,11 +24,12 @@ from bot.helper.mirror_leech_utils.upload_utils.telegram_uploader import Telegra
 
 
 class MirrorLeechListener:
-    def __init__(self, message, tag, user_id, isZip=False, extract=False, pswd=None, isLeech= False, select=False, seed=False):
+    def __init__(self, message, tag, user_id, isZip=False, isMultiZip= False, extract=False, pswd=None, isLeech= False, select=False, seed=False):
         self.message = message
         self.uid = self.message.id
         self.user_id = user_id
         self.__isZip = isZip
+        self.__isMultiZip = isMultiZip
         self.__extract = extract
         self.__pswd = pswd
         self.__tag = tag
@@ -79,10 +80,14 @@ class MirrorLeechListener:
         self.__suproc.wait()
         if self.__suproc.returncode == -9:
             return
-        fns = listdir(f_path)
-        for fn in fns:
-            if fn != f"{name}.zip":
-                clean_target(f'{self.multizip_dir}/{fn}')
+        for dirpath, _, files in walk(f_path, topdown=False):        
+            for file in files:
+                if search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$|\.zip$|\.7z$|^.(?!.*\.part\d+\.rar)(?=.*\.rar$)', file) is None:    
+                    del_path = ospath.join(dirpath, file)
+                    try:
+                        remove(del_path)
+                    except:
+                        return
         up_dir, up_name = path.rsplit('/', 1)
         size = get_path_size(up_dir)
         if self.__isLeech:
@@ -313,7 +318,10 @@ class MirrorLeechListener:
                         await sendMessage(f"{msg}\n<b>cc: </b>{self.__tag}", self.message)  
                 else:
                     await sendMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message)
-        clean_download(self.dir)
+        if self.__isMultiZip:
+            clean_download(self.multizip_dir)
+        else:
+            clean_download(self.dir)
         async with status_dict_lock:
             try:
                 del status_dict[self.uid]
@@ -343,7 +351,10 @@ class MirrorLeechListener:
                     fmsg = ''
             if fmsg != '':
                 await sendMessage(msg + fmsg, self.message)
-        clean_download(self.dir)
+        if self.__isMultiZip:
+            clean_download(self.multizip_dir)
+        else:
+            clean_download(self.dir)
         async with status_dict_lock:
             try:
                 del status_dict[self.uid]
@@ -357,7 +368,10 @@ class MirrorLeechListener:
 
     async def onDownloadError(self, error):
         error = error.replace('<', ' ').replace('>', ' ')
-        clean_download(self.dir)
+        if self.__isMultiZip:
+            clean_download(self.multizip_dir)
+        else:
+            clean_download(self.dir)
         async with status_dict_lock:
             try:
                 del status_dict[self.uid]

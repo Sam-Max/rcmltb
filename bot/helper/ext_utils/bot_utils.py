@@ -113,7 +113,7 @@ async def get_readable_message():
                     msg += f"\n<b>Processed:</b> {download.processed_bytes()}"
                 else:
                     msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
-                    msg += f"\n<b>Queue:</b> {m_queue.qsize()}"
+                    msg += f"\n<b>Enqueue:</b> {m_queue.qsize()}"
                     msg += f"\n<b>Processed:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
                 msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
                 if hasattr(download, 'seeders_num'):

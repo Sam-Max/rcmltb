@@ -45,7 +45,7 @@ class TelegramDownloader:
     async def download(self):
         if self.__multi_zip:
             if self.name == "":
-                name = "multizip.zip"
+                name = "multizip"
             else:
                 name = self.name
             self.__path= self.__path
