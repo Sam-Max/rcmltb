@@ -3,7 +3,6 @@ from asyncio.subprocess import PIPE
 from html import escape
 from json import loads
 from os import listdir, path as ospath, remove, walk
-import os
 from re import search
 from bot import DOWNLOAD_DIR, LOGGER, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2, config_dict
 from subprocess import Popen
@@ -63,15 +62,15 @@ class MirrorLeechListener:
         path = f"{f_path}{name}.zip" 
         async with status_dict_lock:
             status_dict[self.uid] = ZipStatus(name, f_size, gid, self)
-        LEECH_SPLIT_SIZE = config_dict['LEECH_SPLIT_SIZE']    
+        LEECH_SPLIT_SIZE = config_dict['LEECH_SPLIT_SIZE']  
         if self.__pswd is not None:
-            if int(f_size) > LEECH_SPLIT_SIZE:
+            if self.__isLeech and int(f_size) > LEECH_SPLIT_SIZE:
                 LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
                 self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
             else:
                 LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
                 self.__suproc = Popen(["7z", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
-        elif int(f_size) > LEECH_SPLIT_SIZE:
+        elif self.__isLeech and int(f_size) > LEECH_SPLIT_SIZE:
             LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
             self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, f_path])
         else:
@@ -116,13 +115,13 @@ class MirrorLeechListener:
                 status_dict[self.uid] = ZipStatus(name, f_size, gid, self)
             LEECH_SPLIT_SIZE = config_dict['LEECH_SPLIT_SIZE']    
             if self.__pswd is not None:
-                if int(f_size) > LEECH_SPLIT_SIZE:
+                if self.__isLeech and int(f_size) > LEECH_SPLIT_SIZE:
                     LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
                     self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
                 else:
                     LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
                     self.__suproc = Popen(["7z", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
-            elif int(f_size) > LEECH_SPLIT_SIZE:
+            elif self.__isLeech and int(f_size) > LEECH_SPLIT_SIZE:
                 LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
                 self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, f_path])
             else:
@@ -174,7 +173,7 @@ class MirrorLeechListener:
                     elif self.__suproc.returncode == 0:
                         LOGGER.info(f"Extracted Path: {path}")
                         try:
-                            os.remove(f_path)
+                            remove(f_path)
                         except:
                             return
                     else:
@@ -211,7 +210,7 @@ class MirrorLeechListener:
                                     continue
                                 else:
                                     try:
-                                        os.remove(f_path)
+                                        remove(f_path)
                                     except:
                                         return
                             elif res != "errored":
