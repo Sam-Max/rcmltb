@@ -28,12 +28,11 @@ async def handle_mirrorset(client, message):
         else:
             await sendMessage("You can't use on current mode", message)        
 
-async def list_remotes(message, rclone_remote="", base_dir="", edit=False):
+async def list_remotes(message, rclone_remote= "", base_dir= "", edit=False):
     if message.reply_to_message:
         user_id= message.reply_to_message.from_user.id
     else:
         user_id= message.from_user.id
-
     buttons = ButtonMaker()
     path= get_rclone_config(user_id)
     conf = ConfigParser()
@@ -43,25 +42,19 @@ async def list_remotes(message, rclone_remote="", base_dir="", edit=False):
         if remote == get_rclone_data("MIRRORSET_REMOTE", user_id):
             prev = "✅"
         buttons.cb_buildbutton(f"{prev} 📁 {remote}", f"mirrorsetmenu^remote^{remote}^{user_id}")
-
-    if not rclone_remote and not base_dir:
-        msg= f"Select cloud where you want to upload file\n\n<b>Path</b><code>:/</code>" 
-    else:
-        msg= f"Select cloud where you want to upload file\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>" 
-
     buttons.cb_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}", 'footer')
-
+    msg= f"Select cloud where you want to upload file\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>"
     if edit:
         await editMessage(msg, message, reply_markup= buttons.build_menu(2))
     else:
         await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
-
+    
 async def list_folder(message, remote_name, remote_base, edit=False):
     user_id= message.reply_to_message.from_user.id
     buttons = ButtonMaker()
     path = get_rclone_config(user_id)
     buttons.cb_buildbutton(f"✅ Select this folder", f"mirrorsetmenu^close^{user_id}")
-
+    
     cmd = ["rclone", "lsjson", '--dirs-only', f'--config={path}', f"{remote_name}:{remote_base}" ] 
     process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
     out, err = await process.communicate()
@@ -70,11 +63,10 @@ async def list_folder(message, remote_name, remote_base, edit=False):
     if return_code != 0:
         err = err.decode().strip()
         return await sendMessage(f'Error: {err}', message)
-
     list_info = jsonloads(out)
     list_info.sort(key=lambda x: x["Size"])
     update_rclone_data("list_info", list_info, user_id)
-
+    
     if len(list_info) == 0:
         buttons.cb_buildbutton("❌Nothing to show❌", "mirrorsetmenu^pages^{user_id}")
     else:
@@ -98,7 +90,6 @@ async def list_folder(message, remote_name, remote_base, edit=False):
             dir_callback = "remote_dir",
             file_callback= "",
             user_id= user_id)
-
         if offset == 0 and total <= 10:
             buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"mirrorsetmenu^pages^{user_id}", 'footer') 
         else:
@@ -109,7 +100,6 @@ async def list_folder(message, remote_name, remote_base, edit=False):
     buttons.cb_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}", 'footer_second')
 
     msg= f"Select folder where you want to store files\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>"
-
     if edit:
         await editMessage(msg, message, reply_markup= buttons.build_menu(1))
     else:
@@ -127,13 +117,11 @@ async def mirrorset_callback(client, callback_query):
     if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", show_alert=True)
     elif cmd[1] == "remote":
-        #Reset Menu
-        remote_name= cmd[2]
-        update_rclone_data("MIRRORSET_BASE_DIR", "", user_id)
-        base_dir= get_rclone_data("MIRRORSET_BASE_DIR", user_id)
-        config_dict['DEFAULT_OWNER_REMOTE'] = remote_name
-        update_rclone_data("MIRRORSET_REMOTE", remote_name, user_id)
-        await list_folder(message, remote_name= remote_name, remote_base=base_dir, edit=True)
+        update_rclone_data("MIRRORSET_BASE_DIR", "/", user_id) #Reset Dir
+        update_rclone_data("MIRRORSET_REMOTE", cmd[2], user_id)
+        if user_id == OWNER_ID:
+            config_dict.update({'DEFAULT_OWNER_REMOTE': cmd[2]}) 
+        await list_folder(message, remote_name= cmd[2], remote_base="/", edit=True)
         await query.answer()
     elif cmd[1] == "remote_dir":
         path = get_rclone_data(cmd[2], user_id)
@@ -204,8 +192,7 @@ async def next_page_mirrorset(client, callback_query):
 
     mirrorset_remote= get_rclone_data("MIRRORSET_REMOTE", user_id)
     base_dir= get_rclone_data("MIRRORSET_BASE_DIR", user_id)
-    await message.edit(f"Select folder where you want to store files\n\n<b>Path:</b><code>{mirrorset_remote}:{base_dir}</code>", reply_markup= buttons.build_menu(1))
-
+    await editMessage(f"Select folder where you want to store files\n\n<b>Path:</b><code>{mirrorset_remote}:{base_dir}</code>", message, reply_markup= buttons.build_menu(1))
  
 mirrorset_handler = MessageHandler(handle_mirrorset, filters= filters.command(BotCommands.MirrorSetCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 next_mirrorset_cb= CallbackQueryHandler(next_page_mirrorset, filters= regex("next_mirrorset"))

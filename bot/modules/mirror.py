@@ -2,7 +2,7 @@ from base64 import b64encode
 from os import path as ospath
 from time import time
 from requests import get
-from bot import DOWNLOAD_DIR, LOGGER, PARALLEL_TASKS, bot
+from bot import DOWNLOAD_DIR, LOGGER, OWNER_ID, PARALLEL_TASKS, bot, config_dict
 from asyncio import Queue, TimeoutError, sleep
 from bot import bot, DOWNLOAD_DIR, botloop, config_dict, m_queue
 from pyrogram import filters
@@ -16,7 +16,8 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import deleteMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, get_readable_size
-from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected
+from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
+from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected, list_remotes
 from bot.helper.mirror_leech_utils.download_utils.aria2_download import add_aria2c_download
 from bot.helper.mirror_leech_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_leech_utils.download_utils.mega_download import MegaDownloader
@@ -26,6 +27,8 @@ from bot.modules.listener import MirrorLeechListener
 
 
 listener_dict = {}
+
+
 
 async def handle_mirror(client, message):
     await mirror_leech(client, message)
@@ -40,7 +43,7 @@ async def handle_unzip_mirror(client, message):
     await mirror_leech(client, message, extract=True)
 
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/mirror_leech.py
-# Adapted for asyncio and pyrogram and minor modifications
+# Adapted for asyncio and pyrogram with rclone modifications added
 async def mirror_leech(client, message, isZip=False, extract=False, isLeech=False, multiZip=False):
     user_id= message.from_user.id
     message_id= message.id
@@ -148,11 +151,11 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
                     file_name= file.file_name
                     size= get_readable_size(file.file_size)
                     header_msg = f"Which name do you want to use?\n\n<b>Name</b>: <code>{file_name}</code>\n\n<b>Size</b>: <code>{size}</code>"
-                    buttons.cb_buildbutton("📄 By default", f'mirrormenu^default^{message_id}')
-                    buttons.cb_buildbutton("📝 Rename", f'mirrormenu^rename^{message_id}')
-                    buttons.cb_buildbutton("✘ Close Menu", f"mirrormenu^close^{message_id}", 'footer')
-                    menu_msg= await sendMarkup(header_msg, message, reply_markup= buttons.build_menu(2))
-                    listener_dict[message_id] = [listener, file, menu_msg, user_id]
+                    buttons.cb_buildbutton("📄 By default", f"mirrormenu^default")
+                    buttons.cb_buildbutton("📝 Rename", f"mirrormenu^rename")
+                    buttons.cb_buildbutton("✘ Close Menu", f"mirrormenu^close", 'footer')
+                    await sendMarkup(header_msg, message, reply_markup= buttons.build_menu(2))
+                    listener_dict[message_id] = [listener, file, message, user_id]
                 return
             else:
                 link = await client.download_media(file)
@@ -253,24 +256,34 @@ Number should be always before |newname or pswd:
 
 async def mirror_menu(client, query):
     cmd = query.data.split("^")
-    message= query.message
+    query_message= query.message
+    reply_message= query_message.reply_to_message
     user_id= query.from_user.id
-    msg_id= int(cmd[-1])
-    info= listener_dict[msg_id] 
+    message_id= reply_message.id
+    info= listener_dict[message_id] 
     listener= info[0]
     file = info[1]
+    message= info[2]
+    rclone_remote = get_rclone_data("MIRRORSET_REMOTE", user_id)
+    base_dir= get_rclone_data("MIRRORSET_BASE_DIR", user_id)
 
     if int(info[-1]) != user_id:
-        return await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("This menu is not for you!", show_alert=True)
+        return
     elif cmd[1] == "default" :
-        await deleteMessage(info[2]) 
-        tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', '')
-        if PARALLEL_TASKS:    
-            await m_queue.put(tg_down)
-            await query.answer()
+        await deleteMessage(query_message)
+        if config_dict['REMOTE_SELECTION']:
+            update_rclone_data('NAME', "", user_id) 
+            await list_remotes(message, rclone_remote, base_dir, "mirrorselect")    
         else:
-            await tg_down.download() 
+            tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
+            if PARALLEL_TASKS:    
+                await m_queue.put(tg_down)
+                await query.answer()
+            else:
+                await tg_down.download() 
     elif cmd[1] == "rename": 
+        await deleteMessage(query_message)
         question= await client.send_message(message.chat.id, text= "Send the new name, /ignore to cancel")
         try:
             response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout = 30)
@@ -283,19 +296,54 @@ async def mirror_menu(client, query):
                     await client.listen.Cancel(filters.user(user_id))
                 else:
                     name = response.text.strip()
-                    await deleteMessage(info[2]) 
-                    tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', name)
-                    if PARALLEL_TASKS:    
-                        await query.answer()
-                        await m_queue.put(tg_down)
+                    if config_dict['REMOTE_SELECTION']:
+                        update_rclone_data('NAME', name, user_id) 
+                        await list_remotes(message, rclone_remote, base_dir, "mirrorselect")   
                     else:
-                        await tg_down.download() 
+                        tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', name)
+                        if PARALLEL_TASKS:    
+                            await query.answer()
+                            await m_queue.put(tg_down)
+                        else:
+                            await tg_down.download() 
         finally:
             await question.delete()
     else:
         await query.answer()
+        
+
+async def mirror_select(client, callback_query):
+    query= callback_query
+    data = query.data
+    cmd = data.split("^")
+    message = query.message
+    user_id= query.from_user.id
+    message_id= int(cmd[-1])
+    info= listener_dict[message_id] 
+    listener= info[0]
+    file = info[1]
+
+    if int(info[-1]) != user_id:
+        await query.answer("This menu is not for you!", show_alert=True)
+        return
+    elif cmd[1] == "remote":
+        await deleteMessage(message) 
+        update_rclone_data("MIRRORSET_BASE_DIR", "/", user_id)
+        update_rclone_data("MIRRORSET_REMOTE", cmd[2], user_id)
+        if user_id == OWNER_ID:
+            config_dict.update({'DEFAULT_OWNER_REMOTE': cmd[2]}) 
+        name= get_rclone_data("NAME", user_id)
+        tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', name)
+        if PARALLEL_TASKS:    
+            await m_queue.put(tg_down)
+            await query.answer()
+        else:
+            await tg_down.download() 
+        await query.answer()
+    else:
+        await query.answer()
         await message.delete()
-    del listener_dict[msg_id]
+    del listener_dict[message_id]
 
 async def handle_auto_mirror(client, message):
     user_id= message.from_user.id
@@ -308,7 +356,7 @@ async def handle_auto_mirror(client, message):
     if file is not None:
         if file.mime_type != "application/x-bittorrent":
             listener= MirrorLeechListener(message, tag, user_id)
-            tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', '')
+            tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
             if PARALLEL_TASKS:    
                 await m_queue.put(tg_down)
             else:
@@ -331,6 +379,7 @@ unzip_mirror_handler = MessageHandler(handle_unzip_mirror,filters=filters.comman
 multizip_mirror_handler = MessageHandler(handle_multizip_mirror, filters=filters.command(BotCommands.MultiZipMirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 auto_mirror_handler = MessageHandler(handle_auto_mirror, filters= filters.video | filters.document | filters.audio | filters.photo)
 mirror_menu_cb = CallbackQueryHandler(mirror_menu, filters=filters.regex("mirrormenu"))
+mirror_select_cb = CallbackQueryHandler(mirror_select, filters=filters.regex("mirrorselect"))
 
 if config_dict['AUTO_MIRROR']:
     bot.add_handler(auto_mirror_handler)
@@ -339,4 +388,5 @@ bot.add_handler(zip_mirror_handler)
 bot.add_handler(multizip_mirror_handler)
 bot.add_handler(unzip_mirror_handler)
 bot.add_handler(mirror_menu_cb)
+bot.add_handler(mirror_select_cb)
 

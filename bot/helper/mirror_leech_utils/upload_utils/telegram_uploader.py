@@ -12,7 +12,6 @@ IMAGE_SUFFIXES = ("jpg", "jpx", "png", "cr2", "tif", "bmp", "jxr", "psa", "ico",
 
 class TelegramUploader():
     def __init__(self, path, name, size, listener= None) -> None:
-        self.client= app if app else bot
         self.__path = path
         self.__listener = listener
         self.name= name
@@ -27,10 +26,13 @@ class TelegramUploader():
         self.__start_time= time()
         self.uploaded_bytes = 0
         self._last_uploaded = 0
+        self.__user_id = listener.message.from_user.id
+        self.client= app if app is not None else bot 
+        self.__sent_msg= None
         self.__set__user_settings()
 
     async def upload(self):
-        await self.__msg_to_reply() 
+        self.__sent_msg = await bot.get_messages(self.__listener.message.chat.id, self.__listener.uid)
         if ospath.isdir(self.__path):
             for dirpath, _, filenames in sorted(walk(self.__path)):
                 for file in sorted(filenames):
@@ -45,7 +47,7 @@ class TelegramUploader():
                         await self.__upload_file(f_path, file)
                         if self.__is_cancelled:
                             return
-                        if (not self.__listener.isPrivate or config_dict['DUMP_CHAT']) and not self.__is_corrupted:
+                        if (not self.__listener.isPrivate or config_dict['LEECH_LOG']) and not self.__is_corrupted:
                             self.__msgs_dict[self.__sent_msg.link] = file
                         self._last_uploaded = 0
                         await sleep(1)
@@ -80,18 +82,27 @@ class TelegramUploader():
                     else:
                         width = 480
                         height = 320
-                    if DUMP_CHAT:= config_dict['DUMP_CHAT']:    
-                        self.__sent_msg = await self.client.send_video(
-                            chat_id=DUMP_CHAT,
-                            video=up_path,
-                            width=width,
-                            height=height,
-                            caption=cap,
-                            disable_notification=True,
-                            thumb=thumb_path,
-                            supports_streaming=True,
-                            duration=duration,
-                            progress=self.__upload_progress)
+                    if LEECH_LOG := config_dict['LEECH_LOG']:
+                        for chat in LEECH_LOG:
+                            self.__sent_msg = await self.client.send_video(
+                                chat_id= int(chat),
+                                video=up_path,
+                                caption=cap,
+                                duration=duration,
+                                width=width,
+                                height=height,
+                                thumb=thumb_path,
+                                supports_streaming=True,
+                                disable_notification=True,
+                                progress=self.__upload_progress)
+                            if config_dict['BOT_PM']:
+                                try:
+                                    await bot.copy_message(
+                                        chat_id= self.__user_id, 
+                                        from_chat_id= self.__sent_msg.chat.id, 
+                                        message_id= self.__sent_msg.id)
+                                except Exception as err:
+                                    LOGGER.error(f"Failed To Send Video in PM:\n {err}")
                     else:
                         self.__sent_msg= await self.__sent_msg.reply_video(
                             video= up_path,
@@ -106,13 +117,24 @@ class TelegramUploader():
                             progress= self.__upload_progress)
                 elif is_audio:
                     duration, artist, title = get_media_info(up_path)
-                    if DUMP_CHAT:= config_dict['DUMP_CHAT']:   
-                        self.__sent_msg = await self.client.send_audio(
-                            chat_id=DUMP_CHAT,
-                            audio=up_path,
-                            caption=cap,
-                            disable_notification=True,
-                            progress=self.__upload_progress)
+                    if LEECH_LOG := config_dict['LEECH_LOG']:
+                        for chat in LEECH_LOG:
+                            self.__sent_msg = await self.client.send_audio(
+                                chat_id= int(chat),
+                                audio=up_path,
+                                duration=duration,
+                                performer=artist,
+                                title=title,
+                                thumb=thumb_path,
+                                progress=self.__upload_progress)
+                            if config_dict['BOT_PM']:
+                                try:
+                                    await bot.copy_message(
+                                        chat_id= self.__user_id, 
+                                        from_chat_id= self.__sent_msg.chat.id, 
+                                        message_id= self.__sent_msg.id)
+                                except Exception as err:
+                                    LOGGER.error(f"Failed To Send Video in PM:\n {err}")
                     else:
                         self.__sent_msg = await self.__sent_msg.reply_audio(
                             audio=up_path,
@@ -125,13 +147,22 @@ class TelegramUploader():
                             disable_notification=True,
                             progress=self.__upload_progress)    
                 elif file.endswith(IMAGE_SUFFIXES):
-                    if DUMP_CHAT:= config_dict['DUMP_CHAT']:   
-                        self.__sent_msg = await self.client.send_photo(
-                            chat_id=DUMP_CHAT,
-                            photo=up_path,
-                            caption=cap,
-                            disable_notification=True,
-                            progress=self.__upload_progress)
+                    if LEECH_LOG := config_dict['LEECH_LOG']:
+                        for chat in LEECH_LOG:
+                            self.__sent_msg = await self.client.send_photo(
+                                chat_id= int(chat),
+                                photo=up_path,
+                                caption=cap,
+                                disable_notification=True,
+                                progress=self.__upload_progress)
+                            if config_dict['BOT_PM']:
+                                try:
+                                    await bot.copy_message(
+                                        chat_id= self.__user_id, 
+                                        from_chat_id= self.__sent_msg.chat.id, 
+                                        message_id= self.__sent_msg.id)
+                                except Exception as err:
+                                    LOGGER.error(f"Failed To Send Video in PM:\n {err}")
                     else:
                         self.__sent_msg = await self.__sent_msg.reply_photo(
                             photo=up_path,
@@ -148,14 +179,23 @@ class TelegramUploader():
                         if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
                             osremove(thumb_path)
                         return
-                if DUMP_CHAT:= config_dict['DUMP_CHAT']:   
-                    self.__sent_msg = await self.client.send_document(
-                        chat_id=DUMP_CHAT,
-                        document=up_path,
-                        caption=cap,
-                        thumb= thumb_path,
-                        disable_notification=True,
-                        progress=self.__upload_progress)
+                if LEECH_LOG := config_dict['LEECH_LOG']:
+                    for chat in LEECH_LOG:
+                        self.__sent_msg = await self.client.send_document(
+                            chat_id= int(chat),
+                            document=up_path,
+                            caption=cap,
+                            thumb=thumb_path,
+                            disable_notification=True,
+                            progress=self.__upload_progress)
+                        if config_dict['BOT_PM']:
+                            try:
+                                await bot.copy_message(
+                                    chat_id= self.__user_id, 
+                                    from_chat_id= self.__sent_msg.chat.id, 
+                                    message_id= self.__sent_msg.id)
+                            except Exception as err:
+                                LOGGER.error(f"Failed To Send Video in PM:\n {err}")
                 else:
                     self.__sent_msg= await self.__sent_msg.reply_document(
                         document= up_path, 
@@ -194,9 +234,6 @@ class TelegramUploader():
             self.__as_doc = user_dict.get('as_doc', False)
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
-
-    async def __msg_to_reply(self):
-        self.__sent_msg = await self.client.get_messages(self.__listener.message.chat.id, self.__listener.uid)
 
     @property
     def speed(self):

@@ -155,79 +155,78 @@ pip3 install -r requirements-cli.txt
 
 - cp config_sample.env config.env 
 
-- Fill up fields: All values must be filled between quotes, even if `Int` or `Bool`.
+- Fill up fields: All values must be filled between quotes, even if `Int`, `Bool` or `List`.
 
    - Mandatory Fields:
-        - `API_ID`: get this from https://my.telegram.org. Don't put this in quotes
-        - `API_HASH`: get this from https://my.telegram.org
-        - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather)
-        - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot
+        - `API_ID`: get this from https://my.telegram.org. `Int`
+        - `API_HASH`: get this from https://my.telegram.org. `Str`
+        - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather). `Str`
+        - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot. `Int`
 
    - Optional Fields:
-        - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go
+        - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go. `Str`
         - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission separated by spaces. `Str`
         - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces `Str`
         - `AUTO_MIRROR`: For auto mirroring files sent to the bot. **NOTE**: If you add bot to group(not channel), you can also use this feature. Default is `False`. `Bool`
-        - `DATABASE_URL`: Your Mongo Database URL (Connection string). Data will be saved in Database (auth and sudo users, owner and user setting, etc) `Str`
+        - `DATABASE_URL`: Your Mongo Database URL (Connection string). Data will be saved in Database (auth and sudo users, owner and user setting, etc). **NOTE**: You can always edit all settings saved in database from mongodb site -> (browse collections). `Str`
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
-        - `STATUS_LIMIT`: No. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Str`
+        - `STATUS_LIMIT`: No. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Int`
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
-        - `PARALLEL_TASKS`: Number of parallel tasks for queue system. `Str`
+        - `PARALLEL_TASKS`: Number of parallel tasks for queue system. `Int`
 
    - UPDATE
-     - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens)
+     - `UPSTREAM_REPO`: if your repo is private add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`, so you can update your app from private repository on each restart. Get token from [Github settings](https://github.com/settings/tokens). `Str`
      - `UPSTREAM_BRANCH`: Upstream branch for update. Default is `master`. `Str`
     **NOTE**: If any change in docker or requirements you will need to deploy/build again with updated repo for changes to apply.
 
    - RCLONE
-     - `DEFAULT_OWNER_REMOTE`: default remote from your rclone config for mirror. (for owner) `Str`
-     - `MULTI_RCLONE_CONFIG`: For allowing the use of a global rclone config for all users (no sudo or owner affected) or each user with their own rclone config. Default to False. `Bool` 
-     - `DEFAULT_GLOBAL_REMOTE`: default remote from global rclone config for mirror. Use this when `MULTI_RCLONE_CONFIG` is `False` and if you loaded a global rclone config. `Str`
-     - `USE_SERVICE_ACCOUNTS`: For enabling Service Accounts for rclone copy. Default to False. `Bool`.
-     - `SERVICE_ACCOUNTS_REMOTE`= To set remote (teamdrive) from your rclone config with the service accounts added. `Str`. **Note**: teamdrive remote must have team_drive field with id
-     - `SERVER_SIDE`= For enabling or desabling rclone server side copy. Default to False. **NOTE**: if you get any error while copy set this to `False`. `Bool`
-     - `SERVE_IP`= "Ip (public) of your vps where bot is running. `Str`
+     - `DEFAULT_OWNER_REMOTE`: to set default remote from your rclone config for mirroring. (only for owner). `Str`
+     - `REMOTE_SELECTION`: set to `True` to activate selection of cloud each time using mirror command. Default to False.`Bool`
+     - `MULTI_RCLONE_CONFIG`: set to `True` for allowing each user to use their own rclone config. Default to False. `Bool` 
+     - `DEFAULT_GLOBAL_REMOTE`: to set default remote from global rclone config for mirroring. Use this when `MULTI_RCLONE_CONFIG` is `False`. `Str`
+     - `USE_SERVICE_ACCOUNTS`: set to `True` for enabling SA for rclone copy. Default to False. `Bool`.
+     - `SERVICE_ACCOUNTS_REMOTE`= To set teamdrive remote from your rclone config with the service accounts configured `Str`. **Note**: teamdrive remote must have team_drive field with id. `Str`
+     - `SERVER_SIDE`= set to `True` for enabling rclone server side copy. Default to False. **NOTE**: if you get error while copy set this to `False`. `Bool`
+     - `SERVE_IP`: Ip (public) of your vps where bot is running. `Str`
      - `SERVE_PORT`: Port to use for remote index. Default to `8080`. `Str`
      - `SERVE_USER`: User for remote index. Default to `admin`. `Str`
      - `SERVE_PASS`: Password for remote index. Default to `admin`. `Str`
 
    - CLONE
-     - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Str`
+     - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Int`
      - `IS_TEAM_DRIVE`: Set `True` if TeamDrive. Default is `False`. `Bool`
      - `EXTENSION_FILTER`: File extensions that won't clone. Separate them by space. `Str`
      **Notes**: Must add **token.pickle** file directly to root for cloning to work. You can use /config command to add from bot.
    
    - LEECH
-     - `LEECH_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium
+     - `LEECH_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium. `Int`
      - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (not working with zip cmd). Default is `False`. `Bool`
-     - `USER_SESSION_STRING`: Pyrogram session string for batch commands and to upload using your telegram account (needed for telegram premium upload). To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: When using string session, you have to use with supergroup/channel not with bot. You can also use batch commands without string session, but you can't save messages from private/restricted channels.
-      - `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/supergroup id. Add bot in that channel/group as Admin
+     - `USER_SESSION_STRING`: Pyrogram session string for batch commands and for telegram premium upload. To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: When using string session, you have to use with `LEECH_LOG`. You can also use batch commands without string session, but you can't save messages from private/restricted channels. `Str`
+      - `LEECH_LOG`: Chat ID. Upload files to specific chat/chats. Add chats separated by spaces. `Str` **NOTE**: Only available for superGroup/channel. Add `-100` before channel/supergroup id. Add bot in that channel/group as admin if using without string session.
+      - `BOT_PM`: set to `True` if you want to send leeched files in user's PM. Default to False. `Bool`
 
    - MEGA
-     - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from Mega SDK Page
-     - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account
-     - `MEGA_PASSWORD`: Password for mega.nz account
+     - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from Mega SDK Page.`Str`
+     - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account.`Str`
+     - `MEGA_PASSWORD`: Password for mega.nz account.`Str`
 
    - RSS
-     - `RSS_DELAY`: Time in seconds for rss refresh interval. Default is `900` in sec. `Str`
+     - `RSS_DELAY`: Time in seconds for rss refresh interval. Default is `900` in sec. `Int`
      - `RSS_COMMAND`: Choose command for the desired action. `Str`
      - `RSS_CHAT_ID`: Chat ID where rss links will be sent. Add `-100` before channel id. `Str`
      - `RSS_USER_SESSION_STRING`: To send rss links from your telegram account. To generate session string use this command `python3 generate_string_session.py`. `Str`. **NOTE**: Don't use same session string as `USER_SESSION_STRING`.
      - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` are required, otherwise rss commands will not work. You must use bot in group. You can also add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.    
 
    - QBITTORRENT
-     - `BASE_URL`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https). Str
-     - `SERVER_PORT`: Port. Str
-     - `WEB_PINCODE`: If empty or False means no more pincode required while qbit web selection. Bool
-     Qbittorrent NOTE: If your facing ram exceeded issue then set limit for MaxConnecs, decrease AsyncIOThreadsCount in qbittorrent config and set limit of DiskWriteCacheSize to 32
+     - `BASE_URL`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https).`Str`
+     - `SERVER_PORT`: Port. .`Int`
+     - `WEB_PINCODE`: If empty or False means no pincode required while torrent file web selection. Bool
+     Qbittorrent NOTE: If your facing ram exceeded issue then set limit for MaxConnecs, decrease AsyncIOThreadsCount in qbittorrent config and set limit of DiskWriteCacheSize to 32.`Int`
 
    - TORRENT SEARCH
      - `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrent-Api-py). `Str`
-     - `SEARCH_LIMIT`: Search limit for search api, limit for each site. Default is zero. `Str`
-     - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). Add/Delete plugins as you wish. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins).`Str`
-     - Supported Sites:
-     >1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooqle, Kickass, Bitsearch, MagnetDL, Libgen, YTS, Limetorrent, TorrentFunk, Glodls, TorrentProject and YourBittorrent
-
+     - `SEARCH_LIMIT`: Search limit for search api, limit for each site. Default is zero. `Int`
+     - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). Add/Delete plugins as you wish. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins).`List`
  
 3. **Deploying with Docker**
 

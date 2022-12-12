@@ -13,7 +13,7 @@ from bot.helper.ext_utils import db_handler
 from bot.modules import batch, cancel, config, copy, leech, mirror, mirrorset, myfilesset, owner_settings, search, myfiles, stats, status, clone, storage, cleanup, user_settings, ytdlp, shell, bt_select, rss, serve, sync
 
 
-print("Successfully deployed!")
+print("Successfully deployed!!")
 
 async def start(client, message):
     buttons = ButtonMaker()

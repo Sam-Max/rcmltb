@@ -63,6 +63,14 @@ async def load_config():
           for id_ in aid:
                user_data[int(id_.strip())] = {'is_sudo': True}
 
+     LEECH_LOG = environ.get('LEECH_LOG', '')
+     if len(LEECH_LOG) != 0:
+          aid = LEECH_LOG.split()
+          LEECH_LOG = [int(id_.strip()) for id_ in aid]
+
+     BOT_PM = environ.get('BOT_PM', '')
+     BOT_PM = BOT_PM.lower() == 'true'
+
      EXTENSION_FILTER = environ.get('EXTENSION_FILTER', '')
      if len(EXTENSION_FILTER) > 0:
           fx = EXTENSION_FILTER.split()
@@ -118,9 +126,6 @@ async def load_config():
 
      SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
      SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
-
-     DUMP_CHAT = environ.get('DUMP_CHAT', '')
-     DUMP_CHAT = '' if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
 
      STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
      STATUS_LIMIT = '' if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
@@ -201,6 +206,9 @@ async def load_config():
 
      DEFAULT_OWNER_REMOTE = environ.get('DEFAULT_OWNER_REMOTE', '')
 
+     REMOTE_SELECTION = environ.get('REMOTE_SELECTION', '')
+     REMOTE_SELECTION = REMOTE_SELECTION.lower() == 'true'
+
      MULTI_RCLONE_CONFIG = environ.get('MULTI_RCLONE_CONFIG', '')
      MULTI_RCLONE_CONFIG = MULTI_RCLONE_CONFIG.lower() == 'true' 
 
@@ -227,21 +235,23 @@ async def load_config():
                          'ALLOWED_CHATS': ALLOWED_CHATS,
                          'AUTO_MIRROR': AUTO_MIRROR,
                          'BASE_URL': BASE_URL,
+                         'BOT_PM': BOT_PM,
                          'BOT_TOKEN': BOT_TOKEN,
                          'CMD_INDEX': CMD_INDEX,
                          'DATABASE_URL': DATABASE_URL,
-                         'DUMP_CHAT': DUMP_CHAT,
                          'DEFAULT_OWNER_REMOTE': DEFAULT_OWNER_REMOTE,
                          'EQUAL_SPLITS': EQUAL_SPLITS,
                          'EXTENSION_FILTER': EXTENSION_FILTER,
                          'GDRIVE_FOLDER_ID': GDRIVE_FOLDER_ID,
                          'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
+                         'LEECH_LOG': LEECH_LOG,
                          'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
                          'MEGA_API_KEY': MEGA_API_KEY,
                          'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                          'MEGA_PASSWORD': MEGA_PASSWORD,
                          'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
                          'OWNER_ID': OWNER_ID,
+                         'REMOTE_SELECTION': REMOTE_SELECTION,
                          'PARALLEL_TASKS': PARALLEL_TASKS,
                          'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                          'RSS_CHAT_ID': RSS_CHAT_ID,
