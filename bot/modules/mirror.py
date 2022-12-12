@@ -340,9 +340,9 @@ async def mirror_select(client, callback_query):
         else:
             await tg_down.download() 
         await query.answer()
-    else:
+    elif cmd[1] == "close":
         await query.answer()
-        await message.delete()
+        await deleteMessage(message) 
     del listener_dict[message_id]
 
 async def handle_auto_mirror(client, message):

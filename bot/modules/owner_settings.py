@@ -453,6 +453,9 @@ async def start_env_listener(client, query, user_id, key):
                             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
                     elif key == 'SEARCH_API_LINK':
                         initiate_search_tools()
+                    elif key == 'LEECH_LOG':
+                        aid = value.split()
+                        value = [int(id_.strip()) for id_ in aid]
                     config_dict[key] = value
                     await edit_menus(message, 'env')       
                     if DATABASE_URL:

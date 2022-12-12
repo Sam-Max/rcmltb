@@ -54,10 +54,7 @@ def get_rclone_config(user_id):
             return rc_path
 
 async def list_remotes(message, rclone_remote, base_dir, callback, edit=False):
-    if message.reply_to_message:
-        user_id= message.reply_to_message.from_user.id
-    else:
-        user_id= message.from_user.id
+    user_id= message.from_user.id
     buttons = ButtonMaker()
     path= get_rclone_config(user_id)
     conf = ConfigParser()
@@ -67,7 +64,7 @@ async def list_remotes(message, rclone_remote, base_dir, callback, edit=False):
         if remote == get_rclone_data("MIRRORSET_REMOTE", user_id):
             prev = "✅"
         buttons.cb_buildbutton(f"{prev} 📁 {remote}", f"{callback}^remote^{remote}^{message.id}")
-    buttons.cb_buildbutton("✘ Close Menu", f"{callback}^close^{user_id}", 'footer')
+    buttons.cb_buildbutton("✘ Close Menu", f"{callback}^close^{message.id}", 'footer')
     msg= f"Select cloud where you want to upload file\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>" 
     if edit:
         await editMessage(msg, message, reply_markup= buttons.build_menu(2))
