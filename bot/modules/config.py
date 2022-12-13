@@ -124,6 +124,12 @@ async def load_config():
                     Interval.clear()
                     Interval.append(setInterval(STATUS_UPDATE_INTERVAL, update_all_messages))
 
+     AUTO_DELETE_MESSAGE_DURATION = environ.get('AUTO_DELETE_MESSAGE_DURATION', '')
+     if len(AUTO_DELETE_MESSAGE_DURATION) == 0:
+          AUTO_DELETE_MESSAGE_DURATION = 30
+     else:
+          AUTO_DELETE_MESSAGE_DURATION = int(AUTO_DELETE_MESSAGE_DURATION)
+
      SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
      SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
 
@@ -233,6 +239,7 @@ async def load_config():
 
      config_dict.update({'AS_DOCUMENT': AS_DOCUMENT,
                          'ALLOWED_CHATS': ALLOWED_CHATS,
+                         'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                          'AUTO_MIRROR': AUTO_MIRROR,
                          'BASE_URL': BASE_URL,
                          'BOT_PM': BOT_PM,

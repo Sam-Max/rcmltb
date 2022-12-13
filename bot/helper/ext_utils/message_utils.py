@@ -12,8 +12,10 @@ from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 
 async def sendMessage(text: str, message):
     try:
-        return await bot.send_message(message.chat.id, reply_to_message_id=message.id,
-                            text=text, disable_web_page_preview=True)
+        return await bot.send_message(message.chat.id, 
+                            reply_to_message_id=message.id,
+                            text=text, 
+                            disable_web_page_preview=True)
     except FloodWait as fw:
         await sleep(fw.value)
         return await sendMessage(text, message)
@@ -35,9 +37,9 @@ async def sendMarkup(text: str, message, reply_markup):
 async def editMarkup(text: str, message, reply_markup):
     try:
         return await bot.edit_message_text(message.chat.id,
-                                    message.id,
-                                    text=text, 
-                                    reply_markup=reply_markup)
+                            message.id,
+                            text=text, 
+                            reply_markup=reply_markup)
     except FloodWait as fw:
         await sleep(fw.value)
         return await editMarkup(text, message, reply_markup) 
@@ -48,8 +50,10 @@ async def editMarkup(text: str, message, reply_markup):
 
 async def editMessage(text: str, message, reply_markup=None):
     try:
-        return await bot.edit_message_text(text=text, message_id=message.id,
-                            chat_id=message.chat.id, reply_markup=reply_markup)
+        return await bot.edit_message_text(text=text, 
+                            message_id=message.id,
+                            chat_id=message.chat.id, 
+                            reply_markup=reply_markup)
     except FloodWait as fw:
         await sleep(fw.value)
         return await editMessage(text, message, reply_markup)
@@ -152,11 +156,10 @@ async def sendStatusMessage(msg):
         if not Interval:
             Interval.append(setInterval(config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))
 
-async def auto_delete_message(cmd_message, bot_message):
-        await sleep(15)
-        try:
-            # Skip if None is passed meaning we don't want to delete bot or cmd message
+async def auto_delete_message(cmd_message=None, bot_message=None):
+    if config_dict['AUTO_DELETE_MESSAGE_DURATION'] != -1:
+        await sleep(config_dict['AUTO_DELETE_MESSAGE_DURATION'])
+        if cmd_message is not None:
             await deleteMessage(cmd_message)
+        if bot_message is not None:
             await deleteMessage(bot_message)
-        except AttributeError:
-            pass

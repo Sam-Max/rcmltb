@@ -34,7 +34,6 @@ async def _batch(client, message, isLeech=False):
             pass
         else:
             return
-    
     await sendMessage("Send me the message link to start saving from, /ignore to cancel", message)
     try:
         link = await client.listen.Message(filters.text, id= filters.user(user_id), timeout = 30)

@@ -67,7 +67,9 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
         args = mesg[0].split(maxsplit=3)
         for x in args:
             x = x.strip()
-            if x == 's':
+            if x in ['|', 'pswd:']:
+                break
+            elif x == 's':
                 select = True
                 index += 1
             elif x.isdigit():
@@ -155,7 +157,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
                     buttons.cb_buildbutton("📝 Rename", f"mirrormenu^rename")
                     buttons.cb_buildbutton("✘ Close Menu", f"mirrormenu^close", 'footer')
                     await sendMarkup(header_msg, message, reply_markup= buttons.build_menu(2))
-                    listener_dict[message_id] = [listener, file, message, user_id]
+                    listener_dict[message_id] = [listener, file, message, isLeech, user_id]
                 return
             else:
                 link = await client.download_media(file)
@@ -264,6 +266,7 @@ async def mirror_menu(client, query):
     listener= info[0]
     file = info[1]
     message= info[2]
+    is_Leech= info[3]
     rclone_remote = get_rclone_data("MIRRORSET_REMOTE", user_id)
     base_dir= get_rclone_data("MIRRORSET_BASE_DIR", user_id)
 
@@ -272,7 +275,7 @@ async def mirror_menu(client, query):
         return
     elif cmd[1] == "default" :
         await deleteMessage(query_message)
-        if config_dict['REMOTE_SELECTION']:
+        if config_dict['REMOTE_SELECTION'] and not is_Leech:
             update_rclone_data('NAME', "", user_id) 
             await list_remotes(message, rclone_remote, base_dir, "mirrorselect")    
         else:
@@ -296,7 +299,7 @@ async def mirror_menu(client, query):
                     await client.listen.Cancel(filters.user(user_id))
                 else:
                     name = response.text.strip()
-                    if config_dict['REMOTE_SELECTION']:
+                    if config_dict['REMOTE_SELECTION'] and not is_Leech:
                         update_rclone_data('NAME', name, user_id) 
                         await list_remotes(message, rclone_remote, base_dir, "mirrorselect")   
                     else:

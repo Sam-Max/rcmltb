@@ -72,6 +72,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Mongo Database support
 - Ytdl support
 - Docker support
+- Shell and Executor
 - Extensions Filter for the files to be uploaded/cloned
 - Select files from Torrent before downloading 
 - Direct link authentication for specific link while using the bot (it will work even if only username or password)
@@ -172,6 +173,7 @@ pip3 install -r requirements-cli.txt
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `STATUS_LIMIT`: No. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Int`
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
+        - `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message. Set to `-1` to disable auto message deletion. `Int`
         - `PARALLEL_TASKS`: Number of parallel tasks for queue system. `Int`
 
    - UPDATE

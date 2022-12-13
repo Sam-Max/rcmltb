@@ -4,7 +4,7 @@
 from io import FileIO
 from logging import getLogger, ERROR
 from time import time
-from pickle import load as pload
+from pickle import load as pload, dump as pdump
 from json import loads as jsnloads
 from os import makedirs, path as ospath
 from re import search as re_search
@@ -14,6 +14,7 @@ from googleapiclient.errors import HttpError, Error as GCError
 from googleapiclient.http import MediaIoBaseDownload
 from bot import GLOBAL_EXTENSION_FILTER, config_dict, botloop
 from bot.helper.ext_utils.bot_utils import setInterval
+from google.auth.transport.requests import Request
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, RetryError
@@ -67,8 +68,14 @@ class GoogleDriveHelper:
         # Get credentials
         credentials = None
         if ospath.exists(self.__G_DRIVE_TOKEN_FILE):
+            LOGGER.info("Authorize with token.pickle")
             with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
                 credentials = pload(f)
+            if credentials and not credentials.valid and credentials.expired and credentials.refresh_token:
+                LOGGER.warning('Your token is expired! Refreshing Token...')
+                credentials.refresh(Request())
+                with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:
+                    pdump(credentials, token)
         else:
             LOGGER.error('token.pickle not found!')
         return build('drive', 'v3', credentials=credentials, cache_discovery=False)
@@ -360,6 +367,8 @@ class GoogleDriveHelper:
             filename = f"{filename[:245]}{ext}"
             if self.name.endswith(ext):
                 self.name = filename
+        if self.__is_cancelled:
+            return
         fh = FileIO(f"{path}/{filename}", 'wb')
         downloader = MediaIoBaseDownload(fh, request, chunksize=50 * 1024 * 1024)
         done = False

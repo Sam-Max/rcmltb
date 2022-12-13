@@ -41,7 +41,9 @@ async def _ytdl(client, message, isZip= False, isLeech=False):
     if len(args) > 1:
         for x in args:
             x = x.strip()
-            if x.strip().isdigit():
+            if x in ['|', 'pswd:', 'opt:']:
+                break
+            elif x.strip().isdigit():
                 multi = int(x)
                 mi = index
         if multi == 0:
@@ -98,9 +100,10 @@ Like playlist_items:10 works with string, so no need to add `^` before the numbe
 You can add tuple and dict also. Use double quotes inside dict.
 
 <b>NOTE:</b>
-You can add perfix randomly before link those for select (s) and mutli links (number).
-You can't add perfix randomly after link. They should be arranged like exmaple above, rename then pswd then opt. If you don't want to add pswd for example then it will be (|newname opt:), just don't change the arrangement.
-You can always add video quality from yt-dlp api options. 
+1. When use cmd by reply don't add any option in link msg! always add them after cmd msg!
+2. Mutli links (number)) can be add randomly before link or any other option.
+3. Options (rename, pswd, opt) should be arranged like exmaple above, rename then pswd then opt and after the link if link along with the cmd or after cmd if by reply. If you don't want to add pswd for example then it will be (|newname opt:), just don't change the arrangement.
+4. You can always add video quality from yt-dlp api options.
 """
         return await sendMessage(help_msg, message)
 

@@ -31,6 +31,7 @@ class _BotCommands:
         self.StatusCommand = f'status{CMD_INDEX}'
         self.StatsCommand = f'stats{CMD_INDEX}'
         self.ShellCommand = f'shell{CMD_INDEX}'
+        self.ExecCommand = f'exec{CMD_INDEX}'
         self.ServeCommand = f'serve{CMD_INDEX}'
         self.SyncCommand = f'sync{CMD_INDEX}'
         self.BiSyncCommand = f'bisync{CMD_INDEX}'
