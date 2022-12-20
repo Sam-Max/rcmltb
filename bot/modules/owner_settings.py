@@ -27,7 +27,7 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'LEECH_SPLIT_SIZE': TG_MAX_FILE_SIZE,
                   'SEARCH_LIMIT': 0,
                   'SERVER_PORT': 80,
-                  'SERVE_PORT': 8080,
+                  'INDEX_PORT': 8080,
                   'RSS_DELAY': 900}
 
 
@@ -140,7 +140,7 @@ async def ownerset_callback(client, callback_query):
 
     if data[1] == "env":
         if data[2] == "editenv" and STATE == 'edit':
-            if data[3] in ['PARALLEL_TASKS', 'SUDO_USERS', 'SERVE_USER', 'LEECH_LOG', 'SERVE_PASS', 'SERVE_IP', 'SERVE_PORT', 'ALLOWED_CHATS', 'RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
+            if data[3] in ['PARALLEL_TASKS', 'SUDO_USERS', 'INDEX_USER', 'LEECH_LOG', 'INDEX_PASS', 'INDEX_IP', 'INDEX_PORT', 'ALLOWED_CHATS', 'RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
                           'TELEGRAM_API_HASH', 'TELEGRAM_API_ID', 'BOT_TOKEN', 'OWNER_ID', 'DOWNLOAD_DIR', 'DATABASE_URL']:
                 await query.answer(text='Restart required for this to apply!', show_alert=True)
             else:

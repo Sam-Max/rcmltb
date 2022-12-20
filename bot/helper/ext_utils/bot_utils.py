@@ -4,7 +4,7 @@
 from asyncio import sleep, get_running_loop
 from html import escape
 from math import ceil
-from re import match as re_match, findall as re_findall, IGNORECASE, compile
+from re import findall as re_findall, IGNORECASE, compile
 from time import time
 from psutil import cpu_percent, disk_usage, virtual_memory
 from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict, user_data, m_queue
@@ -31,10 +31,6 @@ def is_url(url: str):
 
 def is_gdrive_link(url: str):
     return "drive.google.com" in url
-
-def is_gdtot_link(url: str):
-    url = re_match(r'https?://.+\.gdtot\.\S+', url)
-    return bool(url)
 
 def is_mega_link(url: str):
     return "mega.nz" in url or "mega.co.nz" in url

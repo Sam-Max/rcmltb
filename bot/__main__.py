@@ -10,7 +10,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean_all, start_cleanup
 from bot.helper.ext_utils import db_handler
-from bot.modules import batch, cancel, config, copy, leech, mirror, mirrorset, myfilesset, owner_settings, search, myfiles, stats, status, clone, storage, cleanup, user_settings, ytdlp, shell, exec, bt_select, rss, serve, sync
+from bot.modules import batch, cancel, config, copy, leech, mirror_leech, mirrorset, myfilesset, owner_settings, search, myfiles, stats, status, clone, storage, cleanup, user_settings, ytdlp, shell, exec, bt_select, rss, serve, sync
 
 
 print("Successfully deployed!!")
@@ -39,7 +39,7 @@ async def restart(client, message):
         QbInterval[0].cancel()
         QbInterval.clear()
     clean_all()
-    srun(["pkill", "-9", "-f", "gunicorn|aria2c|rclone|megasdkrest|qbittorrent-nox|ffmpeg"])
+    srun(["pkill", "-9", "-f", "gunicorn|aria2c|rclone|qbittorrent-nox|ffmpeg"])
     srun(["python3", "update.py"])
     with open(".restartmsg", "w") as f:
         f.truncate(0)

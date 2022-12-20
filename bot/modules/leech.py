@@ -16,7 +16,7 @@ from bot.helper.ext_utils.rclone_utils import get_rclone_config, is_rclone_confi
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.helper.mirror_leech_utils.download_utils.rclone_download import RcloneLeech
 from bot.modules.listener import MirrorLeechListener
-from bot.modules.mirror import mirror_leech
+from bot.modules.mirror_leech import mirror_leech
 
 
 listener_dict = {}

@@ -3,6 +3,19 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 
 ## Features:
 
+### Rclone
+- Copy file/folder from cloud to cloud
+- Leech file/folder from cloud to Telegram
+- Mirror from Telegram to a selected cloud
+- Telegram Navigation Button Menus to interact with cloud
+- File Manager: size, mkdir, delete, dedupe and rename
+- Service Accounts support with automatic switching
+- Serve cloud as http or webdav index
+- Sync clouds (not folders)
+- Search files on cloud
+- Clean cloud trash
+- View storage info 
+
 ### qBittorrent
 - Qbittorrent support for torrent and magnets
 - Select files from Torrent before downloading 
@@ -13,19 +26,6 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Netrc support
 - Direct link authentication from bot
 - Edit global options from bot settings
-
-### Rclone
-- Copy file/folder from cloud to cloud
-- Leech file/folder from cloud to Telegram
-- Mirror from Telegram to a selected cloud
-- Telegram Navigation Button Menus to interact with cloud
-- File Manager: size, mkdir, delete, dedupe and rename
-- Service Accounts support with automatic switching
-- Serve cloud as http or webdav index
-- Sync clouds
-- Search files on cloud
-- Clean cloud trash
-- View storage info 
 
 ### Mirror
 - From Telegram to cloud
@@ -67,9 +67,10 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Load and overwrite token.pickle, rclone.conf, config.env and accounts.zip from bot
 - Edit most of the config variables from bot
 
-### From Other Repositories
+### From Base Repository
 - Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
 - Mongo Database support
+- Mega.nz for mega links
 - Ytdl support
 - Docker support
 - Shell and Executor
@@ -189,10 +190,10 @@ pip3 install -r requirements-cli.txt
      - `USE_SERVICE_ACCOUNTS`: set to `True` for enabling SA for rclone copy. Default to False. `Bool`.
      - `SERVICE_ACCOUNTS_REMOTE`= To set teamdrive remote from your rclone config with the service accounts configured `Str`. **Note**: teamdrive remote must have team_drive field with id. `Str`
      - `SERVER_SIDE`= set to `True` for enabling rclone server side copy. Default to False. **NOTE**: if you get error while copy set this to `False`. `Bool`
-     - `SERVE_IP`: Ip (public) of your vps where bot is running. `Str`
-     - `SERVE_PORT`: Port to use for remote index. Default to `8080`. `Str`
-     - `SERVE_USER`: User for remote index. Default to `admin`. `Str`
-     - `SERVE_PASS`: Password for remote index. Default to `admin`. `Str`
+     - `INDEX_IP`: Ip (public) where bot is running. `Str`
+     - `INDEX_PORT`: Port to use. Default to `8080`. `Str`
+     - `INDEX_USER`: Custom user. Default to `admin`. `Str`
+     - `INDEX_PASS`: Custom password. Default to `admin`. `Str`
 
    - CLONE
      - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Int`

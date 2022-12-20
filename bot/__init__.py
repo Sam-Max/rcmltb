@@ -1,4 +1,4 @@
-__version__ = "3.1"
+__version__ = "4.0"
 __author__ = "Sam-Max"
 
 from asyncio import Lock
@@ -13,7 +13,6 @@ from pymongo import MongoClient
 from aria2p import API as ariaAPI, Client as ariaClient
 from qbittorrentapi import Client as qbitClient
 from subprocess import Popen, run as srun
-from megasdkrestclient import MegaSdkRestClient, errors
 from pyrogram import Client
 from bot.conv_pyrogram import Conversation
 from asyncio import get_event_loop
@@ -179,17 +178,17 @@ DEFAULT_OWNER_REMOTE = environ.get('DEFAULT_OWNER_REMOTE', '')
 
 DEFAULT_GLOBAL_REMOTE = environ.get('DEFAULT_GLOBAL_REMOTE', '')
 
-SERVE_USER = environ.get('SERVE_USER', '')
-SERVE_USER = 'admin' if len(SERVE_USER) == 0 else SERVE_USER
+INDEX_USER = environ.get('INDEX_USER', '')
+INDEX_USER = 'admin' if len(INDEX_USER) == 0 else INDEX_USER
 
-SERVE_PASS= environ.get('SERVE_PASS', '')
-SERVE_PASS = 'admin' if len(SERVE_PASS) == 0 else SERVE_PASS
+INDEX_PASS= environ.get('INDEX_PASS', '')
+INDEX_PASS = 'admin' if len(INDEX_PASS) == 0 else INDEX_PASS
 
-SERVE_IP = environ.get('SERVE_IP', '')
-SERVE_IP = '' if len(SERVE_IP) == 0 else SERVE_IP
+INDEX_IP = environ.get('INDEX_IP', '')
+INDEX_IP = '' if len(INDEX_IP) == 0 else INDEX_IP
 
-SERVE_PORT = environ.get('SERVE_PORT', '')
-SERVE_PORT= 8080 if len(SERVE_PORT) == 0 else int(SERVE_PORT)
+INDEX_PORT = environ.get('INDEX_PORT', '')
+INDEX_PORT= 8080 if len(INDEX_PORT) == 0 else int(INDEX_PORT)
 
 USE_SERVICE_ACCOUNTS = environ.get('USE_SERVICE_ACCOUNTS', '')
 USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == 'true'
@@ -339,10 +338,10 @@ if not config_dict:
                    'SEARCH_LIMIT': SEARCH_LIMIT,
                    'SERVER_PORT': SERVER_PORT,
                    'SERVICE_ACCOUNTS_REMOTE': SERVICE_ACCOUNTS_REMOTE,
-                   'SERVE_USER':SERVE_USER,
-                   'SERVE_PASS': SERVE_PASS,
-                   'SERVE_IP': SERVE_IP,
-                   'SERVE_PORT': SERVE_PORT,
+                   'INDEX_USER':INDEX_USER,
+                   'INDEX_PASS': INDEX_PASS,
+                   'INDEX_IP': INDEX_IP,
+                   'INDEX_PORT': INDEX_PORT,
                    'STATUS_LIMIT': STATUS_LIMIT,
                    'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
                    'SUDO_USERS': SUDO_USERS,
@@ -373,24 +372,6 @@ if ospath.exists('accounts.zip'):
     osremove('accounts.zip')
 if not ospath.exists('accounts'):
     config_dict['USE_SERVICE_ACCOUNTS'] = False
-
-if len(MEGA_API_KEY) > 0:
-    Popen(["megasdkrest", "--apikey", MEGA_API_KEY])
-    sleep(3)
-    mega_client = MegaSdkRestClient('http://localhost:6090')
-    try:
-        if len(MEGA_EMAIL_ID) > 0 and len(MEGA_PASSWORD) > 0:
-            try:
-                mega_client.login(MEGA_EMAIL_ID, MEGA_PASSWORD)
-            except errors.MegaSdkRestClientException as e:
-                LOGGER.error(e.message['message'])
-                exit(0)
-        else:
-            LOGGER.info("Mega username and password not provided. Starting mega in anonymous mode!")
-    except:
-            LOGGER.info("Mega username and password not provided. Starting mega in anonymous mode!")
-else:
-    sleep(1.5)
 
 aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
 

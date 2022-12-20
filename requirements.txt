@@ -2,8 +2,10 @@ anytree
 apscheduler
 aria2p
 bencoding
+beautifulsoup4
 cfscrape
 cryptg
+dnspython
 feedparser
 flask
 google-api-python-client
@@ -12,10 +14,9 @@ google-auth-oauthlib
 gunicorn
 lk21
 lxml
-megasdkrestclient
 pillow
 psutil
-psycopg2-binary
+pybase64
 pymongo
 pyrogram
 python-dotenv
@@ -26,6 +27,6 @@ speedtest-cli
 telegraph
 tenacity
 tgCrypto
-urllib3
+xattr
 yt-dlp
 

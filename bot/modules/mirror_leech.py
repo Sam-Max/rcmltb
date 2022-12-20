@@ -20,7 +20,7 @@ from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclo
 from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected, list_remotes
 from bot.helper.mirror_leech_utils.download_utils.aria2_download import add_aria2c_download
 from bot.helper.mirror_leech_utils.download_utils.gd_downloader import add_gd_download
-from bot.helper.mirror_leech_utils.download_utils.mega_download import MegaDownloader
+from bot.helper.mirror_leech_utils.download_utils.mega_download import add_mega_download
 from bot.helper.mirror_leech_utils.download_utils.qbit_downloader import add_qb_torrent
 from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import TelegramDownloader
 from bot.modules.listener import MirrorLeechListener
@@ -226,12 +226,9 @@ Number should be always before |newname or pswd:
     if is_gdrive_link(link):
         await add_gd_download(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name)   
     elif is_mega_link(link):
-        if config_dict['MEGA_API_KEY']:
-            botloop.create_task(MegaDownloader(link, listener).execute(path= f'{DOWNLOAD_DIR}{listener.uid}'))   
-        else:
-            await sendMessage("MEGA_API_KEY not provided!", message)
+        await botloop.run_in_executor(None, add_mega_download, link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)
     elif is_magnet(link) or ospath.exists(link):
-        botloop.create_task(add_qb_torrent(link, f'{DOWNLOAD_DIR}{listener.uid}', listener))
+        await add_qb_torrent(link, f'{DOWNLOAD_DIR}{listener.uid}', listener)
     else:
         if len(mesg) > 1:
             ussr = mesg[1]
@@ -274,7 +271,7 @@ async def mirror_menu(client, query):
         await query.answer("This menu is not for you!", show_alert=True)
         return
     elif cmd[1] == "default" :
-        await deleteMessage(query_message)
+        await query_message.delete()
         if config_dict['REMOTE_SELECTION'] and not is_Leech:
             update_rclone_data('NAME', "", user_id) 
             await list_remotes(message, rclone_remote, base_dir, "mirrorselect")    
@@ -286,7 +283,7 @@ async def mirror_menu(client, query):
             else:
                 await tg_down.download() 
     elif cmd[1] == "rename": 
-        await deleteMessage(query_message)
+        await query_message.delete()
         question= await client.send_message(message.chat.id, text= "Send the new name, /ignore to cancel")
         try:
             response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout = 30)
@@ -313,7 +310,7 @@ async def mirror_menu(client, query):
             await question.delete()
     else:
         await query.answer()
-        
+        await query_message.delete()
 
 async def mirror_select(client, callback_query):
     query= callback_query
