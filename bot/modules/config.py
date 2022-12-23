@@ -427,7 +427,11 @@ async def config_callback(client, callback_query):
           await query.answer()     
           await config_menu(user_id, message, True)
      elif cmd[1] == "delete_acc":
-          rmtree("accounts")
+          if ospath.exists('accounts'):
+               srun(["rm", "-rf", "accounts"])
+          config_dict['USE_SERVICE_ACCOUNTS'] = False
+          if DATABASE_URL:
+               DbManager().update_config({'USE_SERVICE_ACCOUNTS': False})
           await query.answer()
           await config_menu(user_id, message, True)
      else:

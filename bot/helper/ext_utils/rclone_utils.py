@@ -27,21 +27,24 @@ async def is_remote_selected(user_id, message):
 async def is_rclone_config(user_id, message, isLeech=False):
     if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id):
         path= ospath.join("users", f'{user_id}', "rclone.conf")
-        if not ospath.exists(path):
+        if ospath.exists(path):
+            return True
+        else:
             if isLeech:
-                return False
+                return True
             else:
                 await sendMessage("Send a rclone config file, use /config", message)
                 return False
-        else:
-            return True  
     else:
         path= ospath.join("users", "global_rclone", "rclone.conf")
-        if not ospath.exists(path):
-            await sendMessage("No global rclone file found", message)
-            return False
-        else:
+        if ospath.exists(path):
             return True
+        else:
+            if isLeech:
+                return True
+            else:
+                await sendMessage("No global rclone file found", message)
+                return False
 
 def get_rclone_config(user_id):
     if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id):

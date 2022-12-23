@@ -4,7 +4,7 @@
 from asyncio import sleep
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import regex, command
-from bot import DOWNLOAD_DIR, bot
+from bot import DOWNLOAD_DIR, LOGGER, bot
 from re import split as re_split
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import is_url
@@ -120,11 +120,11 @@ You can add tuple and dict also. Use double quotes inside dict.
     formats_dict = {}
     if 'entries' in result:
         for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
-            video_format = f"bv*[height<={i}][ext=mp4]+ba[ext=m4a]/b[height<={i}]"
+            video_format = f"bv*[height<=?{i}][ext=mp4]+ba[ext=m4a]/b[height<=?{i}]"
             b_data = f"{i}|mp4"
             formats_dict[b_data] = video_format
             buttons.cb_buildbutton(f"{i}-mp4", f"qu {msg_id} {b_data} t")
-            video_format = f"bv*[height<={i}][ext=webm]+ba/b[height<={i}]"
+            video_format = f"bv*[height<=?{i}][ext=webm]+ba/b[height<=?{i}]"
             b_data = f"{i}|webm"
             formats_dict[b_data] = video_format
             buttons.cb_buildbutton(f"{i}-webm", f"qu {msg_id} {b_data} t")
@@ -137,7 +137,7 @@ You can add tuple and dict also. Use double quotes inside dict.
         await sendMarkup('Choose Playlist Videos Quality:', message, YTBUTTONS)
     else:
         formats = result.get('formats')
-        formats_dict = {}
+        is_m4a = False
         if formats is not None:
             for frmt in formats:
                 if frmt.get('tbr'):
@@ -151,18 +151,21 @@ You can add tuple and dict also. Use double quotes inside dict.
                     else:
                         size = 0
 
-                    if frmt.get('height'):
+                    if frmt.get('video_ext') == 'none' and frmt.get('acodec') != 'none':
+                        if frmt.get('audio_ext') == 'm4a':
+                            is_m4a = True
+                        b_name = f"{frmt['acodec']}-{frmt['ext']}"
+                        v_format = f"ba[format_id={format_id}]"
+                    elif frmt.get('height'):
                         height = frmt['height']
                         ext = frmt['ext']
                         fps = frmt['fps'] if frmt.get('fps') else ''
                         b_name = f"{height}p{fps}-{ext}"
                         if ext == 'mp4':
-                            v_format = f"bv*[format_id={format_id}]+ba[ext=m4a]/b[height={height}]"
+                            ba_ext = '[ext=m4a]' if is_m4a else ''
+                            v_format = f"bv*[format_id={format_id}]+ba{ba_ext}/b[height=?{height}]"
                         else:
-                            v_format = f"bv*[format_id={format_id}]+ba/b[height={height}]"
-                    elif frmt.get('video_ext') == 'none' and frmt.get('acodec') != 'none':
-                        b_name = f"{frmt['acodec']}-{frmt['ext']}"
-                        v_format = f"ba[format_id={format_id}]"
+                            v_format = f"bv*[format_id={format_id}]+ba/b[height=?{height}]"
                     else:
                         continue
 
@@ -274,6 +277,7 @@ async def select_format(client, callback_query):
                 b_name, tbr = qual.split('|')
                 qual = task_info[6][b_name][tbr][1]
         ydl_hp = YoutubeDLHelper(listener)
+        LOGGER.info(f"Downloading with YT-DLP: {link}")
         await ydl_hp.add_download(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, opt)
     del listener_dict[task_id]
 
