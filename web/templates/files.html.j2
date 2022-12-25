@@ -1,0 +1,42 @@
+<!--Template file-->
+<!--templates/files.html.j2-->
+<h2>Downloads Files</h2>
+<table class="table table-striped table-responsive">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Modified Time</th>
+            <th>Size</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <a href="{{ url_for('getFiles', reqPath=data['parentFolder']) }}">
+                    <span><i class="bi bi-folder-symlink" style="margin-right:0.3em"></i>Parent Directory</span>
+                </a>
+            </td>
+            <td></td>
+            <td></td>
+        </tr>
+        {% for fileObj in data['files'] %}
+        <tr>
+            <td>
+                <a href="{{ url_for('getFiles', reqPath=fileObj['relPath']) }}">
+                    <span><i class="{{fileObj['fIcon']}}" style="margin-right:0.3em"></i>{{ fileObj['name'] }}</span>
+                </a>
+            </td>
+            <td>{{fileObj['mTime']}}</td>
+            <td>{{fileObj['size']}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+
+<style>
+table {table-layout:fixed; width:100%;}
+table td, th {word-wrap:break-word;}
+th {text-align: left;}
+</style>

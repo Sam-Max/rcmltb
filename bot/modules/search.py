@@ -4,8 +4,7 @@
 from functools import partial
 from html import escape
 from urllib.parse import quote
-from bot import LOGGER, SEARCH_PLUGINS, bot, get_client, botloop, config_dict
-from json import loads as jsonloads
+from bot import LOGGER, bot, get_client, botloop, config_dict
 from requests import get as rget
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
@@ -21,16 +20,21 @@ SITES = None
 TELEGRAPH_LIMIT = 300
 
 def initiate_search_tools():
-    if SEARCH_PLUGINS:
+    qbclient = get_client()
+    qb_plugins = qbclient.search_plugins()
+    if SEARCH_PLUGINS := config_dict['SEARCH_PLUGINS']:
         globals()['PLUGINS'] = []
-        src_plugins = jsonloads(SEARCH_PLUGINS)
-        qbclient = get_client()
-        qb_plugins = qbclient.search_plugins()
+        src_plugins = eval(SEARCH_PLUGINS)
         if qb_plugins:
             for plugin in qb_plugins:
                 qbclient.search_uninstall_plugin(names=plugin['name'])
         qbclient.search_install_plugin(src_plugins)
         qbclient.auth_log_out()
+    elif qb_plugins:
+        for plugin in qb_plugins:
+            qbclient.search_uninstall_plugin(names=plugin['name'])
+        globals()['PLUGINS'] = []
+    qbclient.auth_log_out()
 
     if SEARCH_API_LINK := config_dict['SEARCH_API_LINK']:
         global SITES
@@ -85,10 +89,10 @@ async def handle_torrent_search(client, message):
         await sendMarkup('Choose tool to search:', message, button)
     elif SITES is not None:
         button = _api_buttons(user_id, "apisearch")
-        await sendMarkup('Choose site to search:', message, button)
+        await sendMarkup('Choose site to search | API:', message, button)
     else:
         button = _plugin_buttons(user_id)
-        await sendMarkup('Choose site to search:', message, button)
+        await sendMarkup('Choose site to search | Plugins:', message, button)
 
 async def torrent_search_but(client, callback_query):
     query = callback_query

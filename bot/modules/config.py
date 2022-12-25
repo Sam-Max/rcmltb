@@ -4,10 +4,9 @@ from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from os import environ, path as ospath, remove
-from shutil import rmtree
 from dotenv import load_dotenv
 from subprocess import Popen, run as srun
-from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, OWNER_ID, Interval, aria2, aria2_options, bot, config_dict, status_dict, status_reply_dict_lock, user_data
+from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, OWNER_ID, QB_SERVER_PORT, Interval, aria2, aria2_options, bot, config_dict, status_dict, status_reply_dict_lock, user_data
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.ext_utils.db_handler import DbManager
@@ -15,6 +14,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessage, update_all_messages
 from bot.helper.ext_utils.misc_utils import ButtonMaker
 from bot.helper.ext_utils.rclone_utils import get_rclone_config
+from bot.modules.search import initiate_search_tools
 
 async def load_config():
      BOT_TOKEN = environ.get('BOT_TOKEN', '')
@@ -190,14 +190,27 @@ async def load_config():
      EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
 
      SERVER_PORT = environ.get('SERVER_PORT', '')
-     SERVER_PORT = 80 if len(SERVER_PORT) == 0 else int(SERVER_PORT)
+     SERVER_PORT = 81 if len(SERVER_PORT) == 0 else int(SERVER_PORT)
+     
      BASE_URL = environ.get('BASE_URL', '').rstrip("/")
      if len(BASE_URL) == 0:
           BASE_URL = ''
-          srun(["pkill", "-9", "-f", "gunicorn"])
+          srun(["pkill", "-9", "-f", f"gunicorn web.wserver:app"])
      else:
-          srun(["pkill", "-9", "-f", "gunicorn"])
+          srun(["pkill", "-9", "-f", f"gunicorn web.wserver:app"])
           Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
+
+     QB_SERVER_PORT = environ.get('QB_SERVER_PORT', '')
+     if len(QB_SERVER_PORT) == 0:
+          QB_SERVER_PORT = 80
+     
+     QB_BASE_URL = environ.get('QB_BASE_URL', '').rstrip("/")
+     if len(QB_BASE_URL) == 0:
+          QB_BASE_URL = ''
+          srun(["pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app"])
+     else:
+          srun(["pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app"])
+          Popen(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT}", shell=True)
 
      UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
      if len(UPSTREAM_REPO) == 0:
@@ -223,17 +236,24 @@ async def load_config():
 
      SERVICE_ACCOUNTS_REMOTE = environ.get('SERVICE_ACCOUNTS_REMOTE', '')
 
-     INDEX_USER = environ.get('INDEX_USER', '')
-     INDEX_USER = 'admin' if len(INDEX_USER) == 0 else INDEX_USER
+     GD_INDEX_URL = environ.get('GD_INDEX_URL', '').rstrip("/")
+     if len(GD_INDEX_URL) == 0:
+          GD_INDEX_URL = ''
 
-     INDEX_PASS= environ.get('INDEX_PASS', '')
-     INDEX_PASS = 'admin' if len(INDEX_PASS) == 0 else INDEX_PASS
+     VIEW_LINK = environ.get('VIEW_LINK', '')
+     VIEW_LINK = VIEW_LINK.lower() == 'true'
 
-     INDEX_IP = environ.get('INDEX_IP', '')
-     INDEX_IP = '' if len(INDEX_IP) == 0 else INDEX_IP
+     RC_INDEX_USER = environ.get('RC_INDEX_USER', '')
+     RC_INDEX_USER = 'admin' if len(RC_INDEX_USER) == 0 else RC_INDEX_USER
 
-     INDEX_PORT = environ.get('INDEX_PORT', '')
-     INDEX_PORT= 8080 if len(INDEX_PORT) == 0 else int(INDEX_PORT)
+     RC_INDEX_PASS= environ.get('RC_INDEX_PASS', '')
+     RC_INDEX_PASS = 'admin' if len(RC_INDEX_PASS) == 0 else RC_INDEX_PASS
+
+     RC_INDEX_URL = environ.get('RC_INDEX_URL', '')
+     RC_INDEX_URL = '' if len(RC_INDEX_URL) == 0 else RC_INDEX_URL
+
+     RC_INDEX_PORT = environ.get('RC_INDEX_PORT', '')
+     RC_INDEX_PORT= 8080 if len(RC_INDEX_PORT) == 0 else int(RC_INDEX_PORT)
 
      CMD_INDEX = environ.get('CMD_INDEX', '')
 
@@ -251,6 +271,7 @@ async def load_config():
                          'EXTENSION_FILTER': EXTENSION_FILTER,
                          'GDRIVE_FOLDER_ID': GDRIVE_FOLDER_ID,
                          'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
+                         'GD_INDEX_URL': GD_INDEX_URL,
                          'LEECH_LOG': LEECH_LOG,
                          'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
                          'MEGA_API_KEY': MEGA_API_KEY,
@@ -260,19 +281,22 @@ async def load_config():
                          'OWNER_ID': OWNER_ID,
                          'REMOTE_SELECTION': REMOTE_SELECTION,
                          'PARALLEL_TASKS': PARALLEL_TASKS,
+                         'QB_BASE_URL': QB_BASE_URL,
+                         'QB_SERVER_PORT': QB_SERVER_PORT,
                          'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                          'RSS_CHAT_ID': RSS_CHAT_ID,
                          'RSS_COMMAND': RSS_COMMAND,
                          'RSS_DELAY': RSS_DELAY,
+                         'SEARCH_PLUGINS': SEARCH_PLUGINS,
                          'SEARCH_API_LINK': SEARCH_API_LINK,
                          'SEARCH_LIMIT': SEARCH_LIMIT,
                          'SERVER_PORT': SERVER_PORT,
                          'SERVICE_ACCOUNTS_REMOTE': SERVICE_ACCOUNTS_REMOTE,
                          'SERVER_SIDE': SERVER_SIDE,
-                         'INDEX_USER':INDEX_USER,
-                         'INDEX_PASS': INDEX_PASS,
-                         'INDEX_IP': INDEX_IP,
-                         'INDEX_PORT': INDEX_PORT,
+                         'RC_INDEX_URL': RC_INDEX_URL,
+                         'RC_INDEX_PORT': RC_INDEX_PORT,
+                         'RC_INDEX_USER':RC_INDEX_USER,
+                         'RC_INDEX_PASS': RC_INDEX_PASS,
                          'STATUS_LIMIT': STATUS_LIMIT,
                          'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
                          'SUDO_USERS': SUDO_USERS,
@@ -284,11 +308,13 @@ async def load_config():
                          'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
                          'USER_SESSION_STRING': USER_SESSION_STRING,
                          'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
+                         'VIEW_LINK': VIEW_LINK,
                          'WEB_PINCODE': WEB_PINCODE})
 
      if DATABASE_URL:
           DbManager().update_config(config_dict)                        
-
+     initiate_search_tools()
+     
 async def config_menu(user_id, message, edit=False):
      conf_path= get_rclone_config(user_id)
      buttons= ButtonMaker()
@@ -350,7 +376,7 @@ async def handle_config(client, message):
         if CustomFilters._owner_query(user_id):  
           await config_menu(user_id, message) 
         else:
-          await sendMessage("You can't use on current mode", message)
+          await sendMessage("Not allowed to use", message)
 
 async def config_callback(client, callback_query):
      query= callback_query

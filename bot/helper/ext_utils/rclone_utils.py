@@ -43,7 +43,7 @@ async def is_rclone_config(user_id, message, isLeech=False):
             if isLeech:
                 return True
             else:
-                await sendMessage("No global rclone file found", message)
+                await sendMessage("Global rclone not found", message)
                 return False
 
 def get_rclone_config(user_id):
@@ -96,5 +96,7 @@ async def get_gid(remote, path, ename, conf_path, isdir=True):
         return (id, name)
     except Exception:
         LOGGER.error("Error while getting id ::- {}".format(stdout))
+        return ""
+        
 
         

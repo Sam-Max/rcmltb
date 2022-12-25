@@ -7,7 +7,6 @@ from string import ascii_letters, digits
 from os import listdir, path as ospath
 from yt_dlp import YoutubeDL, DownloadError
 from re import search as re_search
-from json import loads as jsonloads
 from bot import status_dict_lock, status_dict, botloop
 from bot.helper.ext_utils.message_utils import sendStatusMessage
 from bot.helper.mirror_leech_utils.status_utils.yt_dlp_status import YtDlpDownloadStatus
@@ -224,9 +223,6 @@ class YoutubeDLHelper:
                 varg = True
             elif varg.lower() == 'false':
                 varg = False
-            elif varg.startswith('(') and varg.endswith(')'):
-                varg = varg.replace('(', '').replace(')', '')
-                varg = tuple(map(int, varg.split(',')))
-            elif varg.startswith('{') and varg.endswith('}'):
-                varg = jsonloads(varg)
+            elif varg.startswith(('{', '[', '(')) and varg.endswith(('}', ']', ')')):
+                varg = eval(varg)
             self.opts[karg] = varg

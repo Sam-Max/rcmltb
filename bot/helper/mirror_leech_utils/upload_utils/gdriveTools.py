@@ -5,7 +5,6 @@ from io import FileIO
 from logging import getLogger, ERROR
 from time import time
 from pickle import load as pload, dump as pdump
-from json import loads as jsnloads
 from os import makedirs, path as ospath
 from re import search as re_search
 from urllib.parse import parse_qs, urlparse
@@ -243,7 +242,7 @@ class GoogleDriveHelper:
             return self.__service.files().copy(fileId=file_id, body=body, supportsTeamDrives=True).execute()
         except HttpError as err:
             if err.resp.get('content-type', '').startswith('application/json'):
-                reason = jsnloads(err.content).get('error').get('errors')[0].get('reason')
+                reason = eval(err.content).get('error').get('errors')[0].get('reason')
                 if reason in ['userRateLimitExceeded', 'dailyLimitExceeded']:
                     self.__is_cancelled  = True
                     LOGGER.error(f"Got: {reason}")
@@ -380,7 +379,7 @@ class GoogleDriveHelper:
                 self.__status, done = downloader.next_chunk()
             except HttpError as err:
                 if err.resp.get('content-type', '').startswith('application/json'):
-                    reason = jsnloads(err.content).get('error').get('errors')[0].get('reason')
+                    reason = eval(err.content).get('error').get('errors')[0].get('reason')
                     if reason not in [
                         'downloadQuotaExceeded',
                         'dailyLimitExceeded',

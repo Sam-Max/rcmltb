@@ -183,17 +183,27 @@ DEFAULT_OWNER_REMOTE = environ.get('DEFAULT_OWNER_REMOTE', '')
 
 DEFAULT_GLOBAL_REMOTE = environ.get('DEFAULT_GLOBAL_REMOTE', '')
 
-INDEX_USER = environ.get('INDEX_USER', '')
-INDEX_USER = 'admin' if len(INDEX_USER) == 0 else INDEX_USER
+GD_INDEX_URL = environ.get('GD_INDEX_URL', '').rstrip("/")
+if len(GD_INDEX_URL) == 0:
+    GD_INDEX_URL = ''
 
-INDEX_PASS= environ.get('INDEX_PASS', '')
-INDEX_PASS = 'admin' if len(INDEX_PASS) == 0 else INDEX_PASS
+VIEW_LINK = environ.get('VIEW_LINK', '')
+VIEW_LINK = VIEW_LINK.lower() == 'true'
 
-INDEX_IP = environ.get('INDEX_IP', '')
-INDEX_IP = '' if len(INDEX_IP) == 0 else INDEX_IP
+LOCAL_MIRROR = environ.get('LOCAL_MIRROR', '')
+LOCAL_MIRROR = LOCAL_MIRROR.lower() == 'true'
 
-INDEX_PORT = environ.get('INDEX_PORT', '')
-INDEX_PORT= 8080 if len(INDEX_PORT) == 0 else int(INDEX_PORT)
+RC_INDEX_USER = environ.get('RC_INDEX_USER', '')
+RC_INDEX_USER = 'admin' if len(RC_INDEX_USER) == 0 else RC_INDEX_USER
+
+RC_INDEX_PASS= environ.get('RC_INDEX_PASS', '')
+RC_INDEX_PASS = 'admin' if len(RC_INDEX_PASS) == 0 else RC_INDEX_PASS
+
+RC_INDEX_URL = environ.get('RC_INDEX_URL', '')
+RC_INDEX_URL = '' if len(RC_INDEX_URL) == 0 else RC_INDEX_URL
+
+RC_INDEX_PORT = environ.get('RC_INDEX_PORT', '')
+RC_INDEX_PORT= 8080 if len(RC_INDEX_PORT) == 0 else int(RC_INDEX_PORT)
 
 USE_SERVICE_ACCOUNTS = environ.get('USE_SERVICE_ACCOUNTS', '')
 USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == 'true'
@@ -228,7 +238,16 @@ if len(BASE_URL) == 0:
 
 SERVER_PORT = environ.get('SERVER_PORT', '')
 if len(SERVER_PORT) == 0:
-    SERVER_PORT = 80
+    SERVER_PORT = 81
+
+QB_BASE_URL = environ.get('QB_BASE_URL', '').rstrip("/")
+if len(QB_BASE_URL) == 0:
+    LOGGER.warning('QB_BASE_URL not provided!')
+    QB_BASE_URL = '' 
+
+QB_SERVER_PORT = environ.get('QB_SERVER_PORT', '')
+if len(QB_SERVER_PORT) == 0:
+    QB_SERVER_PORT = 80
 
 UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
 if len(UPSTREAM_REPO) == 0:
@@ -325,6 +344,8 @@ if not config_dict:
                    'EXTENSION_FILTER': EXTENSION_FILTER,
                    'GDRIVE_FOLDER_ID': GDRIVE_FOLDER_ID,
                    'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
+                   'GD_INDEX_URL': GD_INDEX_URL,
+                   'LOCAL_MIRROR': LOCAL_MIRROR,
                    'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
                    'LEECH_LOG': LEECH_LOG,
                    'MEGA_API_KEY': MEGA_API_KEY,
@@ -333,20 +354,23 @@ if not config_dict:
                    'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
                    'OWNER_ID': OWNER_ID,
                    'PARALLEL_TASKS': PARALLEL_TASKS,
+                   'QB_BASE_URL': QB_BASE_URL,
+                   'QB_SERVER_PORT': QB_SERVER_PORT,
                    'REMOTE_SELECTION': REMOTE_SELECTION,
                    'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                    'RSS_CHAT_ID': RSS_CHAT_ID,
                    'RSS_COMMAND': RSS_COMMAND,
                    'RSS_DELAY': RSS_DELAY,
+                   'SEARCH_PLUGINS': SEARCH_PLUGINS,
                    'SERVER_SIDE': SERVER_SIDE,
                    'SEARCH_API_LINK': SEARCH_API_LINK,
                    'SEARCH_LIMIT': SEARCH_LIMIT,
                    'SERVER_PORT': SERVER_PORT,
                    'SERVICE_ACCOUNTS_REMOTE': SERVICE_ACCOUNTS_REMOTE,
-                   'INDEX_USER':INDEX_USER,
-                   'INDEX_PASS': INDEX_PASS,
-                   'INDEX_IP': INDEX_IP,
-                   'INDEX_PORT': INDEX_PORT,
+                   'RC_INDEX_URL': RC_INDEX_URL,
+                   'RC_INDEX_PORT': RC_INDEX_PORT,
+                   'RC_INDEX_USER':RC_INDEX_USER,
+                   'RC_INDEX_PASS': RC_INDEX_PASS,
                    'STATUS_LIMIT': STATUS_LIMIT,
                    'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
                    'SUDO_USERS': SUDO_USERS,
@@ -358,9 +382,11 @@ if not config_dict:
                    'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
                    'USER_SESSION_STRING': USER_SESSION_STRING,
                    'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
+                   'VIEW_LINK': VIEW_LINK,
                    'WEB_PINCODE': WEB_PINCODE}
 
 Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
+Popen(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT}", shell=True)
 srun(["qbittorrent-nox", "-d", "--profile=."])
 if not ospath.exists('.netrc'):
     srun(["touch", ".netrc"])

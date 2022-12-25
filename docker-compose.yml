@@ -5,7 +5,10 @@ services:
     build: .
     command: bash start.sh
     restart: on-failure
+    volumes:
+      - /usr/src/app/downloads:/usr/src/app/downloads:rw
     ports:
-      - "80:80"
-      - "8080:8080"
+      - "80:80" # qbittorrent selection webserver
+      - "81:81" # downloads folder webserver
+      - "8080:8080" # rclone serve index
       

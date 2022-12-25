@@ -23,12 +23,11 @@ class RcloneLeech:
         self.process= None
 
     async def leech(self):
+        conf_path = get_rclone_config(self.__user_id)
         if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(self.__user_id):
-            conf_path = get_rclone_config(self.__user_id)
             leech_drive = get_rclone_data("LEECH_REMOTE", self.__user_id)
             cmd = ['rclone', 'copy', f'--config={conf_path}', f'{leech_drive}:{self.__origin_path}', f'{self.__dest_path}', '-P']
         else:
-            conf_path = get_rclone_config(self.__user_id)
             if DEFAULT_GLOBAL_REMOTE := config_dict['DEFAULT_GLOBAL_REMOTE']:
                 cmd = ['rclone', 'copy', f"--config={conf_path}", f"{DEFAULT_GLOBAL_REMOTE}:{self.__origin_path}", f'{self.__dest_path}', '-P']
             else:

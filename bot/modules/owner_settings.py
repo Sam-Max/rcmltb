@@ -26,10 +26,10 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'STATUS_UPDATE_INTERVAL': 10,
                   'LEECH_SPLIT_SIZE': TG_MAX_FILE_SIZE,
                   'SEARCH_LIMIT': 0,
-                  'SERVER_PORT': 80,
-                  'INDEX_PORT': 8080,
+                  'SERVER_PORT': 81,
+                  'QB_SERVER_PORT': 80,
+                  'RC_INDEX_PORT': 8080,
                   'RSS_DELAY': 900}
-
 
 async def handle_ownerset(client, message):
     text, buttons= get_env_menu()
@@ -140,7 +140,7 @@ async def ownerset_callback(client, callback_query):
 
     if data[1] == "env":
         if data[2] == "editenv" and STATE == 'edit':
-            if data[3] in ['PARALLEL_TASKS', 'SUDO_USERS', 'INDEX_USER', 'LEECH_LOG', 'INDEX_PASS', 'INDEX_IP', 'INDEX_PORT', 'ALLOWED_CHATS', 'RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
+            if data[3] in ['PARALLEL_TASKS', 'SUDO_USERS', 'LEECH_LOG', 'RC_INDEX_USER', 'RC_INDEX_PASS', 'RC_INDEX_URL', 'RC_INDEX_PORT', 'ALLOWED_CHATS', 'RSS_USER_SESSION_STRING', 'USER_SESSION_STRING', 'AUTO_MIRROR',  'RSS_DELAY', 'CMD_INDEX', 
                           'TELEGRAM_API_HASH', 'TELEGRAM_API_ID', 'BOT_TOKEN', 'OWNER_ID', 'DOWNLOAD_DIR', 'DATABASE_URL']:
                 await query.answer(text='Restart required for this to apply!', show_alert=True)
             else:
@@ -186,14 +186,21 @@ async def ownerset_callback(client, callback_query):
                 if DATABASE_URL:
                     DbManager().update_aria2('bt-stop-timeout', '0')
             elif data[3] == 'BASE_URL':
-                srun(["pkill", "-9", "-f", "gunicorn"])
+                srun(["pkill", "-9", "-f", "gunicorn web.wserver:app"])
+            elif data[3] == 'QB_BASE_URL':
+                srun(["pkill", "-9", "-f", "gunicorn qbitweb.wserver:app"])    
             elif data[3] == 'SERVER_PORT':
-                srun(["pkill", "-9", "-f", "gunicorn"])
-                Popen("gunicorn web.wserver:app --bind 0.0.0.0:80", shell=True)
+                srun(["pkill", "-9", "-f", f"gunicorn web.wserver:app"])
+                Popen("gunicorn web.wserver:app --bind 0.0.0.0:81", shell=True)
+            elif data[3] == 'QB_SERVER_PORT':
+                srun(["pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app"])
+                Popen("gunicorn qbitweb.wserver:app --bind 0.0.0.0:80", shell=True)
             await query.answer("Reseted")    
             config_dict[data[3]] = value
             if DATABASE_URL:
                 DbManager().update_config({data[3]: value})
+            if data[3] in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
+                initiate_search_tools()    
             await edit_menus(message, 'env')
     elif data[1] == "aria":
         if data[2] == 'aria_menu':
@@ -451,8 +458,6 @@ async def start_env_listener(client, query, user_id, key):
                         GLOBAL_EXTENSION_FILTER.append('.aria2')
                         for x in fx:
                             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
-                    elif key == 'SEARCH_API_LINK':
-                        initiate_search_tools()
                     elif key == 'LEECH_LOG':
                         aid = value.split()
                         value = [int(id_.strip()) for id_ in aid]
@@ -460,6 +465,8 @@ async def start_env_listener(client, query, user_id, key):
                     await edit_menus(message, 'env')       
                     if DATABASE_URL:
                         DbManager().update_config({key: value})
+                    if key in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
+                        initiate_search_tools()
             except KeyError:
                 return await query.answer("Value doesn't exist") 
     finally:

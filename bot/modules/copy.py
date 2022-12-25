@@ -29,7 +29,7 @@ async def handle_copy(client, message):
         if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id): 
             await list_remotes(message, rclone_drive=origin_remote, base_dir=origin_dir, callback="remote_origin")
         else:
-            await sendMessage("You can't use on current mode", message)
+            await sendMessage("Not allowed to use", message)
 
 async def list_remotes(message, rclone_drive, base_dir, callback, is_second_menu=False, edit=False):
     if message.reply_to_message:

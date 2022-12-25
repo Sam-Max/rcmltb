@@ -26,7 +26,7 @@ async def handle_mirrorset(client, message):
         if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id): 
             await list_remotes(message, rclone_remote, base_dir) 
         else:
-            await sendMessage("You can't use on current mode", message)        
+            await sendMessage("Not allowed to use", message)        
 
 async def list_remotes(message, rclone_remote= "", base_dir= "", edit=False):
     if message.reply_to_message:

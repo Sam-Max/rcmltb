@@ -7,7 +7,7 @@ cfscrape
 cryptg
 dnspython
 feedparser
-flask
+flask==2.0.3
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib

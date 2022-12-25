@@ -2,13 +2,14 @@ from asyncio import create_subprocess_exec, sleep
 from asyncio.subprocess import PIPE
 from html import escape
 from json import loads
+from requests import utils as rutils
 from os import listdir, path as ospath, remove, walk
 from re import search
-from bot import DOWNLOAD_DIR, LOGGER, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2, config_dict
+from bot import DOWNLOAD_DIR, LOGGER, SERVER_PORT, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2, config_dict
 from subprocess import Popen
 from pyrogram.enums import ChatType
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
-from bot.helper.ext_utils.human_format import human_readable_bytes
+from bot.helper.ext_utils.human_format import get_readable_file_size, human_readable_bytes
 from bot.helper.ext_utils.message_utils import delete_all_messages, sendMarkup, sendMessage, update_all_messages
 from bot.helper.ext_utils.misc_utils import ButtonMaker, clean_download, clean_target, split_file
 from bot.helper.ext_utils.rclone_utils import get_gid
@@ -31,7 +32,7 @@ class MirrorLeechListener:
         self.__isMultiZip = isMultiZip
         self.__extract = extract
         self.__pswd = pswd
-        self.__tag = tag
+        self.tag = tag
         self.seed = seed
         self.select = select
         self.dir = f"{DOWNLOAD_DIR}{self.uid}"
@@ -225,7 +226,27 @@ class MirrorLeechListener:
             await update_all_messages()
             await tg_up.upload()    
         else:
-            await RcloneMirror(up_dir, up_name, size, self.user_id, self).mirror()
+            if config_dict['LOCAL_MIRROR']:
+              if BASE_URL:= config_dict['BASE_URL']:
+                buttons= ButtonMaker()
+                server_url = f'{BASE_URL}:{SERVER_PORT}/downloads/'
+                buttons.url_buildbutton("🖥 Local Server", server_url)
+                size = get_readable_file_size(size)
+                msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
+                msg += f'\n<b>cc: </b>{self.tag}\n\n'
+                await sendMarkup(msg, self.message, reply_markup= buttons.build_menu(1))
+                async with status_dict_lock:
+                    try:
+                        del status_dict[self.uid]
+                    except Exception as e:
+                        LOGGER.error(str(e))
+                    count = len(status_dict)
+                if count == 0:
+                    await self.clean()
+                else:
+                    await update_all_messages()
+            else:
+                await RcloneMirror(up_dir, up_name, size, self.user_id, self).mirror()
 
     async def onRcloneCopyComplete(self, conf, origin_dir, dest_drive, dest_dir):
         #Calculate Size
@@ -241,7 +262,7 @@ class MirrorLeechListener:
         size = human_readable_bytes(data["bytes"])
         format_out = f"**Total Files** {files}" 
         format_out += f"\n**Total Size**: {size}"
-        format_out += f"\n<b>cc: </b>{self.__tag}"
+        format_out += f"\n<b>cc: </b>{self.tag}"
         #Get Link
         cmd = ["rclone", "link", f'--config={conf}', f"{dest_drive}:{dest_dir}{origin_dir}"]
         process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
@@ -281,42 +302,33 @@ class MirrorLeechListener:
         else:
             await update_all_messages()
 
-    async def onRcloneUploadComplete(self, name, size, conf, drive, base, isGdrive):
+    async def onRcloneUploadComplete(self, name, size, conf, remote, base, type, isGdrive):
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
-        button= ButtonMaker()
-        cmd = ["rclone", "link", f'--config={conf}', f"{drive}:{base}/{name}"]
+        msg += f'\n<b>cc: </b>{self.tag}\n\n'
+        buttons= ButtonMaker()
+        cmd = ["rclone", "link", f'--config={conf}', f"{remote}:{base}/{name}"]
         process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         out, _ = await process.communicate()
         url = out.decode().strip()
         return_code = await process.wait()
         if return_code == 0:
-            button.url_buildbutton("Cloud Link 🔗", url)
-            await sendMarkup(msg, self.message, reply_markup= button.build_menu(1))
+            buttons.url_buildbutton("Cloud Link 🔗", url)
+        if isGdrive:
+            if GD_INDEX_URL:= config_dict['GD_INDEX_URL']:
+                url_path = rutils.quote(f'{name}')
+                share_url = f'{GD_INDEX_URL}/{url_path}'
+                if type == "Folder":
+                    share_url += '/'
+                    buttons.url_buildbutton("⚡ Index Link", share_url)
+                else:
+                    buttons.url_buildbutton("⚡ Index Link", share_url)
+                    if config_dict['VIEW_LINK']:
+                        share_urls = f'{GD_INDEX_URL}/{url_path}?a=view'
+                        buttons.url_buildbutton("🌐 View Link", share_urls)
+        if return_code == 0 or config_dict['GD_INDEX_URL']:
+            await sendMarkup(msg, self.message, reply_markup= buttons.build_menu(2))
         else:
-            if self.__extract:
-                if isGdrive:
-                    gid = await get_gid(drive, base, f"{name}/", conf)
-                    if gid is not None:
-                        link = f"https://drive.google.com/folderview?id={gid[0]}"
-                        button.url_buildbutton('Cloud Link 🔗', link)
-                        await sendMarkup(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message, button.build_menu(1))
-                    else:
-                        msg += "\n\nFailed to generate link"
-                        await sendMessage(f"{msg}\n<b>cc: </b>{self.__tag}", self.message)  
-                else:
-                    await sendMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message) 
-            else:
-                if isGdrive:
-                    gid = await get_gid(drive, base, name, conf, False)
-                    if gid is not None:
-                        link = f"https://drive.google.com/file/d/{gid[0]}/view"
-                        button.url_buildbutton('Cloud Link 🔗', link)
-                        await sendMarkup(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message, button.build_menu(1))
-                    else:
-                        msg += "\n\nFailed to generate link"
-                        await sendMessage(f"{msg}\n<b>cc: </b>{self.__tag}", self.message)  
-                else:
-                    await sendMessage(f"{msg}\n\n<b>cc: </b>{self.__tag}", self.message)
+            await sendMessage(msg, self.message)
         if self.__isMultiZip:
             clean_download(self.multizip_dir)
         else:
@@ -337,7 +349,7 @@ class MirrorLeechListener:
         msg += f'\n<b>Total Files: </b>{folders}'
         if typ != 0:
             msg += f'\n<b>Corrupted Files: </b>{typ}'
-        msg += f'\n<b>cc: </b>{self.__tag}\n\n'
+        msg += f'\n<b>cc: </b>{self.tag}\n\n'
         if not files:
             await sendMessage(msg, self.message)
         else:
@@ -377,7 +389,7 @@ class MirrorLeechListener:
             except Exception as e:
                 LOGGER.error(str(e))
             count = len(status_dict)
-        msg = f"{self.__tag} your download has been stopped due to: {error}"
+        msg = f"{self.tag} your download has been stopped due to: {error}"
         await sendMessage(msg, self.message)
         if count == 0:
             await self.clean()
@@ -393,7 +405,7 @@ class MirrorLeechListener:
             except Exception as e:
                 LOGGER.error(str(e))
             count = len(status_dict)
-        await sendMessage(f"{self.__tag} {e_str}", self.message)
+        await sendMessage(f"{self.tag} {e_str}", self.message)
         if count == 0:
             await self.clean()
         else:

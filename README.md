@@ -10,7 +10,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Telegram Navigation Button Menus to interact with cloud
 - File Manager: size, mkdir, delete, dedupe and rename
 - Service Accounts support with automatic switching
-- Serve cloud as http or webdav index
+- Create cloud index as http or webdav 
 - Sync clouds (not folders)
 - Search files on cloud
 - Clean cloud trash
@@ -30,6 +30,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 ### Mirror
 - From Telegram to cloud
 - Link/Torrent/Magnets/Mega to cloud 
+- Mirror to local (no cloud)
 - Renaming for Telegram files
 - Files in batch from Telegram restricted channels
 - Queue system
@@ -65,7 +66,8 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 
 ### Others
 - Load and overwrite token.pickle, rclone.conf, config.env and accounts.zip from bot
-- Edit most of the config variables from bot
+- Edit config variables from bot
+- Index support (rclone index and cloudfare workers index with google drive)
 
 ### From Base Repository
 - Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
@@ -172,6 +174,10 @@ pip3 install -r requirements-cli.txt
         - `AUTO_MIRROR`: For auto mirroring files sent to the bot. **NOTE**: If you add bot to group(not channel), you can also use this feature. Default is `False`. `Bool`
         - `DATABASE_URL`: Your Mongo Database URL (Connection string). Data will be saved in Database (auth and sudo users, owner and user setting, etc). **NOTE**: You can always edit all settings saved in database from mongodb site -> (browse collections). `Str`
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
+        - `BASE_URL`: Ip (public/domain) where bot is running to use file downloads webserver of local mirrors. Format of URL should be http://myip, where myip is the IP/Domain(public).`Str`
+        - `SERVER_PORT`: Port for downloads webserver. Default to `81`. `Int
+        - `GD_INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index. `Str`
+        - `VIEW_LINK`: View Link button to open file Google Drive Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`. Compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. Default is `False`. `Bool`
         - `STATUS_LIMIT`: No. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Int`
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
         - `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message. Set to `-1` to disable auto message deletion. `Int`
@@ -190,10 +196,11 @@ pip3 install -r requirements-cli.txt
      - `USE_SERVICE_ACCOUNTS`: set to `True` for enabling SA for rclone copy. Default to False. `Bool`.
      - `SERVICE_ACCOUNTS_REMOTE`= To set teamdrive remote from your rclone config with the service accounts configured `Str`. **Note**: teamdrive remote must have team_drive field with id. `Str`
      - `SERVER_SIDE`= set to `True` for enabling rclone server side copy. Default to False. **NOTE**: if you get error while copy set this to `False`. `Bool`
-     - `INDEX_IP`: Ip (public) where bot is running. `Str`
-     - `INDEX_PORT`: Port to use. Default to `8080`. `Str`
-     - `INDEX_USER`: Custom user. Default to `admin`. `Str`
-     - `INDEX_PASS`: Custom password. Default to `admin`. `Str`
+     If you have chosen port other than 80 so write it in this format http://myip:port (http and not https).`Str`
+     - `RC_INDEX_URL`: Ip (public/domain) where bot is running. Format of URL should be http://myip, where myip is the IP/Domain(public). `Str`
+     - `RC_INDEX_PORT`: Port to use. Default to `8080`. `Str`
+     - `RC_INDEX_USER`: Custom user. Default to `admin`. `Str`
+     - `RC_INDEX_PASS`: Custom password. Default to `admin`. `Str`
 
    - CLONE
      - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Int`
@@ -221,8 +228,8 @@ pip3 install -r requirements-cli.txt
      - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` are required, otherwise rss commands will not work. You must use bot in group. You can also add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.    
 
    - QBITTORRENT
-     - `BASE_URL`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https).`Str`
-     - `SERVER_PORT`: Port. .`Int`
+     - `QB_BASE_URL`: Valid BASE URL where the bot is deployed to use qbittorrent web selection and local mirror. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https).`Str`
+     - `QB_SERVER_PORT`: Port. Default to `80`. `Int`
      - `WEB_PINCODE`: If empty or False means no pincode required while torrent file web selection. Bool
      Qbittorrent NOTE: If your facing ram exceeded issue then set limit for MaxConnecs, decrease AsyncIOThreadsCount in qbittorrent config and set limit of DiskWriteCacheSize to 32.`Int`
 

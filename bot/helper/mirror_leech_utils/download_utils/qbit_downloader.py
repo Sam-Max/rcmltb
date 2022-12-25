@@ -80,7 +80,7 @@ async def add_qb_torrent(link, path, listener):
                 periodic = setInterval(5, __qb_listener)
                 QbInterval.append(periodic)
         LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {ext_hash}")
-        if config_dict['BASE_URL'] and listener.select:
+        if config_dict['QB_BASE_URL'] and listener.select:
             if link.startswith('magnet:'):
                 metamsg = "Downloading Metadata, wait then you can select files. Use torrent file to avoid this wait."
                 meta = await sendMessage(metamsg, listener.message)

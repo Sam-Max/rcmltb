@@ -1,5 +1,5 @@
 from math import ceil
-from os import mkdir, path as ospath, remove as osremove, makedirs
+from os import mkdir, path as ospath, remove as osremove
 from shutil import rmtree
 from bot.helper.ext_utils.zip_utils import get_path_size
 from magic import Magic
@@ -8,7 +8,6 @@ from json import loads as jsnloads
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from subprocess import Popen, check_output
 from subprocess import check_output
-from json import loads
 
 ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".tgz", ".lzma2",
                 ".zip", ".7z", ".z", ".rar", ".iso", ".wim", ".cab", ".apm", ".arj", ".chm",
@@ -57,7 +56,6 @@ def start_cleanup():
         rmtree(DOWNLOAD_DIR)
     except:
         pass
-    makedirs(DOWNLOAD_DIR)
 
 def get_readable_size(size):
     """Get size in readable format"""
@@ -163,7 +161,7 @@ def get_media_streams(path):
         LOGGER.error(f'{e}. Mostly file not found!')
         return is_video, is_audio
 
-    fields = loads(result).get('streams')
+    fields = eval(result).get('streams')
     if fields is None:
         LOGGER.error(f"get_media_streams: {result}")
         return is_video, is_audio
@@ -186,7 +184,7 @@ def get_media_info(path):
     try:
         result = check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
                                             "json", "-show_format", path]).decode('utf-8')
-        fields = loads(result)['format']
+        fields = eval(result)['format']
     except Exception as e:
         LOGGER.error(f"get_media_info: {e}")
         return 0, None, None
@@ -217,7 +215,6 @@ def get_video_resolution(path):
         LOGGER.error(f"get_video_resolution: {e}")
         return 480, 320
 
-
 def bt_selection_buttons(id_: str):
     if len(id_) > 20:
         gid = id_[:12]
@@ -232,12 +229,12 @@ def bt_selection_buttons(id_: str):
             break
 
     buttons = ButtonMaker()
-    BASE_URL = config_dict['BASE_URL']
+    QB_BASE_URL = config_dict['QB_BASE_URL']
     if config_dict['WEB_PINCODE']:
-        buttons.url_buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}")
+        buttons.url_buildbutton("Select Files", f"{QB_BASE_URL}/app/files/{id_}")
         buttons.cb_buildbutton("Pincode", f"btsel pin {gid} {pincode}")
     else:
-        buttons.url_buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}")
+        buttons.url_buildbutton("Select Files", f"{QB_BASE_URL}/app/files/{id_}?pin_code={pincode}")
     buttons.cb_buildbutton("Done Selecting", f"btsel done {gid} {id_}")
     return buttons.build_menu(2)
 
