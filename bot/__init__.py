@@ -85,7 +85,8 @@ if DATABASE_URL:
         for key, value in pf_dict.items():
             if value:
                 file_ = key.replace('__', '.')
-                if not ospath.exists(file_):
+                filename = ospath.basename(file_)
+                if filename == "rclone.conf" and not ospath.exists(file_):
                     osmakedirs(ospath.dirname(file_))
                 with open(file_, 'wb+') as f:
                     f.write(value)
