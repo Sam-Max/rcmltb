@@ -71,6 +71,7 @@ async def handle_torrent_search(client, message):
     user_id = message.from_user.id
     buttons = ButtonMaker()
     args = message.text.split(maxsplit=1)
+    SEARCH_PLUGINS = config_dict['SEARCH_PLUGINS']
     if SITES is None and not SEARCH_PLUGINS:
         await sendMessage("No API link or search PLUGINS added for this function", message)
     elif len(args) == 1 and SITES is None:
