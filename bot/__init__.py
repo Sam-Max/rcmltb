@@ -4,7 +4,7 @@ __author__ = "Sam-Max"
 from asyncio import Lock
 from asyncio import Queue
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
-from os import environ, remove as osremove, path as ospath
+from os import environ, remove as osremove, path as ospath, makedirs as osmakedirs
 from threading import Thread
 from time import sleep, time
 from sys import exit
@@ -85,6 +85,8 @@ if DATABASE_URL:
         for key, value in pf_dict.items():
             if value:
                 file_ = key.replace('__', '.')
+                if not ospath.exists(file_):
+                    osmakedirs(ospath.dirname(file_))
                 with open(file_, 'wb+') as f:
                     f.write(value)
     if a2c_options := db.settings.aria2c.find_one({'_id': bot_id}):
