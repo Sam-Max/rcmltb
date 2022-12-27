@@ -40,12 +40,15 @@ async def serve_cb(client, callbackQuery):
   if data[1] == "drive":
     SREMOTE.append(data[2]) 
     await protocol_selection(message)
+  elif data[1] == "all":
+    cmd = ["rclone", "rcd", "--rc-serve", f"--rc-addr=:{RC_INDEX_PORT}", f"--rc-user={RC_INDEX_USER}", f"--rc-pass={RC_INDEX_PASS}", f'--config={path}'] 
+    await rclone_serve(cmd, message)
   elif data[1] == "http":
     cmd = ["rclone", "serve", "http", f"--addr=:{RC_INDEX_PORT}", f"--user={RC_INDEX_USER}", f"--pass={RC_INDEX_PASS}", f'--config={path}', f"{SREMOTE[0]}:"] 
-    await rclone_serve(cmd, data[1], message)
+    await rclone_serve(cmd, message)
   elif data[1] == "webdav":
     cmd = ["rclone", "serve", "webdav", f"--addr=:{RC_INDEX_PORT}", f"--user={RC_INDEX_USER}", f"--pass={RC_INDEX_PASS}", f'--config={path}', f"{SREMOTE[0]}:"] 
-    await rclone_serve(cmd, data[1], message)
+    await rclone_serve(cmd, message)
   elif data[1] == "stop":
     LOGGER.info(f"Killing process...")
     process_dict['state'] = 'inactive'
@@ -56,12 +59,12 @@ async def serve_cb(client, callbackQuery):
     await query.answer()
     await message.delete()
   
-async def rclone_serve(cmd, protocol, message):
+async def rclone_serve(cmd, message):
   process = await subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
   process_dict['pid']= process.pid
   button= ButtonMaker()
   url= f"{RC_INDEX_URL}:{RC_INDEX_PORT}"
-  msg= f'Serving {protocol} on <a href={url}>{url}</a>'
+  msg= f'Serving on <a href={url}>{url}</a>'
   msg+= f'\n<b>User</b>: <code>{RC_INDEX_USER}</code>'
   msg+= f'\n<b>Pass</b>: <code>{RC_INDEX_PASS}</code>'
   button.cb_buildbutton("Stop", "servemenu^stop")
@@ -85,6 +88,7 @@ async def list_remotes(message):
     conf.read(path)
     for remote in conf.sections():
         button.cb_buildbutton(f"📁{remote}", f"servemenu^drive^{remote}")
+    button.cb_buildbutton("🌐 All", f"servemenu^all")
     button.cb_buildbutton("✘ Close Menu", f"servemenu^close")
     await sendMarkup("Select cloud to serve as a remote", message, reply_markup= button.build_menu(2))
 

@@ -9,6 +9,7 @@ services:
       - /usr/src/app/downloads:/usr/src/app/downloads:rw
     ports:
       - "80:80" # qbittorrent selection webserver
-      - "81:81" # downloads folder webserver
-      - "8080:8080" # rclone serve index
+      - "81:81" # local mirror webserver
+      - "8080:8080" # rclone index
+      
       

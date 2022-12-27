@@ -243,6 +243,9 @@ async def load_config():
      VIEW_LINK = environ.get('VIEW_LINK', '')
      VIEW_LINK = VIEW_LINK.lower() == 'true'
 
+     LOCAL_MIRROR = environ.get('LOCAL_MIRROR', '')
+     LOCAL_MIRROR = LOCAL_MIRROR.lower() == 'true'
+
      RC_INDEX_USER = environ.get('RC_INDEX_USER', '')
      RC_INDEX_USER = 'admin' if len(RC_INDEX_USER) == 0 else RC_INDEX_USER
 
@@ -272,6 +275,7 @@ async def load_config():
                          'GDRIVE_FOLDER_ID': GDRIVE_FOLDER_ID,
                          'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
                          'GD_INDEX_URL': GD_INDEX_URL,
+                         'LOCAL_MIRROR': LOCAL_MIRROR,
                          'LEECH_LOG': LEECH_LOG,
                          'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
                          'MEGA_API_KEY': MEGA_API_KEY,

@@ -85,8 +85,8 @@ if DATABASE_URL:
         for key, value in pf_dict.items():
             if value:
                 file_ = key.replace('__', '.')
-                filename = ospath.basename(file_)
-                if filename == "rclone.conf" and not ospath.exists(file_):
+                file_name = ospath.basename(file_)
+                if file_name == "rclone.conf" and not ospath.exists(file_):
                     osmakedirs(ospath.dirname(file_))
                 with open(file_, 'wb+') as f:
                     f.write(value)
@@ -454,3 +454,4 @@ else:
         if v in ["", "*"]:
             del qb_opt[k]
     qb_client.app_set_preferences(qb_opt)
+
