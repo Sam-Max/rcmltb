@@ -79,6 +79,11 @@ if DATABASE_URL:
     if config_dict := db.settings.config.find_one({'_id': bot_id}):  #return config dict (all env vars)
         del config_dict['_id']
         for key, value in config_dict.items():
+            if key == 'LEECH_LOG':
+                if len(value) != 0:
+                    aid = value.split()
+                    LEECH_LOG = [int(id_.strip()) for id_ in aid]
+                    config_dict.update({'LEECH_LOG': LEECH_LOG})
             environ[key] = str(value)
     if pf_dict := db.settings.files.find_one({'_id': bot_id}):
         del pf_dict['_id']

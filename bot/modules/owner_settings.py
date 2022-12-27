@@ -317,6 +317,77 @@ async def ownerset_callback(client, callback_query):
         await query.answer()
         await message.delete()
 
+async def start_env_listener(client, query, user_id, key):
+    message= query.message
+    question= await sendMessage("Send valid value for selected variable, /ignore to cancel. Timeout: 60 sec", message)
+    try:
+        response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout= 60)
+    except TimeoutError:
+        await client.send_message(message.chat.id, text="Too late 30s gone, try again!")
+        return
+    else:
+        if response:
+            try:
+                if "/ignore" in response.text:
+                    await client.listen.Cancel(filters.user(user_id))
+                    await query.answer("Cancelled question!")
+                else:
+                    value= response.text.strip() 
+                    if value.lower() == 'true':
+                        value = True
+                    elif value.lower() == 'false':
+                        value = False
+                    elif value.isdigit():
+                        value = int(value)
+                    elif key == 'STATUS_LIMIT':
+                        value = int(value)
+                        async with status_reply_dict_lock:
+                            try:
+                                if Interval:
+                                    Interval[0].cancel()
+                                    Interval.clear()
+                            except:
+                                pass
+                            finally:
+                                Interval.append(setInterval(value, update_all_messages))
+                    elif key == 'TORRENT_TIMEOUT':
+                        value = int(value)
+                        downloads = aria2.get_downloads()
+                        for download in downloads:
+                            if not download.is_complete:
+                                try:
+                                    aria2.client.change_option(download.gid, {'bt-stop-timeout': f'{value}'})
+                                except Exception as e:
+                                    LOGGER.error(e)
+                        aria2_options['bt-stop-timeout'] = f'{value}'
+                    elif key == 'DEFAULT_OWNER_REMOTE':
+                        update_rclone_data("MIRRORSET_REMOTE", value, user_id)
+                    elif key == 'DOWNLOAD_DIR':
+                        if not value.endswith('/'):
+                            value = f'{value}/'
+                    elif key == 'LEECH_SPLIT_SIZE':
+                        value = min(int(value), TG_MAX_FILE_SIZE)
+                    elif key == 'SERVER_PORT':
+                        value = int(value)
+                        srun(["pkill", "-9", "-f", "gunicorn"])
+                        Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{value}", shell=True)
+                    elif key == 'EXTENSION_FILTER':
+                        fx = value.split()
+                        GLOBAL_EXTENSION_FILTER.clear()
+                        GLOBAL_EXTENSION_FILTER.append('.aria2')
+                        for x in fx:
+                            GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
+                    config_dict[key] = value
+                    await edit_menus(message, 'env')       
+                    if DATABASE_URL:
+                        DbManager().update_config({key: value})
+                    if key in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
+                        initiate_search_tools()
+            except KeyError:
+                return await query.answer("Value doesn't exist") 
+    finally:
+        await question.delete()
+
 async def start_aria_listener(client, query, user_id, key):
     message= query.message
     if key == 'newkey':
@@ -397,77 +468,6 @@ async def start_qbit_listener(client, query, user_id, key):
                 return await query.answer("Value doesn't exist")
     finally:
         await question.delete() 
-
-async def start_env_listener(client, query, user_id, key):
-    message= query.message
-    question= await sendMessage("Send valid value for selected variable, /ignore to cancel. Timeout: 60 sec", message)
-    try:
-        response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout= 60)
-    except TimeoutError:
-        await client.send_message(message.chat.id, text="Too late 30s gone, try again!")
-        return
-    else:
-        if response:
-            try:
-                if "/ignore" in response.text:
-                    await client.listen.Cancel(filters.user(user_id))
-                    await query.answer("Cancelled question!")
-                else:
-                    value= response.text.strip() 
-                    if value.lower() == 'true':
-                        value = True
-                    elif value.lower() == 'false':
-                        value = False
-                    elif value.isdigit():
-                        value = int(value)
-                    elif key == 'STATUS_LIMIT':
-                        value = int(value)
-                        async with status_reply_dict_lock:
-                            try:
-                                if Interval:
-                                    Interval[0].cancel()
-                                    Interval.clear()
-                            except:
-                                pass
-                            finally:
-                                Interval.append(setInterval(value, update_all_messages))
-                    elif key == 'TORRENT_TIMEOUT':
-                        value = int(value)
-                        downloads = aria2.get_downloads()
-                        for download in downloads:
-                            if not download.is_complete:
-                                try:
-                                    aria2.client.change_option(download.gid, {'bt-stop-timeout': f'{value}'})
-                                except Exception as e:
-                                    LOGGER.error(e)
-                        aria2_options['bt-stop-timeout'] = f'{value}'
-                    elif key == 'DEFAULT_OWNER_REMOTE':
-                        update_rclone_data("MIRRORSET_REMOTE", value, user_id)
-                    elif key == 'DOWNLOAD_DIR':
-                        if not value.endswith('/'):
-                            value = f'{value}/'
-                    elif key == 'LEECH_SPLIT_SIZE':
-                        value = min(int(value), TG_MAX_FILE_SIZE)
-                    elif key == 'SERVER_PORT':
-                        value = int(value)
-                        srun(["pkill", "-9", "-f", "gunicorn"])
-                        Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{value}", shell=True)
-                    elif key == 'EXTENSION_FILTER':
-                        fx = value.split()
-                        GLOBAL_EXTENSION_FILTER.clear()
-                        GLOBAL_EXTENSION_FILTER.append('.aria2')
-                        for x in fx:
-                            GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
-                    config_dict[key] = value
-                    await edit_menus(message, 'env')       
-                    if DATABASE_URL:
-                        DbManager().update_config({key: value})
-                    if key in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
-                        initiate_search_tools()
-            except KeyError:
-                return await query.answer("Value doesn't exist") 
-    finally:
-        await question.delete()
         
 owner_settings_handler = MessageHandler(handle_ownerset, filters= command(BotCommands.OwnerSetCommand) & (CustomFilters.owner_filter))
 owner_settings_cb = CallbackQueryHandler(ownerset_callback, filters= regex(r'ownersetmenu'))
