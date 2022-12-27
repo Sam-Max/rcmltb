@@ -1,7 +1,7 @@
 from asyncio import sleep
 from os import walk, rename, path as ospath, remove as osremove
 from time import time
-from bot import GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, bot, app, botloop, user_data
+from bot import GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, bot, app, botloop, user_data, leech_log
 from pyrogram.errors import FloodWait
 from PIL import Image
 from bot.helper.ext_utils.human_format import get_readable_file_size
@@ -82,8 +82,8 @@ class TelegramUploader():
                     else:
                         width = 480
                         height = 320
-                    if LEECH_LOG := config_dict['LEECH_LOG']:
-                        for chat in LEECH_LOG:
+                    if config_dict['LEECH_LOG']:
+                        for chat in leech_log:
                             self.__sent_msg = await self.client.send_video(
                                 chat_id= int(chat),
                                 video=up_path,
@@ -117,8 +117,8 @@ class TelegramUploader():
                             progress= self.__upload_progress)
                 elif is_audio:
                     duration, artist, title = get_media_info(up_path)
-                    if LEECH_LOG := config_dict['LEECH_LOG']:
-                        for chat in LEECH_LOG:
+                    if config_dict['LEECH_LOG']:
+                        for chat in leech_log:
                             self.__sent_msg = await self.client.send_audio(
                                 chat_id= int(chat),
                                 audio=up_path,
@@ -147,8 +147,8 @@ class TelegramUploader():
                             disable_notification=True,
                             progress=self.__upload_progress)    
                 elif file.endswith(IMAGE_SUFFIXES):
-                    if LEECH_LOG := config_dict['LEECH_LOG']:
-                        for chat in LEECH_LOG:
+                    if config_dict['LEECH_LOG']:
+                        for chat in leech_log:
                             self.__sent_msg = await self.client.send_photo(
                                 chat_id= int(chat),
                                 photo=up_path,
@@ -179,8 +179,8 @@ class TelegramUploader():
                         if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
                             osremove(thumb_path)
                         return
-                if LEECH_LOG := config_dict['LEECH_LOG']:
-                    for chat in LEECH_LOG:
+                if config_dict['LEECH_LOG']:
+                    for chat in leech_log:
                         self.__sent_msg = await self.client.send_document(
                             chat_id= int(chat),
                             document=up_path,

@@ -36,6 +36,7 @@ Interval = []
 QbInterval = []
 GLOBAL_EXTENSION_FILTER = ['.aria2']
 user_data = {}
+leech_log = []
 aria2_options = {}
 qbit_options = {}
 
@@ -294,8 +295,10 @@ if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
 
 LEECH_LOG = environ.get('LEECH_LOG', '')
 if len(LEECH_LOG) != 0:
+    leech_log.clear()
     aid = LEECH_LOG.split()
-    LEECH_LOG = [int(id_.strip()) for id_ in aid]
+    for id_ in aid:
+        leech_log.append(int(id_.strip()))
 
 BOT_PM = environ.get('BOT_PM', '')
 BOT_PM = BOT_PM.lower() == 'true'

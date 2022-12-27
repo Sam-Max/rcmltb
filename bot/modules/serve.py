@@ -90,7 +90,7 @@ async def list_remotes(message):
         button.cb_buildbutton(f"📁{remote}", f"servemenu^drive^{remote}")
     button.cb_buildbutton("🌐 All", f"servemenu^all")
     button.cb_buildbutton("✘ Close Menu", f"servemenu^close")
-    await sendMarkup("Select cloud to serve as a remote", message, reply_markup= button.build_menu(2))
+    await sendMarkup("Select cloud to serve as index", message, reply_markup= button.build_menu(2))
 
 serve_handler = MessageHandler(serve, filters= filters.command(BotCommands.ServeCommand) & (CustomFilters.owner_filter | CustomFilters.chat_filter))
 serve_cb_handler = CallbackQueryHandler(serve_cb, filters= filters.regex("servemenu"))

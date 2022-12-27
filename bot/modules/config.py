@@ -6,7 +6,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from os import environ, path as ospath, remove
 from dotenv import load_dotenv
 from subprocess import Popen, run as srun
-from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, OWNER_ID, QB_SERVER_PORT, Interval, aria2, aria2_options, bot, config_dict, status_dict, status_reply_dict_lock, user_data
+from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, OWNER_ID, Interval, aria2, aria2_options, bot, config_dict, status_dict, status_reply_dict_lock, user_data, leech_log
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.ext_utils.db_handler import DbManager
@@ -65,8 +65,10 @@ async def load_config():
 
      LEECH_LOG = environ.get('LEECH_LOG', '')
      if len(LEECH_LOG) != 0:
+          leech_log.clear()
           aid = LEECH_LOG.split()
-          LEECH_LOG = [int(id_.strip()) for id_ in aid]
+          for id_ in aid:
+               leech_log.append(int(id_.strip()))
 
      BOT_PM = environ.get('BOT_PM', '')
      BOT_PM = BOT_PM.lower() == 'true'
