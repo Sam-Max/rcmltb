@@ -250,7 +250,7 @@ pip3 install -r requirements-cli.txt
 
 - Run the image:
 
-        sudo docker run -p 80:80 rcmltb
+        sudo docker run -p 80:80 -p 81:81 -p 8080:8080 rcmltb
 
 - To stop the image:
 
