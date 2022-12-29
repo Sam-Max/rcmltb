@@ -1,7 +1,7 @@
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 import configparser
-from os import listdir
+from os import listdir, path as ospath
 from random import SystemRandom, randrange
 from string import ascii_letters, digits
 from bot import LOGGER, status_dict, status_dict_lock, config_dict
@@ -30,23 +30,24 @@ class RcloneCopy:
     async def copy(self, origin_drive, origin_dir, dest_drive, dest_dir):
         conf_path = get_rclone_config(self._user_id)
         if config_dict['USE_SERVICE_ACCOUNTS']:
-            globals()['SERVICE_ACCOUNTS_NUMBER'] = len(listdir("accounts"))
-            if self.__sa_count == 0:
-                self.__service_account_index = randrange(SERVICE_ACCOUNTS_NUMBER)
-            config = configparser.ConfigParser()
-            config.read(conf_path)
-            if SERVICE_ACCOUNTS_REMOTE:= config_dict['SERVICE_ACCOUNTS_REMOTE']:
-                if SERVICE_ACCOUNTS_REMOTE in config:
-                    if len(config[SERVICE_ACCOUNTS_REMOTE]['team_drive']) > 0:
-                        self.__create_teamdrive_sa_config(config, SERVICE_ACCOUNTS_REMOTE)
+            if ospath.exists("accounts"):
+                globals()['SERVICE_ACCOUNTS_NUMBER'] = len(listdir("accounts"))
+                if self.__sa_count == 0:
+                    self.__service_account_index = randrange(SERVICE_ACCOUNTS_NUMBER)
+                config = configparser.ConfigParser()
+                config.read(conf_path)
+                if SERVICE_ACCOUNTS_REMOTE:= config_dict['SERVICE_ACCOUNTS_REMOTE']:
+                    if SERVICE_ACCOUNTS_REMOTE in config:
+                        if len(config[SERVICE_ACCOUNTS_REMOTE]['team_drive']) > 0:
+                            self.__create_teamdrive_sa_config(config, SERVICE_ACCOUNTS_REMOTE)
+                        else:
+                            return await sendMessage(f"No id found on team_drive field", self.__listener.message)    
                     else:
-                        return await sendMessage(f"No id found on team_drive field", self.__listener.message)    
+                        return await sendMessage(f"Not remote found with name: {SERVICE_ACCOUNTS_REMOTE}", self.__listener.message)
+                    with open(conf_path, 'w') as configfile:
+                        config.write(configfile)
                 else:
-                    return await sendMessage(f"Not remote found with name: {SERVICE_ACCOUNTS_REMOTE}", self.__listener.message)
-                with open(conf_path, 'w') as configfile:
-                    config.write(configfile)
-            else:
-                return await sendMessage("You need to set SERVICE_ACCOUNTS_REMOTE variable", self.__listener.message)
+                    return await sendMessage("You need to set SERVICE_ACCOUNTS_REMOTE variable", self.__listener.message)
         if config_dict['SERVER_SIDE']:
             cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
             f'{dest_drive}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '--drive-server-side-across-configs', '-P']

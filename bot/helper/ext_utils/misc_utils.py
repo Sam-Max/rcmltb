@@ -46,16 +46,18 @@ def clean_target(path: str):
 def clean_all():
     aria2.remove_all(True)
     get_client().torrents_delete(torrent_hashes="all")
-    try:
-        rmtree(DOWNLOAD_DIR)
-    except:
-        pass
+    if not config_dict['LOCAL_MIRROR']:
+        try:
+            rmtree(DOWNLOAD_DIR)
+        except:
+            pass
 
 def start_cleanup():
-    try:
-        rmtree(DOWNLOAD_DIR)
-    except:
-        pass
+    if not config_dict['LOCAL_MIRROR']:
+        try:
+            rmtree(DOWNLOAD_DIR)
+        except:
+            pass
 
 def get_readable_size(size):
     """Get size in readable format"""
