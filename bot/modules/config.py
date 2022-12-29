@@ -270,6 +270,7 @@ async def load_config():
                          'BOT_PM': BOT_PM,
                          'BOT_TOKEN': BOT_TOKEN,
                          'CMD_INDEX': CMD_INDEX,
+                         'DOWNLOAD_DIR':DOWNLOAD_DIR,
                          'DATABASE_URL': DATABASE_URL,
                          'DEFAULT_OWNER_REMOTE': DEFAULT_OWNER_REMOTE,
                          'EQUAL_SPLITS': EQUAL_SPLITS,

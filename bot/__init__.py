@@ -271,9 +271,8 @@ if len(GDRIVE_FOLDER_ID) == 0:
 DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
 if len(DOWNLOAD_DIR) == 0:
     DOWNLOAD_DIR = '/usr/src/app/downloads/'
-else:
-    if not DOWNLOAD_DIR.endswith("/"):
-        DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
+elif not DOWNLOAD_DIR.endswith("/"):
+    DOWNLOAD_DIR = f'{DOWNLOAD_DIR}/'
 
 EXTENSION_FILTER = environ.get('EXTENSION_FILTER', '')
 if len(EXTENSION_FILTER) > 0:
@@ -346,6 +345,7 @@ if not config_dict:
                    'DATABASE_URL': DATABASE_URL,
                    'DEFAULT_OWNER_REMOTE': DEFAULT_OWNER_REMOTE,
                    'DEFAULT_GLOBAL_REMOTE':DEFAULT_GLOBAL_REMOTE,
+                   'DOWNLOAD_DIR':DOWNLOAD_DIR,
                    'EQUAL_SPLITS': EQUAL_SPLITS,
                    'EXTENSION_FILTER': EXTENSION_FILTER,
                    'GDRIVE_FOLDER_ID': GDRIVE_FOLDER_ID,

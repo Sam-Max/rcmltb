@@ -1,5 +1,5 @@
 from math import ceil
-from os import mkdir, path as ospath, remove as osremove
+from os import makedirs, mkdir, path as ospath, remove as osremove
 from shutil import rmtree
 from bot.helper.ext_utils.zip_utils import get_path_size
 from magic import Magic
@@ -56,6 +56,10 @@ def start_cleanup():
     if not config_dict['LOCAL_MIRROR']:
         try:
             rmtree(DOWNLOAD_DIR)
+        except:
+            pass
+        try:
+            makedirs(DOWNLOAD_DIR)  
         except:
             pass
 
