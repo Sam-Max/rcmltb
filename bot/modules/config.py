@@ -225,6 +225,9 @@ async def load_config():
      AUTO_MIRROR= environ.get('AUTO_MIRROR', '')  
      AUTO_MIRROR= AUTO_MIRROR.lower() == 'true'
 
+     MULTI_REMOTE_UP= environ.get('MULTI_REMOTE_UP', '')  
+     MULTI_REMOTE_UP= MULTI_REMOTE_UP.lower() == 'true'
+
      DEFAULT_OWNER_REMOTE = environ.get('DEFAULT_OWNER_REMOTE', '')
 
      REMOTE_SELECTION = environ.get('REMOTE_SELECTION', '')
@@ -284,6 +287,7 @@ async def load_config():
                          'MEGA_API_KEY': MEGA_API_KEY,
                          'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                          'MEGA_PASSWORD': MEGA_PASSWORD,
+                         'MULTI_REMOTE_UP': MULTI_REMOTE_UP,
                          'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
                          'OWNER_ID': OWNER_ID,
                          'REMOTE_SELECTION': REMOTE_SELECTION,

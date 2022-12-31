@@ -322,9 +322,9 @@ class MirrorLeechListener:
                     buttons.url_buildbutton("⚡ Index Link", share_url)
                 else:
                     buttons.url_buildbutton("⚡ Index Link", share_url)
-                    if config_dict['VIEW_LINK']:
-                        share_urls = f'{GD_INDEX_URL}/{url_path}?a=view'
-                        buttons.url_buildbutton("🌐 View Link", share_urls)
+                if config_dict['VIEW_LINK']:
+                    share_urls = f'{GD_INDEX_URL}/{url_path}?a=view'
+                    buttons.url_buildbutton("🌐 View Link", share_urls)
         if return_code == 0 or config_dict['GD_INDEX_URL']:
             await sendMarkup(msg, self.message, reply_markup= buttons.build_menu(2))
         else:
@@ -332,7 +332,8 @@ class MirrorLeechListener:
         if self.__isMultiZip:
             clean_download(self.multizip_dir)
         else:
-            clean_download(self.dir)
+            if not config_dict['MULTI_REMOTE_UP']:
+                clean_download(self.dir)
         async with status_dict_lock:
             try:
                 del status_dict[self.uid]

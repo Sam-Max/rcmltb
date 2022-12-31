@@ -1,6 +1,6 @@
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from configparser import ConfigParser
-from bot import LOGGER, OWNER_ID, bot, config_dict
+from bot import LOGGER, OWNER_ID, bot, config_dict, remotes_data
 from json import loads as jsonloads
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
@@ -39,11 +39,20 @@ async def list_remotes(message, rclone_remote= "", base_dir= "", edit=False):
     conf.read(path)
     for remote in conf.sections():
         prev = ""
-        if remote == get_rclone_data("MIRRORSET_REMOTE", user_id):
-            prev = "✅"
+        if config_dict['MULTI_REMOTE_UP'] and user_id== OWNER_ID:
+            if remote in remotes_data: 
+                prev = "✅"
+        else:
+            if remote == get_rclone_data("MIRRORSET_REMOTE", user_id): 
+                prev = "✅"
         buttons.cb_buildbutton(f"{prev} 📁 {remote}", f"mirrorsetmenu^remote^{remote}^{user_id}")
+    if config_dict['MULTI_REMOTE_UP']:
+        buttons.cb_buildbutton("🔄 Reset", f"mirrorsetmenu^reset^{user_id}", 'footer')
     buttons.cb_buildbutton("✘ Close Menu", f"mirrorsetmenu^close^{user_id}", 'footer')
-    msg= f"Select cloud where you want to upload file\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>"
+    if config_dict['MULTI_REMOTE_UP']:
+        msg= f"Select all clouds where you want to upload file"
+    else:
+        msg= f"Select cloud where you want to upload file\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>"
     if edit:
         await editMessage(msg, message, reply_markup= buttons.build_menu(2))
     else:
@@ -117,12 +126,16 @@ async def mirrorset_callback(client, callback_query):
     if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", show_alert=True)
     elif cmd[1] == "remote":
-        update_rclone_data("MIRRORSET_BASE_DIR", "/", user_id) #Reset Dir
-        update_rclone_data("MIRRORSET_REMOTE", cmd[2], user_id)
-        if user_id == OWNER_ID:
-            config_dict.update({'DEFAULT_OWNER_REMOTE': cmd[2]}) 
-        await list_folder(message, remote_name= cmd[2], remote_base="/", edit=True)
-        await query.answer()
+        if config_dict['MULTI_REMOTE_UP'] and user_id== OWNER_ID:
+            remotes_data.append(cmd[2])
+            await list_remotes(message, cmd[2], edit=True)
+        else:
+            update_rclone_data("MIRRORSET_BASE_DIR", "/", user_id) #Reset Dir
+            update_rclone_data("MIRRORSET_REMOTE", cmd[2], user_id)
+            if user_id == OWNER_ID:
+                config_dict.update({'DEFAULT_OWNER_REMOTE': cmd[2]}) 
+            await list_folder(message, remote_name= cmd[2], remote_base="/", edit=True)
+            await query.answer()
     elif cmd[1] == "remote_dir":
         path = get_rclone_data(cmd[2], user_id)
         base_dir += path + "/"
@@ -144,6 +157,9 @@ async def mirrorset_callback(client, callback_query):
         await query.answer() 
     elif cmd[1] == "pages":
         await query.answer()
+    elif cmd[1] == "reset":
+        remotes_data.clear()
+        await list_remotes(message, edit=True)
     else:
         await query.answer()
         await message.delete()

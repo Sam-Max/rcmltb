@@ -36,6 +36,7 @@ Interval = []
 QbInterval = []
 GLOBAL_EXTENSION_FILTER = ['.aria2']
 user_data = {}
+remotes_data = []
 leech_log = []
 aria2_options = {}
 qbit_options = {}
@@ -62,6 +63,11 @@ if ospath.exists('pyrogram.session'):
     osremove('pyrogram.session')
 if ospath.exists('pyrogram.session-journal'):
     osremove('pyrogram.session-journal')
+    
+if ospath.exists('rss_session.session'):
+    osremove('rss_session.session')
+if ospath.exists('rss_session.session-journal'):
+    osremove('rss_session.session-journal')
 
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
 if len(BOT_TOKEN) == 0:
@@ -158,6 +164,9 @@ AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
 
 AUTO_MIRROR= environ.get('AUTO_MIRROR', '')  
 AUTO_MIRROR= AUTO_MIRROR.lower() == 'true'
+
+MULTI_REMOTE_UP= environ.get('MULTI_REMOTE_UP', '')  
+MULTI_REMOTE_UP= MULTI_REMOTE_UP.lower() == 'true'
 
 UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
 if len(UPTOBOX_TOKEN) == 0:
@@ -357,6 +366,7 @@ if not config_dict:
                    'MEGA_API_KEY': MEGA_API_KEY,
                    'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                    'MEGA_PASSWORD': MEGA_PASSWORD,
+                   'MULTI_REMOTE_UP': MULTI_REMOTE_UP,
                    'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
                    'OWNER_ID': OWNER_ID,
                    'PARALLEL_TASKS': PARALLEL_TASKS,

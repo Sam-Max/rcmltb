@@ -4,11 +4,11 @@ from configparser import ConfigParser
 from random import SystemRandom
 from os import path as ospath
 from string import ascii_letters, digits
-from bot import LOGGER, status_dict, status_dict_lock, config_dict
+from bot import LOGGER, status_dict, status_dict_lock, remotes_data, config_dict
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import sendStatusMessage
-from bot.helper.ext_utils.misc_utils import get_mime_type
+from bot.helper.ext_utils.misc_utils import clean_download, get_mime_type
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data
 from bot.helper.ext_utils.rclone_utils import get_rclone_config
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
@@ -35,26 +35,41 @@ class RcloneMirror:
         conf = ConfigParser()
         conf.read(conf_path)
         if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(self.__user_id):
-            remote = get_rclone_data('MIRRORSET_REMOTE', self.__user_id)
-            base = get_rclone_data('MIRRORSET_BASE_DIR', self.__user_id)
-            for r in conf.sections():
-                if remote == str(r):
-                    if conf[r]['type'] == 'drive':
-                        self.__isGdrive = True
-                        break
-            cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path), f"{remote}:{base}", '-P']
-        else:
-            if DEFAULT_GLOBAL_REMOTE := config_dict['DEFAULT_GLOBAL_REMOTE']:
-                remote= DEFAULT_GLOBAL_REMOTE
-                base= ""
+            if config_dict['MULTI_REMOTE_UP']:
+                if len(remotes_data) > 0:
+                    for remote in remotes_data:
+                        for r in conf.sections():
+                            if remote == str(r):
+                                if conf[r]['type'] == 'drive':
+                                    self.__isGdrive = True
+                                    break
+                        cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path), f"{remote}:", '-P']     
+                        await self.upload(cmd, conf_path, mime_type, remote, base="/")
+                clean_download(self.__path)
+            else:
+                remote = get_rclone_data('MIRRORSET_REMOTE', self.__user_id)
+                base = get_rclone_data('MIRRORSET_BASE_DIR', self.__user_id)
                 for r in conf.sections():
                     if remote == str(r):
                         if conf[r]['type'] == 'drive':
                             self.__isGdrive = True
                             break
                 cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path), f"{remote}:{base}", '-P']
+                await self.upload(cmd, conf_path, mime_type, remote, base)
+        else:
+            if DEFAULT_GLOBAL_REMOTE := config_dict['DEFAULT_GLOBAL_REMOTE']:
+                remote= DEFAULT_GLOBAL_REMOTE
+                for r in conf.sections():
+                    if remote == str(r):
+                        if conf[r]['type'] == 'drive':
+                            self.__isGdrive = True
+                            break
+                cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path), f"{remote}:", '-P']
+                await self.upload(cmd, conf_path, mime_type, remote, base="/")
             else:
                 return await self.__listener.onUploadError("DEFAULT_GLOBAL_REMOTE not found")
+        
+    async def upload(self, cmd, conf_path, mime_type, remote, base):
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         async with status_dict_lock:
             status = RcloneStatus(self, gid)
@@ -67,6 +82,8 @@ class RcloneMirror:
             size = get_readable_file_size(self.size)
             await self.__listener.onRcloneUploadComplete(self.name, size, conf_path, remote, base, mime_type, self.__isGdrive)
         else:
+            error= await self.process.stderr.read()
+            LOGGER.info(str(error))
             await self.__listener.onUploadError("Cancelled by user")
 
     def cancel_download(self):

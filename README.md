@@ -7,6 +7,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Copy file/folder from cloud to cloud
 - Leech file/folder from cloud to Telegram
 - Mirror from Telegram to a selected cloud
+- Mirror from Telegram to multiple clouds
 - Telegram Navigation Button Menus to interact with cloud
 - File Manager: size, mkdir, delete, dedupe and rename
 - Service Accounts support with automatic switching
@@ -31,6 +32,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - From Telegram to cloud
 - Link/Torrent/Magnets/Mega to cloud 
 - Mirror to local (no cloud)
+- Mirror to multiple clouds at the same time.
 - Renaming for Telegram files
 - Files in batch from Telegram restricted channels
 - Queue system
@@ -190,9 +192,10 @@ pip3 install -r requirements-cli.txt
 
    - RCLONE
      - `DEFAULT_OWNER_REMOTE`: to set default remote from your rclone config for mirroring. (only for owner). `Str`
-     - `REMOTE_SELECTION`: set to `True` to activate selection of cloud each time using mirror command. Default to False.`Bool`
-     - `MULTI_RCLONE_CONFIG`: set to `True` for allowing each user to use their own rclone config. Default to False. `Bool` 
      - `DEFAULT_GLOBAL_REMOTE`: to set default remote from global rclone config for mirroring. Use this when `MULTI_RCLONE_CONFIG` is `False`. `Str`
+     - `REMOTE_SELECTION`: set to `True` to activate selection of cloud each time using mirror command. Default to `False`. `Bool`
+     - `MULTI_RCLONE_CONFIG`: set to `True` for allowing each user to use their own rclone config. Default to False. `Bool` 
+     - `MULTI_REMOTE_UP`= set to `True` for allowing upload to multiple clouds at the same time. `Bool`. (only for owner)
      - `USE_SERVICE_ACCOUNTS`: set to `True` for enabling SA for rclone copy. Default to False. `Bool`.
      - `SERVICE_ACCOUNTS_REMOTE`= To set shared drive remote name from your rclone config file that is using SA. `Str`. **Note**: teamdrive remote must have team_drive field with id. `Str`
      - `SERVER_SIDE`= set to `True` for enabling rclone server side copy. Default to False. **NOTE**: if you get error while copy set this to `False`. `Bool`
