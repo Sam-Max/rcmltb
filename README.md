@@ -100,11 +100,13 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 mirror - Mirror to selected cloud 
 unzipmirror - Mirror and extract to cloud 
 zipmirror - Mirror and zip to cloud 
+bulk - Mirror multilink txt or message file
 multizipmirror - Mirror and zip multiple files to cloud 
 mirrorset - Select cloud/folder where to mirror
 mirrorbatch - Mirror Telegram files in batch to cloud 
 leech - Leech from cloud to Telegram
 unzipleech - Leech and extract to Telegram 
+bulkleech - Leech multilink txt or message file
 zipleech - Leech and zip to Telegram 
 multizipleech - Leech and zip multiple files to Telegram 
 leechbatch - Leech Telegram files in batch to Telegram 
