@@ -35,8 +35,6 @@ class _BotCommands:
         self.ServeCommand = f'serve{CMD_INDEX}'
         self.SyncCommand = f'sync{CMD_INDEX}'
         self.BiSyncCommand = f'bisync{CMD_INDEX}'
-        self.BulkCommand = f'bulk{CMD_INDEX}'
-        self.BulkLeechCommand = f'bulkleech{CMD_INDEX}'
         self.CancelAllCommand= f'cancelall{CMD_INDEX}'
         self.CancelCommand= f'cancel{CMD_INDEX}'
         self.RssCommand= f'rss{CMD_INDEX}'

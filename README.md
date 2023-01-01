@@ -35,6 +35,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Mirror to multiple clouds at the same time.
 - Renaming for Telegram files
 - Files in batch from Telegram restricted channels
+- Links in batch
 - Queue system
 
 ### Leech
@@ -42,6 +43,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Thumbnail for each user
 - Set upload as document or as media for each user
 - Files in batch from Telegram restricted channels
+- Links in batch
 - Upload files to a superGroup/channel.
 - 4gb file with premium account
 
@@ -100,16 +102,14 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 mirror - Mirror to selected cloud 
 unzipmirror - Mirror and extract to cloud 
 zipmirror - Mirror and zip to cloud 
-bulk - Mirror multilink txt or message file
 multizipmirror - Mirror and zip multiple files to cloud 
 mirrorset - Select cloud/folder where to mirror
-mirrorbatch - Mirror Telegram files in batch to cloud 
+mirrorbatch - Mirror Telegram files and links in batch to cloud 
 leech - Leech from cloud to Telegram
 unzipleech - Leech and extract to Telegram 
-bulkleech - Leech multilink txt or message file
 zipleech - Leech and zip to Telegram 
 multizipleech - Leech and zip multiple files to Telegram 
-leechbatch - Leech Telegram files in batch to Telegram 
+leechbatch - Leech Telegram files and links in batch to Telegram 
 ytdl - Mirror ytdlp supported link
 ytdlzip- Mirror and zip ytdlp supported link
 ytdlleech - Leech yt-dlp supported link
@@ -216,7 +216,7 @@ pip3 install -r requirements-cli.txt
    - LEECH
      - `LEECH_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium. `Int`
      - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (not working with zip cmd). Default is `False`. `Bool`
-     - `USER_SESSION_STRING`: Pyrogram session string for batch commands and for telegram premium upload. To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: When using string session, you have to use with `LEECH_LOG`. You can also use batch commands without string session, but you can't save messages from private/restricted channels. `Str`
+     - `USER_SESSION_STRING`: Pyrogram session string for batch commands and for telegram premium upload. To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: When using string session, you have to use with `LEECH_LOG`. You can also use batch commands without string session, but you can't save messages from private/restricted telegram channels. `Str`
       - `LEECH_LOG`: Chat ID. Upload files to specific chat/chats. Add chats separated by spaces. `Str` **NOTE**: Only available for superGroup/channel. Add `-100` before channel/supergroup id. Add bot in that channel/group as admin if using without string session.
       - `BOT_PM`: set to `True` if you want to send leeched files in user's PM. Default to False. `Bool`
 

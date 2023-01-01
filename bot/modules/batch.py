@@ -1,6 +1,3 @@
-# Source: Github.com/Vasusen-code
-# Adapted to Pyrogram and Conversation-Pyrogram Library
-
 from asyncio import sleep, TimeoutError
 from bot import DOWNLOAD_DIR, LOGGER, app, bot, botloop
 from pyrogram.errors import FloodWait
@@ -14,14 +11,19 @@ from bot.helper.ext_utils.message_utils import sendMessage
 from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected
 from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import TelegramDownloader
 from bot.modules.listener import MirrorLeechListener
+from os import path as ospath
+from subprocess import run as srun
+from bot.modules.mirror_leech import mirror_leech
 
 
 
 async def leech_batch(client, message):
     await _batch(client, message, isLeech=True)
 
+
 async def mirror_batch(client, message):
     await _batch(client, message)
+
 
 async def _batch(client, message, isLeech=False):
     user_id= message.from_user.id
@@ -34,38 +36,91 @@ async def _batch(client, message, isLeech=False):
             pass
         else:
             return
-    await sendMessage("Send me the message link to start saving from, /ignore to cancel", message)
+    msg= "Send me one of the followings: \n\n"                
+    msg+= "1. Telegram message link from public or private channel\n"        
+    msg+= "2. URL links separated each link by new line\n"        
+    msg+= "3. TXT file with URL links separated each link by new line\n\n"        
+    msg+= "/ignore to cancel"        
+    await sendMessage(msg, message)
     try:
-        link = await client.listen.Message(filters.text, id= filters.user(user_id), timeout = 30)
+        response = await client.listen.Message(filters.document | filters.text, id= filters.user(user_id), timeout=60)
         try:
-            if "/ignore" in link.text:
-                 return await client.listen.Cancel(filters.user(user_id))
-            _link = get_link(link.text)
+            if response.text:
+                if "/ignore" in response.text:
+                    await client.listen.Cancel(filters.user(user_id))
+                else:
+                    lines= response.text.split("\n")  
+                    if len(lines) > 1:
+                        count= 0
+                        for link in lines:
+                            link.strip()
+                            if link != "\n":
+                                count += 1
+                            if len(link) > 1:
+                                if isLeech:
+                                    msg= await bot.send_message(message.chat.id, f"/leech {link}", disable_web_page_preview=True)
+                                else:
+                                    msg= await bot.send_message(message.chat.id, f"/mirror {link}", disable_web_page_preview=True)
+                                msg = await client.get_messages(message.chat.id, msg.id)
+                                msg.from_user.id = message.from_user.id
+                                botloop.create_task(mirror_leech(client, msg, isLeech=isLeech))
+                                await sleep(4)
+                    else:
+                        _link = get_link(response.text)
+                        await sendMessage("Send me the number of files to save from given link, /ignore to cancel", message)
+                        try:
+                            _range = await client.listen.Message(filters.text, id= filters.user(user_id), timeout=60)
+                            try:
+                                if "/ignore" in _range.text:
+                                    return await client.listen.Cancel(filters.user(user_id))
+                                multi = int(_range.text)
+                            except ValueError:
+                                return await sendMessage("Range must be an integer!", message)
+                        except TimeoutError:
+                            return await sendMessage("Too late 30s gone, try again!", message)
+                        suceed, msg = await check_link(_link)
+                        if suceed != True:
+                            await sendMessage(msg, message)
+                            return
+                        try:
+                            await get_bulk_msg(message, _link, multi, isLeech=isLeech) 
+                        except FloodWait as fw:
+                            await sleep(fw.seconds + 5)
+                            await get_bulk_msg(message, _link, multi, isLeech=isLeech)
+            else:
+                file_name = response.document.file_name
+                ext= file_name.split(".")[1]
+                count= 0
+                if ext in ["txt", ".txt"]:
+                    if ospath.exists("./links.txt"):
+                        srun(["rm", "-rf", "links.txt"])
+                    await client.download_media(response, file_name="./links.txt")
+                    with open('links.txt', 'r+') as f:
+                        lines = f.readlines()
+                        for link in lines:
+                            link.strip()
+                            if link != "\n":
+                                count += 1
+                            if len(link) > 1:
+                                if isLeech:
+                                    msg= await bot.send_message(message.chat.id, f"/leech {link}", disable_web_page_preview=True)
+                                else:
+                                    msg= await bot.send_message(message.chat.id, f"/mirror {link}", disable_web_page_preview=True)
+                                msg = await client.get_messages(message.chat.id, msg.id)
+                                msg.from_user.id = message.from_user.id
+                                botloop.create_task(mirror_leech(client, msg, isLeech=isLeech))
+                                await sleep(4)
+                else:
+                    await sendMessage("Send a txt file", message)
         except Exception:
             return await sendMessage("No link found.", message)
     except TimeoutError:
-        return await sendMessage("Too late 30s gone, try again!", message)
-    await sendMessage("Send me the number of files to save from given link, /ignore to cancel", message)
-    try:
-        _range = await client.listen.Message(filters.text, id= filters.user(user_id), timeout = 30)
-        try:
-            if "/ignore" in _range.text:
-                return await client.listen.Cancel(filters.user(user_id))
-            multi = int(_range.text)
-        except ValueError:
-            return await sendMessage("Range must be an integer!", message)
-    except TimeoutError:
-        return await sendMessage("Too late 30s gone, try again!", message)
-    suceed, msg = await check_link(_link)
-    if suceed != True:
-        await sendMessage(msg, message)
-        return
-    try:
-        await get_bulk_msg(message, _link, multi, isLeech=isLeech) 
-    except FloodWait as fw:
-        await sleep(fw.seconds + 5)
-        await get_bulk_msg(message, _link, multi, isLeech=isLeech)
+        return await sendMessage("Too late 60s gone, try again!", message)
 
+##############################################
+
+# Source: Github.com/Vasusen-code
+# Adapted to Pyrogram and Conversation-Pyrogram Library
 async def get_bulk_msg(message, msg_link, multi, isLeech, value=0):
     msg_id = int(msg_link.split("/")[-1]) + int(value)
     user_id= message.from_user.id
@@ -142,6 +197,7 @@ async def get_bulk_msg(message, msg_link, multi, isLeech, value=0):
             await sendMessage(f'Failed to save: `{e}`', message)
             return 
 
+            
 mirrorbatch_handler= MessageHandler(mirror_batch, filters=filters.command(BotCommands.MirrorBatchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 leechbatch__handler= MessageHandler(leech_batch, filters=filters.command(BotCommands.LeechBatchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 

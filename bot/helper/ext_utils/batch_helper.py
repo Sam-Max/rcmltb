@@ -29,7 +29,7 @@ async def check_link(link):
         except ValueError:
             return False, "**Invalid Link!**"
         except Exception:
-            msg= "Make sure you joined the channel or/and you set string session variable"
+            msg= "Make sure you joined the channel and set string session!!"
             return False, msg
     else:
         try:
