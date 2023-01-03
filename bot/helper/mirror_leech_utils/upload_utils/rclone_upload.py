@@ -2,9 +2,9 @@ from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 from configparser import ConfigParser
 from random import SystemRandom
-from os import path as ospath
+from os import path as ospath, remove as osremove, walk
 from string import ascii_letters, digits
-from bot import LOGGER, status_dict, status_dict_lock, remotes_data, config_dict
+from bot import GLOBAL_EXTENSION_FILTER, LOGGER, status_dict, status_dict_lock, remotes_data, config_dict
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import sendStatusMessage
@@ -27,6 +27,14 @@ class RcloneMirror:
         self.status_type = MirrorStatus.STATUS_UPLOADING
 
     async def mirror(self):
+        for dirpath, _, files in walk(self.__path):
+            for file in files:
+                if file.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+                    try:
+                        del_file = ospath.join(dirpath, file)
+                        osremove(del_file)
+                    except:
+                        return
         if ospath.isfile(self.__path):
             mime_type = get_mime_type(self.__path)
         else:

@@ -3,7 +3,7 @@ from asyncio.subprocess import PIPE
 from html import escape
 from json import loads
 from requests import utils as rutils
-from os import listdir, path as ospath, remove, walk
+from os import listdir, path as ospath, remove as osremove, walk
 from re import search
 from bot import DOWNLOAD_DIR, LOGGER, SERVER_PORT, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2, config_dict
 from subprocess import Popen
@@ -85,7 +85,7 @@ class MirrorLeechListener:
                 if search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$|\.zip$|\.7z$|^.(?!.*\.part\d+\.rar)(?=.*\.rar$)', file) is None:    
                     del_path = ospath.join(dirpath, file)
                     try:
-                        remove(del_path)
+                        osremove(del_path)
                     except:
                         return
         up_dir, up_name = path.rsplit('/', 1)
@@ -159,7 +159,7 @@ class MirrorLeechListener:
                                 if search(r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$|\.zip$|\.rar$|\.7z$', file):
                                     del_path = ospath.join(dirpath, file)
                                     try:
-                                        remove(del_path)
+                                        osremove(del_path)
                                     except:
                                         return
                 else:
@@ -174,7 +174,7 @@ class MirrorLeechListener:
                     elif self.__suproc.returncode == 0:
                         LOGGER.info(f"Extracted Path: {path}")
                         try:
-                            remove(f_path)
+                            osremove(f_path)
                         except:
                             return
                     else:
@@ -211,7 +211,7 @@ class MirrorLeechListener:
                                     continue
                                 else:
                                     try:
-                                        remove(f_path)
+                                        osremove(f_path)
                                     except:
                                         return
                             elif res != "errored":

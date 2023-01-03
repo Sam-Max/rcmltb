@@ -195,13 +195,12 @@ pip3 install -r requirements-cli.txt
    - RCLONE
      - `DEFAULT_OWNER_REMOTE`: to set default remote from your rclone config for mirroring. (only for owner). `Str`
      - `DEFAULT_GLOBAL_REMOTE`: to set default remote from global rclone config for mirroring. Use this when `MULTI_RCLONE_CONFIG` is `False`. `Str`
-     - `REMOTE_SELECTION`: set to `True` to activate selection of cloud each time using mirror command. Default to `False`. `Bool`
      - `MULTI_RCLONE_CONFIG`: set to `True` for allowing each user to use their own rclone config. Default to False. `Bool` 
+     - `REMOTE_SELECTION`: set to `True` to activate selection of cloud each time using mirror command. Default to `False`. `Bool`
      - `MULTI_REMOTE_UP`= set to `True` for allowing upload to multiple clouds at the same time. `Bool`. (only for owner)
      - `USE_SERVICE_ACCOUNTS`: set to `True` for enabling SA for rclone copy. Default to False. `Bool`.
      - `SERVICE_ACCOUNTS_REMOTE`= To set shared drive remote name from your rclone config file that is using SA. `Str`. **Note**: teamdrive remote must have team_drive field with id. `Str`
-     - `SERVER_SIDE`= set to `True` for enabling rclone server side copy. Default to False. **NOTE**: if you get error while copy set this to `False`. `Bool`
-     If you have chosen port other than 80 so write it in this format http://myip:port (http and not https).`Str`
+     - `SERVER_SIDE`= set to `True` for enabling rclone server side copy. Default to False. **NOTE**: if you get errors while copy set this to `False`. `Bool`
      - `RC_INDEX_URL`: Ip (public/domain) where bot is running for rclone index. Format of URL should be http://myip, where myip is the IP/Domain(public). `Str`
      - `RC_INDEX_PORT`: Port to use. Default to `8080`. `Str`
      - `RC_INDEX_USER`: Custom user. Default to `admin`. `Str`

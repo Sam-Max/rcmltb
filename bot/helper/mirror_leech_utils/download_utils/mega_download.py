@@ -152,13 +152,12 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
         if folder_api is not None:
             folder_api.removeListener(mega_listener)
         return
-    mname = name or node.getName()
-    status_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
-    listener.onDownloadStart()
-    makedirs(path)
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=8))
     mname = name or node.getName()
+    status_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
+    makedirs(path)
     mega_listener.setValues(mname, api.getSize(node), gid)
+    listener.onDownloadStart()
     botloop.create_task(sendStatusMessage(listener.message))
     executor.do(api.startDownload, (node, path, name, None, False, None))
     api.removeListener(mega_listener)

@@ -36,21 +36,22 @@ class TelegramUploader():
         if ospath.isdir(self.__path):
             for dirpath, _, filenames in sorted(walk(self.__path)):
                 for file in sorted(filenames):
-                    if not file.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
-                        self.__total_files += 1   
-                        f_path = ospath.join(dirpath, file)
-                        f_size = ospath.getsize(f_path)
-                        if f_size == 0:
-                            LOGGER.error(f"{f_size} size is zero, telegram don't upload zero size files")
-                            self.__corrupted += 1
-                            continue
-                        await self.__upload_file(f_path, file)
-                        if self.__is_cancelled:
-                            return
-                        if (not self.__listener.isPrivate or config_dict['LEECH_LOG']) and not self.__is_corrupted:
-                            self.__msgs_dict[self.__sent_msg.link] = file
-                        self._last_uploaded = 0
-                        await sleep(1)
+                    if file.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+                        continue
+                    f_path = ospath.join(dirpath, file)
+                    f_size = ospath.getsize(f_path)
+                    self.__total_files += 1   
+                    if f_size == 0:
+                        LOGGER.error(f"{f_size} size is zero, telegram don't upload zero size files")
+                        self.__corrupted += 1
+                        continue
+                    await self.__upload_file(f_path, file)
+                    if self.__is_cancelled:
+                        return
+                    if (not self.__listener.isPrivate or config_dict['LEECH_LOG']) and not self.__is_corrupted:
+                        self.__msgs_dict[self.__sent_msg.link] = file
+                    self._last_uploaded = 0
+                    await sleep(1)
         if self.__total_files <= self.__corrupted:
             return await self.__listener.onUploadError('Files Corrupted. Check logs')
         size = get_readable_file_size(self.__size)
