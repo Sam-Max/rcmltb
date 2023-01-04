@@ -212,8 +212,9 @@ class TelegramUploader():
             LOGGER.error(f"{ex} Path: {up_path}")
             self.__corrupted += 1
             self.__is_corrupted = True
-        if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
-            osremove(thumb_path)
+        finally:
+            if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
+                osremove(thumb_path)
         if not self.__is_cancelled :
             try:
                 osremove(up_path)

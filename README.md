@@ -17,68 +17,53 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Clean cloud trash
 - View storage info 
 
-### qBittorrent
-- Qbittorrent support for torrent and magnets
-- Select files from Torrent before downloading 
-- Edit global options from bot settings
-
-### Aria2c
-- Aria support for direct download links
-- Netrc support
-- Direct link authentication from bot
-- Edit global options from bot settings
-
 ### Mirror
 - From Telegram to cloud
 - Link/Torrent/Magnets/Mega to cloud 
 - Mirror to local (no cloud)
 - Mirror to multiple clouds at the same time.
-- Renaming for Telegram files
 - Files in batch from Telegram restricted channels
 - Links in batch
 - Queue system
 
 ### Leech
 - Link/Torrent/Magnets/Mega to Telegram 
-- Thumbnail for each user
-- Set upload as document or as media for each user
 - Files in batch from Telegram restricted channels
 - Links in batch
 - Upload files to a superGroup/channel.
 - 4gb file with premium account
 
-### Status
-- Status while downloading and uploading
-- Status Pages for unlimited tasks
-- Cancel all buttons for choosing specific tasks status to cancel
-
-### Archives
-- Extract and Zip link/file from Telegram to cloud
-- Extract and Zip folder/file from cloud to Telegram
-- Using 7-zip tool to extract all supported files
-- Extract rar, zip and 7z with or without password
-
-### Database
-- Mongo Database
-- Save owner settings
-- Save user settings, including thumbnails.
-- Save private files (rclone.conf, token.pickle, etc)
-- Save RSS last recorded data
-
-### RSS
-- Rss feed with filter support
-
 ### Others
-- Load and overwrite token.pickle, rclone.conf, config.env and accounts.zip from bot
-- Edit config variables from bot
-- Index support (rclone index and cloudfare workers index with google drive)
+- Index support (rclone index for all remotes)
+- Load and overwrite rclone.conf file from bot
 
 ### From Base Repository
 - Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
 - Mongo Database support
+- Save owner settings
+- Save user settings, including thumbnails.
+- Ssve private files(token.pickle, config.env and accounts.zip) from bot
+- Save RSS last recorded data
+- Rss feed with filter support
+- Aria support for direct download links
+- Netrc support
+- Qbittorrent support for torrent and magnets
+- Select files from Torrent before downloading 
+- Edit global options from bot settings
+- Renaming for Telegram files
+- Direct link authentication from bot
+- Extract and Zip link/file from Telegram to cloud
+- Extract and Zip folder/file from cloud to Telegram
+- Using 7-zip tool to extract all supported files
+- Extract rar, zip and 7z with or without password
+- Status Pages for unlimited tasks
+- Thumbnail for each user
+- Set upload as document or as media for each user
+- Cancel all buttons for choosing specific tasks status to cancel
 - Mega.nz for mega links
 - Ytdl support
 - Docker support
+- Cloudfare workers index support for google drive
 - Shell and Executor
 - Extensions Filter for the files to be uploaded/cloned
 - Select files from Torrent before downloading 
@@ -103,8 +88,8 @@ mirror - Mirror to selected cloud
 unzipmirror - Mirror and extract to cloud 
 zipmirror - Mirror and zip to cloud 
 multizipmirror - Mirror and zip multiple files to cloud 
-mirrorset - Select cloud/folder where to mirror
-mirrorbatch - Mirror Telegram files and links in batch to cloud 
+mirrorbatch - Mirror Telegram files and links in batch to cloud
+mirrorsel - Select cloud/folder for mirror 
 leech - Leech from cloud to Telegram
 unzipleech - Leech and extract to Telegram 
 zipleech - Leech and zip to Telegram 
@@ -114,8 +99,8 @@ ytdl - Mirror ytdlp supported link
 ytdlzip- Mirror and zip ytdlp supported link
 ytdlleech - Leech yt-dlp supported link
 ytdlzipleech - Leech and zip yt-dlp supported link
-myfiles - File manager
-config - Bot config files
+botfiles - Bot configuration files
+myfile - Rclone file manager
 copy - Copy from cloud to cloud
 clone - Clone gdrive link file/folder 
 usetting - User settings

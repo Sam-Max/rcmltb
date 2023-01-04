@@ -155,7 +155,7 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=8))
     mname = name or node.getName()
     status_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
-    makedirs(path)
+    makedirs(path, exist_ok=True)
     mega_listener.setValues(mname, api.getSize(node), gid)
     listener.onDownloadStart()
     botloop.create_task(sendStatusMessage(listener.message))

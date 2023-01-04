@@ -144,6 +144,7 @@ async def __onSeedFinish(client, tor):
 
 
 async def __onDownloadComplete(client, tor):
+    await sleep(2)
     download = getDownloadByGid(tor.hash[:12])
     try:
         listener = download.listener()

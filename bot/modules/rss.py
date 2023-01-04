@@ -293,7 +293,7 @@ async def rss_monitor():
                 except IndexError:
                     url = rss_d.entries[feed_count]['link']
                 if RSS_COMMAND := config_dict['RSS_COMMAND']:
-                    feed_msg = f"{RSS_COMMAND} {url}"
+                    feed_msg = f"/{RSS_COMMAND.replace('/', '')} {url}"
                 else:
                     feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title'].replace('>', '').replace('<', '')}</code>\n\n"
                     feed_msg += f"<b>Link: </b><code>{url}</code>"

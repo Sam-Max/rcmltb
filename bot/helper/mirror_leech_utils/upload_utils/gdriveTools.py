@@ -308,7 +308,7 @@ class GoogleDriveHelper:
             if meta.get("mimeType") == self.__G_DRIVE_DIR_MIME_TYPE:
                 await botloop.run_in_executor(None, self.__download_folder, file_id, self.__path, self.name)
             else:
-                makedirs(self.__path)
+                makedirs(self.__path, exist_ok=True)
                 await botloop.run_in_executor(None, self.__download_file, file_id, self.__path, self.name, meta.get('mimeType'))
         except Exception as err:
             if isinstance(err, RetryError):

@@ -354,10 +354,10 @@ async def config_menu(user_id, message, edit=False):
           buttons.cb_buildbutton("📃rclone.conf", f"configmenu^change_rclone_conf^{user_id}", 'footer')
      if user_id == OWNER_ID:
           if ospath.exists(ospath.join("users", "global_rclone", "rclone.conf")):
-               buttons.cb_buildbutton("🗂 Get global rclone.conf", f"configmenu^get_global_rclone_conf^{user_id}")
-               buttons.cb_buildbutton("🗑 Delete global rclone.conf", f"configmenu^delete_global_rclone_conf^{user_id}")
+               buttons.cb_buildbutton("🗂 Get rclone.conf (global)", f"configmenu^get_global_rclone_conf^{user_id}")
+               buttons.cb_buildbutton("🗑 Delete rclone.conf (global)", f"configmenu^delete_global_rclone_conf^{user_id}")
           else:
-               buttons.cb_buildbutton("📃global rclone.conf", f"configmenu^change_global_rclone_conf^{user_id}", 'footer')
+               buttons.cb_buildbutton("📃rclone.conf (global)", f"configmenu^change_global_rclone_conf^{user_id}", 'footer')
           if ospath.exists("token.pickle"):
                buttons.cb_buildbutton("🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}")
                buttons.cb_buildbutton("🗑 Delete token.pickle", f"configmenu^delete_pickle^{user_id}")
