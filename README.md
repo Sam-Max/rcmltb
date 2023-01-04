@@ -1,5 +1,5 @@
 
-An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with rclone support added, and other features and minor changes from base code.
+An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with rclone support added, and other features and changes from base code.
 
 ## Features:
 
@@ -37,24 +37,26 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Multizip mirror and leech
 - Extract and Zip link/file from Telegram to cloud
 - Extract and Zip folder/file from cloud to Telegram
-- Refactor of code to use pyrogram and not ptb library
+- Refactor of code to use pyrogram
 
 ### From Base Repository
 - Link/Torrent/Magnets/Mega to Telegram 
-- Mongo Database support
+- Aria support for direct download links
+- Qbittorrent support for torrent and magnets
+- Select files from Torrent before downloading 
+- Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
+- Mega.nz for mega links
+- Ytdl support 
+- Mongo DB support
 - Save owner settings
 - Save user settings, including thumbnails.
 - Edit global options from bot settings
 - Send private files(token.pickle, config.env and accounts.zip) from bot
 - Save RSS last recorded data
 - Rss feed with filter support
-- Aria support for direct download links
 - Netrc support
-- Qbittorrent support for torrent and magnets
-- Select files from Torrent before downloading 
 - Renaming for Telegram files
 - Direct link authentication from bot
-- Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
 - Using 7-zip tool to extract all supported files
 - Extract rar, zip and 7z with or without password
 - Status Pages for unlimited tasks
@@ -63,17 +65,13 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Thumbnail for each user
 - Set upload as document or as media for each user
 - Cancel all buttons for choosing specific tasks status to cancel
-- Mega.nz for mega links
-- Ytdl support
 - Docker support
 - Cloudfare workers index support for Google Drive
 - Shell and Executor
 - Extensions Filter for the files to be uploaded/cloned
-- Select files from Torrent before downloading 
 - Direct link authentication for specific link while using the bot (it will work even if only username or password)
 - Custom name for all links except torrents and mega. 
 - Clone Google Drive files/folders from link
-- Upload as document or as media 
 - Update bot at startup and with restart command using UPSTREAM_REPO
 - Direct links Supported:
   > letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
@@ -99,7 +97,7 @@ ytdlzip- Mirror and zip ytdlp supported link
 ytdlleech - Leech yt-dlp supported link
 ytdlzipleech - Leech and zip yt-dlp supported link
 botfiles - Bot configuration files
-myfile - Rclone file manager
+myfiles - Rclone file manager
 copy - Copy from cloud to cloud
 clone - Clone gdrive link file/folder 
 usetting - User settings
