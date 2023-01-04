@@ -27,17 +27,16 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Queue system
 
 ### Leech
-- Link/Torrent/Magnets/Mega to Telegram 
 - Files in batch from Telegram restricted channels
 - Links in batch
-- Upload files to a superGroup/channel.
-- 4gb file with premium account
 
 ### Others
 - Index support (rclone index for all remotes)
-- Load and overwrite rclone.conf file from bot
+- Load/overwrite rclone.conf file from bot
+- Added pyrogram support
 
 ### From Base Repository
+- Link/Torrent/Magnets/Mega to Telegram 
 - Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
 - Mongo Database support
 - Save owner settings
@@ -57,6 +56,8 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Using 7-zip tool to extract all supported files
 - Extract rar, zip and 7z with or without password
 - Status Pages for unlimited tasks
+- Upload files to a superGroup/channel.
+- 4gb file with premium account
 - Thumbnail for each user
 - Set upload as document or as media for each user
 - Cancel all buttons for choosing specific tasks status to cancel
