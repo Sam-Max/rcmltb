@@ -42,14 +42,14 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Mongo Database support
 - Save owner settings
 - Save user settings, including thumbnails.
-- Ssve private files(token.pickle, config.env and accounts.zip) from bot
+- Edit global options from bot settings
+- Send private files(token.pickle, config.env and accounts.zip) from bot
 - Save RSS last recorded data
 - Rss feed with filter support
 - Aria support for direct download links
 - Netrc support
 - Qbittorrent support for torrent and magnets
 - Select files from Torrent before downloading 
-- Edit global options from bot settings
 - Renaming for Telegram files
 - Direct link authentication from bot
 - Extract and Zip link/file from Telegram to cloud
@@ -69,13 +69,11 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Select files from Torrent before downloading 
 - Direct link authentication for specific link while using the bot (it will work even if only username or password)
 - Custom name for all links except torrents and mega. 
-- Save restricted messages from private channels.
 - Upload files to supergroup/channel.
 - Clone Google Drive files/folders from link
 - Thumbnail support
 - Upload as document or as media 
 - Update bot at startup and with restart command using UPSTREAM_REPO
-- Own users settings when using bot or added to supergroup
 - Direct links Supported:
   > letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
 - Extract filetypes:
