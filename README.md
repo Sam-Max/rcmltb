@@ -1,5 +1,5 @@
 
-An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with rclone support added, and other features and changes from base code.
+An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with rclone support added, and other features and minor changes from base code.
 
 ## Features:
 
@@ -22,22 +22,25 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Link/Torrent/Magnets/Mega to cloud 
 - Mirror to local (no cloud)
 - Mirror to multiple clouds at the same time.
-- Files in batch from Telegram restricted channels
+- Files in batch from Telegram private/restricted channels
 - Links in batch
 - Queue system
 
 ### Leech
-- Files in batch from Telegram restricted channels
+- Link/Torrent/Magnets/Mega to Telegram 
+- Files in batch from Telegram private/restricted channels
 - Links in batch
 
 ### Others
 - Index support (rclone index for all remotes)
 - Load/overwrite rclone.conf file from bot
-- Added pyrogram support
+- Multizip mirror and leech
+- Extract and Zip link/file from Telegram to cloud
+- Extract and Zip folder/file from cloud to Telegram
+- Refactor of code to use pyrogram and not ptb library
 
 ### From Base Repository
 - Link/Torrent/Magnets/Mega to Telegram 
-- Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
 - Mongo Database support
 - Save owner settings
 - Save user settings, including thumbnails.
@@ -51,8 +54,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Select files from Torrent before downloading 
 - Renaming for Telegram files
 - Direct link authentication from bot
-- Extract and Zip link/file from Telegram to cloud
-- Extract and Zip folder/file from cloud to Telegram
+- Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
 - Using 7-zip tool to extract all supported files
 - Extract rar, zip and 7z with or without password
 - Status Pages for unlimited tasks
@@ -64,15 +66,13 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Mega.nz for mega links
 - Ytdl support
 - Docker support
-- Cloudfare workers index support for google drive
+- Cloudfare workers index support for Google Drive
 - Shell and Executor
 - Extensions Filter for the files to be uploaded/cloned
 - Select files from Torrent before downloading 
 - Direct link authentication for specific link while using the bot (it will work even if only username or password)
 - Custom name for all links except torrents and mega. 
-- Upload files to supergroup/channel.
 - Clone Google Drive files/folders from link
-- Thumbnail support
 - Upload as document or as media 
 - Update bot at startup and with restart command using UPSTREAM_REPO
 - Direct links Supported:
@@ -88,7 +88,7 @@ unzipmirror - Mirror and extract to cloud
 zipmirror - Mirror and zip to cloud 
 multizipmirror - Mirror and zip multiple files to cloud 
 mirrorbatch - Mirror Telegram files and links in batch to cloud
-mirrorsel - Select cloud/folder for mirror 
+remotesel - Select cloud/folder for mirror 
 leech - Leech from cloud to Telegram
 unzipleech - Leech and extract to Telegram 
 zipleech - Leech and zip to Telegram 

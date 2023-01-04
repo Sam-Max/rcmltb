@@ -16,6 +16,8 @@ from bot.helper.ext_utils.misc_utils import ButtonMaker
 from bot.helper.ext_utils.rclone_utils import get_rclone_config
 from bot.modules.search import initiate_search_tools
 
+
+
 async def load_config():
      BOT_TOKEN = environ.get('BOT_TOKEN', '')
      if len(BOT_TOKEN) == 0:
@@ -349,27 +351,27 @@ async def config_menu(user_id, message, edit=False):
           msg+= "\n\n**Here is list of drives in config file:**"
           msg+= f"\n{fstr}"
           buttons.cb_buildbutton("🗂 Get rclone.conf", f"configmenu^get_rclone_conf^{user_id}")
-          buttons.cb_buildbutton("🗑 Delete rclone.conf", f"configmenu^delete_config^{user_id}")
+          buttons.cb_buildbutton("🗑 rclone.conf", f"configmenu^delete_config^{user_id}")
      else:
           buttons.cb_buildbutton("📃rclone.conf", f"configmenu^change_rclone_conf^{user_id}", 'footer')
      if user_id == OWNER_ID:
-          if ospath.exists(ospath.join("users", "global_rclone", "rclone.conf")):
-               buttons.cb_buildbutton("🗂 Get rclone.conf (global)", f"configmenu^get_global_rclone_conf^{user_id}")
-               buttons.cb_buildbutton("🗑 Delete rclone.conf (global)", f"configmenu^delete_global_rclone_conf^{user_id}")
+          if ospath.exists(ospath.join("users", "grclone", "rclone.conf")):
+               buttons.cb_buildbutton("🗂 Get rclone.conf (🌐)", f"configmenu^get_grclone_conf^{user_id}")
+               buttons.cb_buildbutton("🗑 rclone.conf (🌐)", f"configmenu^delete_grclone_conf^{user_id}")
           else:
-               buttons.cb_buildbutton("📃rclone.conf (global)", f"configmenu^change_global_rclone_conf^{user_id}", 'footer')
+               buttons.cb_buildbutton("📃rclone.conf (🌐)", f"configmenu^change_grclone_conf^{user_id}", 'footer')
           if ospath.exists("token.pickle"):
                buttons.cb_buildbutton("🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}")
-               buttons.cb_buildbutton("🗑 Delete token.pickle", f"configmenu^delete_pickle^{user_id}")
+               buttons.cb_buildbutton("🗑 token.pickle", f"configmenu^delete_pickle^{user_id}")
           else:
                buttons.cb_buildbutton("📃token.pickle", f"configmenu^change_pickle^{user_id}", 'footer_second' )
           if ospath.exists("accounts"):
-               buttons.cb_buildbutton("🗑 Delete accounts folder", f"configmenu^delete_acc^{user_id}")
+               buttons.cb_buildbutton("🗑 accounts folder", f"configmenu^delete_acc^{user_id}")
           else:
                buttons.cb_buildbutton("📃accounts.zip", f"configmenu^change_acc^{user_id}", 'footer_second')
           if ospath.exists("config.env"):
                buttons.cb_buildbutton("🗂 Get config.env", f"configmenu^get_config_env^{user_id}")
-               buttons.cb_buildbutton("🗑 Delete config.env", f"configmenu^delete_config_env^{user_id}")
+               buttons.cb_buildbutton("🗑 config.env", f"configmenu^delete_config_env^{user_id}")
           else:
                buttons.cb_buildbutton("📃config.env", f"configmenu^change_config_env^{user_id}", 'footer')
 
@@ -379,7 +381,7 @@ async def config_menu(user_id, message, edit=False):
      else:
           await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
-async def handle_config(client, message):
+async def handle_botfiles(client, message):
      user_id= message.from_user.id
      if config_dict['MULTI_RCLONE_CONFIG']: 
           await config_menu(user_id, message)    
@@ -389,7 +391,7 @@ async def handle_config(client, message):
         else:
           await sendMessage("Not allowed to use", message)
 
-async def config_callback(client, callback_query):
+async def botfiles_callback(client, callback_query):
      query= callback_query
      data = query.data
      cmd = data.split("^")
@@ -405,8 +407,8 @@ async def config_callback(client, callback_query):
           except ValueError as err:
                await sendMessage(str(err), message)
           await query.answer()
-     elif cmd[1] == "get_global_rclone_conf":
-          path= ospath.join("users", "global_rclone", "rclone.conf")    
+     elif cmd[1] == "get_grclone_conf":
+          path= ospath.join("users", "grclone", "rclone.conf")    
           try:
                await client.send_document(document=path, chat_id=message.chat.id)
           except ValueError as err:
@@ -427,7 +429,7 @@ async def config_callback(client, callback_query):
      elif cmd[1] == "change_rclone_conf":
           await set_config_listener(client, query, message)
           await config_menu(user_id, message, True)
-     elif cmd[1] == "change_global_rclone_conf" and user_id == OWNER_ID:
+     elif cmd[1] == "change_grclone_conf" and user_id == OWNER_ID:
           await set_config_listener(client, query, message, True)
           await config_menu(user_id, message, True)
      elif cmd[1] == "change_pickle" or cmd[1] == "change_acc" or cmd[1] == 'change_config_env' and user_id == OWNER_ID:
@@ -441,8 +443,8 @@ async def config_callback(client, callback_query):
                await sendMessage(str(err), message)
           await query.answer()
           await config_menu(user_id, message, True)
-     elif cmd[1] == "delete_global_rclone_conf":
-          path= ospath.join("users", "global_rclone", "rclone.conf")    
+     elif cmd[1] == "delete_grclone_conf":
+          path= ospath.join("users", "grclone", "rclone.conf")    
           try:
                remove(path)
           except FileNotFoundError as err:
@@ -476,7 +478,7 @@ async def config_callback(client, callback_query):
           await message.delete()
 
 
-async def set_config_listener(client, query, message, global_rclone=False):
+async def set_config_listener(client, query, message, grclone=False):
      if message.reply_to_message:
           user_id= message.reply_to_message.from_user.id
      else:
@@ -495,8 +497,8 @@ async def set_config_listener(client, query, message, global_rclone=False):
                else:
                     file_name = response.document.file_name
                     if file_name == "rclone.conf":
-                         if global_rclone:
-                              rclone_path = ospath.join("users", "global_rclone", "rclone.conf" )
+                         if grclone:
+                              rclone_path = ospath.join("users", "grclone", "rclone.conf" )
                          else:
                               rclone_path = ospath.join("users", f"{user_id}", "rclone.conf" )
                          path= await client.download_media(response, file_name=rclone_path)
@@ -525,8 +527,10 @@ async def set_config_listener(client, query, message, global_rclone=False):
      finally:
           await question.delete()
 
-config_handler = MessageHandler(handle_config, filters= command(BotCommands.ConfigCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-config_cb = CallbackQueryHandler(config_callback, filters= regex(r'configmenu'))
 
-bot.add_handler(config_handler)
-bot.add_handler(config_cb)
+
+botfiles_handler = MessageHandler(handle_botfiles, filters= command(BotCommands.BotFilesCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+botfiles_cb = CallbackQueryHandler(botfiles_callback, filters= regex(r'configmenu'))
+
+bot.add_handler(botfiles_handler)
+bot.add_handler(botfiles_cb)

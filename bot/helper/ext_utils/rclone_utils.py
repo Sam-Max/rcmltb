@@ -10,6 +10,7 @@ from bot.helper.ext_utils.misc_utils import ButtonMaker
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 
             
+            
 async def is_remote_selected(user_id, message):
     if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id):
         if DEFAULT_OWNER_REMOTE := config_dict['DEFAULT_OWNER_REMOTE']:
@@ -19,7 +20,7 @@ async def is_remote_selected(user_id, message):
         if get_rclone_data("MIRRORSET_REMOTE", user_id):
             return True
         else:
-            await sendMessage("Select a cloud first, use /mirrorset", message)
+            await sendMessage("Select a cloud first, use /botfiles", message)
             return False
     else:
         return True
@@ -33,10 +34,10 @@ async def is_rclone_config(user_id, message, isLeech=False):
             if isLeech:
                 return True
             else:
-                await sendMessage("Send a rclone config file, use /config", message)
+                await sendMessage("Send a rclone config file, use /botfiles", message)
                 return False
     else:
-        path= ospath.join("users", "global_rclone", "rclone.conf")
+        path= ospath.join("users", "grclone", "rclone.conf")
         if ospath.exists(path):
             return True
         else:
@@ -52,7 +53,7 @@ def get_rclone_config(user_id):
         if ospath.exists(rc_path):
             return rc_path
     else:
-        rc_path = ospath.join("users", "global_rclone", "rclone.conf")      
+        rc_path = ospath.join("users", "grclone", "rclone.conf")      
         if ospath.exists(rc_path):
             return rc_path
 

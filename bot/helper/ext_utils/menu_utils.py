@@ -7,7 +7,7 @@ class Menus:
     LEECH= "leechmenu"
     COPY= "copymenu"
     MYFILES= "myfilesmenu"
-    MIRRORSET= "mirrorsetmenu" 
+    REMOTESEL= "remoteselmenu" 
 
 def rcloneListNextPage(list_info, offset= 0, max_results=10):
     start = offset
