@@ -8,7 +8,7 @@ class _BotCommands:
         self.UnzipMirrorCommand = f'unzipmirror{CMD_INDEX}'
         self.ZipMirrorCommand = f'zipmirror{CMD_INDEX}'
         self.MultiZipMirrorCommand = f'multizipmirror{CMD_INDEX}'
-        self.RemoteSelCommand = f'remotesel{CMD_INDEX}'
+        self.CloudSelectCommand = f'cloudselect{CMD_INDEX}'
         self.MirrorBatchCommand = f'mirrorbatch{CMD_INDEX}'
         self.LeechCommand = f'leech{CMD_INDEX}'
         self.UnzipLeechCommand = f'unzipleech{CMD_INDEX}'

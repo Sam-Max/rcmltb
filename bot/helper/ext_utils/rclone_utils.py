@@ -20,7 +20,7 @@ async def is_remote_selected(user_id, message):
         if get_rclone_data("MIRRORSET_REMOTE", user_id):
             return True
         else:
-            await sendMessage("Select a cloud first, use /botfiles", message)
+            await sendMessage("Select a cloud first, use /cloudselect", message)
             return False
     else:
         return True

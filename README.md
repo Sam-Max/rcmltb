@@ -6,38 +6,28 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 ### Rclone
 - Copy file/folder from cloud to cloud
 - Leech file/folder from cloud to Telegram
-- Mirror from Telegram to a selected cloud
-- Mirror from Telegram to multiple clouds
+- Mirror Link/Torrent/Magnets/Mega/Telegram-Files to cloud
+- Mirror from Telegram to multiple clouds at the same time
 - Telegram Navigation Button Menus to interact with cloud
 - File Manager: size, mkdir, delete, dedupe and rename
 - Service Accounts support with automatic switching
-- Create cloud index as http or webdav 
-- Sync clouds (not folders)
+- Create cloud index as http or webdav webserver
+- Sync between clouds (not folders)
 - Search files on cloud
 - Clean cloud trash
-- View storage info 
-
-### Mirror
-- From Telegram to cloud
-- Link/Torrent/Magnets/Mega to cloud 
-- Mirror to local (no cloud)
-- Mirror to multiple clouds at the same time.
-- Files in batch from Telegram private/restricted channels
-- Links in batch
-- Queue system
-
-### Leech
-- Link/Torrent/Magnets/Mega to Telegram 
-- Files in batch from Telegram private/restricted channels
-- Links in batch
+- View cloud storage info 
 
 ### Others
-- Index support (rclone index for all remotes)
 - Load/overwrite rclone.conf file from bot
+- Queue system for mirror
+- Index support (rclone index for all remotes)
+- Files in batch from Telegram private/restricted channels
+- Links in batch from txt or message
 - Multizip mirror and leech
 - Extract and Zip link/file from Telegram to cloud
 - Extract and Zip folder/file from cloud to Telegram
-- Refactor of code to use pyrogram
+- Mirror to local (no cloud)
+- Refactor of the whole code to use pyrogram with async/await
 
 ### From Base Repository
 - Link/Torrent/Magnets/Mega to Telegram 
@@ -48,7 +38,6 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Mega.nz for mega links
 - Ytdl support 
 - Mongo DB support
-- Save owner settings
 - Save user settings, including thumbnails.
 - Edit global options from bot settings
 - Send private files(token.pickle, config.env and accounts.zip) from bot
@@ -86,7 +75,7 @@ unzipmirror - Mirror and extract to cloud
 zipmirror - Mirror and zip to cloud 
 multizipmirror - Mirror and zip multiple files to cloud 
 mirrorbatch - Mirror Telegram files and links in batch to cloud
-remotesel - Select cloud/folder for mirror 
+cloudselect - Select cloud/folder for mirror 
 leech - Leech from cloud to Telegram
 unzipleech - Leech and extract to Telegram 
 zipleech - Leech and zip to Telegram 
