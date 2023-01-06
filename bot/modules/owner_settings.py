@@ -169,8 +169,8 @@ async def ownerset_callback(client, callback_query):
                             Interval.clear()
                             Interval.append(setInterval(value, update_all_messages))
             elif data[3] == 'DEFAULT_OWNER_REMOTE':
-                update_rclone_data("MIRRORSET_REMOTE", value, user_id)
-                update_rclone_data("MIRRORSET_BASE_DIR", value, user_id)
+                update_rclone_data("CLOUDSEL_REMOTE", value, user_id)
+                update_rclone_data("CLOUDSEL_BASE_DIR", value, user_id)
             elif data[3] == 'EXTENSION_FILTER':
                 GLOBAL_EXTENSION_FILTER.clear()
                 GLOBAL_EXTENSION_FILTER.append('.aria2')
@@ -361,7 +361,7 @@ async def start_env_listener(client, query, user_id, key):
                                     LOGGER.error(e)
                         aria2_options['bt-stop-timeout'] = f'{value}'
                     elif key == 'DEFAULT_OWNER_REMOTE':
-                        update_rclone_data("MIRRORSET_REMOTE", value, user_id)
+                        update_rclone_data("CLOUDSEL_REMOTE", value, user_id)
                     elif key == 'DOWNLOAD_DIR':
                         if not value.endswith('/'):
                             value = f'{value}/'

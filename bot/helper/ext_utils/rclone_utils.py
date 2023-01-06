@@ -15,9 +15,9 @@ async def is_remote_selected(user_id, message):
     if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id):
         if DEFAULT_OWNER_REMOTE := config_dict['DEFAULT_OWNER_REMOTE']:
                 if user_id == OWNER_ID:
-                    update_rclone_data("MIRRORSET_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
+                    update_rclone_data("CLOUDSEL_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
                     return True
-        if get_rclone_data("MIRRORSET_REMOTE", user_id):
+        if get_rclone_data("CLOUDSEL_REMOTE", user_id):
             return True
         else:
             await sendMessage("Select a cloud first, use /cloudselect", message)
@@ -65,7 +65,7 @@ async def list_remotes(message, rclone_remote, base_dir, callback, edit=False):
     conf.read(path)
     for remote in conf.sections():
         prev = ""
-        if remote == get_rclone_data("MIRRORSET_REMOTE", user_id):
+        if remote == get_rclone_data("CLOUDSEL_REMOTE", user_id):
             prev = "✅"
         buttons.cb_buildbutton(f"{prev} 📁 {remote}", f"{callback}^remote^{remote}^{message.id}")
     buttons.cb_buildbutton("✘ Close Menu", f"{callback}^close^{message.id}", 'footer')
