@@ -3,7 +3,7 @@ from json import loads as jsonloads
 from re import escape
 from os import path as ospath
 from asyncio.subprocess import PIPE, create_subprocess_exec
-from bot import LOGGER, OWNER_ID, config_dict
+from bot import LOGGER, OWNER_ID, config_dict, remotes_data
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.misc_utils import ButtonMaker
@@ -17,7 +17,7 @@ async def is_remote_selected(user_id, message):
                 if user_id == OWNER_ID:
                     update_rclone_data("CLOUDSEL_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
                     return True
-        if get_rclone_data("CLOUDSEL_REMOTE", user_id):
+        if get_rclone_data("CLOUDSEL_REMOTE", user_id) or len(remotes_data) > 0:
             return True
         else:
             await sendMessage("Select a cloud first, use /cloudselect", message)
