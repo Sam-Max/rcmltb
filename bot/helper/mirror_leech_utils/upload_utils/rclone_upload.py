@@ -55,8 +55,8 @@ class RcloneMirror:
                         await self.upload(cmd, conf_path, mime_type, remote, base="/")
                 clean_download(self.__path)
             else:
-                remote = get_rclone_data('MIRRORSET_REMOTE', self.__user_id)
-                base = get_rclone_data('MIRRORSET_BASE_DIR', self.__user_id)
+                remote = get_rclone_data('CLOUDSEL_REMOTE', self.__user_id)
+                base = get_rclone_data('CLOUDSEL_BASE_DIR', self.__user_id)
                 for r in conf.sections():
                     if remote == str(r):
                         if conf[r]['type'] == 'drive':

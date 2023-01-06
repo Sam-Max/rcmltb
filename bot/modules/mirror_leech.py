@@ -264,8 +264,8 @@ async def mirror_menu(client, query):
     file = info[1]
     message= info[2]
     is_Leech= info[3]
-    rclone_remote = get_rclone_data("MIRRORSET_REMOTE", user_id)
-    base_dir= get_rclone_data("MIRRORSET_BASE_DIR", user_id)
+    rclone_remote = get_rclone_data("CLOUDSEL_REMOTE", user_id)
+    base_dir= get_rclone_data("CLOUDSEL_BASE_DIR", user_id)
 
     if int(info[-1]) != user_id:
         await query.answer("This menu is not for you!", show_alert=True)
@@ -328,8 +328,8 @@ async def mirror_select(client, callback_query):
         return
     elif cmd[1] == "remote":
         await deleteMessage(message) 
-        update_rclone_data("MIRRORSET_BASE_DIR", "/", user_id)
-        update_rclone_data("MIRRORSET_REMOTE", cmd[2], user_id)
+        update_rclone_data("CLOUDSEL_BASE_DIR", "/", user_id)
+        update_rclone_data("CLOUDSEL_REMOTE", cmd[2], user_id)
         if user_id == OWNER_ID:
             config_dict.update({'DEFAULT_OWNER_REMOTE': cmd[2]}) 
         name= get_rclone_data("NAME", user_id)
