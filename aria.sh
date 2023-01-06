@@ -1,4 +1,4 @@
-tracker_list=$(curl -Ns https://ngosang.github.io/trackerslist/trackers_all_http.txt | awk '$0' | tr '\n\n' ',')
+tracker_list=$(curl -Ns https://cdn.staticaly.com/gh/XIU2/TrackersListCollection/master/all_aria2.txt | awk '$0' | tr '\n\n' ',')
 aria2c --allow-overwrite=true --auto-file-renaming=true --bt-enable-lpd=true --bt-detach-seed-only=true \
        --bt-remove-unselected-file=true --bt-tracker="[$tracker_list]" --check-certificate=false \
        --check-integrity=true --continue=true --content-disposition-default-utf8=true --daemon=true \
