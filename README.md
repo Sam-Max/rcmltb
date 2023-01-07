@@ -18,8 +18,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - View cloud storage info 
 
 ### Others
-- Load/overwrite rclone.conf file from bot
-- Queue system for mirror
+- Send rclone.conf file from bot
 - Index support (rclone index for all remotes)
 - Files in batch from Telegram private/restricted channels
 - Links in batch from txt or message
@@ -27,6 +26,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Extract and Zip link/file from Telegram to cloud
 - Extract and Zip folder/file from cloud to Telegram
 - Mirror to local (no cloud)
+- Queue system for mirror
 - Refactor of the whole code to use pyrogram with async/await
 
 ### From Base Repository
@@ -76,27 +76,27 @@ zipmirror - Mirror and zip to cloud
 multizipmirror - Mirror and zip multiple files to cloud 
 mirrorbatch - Mirror Telegram files and links in batch to cloud
 cloudselect - Select cloud/folder for mirror 
-leech - Leech from cloud to Telegram
+leech - Leech from cloud/link to Telegram
 unzipleech - Leech and extract to Telegram 
 zipleech - Leech and zip to Telegram 
 multizipleech - Leech and zip multiple files to Telegram 
-leechbatch - Leech Telegram files and links in batch to Telegram 
+leechbatch - Leech Telegram files/links in batch to Telegram 
 ytdl - Mirror ytdlp supported link
 ytdlzip- Mirror and zip ytdlp supported link
 ytdlleech - Leech yt-dlp supported link
 ytdlzipleech - Leech and zip yt-dlp supported link
 botfiles - Bot configuration files
-myfiles - Rclone file manager
+myfiles - Rclone File Manager
 copy - Copy from cloud to cloud
 clone - Clone gdrive link file/folder 
 usetting - User settings
 ownsetting - Owner settings
 rss - Rss feed
-cleanup - Clean drive trash
+cleanup - Clean cloud trash
 cancelall - Cancel all tasks
-storage - Drive details
-serve - Serve remote as index
-sync - Sync two remotes
+storage - Cloud details
+serve - Serve cloud as web index 
+sync - Sync two clouds
 search - Search for torrents
 status - Status message of tasks
 stats - Bot stats
