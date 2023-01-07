@@ -1,6 +1,7 @@
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 from random import SystemRandom
+from re import search
 from string import ascii_letters, digits
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import sendStatusMessage
@@ -34,7 +35,9 @@ class RcloneLeech:
                 return await self.__listener.onDownloadError("DEFAULT_GLOBAL_REMOTE not found")
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10)) 
         if self.__isFolder:
-            self.name = self.__dest_path.rsplit("/", 2)[1]
+            result = search(r'\d{4}/(.*)', self.__dest_path)
+            path = result.group(1)
+            self.name= path[:-1]
         else:
             self.name = self.__dest_path.rsplit("/", 1)[1]
         async with status_dict_lock:
