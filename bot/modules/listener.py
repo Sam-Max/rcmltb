@@ -103,7 +103,7 @@ class MirrorLeechListener:
     async def onDownloadComplete(self):
         async with status_dict_lock:
             download = status_dict[self.uid]
-            name = str(download.name()).replace('/', '')
+            name = str(download.name())
             gid = download.gid()
         LOGGER.info(f"Download completed: {name}")
         if name == "None" or not ospath.exists(f"{self.dir}/{name}"):
@@ -173,6 +173,7 @@ class MirrorLeechListener:
                         return
                     elif self.__suproc.returncode == 0:
                         LOGGER.info(f"Extracted Path: {path}")
+                        path= f_path 
                         try:
                             osremove(f_path)
                         except:
@@ -227,24 +228,24 @@ class MirrorLeechListener:
             await tg_up.upload()    
         else:
             if config_dict['LOCAL_MIRROR']:
-              if BASE_URL:= config_dict['BASE_URL']:
-                buttons= ButtonMaker()
-                server_url = f'{BASE_URL}:{SERVER_PORT}/downloads/'
-                buttons.url_buildbutton("🖥 Local Server", server_url)
-                size = get_readable_file_size(size)
-                msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
-                msg += f'\n<b>cc: </b>{self.tag}\n\n'
-                await sendMarkup(msg, self.message, reply_markup= buttons.build_menu(1))
-                async with status_dict_lock:
-                    try:
-                        del status_dict[self.uid]
-                    except Exception as e:
-                        LOGGER.error(str(e))
-                    count = len(status_dict)
-                if count == 0:
-                    await self.clean()
-                else:
-                    await update_all_messages()
+                if BASE_URL:= config_dict['BASE_URL']:
+                    buttons= ButtonMaker()
+                    server_url = f'{BASE_URL}:{SERVER_PORT}/downloads/'
+                    buttons.url_buildbutton("🖥 Local Server", server_url)
+                    size = get_readable_file_size(size)
+                    msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
+                    msg += f'\n<b>cc: </b>{self.tag}\n\n'
+                    await sendMarkup(msg, self.message, reply_markup= buttons.build_menu(1))
+                    async with status_dict_lock:
+                        try:
+                            del status_dict[self.uid]
+                        except Exception as e:
+                            LOGGER.error(str(e))
+                        count = len(status_dict)
+                    if count == 0:
+                        await self.clean()
+                    else:
+                        await update_all_messages()
             else:
                 await RcloneMirror(up_dir, up_name, size, self.user_id, self).mirror()
 
