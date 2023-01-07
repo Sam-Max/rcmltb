@@ -2,7 +2,7 @@
 import asyncio
 from time import sleep
 from pyrogram.filters import regex
-from bot import status_dict_lock, OWNER_ID, bot, status_dict, botloop, user_data, m_queue, l_queue
+from bot import LOGGER, status_dict_lock, OWNER_ID, bot, status_dict, botloop, user_data, m_queue, l_queue
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
@@ -17,6 +17,7 @@ async def cancel_mirror(client, message):
     args= message.text.split()
     if len(args) > 1:
         gid = args[1]
+        LOGGER.info(gid)
         dl = getDownloadByGid(gid)
         if not dl:
            return await sendMessage(f"GID: <code>{gid}</code> Not Found.", message)
@@ -30,6 +31,8 @@ async def cancel_mirror(client, message):
 
     if dl.type() == "RcloneSync":
         dl.download().kill()
+    elif dl.type() == "Aria":
+        await dl.download().cancel_download()
     else:
         dl.download().cancel_download()
 

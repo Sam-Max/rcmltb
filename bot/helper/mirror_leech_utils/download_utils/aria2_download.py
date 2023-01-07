@@ -25,11 +25,15 @@ def __onDownloadComplete(api, gid):
         download = api.get_download(gid)
     except:
         return
-    LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
-    if dl := getDownloadByGid(gid):
-        future= run_coroutine_threadsafe(dl.listener().onDownloadComplete(), botloop)
-        future.result()
-        api.remove([download], force=True, files=True)
+    if download.followed_by_ids:
+        new_gid = download.followed_by_ids[0]
+        LOGGER.info(f'Gid changed from {gid} to {new_gid}')
+    else:
+        LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
+        if dl := getDownloadByGid(gid):
+            future= run_coroutine_threadsafe(dl.listener().onDownloadComplete(), botloop)
+            future.result()
+            api.remove([download], force=True, files=True)
 
 @new_thread
 def __onBtDownloadComplete(api, gid):
@@ -97,6 +101,7 @@ async def add_aria2c_download(link: str, path, listener, filename, auth):
     async with status_dict_lock:
         status_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
         LOGGER.info(f"Aria2Download started: {download.gid}")
+    listener.onDownloadStart()
     await sendStatusMessage(listener.message)
 
 

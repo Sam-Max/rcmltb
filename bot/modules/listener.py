@@ -386,10 +386,8 @@ class MirrorLeechListener:
         else:
             clean_download(self.dir)
         async with status_dict_lock:
-            try:
+            if self.uid in status_dict.keys():
                 del status_dict[self.uid]
-            except Exception as e:
-                LOGGER.error(str(e))
             count = len(status_dict)
         msg = f"{self.tag} your download has been stopped due to: {error}"
         await sendMessage(msg, self.message)

@@ -125,10 +125,7 @@ async def get_readable_message():
                 msg += f" | <b>Time: </b>{download.seeding_time()}"
             else:
                 msg += f"\n<b>Size: </b>{download.size()}"
-            if download.status() == MirrorStatus.STATUS_SEEDING:
-                msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>"
-            else:
-                msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>"
+            msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>"
             msg += "\n\n"
             if index == STATUS_LIMIT:
                 break
