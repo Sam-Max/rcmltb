@@ -5,7 +5,9 @@ services:
     build: .
     container_name: rcmltb
     command: bash start.sh
+    #数据持久化，到那时个人觉得还可以添加一下用户数据本地化，在不使用数据库得前提下保存数据
     volumes:
+      - //usr/src/app/users:/usr/src/app/downloads:rw
       - /usr/src/app/downloads:/usr/src/app/downloads:rw # optional
     ports:
       - "80:80" # qbittorrent selection webserver
