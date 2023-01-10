@@ -5,7 +5,7 @@ services:
     build: .
     container_name: rcmltb
     command: bash start.sh
-    #数据持久化，在不使用数据库得前提下保存数据
+    #数据持久化，在不使用数据库得前提下保存用户数据数据
     volumes:
       - /usr/src/app/users:/usr/src/app/users:rw
       - /usr/src/app/downloads:/usr/src/app/downloads:rw
