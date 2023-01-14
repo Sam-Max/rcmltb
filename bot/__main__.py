@@ -26,9 +26,12 @@ async def start(client, message):
 I can help you copy files from one cloud to another.
 I can also can mirror-leech files and links to Telegram or cloud**\n\n
         '''
+        msg2 = '''
+**Not Authorized user, deploy your own version**
+        '''
         await sendMarkup(msg, message, reply_markup)
     else:
-        await sendMarkup("Not Authorized user, deploy your own version", message, reply_markup)     
+        await sendMarkup(msg2, message, reply_markup)     
     
 async def restart(client, message):
     restart_msg= await sendMessage("Restarting...", message) 
