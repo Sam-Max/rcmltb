@@ -18,54 +18,17 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - View cloud storage info 
 
 ### Others
-- Send rclone.conf file from bot
+- Send rclone config file from bot
+- Renaming menu for Telegram files
 - Index support (rclone index for all remotes)
-- Files in batch from Telegram private/restricted channels
-- Links in batch from txt or message
-- Multizip mirror and leech
-- Extract and Zip link/file from Telegram to cloud
-- Extract and Zip folder/file from cloud to Telegram
-- Mirror to local (no cloud)
+- Mirror and Leech files in batch from Telegram private/restricted channels
+- Mirror and Leech links in batch from txt file
+- Multizip mirror & leech
+- Extract and zip link/file from Telegram to cloud
+- Extract and zip folder/file from cloud to Telegram
+- Mirror to local
 - Queue system for mirror
-- Refactor of the whole code to use pyrogram with async/await
-
-### From Base Repository
-- Link/Torrent/Magnets/Mega to Telegram 
-- Aria support for direct download links
-- Qbittorrent support for torrent and magnets
-- Select files from Torrent before downloading 
-- Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
-- Mega.nz for mega links
-- Ytdl support 
-- Mongo DB support
-- Save user settings, including thumbnails.
-- Edit global options from bot settings
-- Send private files(token.pickle, config.env and accounts.zip) from bot
-- Save RSS last recorded data
-- Rss feed with filter support
-- Netrc support
-- Renaming for Telegram files
-- Direct link authentication from bot
-- Using 7-zip tool to extract all supported files
-- Extract rar, zip and 7z with or without password
-- Status Pages for unlimited tasks
-- Upload files to a superGroup/channel.
-- 4gb file with premium account
-- Thumbnail for each user
-- Set upload as document or as media for each user
-- Cancel all buttons for choosing specific tasks status to cancel
-- Docker support
-- Cloudfare workers index support for Google Drive
-- Shell and Executor
-- Extensions Filter for the files to be uploaded/cloned
-- Direct link authentication for specific link while using the bot (it will work even if only username or password)
-- Custom name for all links except torrents and mega. 
-- Clone Google Drive files/folders from link
-- Update bot at startup and with restart command using UPSTREAM_REPO
-- Direct links Supported:
-  > letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
-- Extract filetypes:
-  > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
+- Refactor of the whole code to use only pyrogram with asyncio
 
 ## Commands for bot(set through @BotFather)
 
