@@ -171,7 +171,6 @@ class YoutubeDLHelper:
             rate = mp3_info[1]
             self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': rate}]
         self.opts['format'] = qual
-        LOGGER.info(f"Downloading with YT-DLP: {link}")
         await botloop.run_in_executor(None, self.extractMetaData, link, name, args)
         if self.is_cancelled:
             return
