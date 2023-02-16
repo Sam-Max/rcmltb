@@ -48,6 +48,8 @@ async def status_pages(client, callback_query):
     if not done:
         await query.message.delete()
 
+
+
 status_handlers = MessageHandler(status_handler, filters= filters.command(BotCommands.StatusCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 status_pages_handler = CallbackQueryHandler(status_pages, filters= filters.regex("status"))
 

@@ -9,7 +9,7 @@ from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_utils import get_rclone_config, is_rclone_config
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.modules.myfilesset import calculate_size, delete_empty_dir, delete_selected, delete_selection, myfiles_settings, rclone_dedupe, rclone_mkdir, rclone_rename, search_action
@@ -158,7 +158,7 @@ async def myfiles_callback(client, callback_query):
     elif cmd[1] == "delete":
         if cmd[2] == "folder":
             is_folder= True
-        elif cmd[2] == "file":
+        if cmd[2] == "file":
             is_folder= False
         await delete_selection(message, user_id, is_folder=is_folder)
         await query.answer()
@@ -244,6 +244,7 @@ async def next_page_myfiles(client, callback_query):
 myfiles_handler = MessageHandler(handle_myfiles, filters= filters.command(BotCommands.MyFilesCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 next_page_myfiles_cb= CallbackQueryHandler(next_page_myfiles, filters= regex("next_myfiles"))
 myfiles_cb = CallbackQueryHandler(myfiles_callback, filters= regex("myfilesmenu"))
+
 
 bot.add_handler(myfiles_cb)
 bot.add_handler(next_page_myfiles_cb)

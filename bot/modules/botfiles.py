@@ -1,4 +1,4 @@
-from asyncio import TimeoutError
+from asyncio import TimeoutError, create_subprocess_exec
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex, command
 from pyrogram import filters
@@ -12,7 +12,7 @@ from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessage, update_all_messages
-from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_utils import get_rclone_config
 from bot.modules.search import initiate_search_tools
 
@@ -326,7 +326,7 @@ async def load_config():
 
      if DATABASE_URL:
           DbManager().update_config(config_dict)                        
-     initiate_search_tools()
+     await initiate_search_tools()
      
 async def config_menu(user_id, message, edit=False):
      conf_path= get_rclone_config(user_id)
@@ -508,13 +508,13 @@ async def set_config_listener(client, query, message, grclone=False):
                          await client.download_media(response, file_name='./')
                          if file_name == 'accounts.zip':
                               if ospath.exists('accounts'):
-                                   srun(["rm", "-rf", "accounts"])
-                              srun(["unzip", "-q", "-o", "accounts.zip"])
-                              srun(["chmod", "-R", "777", "accounts"])
+                                   await(await create_subprocess_exec("rm", "-rf", "accounts")).wait()
+                              await(await create_subprocess_exec("7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json")).wait()
+                              await(await create_subprocess_exec("chmod", "-R", "777", "accounts")).wait()
                          elif file_name in ['.netrc', 'netrc']:
-                              srun(["touch", ".netrc"])
-                              srun(["cp", ".netrc", "/root/.netrc"])
-                              srun(["chmod", "600", ".netrc"])
+                              await(await create_subprocess_exec("touch", ".netrc")).wait()
+                              await(await create_subprocess_exec("cp", ".netrc", "/root/.netrc")).wait()
+                              await(await create_subprocess_exec("chmod", "600", ".netrc")).wait()
                          elif file_name == "config.env":
                               load_dotenv('config.env', override=True)
                               await load_config()

@@ -13,7 +13,7 @@ from bot import DATABASE_URL, LOGGER, RSS_DELAY, bot, rss_dict, config_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage, sendRss
-from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.button_build import ButtonMaker
 
 rss_dict_lock = Lock()
 rss_job_enabled = True

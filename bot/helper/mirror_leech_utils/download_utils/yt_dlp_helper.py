@@ -1,6 +1,7 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/ytdlp.py
 # Adapted for asyncio framework and pyrogram library
 
+from functools import partial
 from logging import getLogger
 from random import SystemRandom
 from string import ascii_letters, digits
@@ -171,7 +172,7 @@ class YoutubeDLHelper:
             rate = mp3_info[1]
             self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': rate}]
         self.opts['format'] = qual
-        await botloop.run_in_executor(None, self.extractMetaData, link, name, args)
+        await botloop.run_in_executor(None, partial(self.extractMetaData, link, name, args))
         if self.is_cancelled:
             return
         if self.is_playlist:
@@ -202,11 +203,11 @@ class YoutubeDLHelper:
         except ValueError:
             await self.__onDownloadError("Download cancelled by user")
 
-    def cancel_download(self):
+    async def cancel_download(self):
         self.is_cancelled = True
         LOGGER.info(f"Cancelling Download: {self.name}")
         if not self.__downloading:
-            botloop.create_task(self.__onDownloadError("Download cancelled by user"))
+            await self.__onDownloadError("Download cancelled by user")
 
     def __set_args(self, args):
         args = args.split('|')

@@ -1,6 +1,8 @@
-__version__ = "4.0"
+__version__ = "4.5"
 __author__ = "Sam-Max"
 
+from uvloop import install
+install()
 from asyncio import Lock
 from asyncio import Queue
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
@@ -311,7 +313,7 @@ if len(LEECH_LOG) != 0:
 BOT_PM = environ.get('BOT_PM', '')
 BOT_PM = BOT_PM.lower() == 'true'
 
-bot = Client(name="pyrogram", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, bot_token=BOT_TOKEN)
+bot = Client(name="pyrogram", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, bot_token=BOT_TOKEN, max_concurrent_transmissions=10)
 Conversation(bot) 
 LOGGER.info("Creating Pyrogram client")
 
@@ -320,7 +322,7 @@ USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 app= None
 if len(USER_SESSION_STRING) != 0:
     LOGGER.info("Creating Pyrogram client from USER_SESSION_STRING")
-    app = Client(name="pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING, no_updates=True)
+    app = Client(name="pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING, takeout=True, no_updates=True, max_concurrent_transmissions=10)
     with app:
         if IS_PREMIUM_USER := app.me.is_premium:
             if not LEECH_LOG:
@@ -404,19 +406,22 @@ if not config_dict:
 Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
 Popen(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT}", shell=True)
 srun(["qbittorrent-nox", "-d", "--profile=."])
+
 if not ospath.exists('.netrc'):
     srun(["touch", ".netrc"])
+srun(["chmod", "600", ".netrc"])    
 srun(["cp", ".netrc", "/root/.netrc"])
-srun(["chmod", "600", ".netrc"])
 srun(["chmod", "+x", "aria.sh"])
 srun("./aria.sh", shell=True)
 sleep(0.5)
+
 if ospath.exists('accounts.zip'):
     if ospath.exists('accounts'):
         srun(["rm", "-rf", "accounts"])
-    srun(["unzip", "-q", "-o", "accounts.zip", "-x", "accounts/emails.txt"])
+    srun(["unzip", "-q", "-o", "accounts.zip", "-w", "**.json", "-d", "accounts/"])
     srun(["chmod", "-R", "777", "accounts"])
     osremove('accounts.zip')
+
 if not ospath.exists('accounts'):
     config_dict['USE_SERVICE_ACCOUNTS'] = False
 

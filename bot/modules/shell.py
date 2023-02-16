@@ -1,4 +1,5 @@
-from subprocess import Popen, PIPE
+from asyncio import create_subprocess_shell
+from asyncio.subprocess import PIPE
 from bot import LOGGER, bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
@@ -12,8 +13,8 @@ async def shell(client, message):
     if len(cmd) == 1:
         return await message.reply_text('No command to execute was given.')
     cmd = cmd[1]
-    process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
-    stdout, stderr = process.communicate()
+    process = await create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = await process.communicate()
     reply = ''
     stderr = stderr.decode()
     stdout = stdout.decode()
@@ -36,6 +37,7 @@ async def shell(client, message):
         await message.reply_text(reply)
     else:
         await message.reply_text('No Reply')
+
 
 
 shell_handler = MessageHandler(shell, filters= command(BotCommands.ShellCommand) & (CustomFilters.owner_filter))

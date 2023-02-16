@@ -29,7 +29,8 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Mirror to local
 - Queue system for mirror
 - Refactor of the whole code to use only pyrogram with asyncio
-
+- Docker based image based on Alpine 
+- Compatible with Amd64 and ARM64 bit
 ## Commands for bot(set through @BotFather)
 
 ```

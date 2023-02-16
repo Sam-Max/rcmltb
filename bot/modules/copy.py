@@ -8,7 +8,7 @@ from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_utils import get_rclone_config, is_rclone_config
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.helper.mirror_leech_utils.download_utils.rclone_copy import RcloneCopy
@@ -45,7 +45,10 @@ async def list_remotes(message, rclone_drive, base_dir, callback, is_second_menu
     if is_second_menu:
         msg = 'Select folder where you want to copy' 
     else:
-        msg = f"Select cloud where your files are stored\n\n<b>Path: </b><code>{rclone_drive}:{base_dir}</code>" 
+        if rclone_drive or base_dir:
+            msg = f"Select cloud where your files are stored\n\n<b>Path: </b><code>{rclone_drive}:{base_dir}</code>"
+        else:
+            msg = f"Select cloud where your files are stored\n\n<b>Path:</b>" 
     buttons.cb_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}", 'footer')
     if edit:
         await editMessage(msg, message, reply_markup= buttons.build_menu(2))

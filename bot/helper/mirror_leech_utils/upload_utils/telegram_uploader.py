@@ -1,14 +1,15 @@
 from asyncio import sleep
 from os import walk, rename, path as ospath, remove as osremove
 from time import time
-from bot import GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, bot, app, botloop, user_data, leech_log
+from bot import GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, bot, app, user_data, leech_log
 from pyrogram.errors import FloodWait
 from PIL import Image
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.misc_utils import get_media_info, get_media_streams
+from bot.helper.ext_utils.misc_utils import get_document_type, get_media_info
 from bot.helper.ext_utils.screenshot import take_ss
 
-IMAGE_SUFFIXES = ("jpg", "jpx", "png", "cr2", "tif", "bmp", "jxr", "psa", "ico", "heic", "jpeg")
+
+
 
 class TelegramUploader():
     def __init__(self, path, name, size, listener= None) -> None:
@@ -63,14 +64,14 @@ class TelegramUploader():
         self.__is_corrupted = False
         cap= f"<code>{file}</code>"
         try:
-            is_video, is_audio = get_media_streams(up_path)
+            is_video, is_audio, is_image = await get_document_type(up_path)
             if not self.__as_doc:
                 if is_video:
                     if not str(up_path).split(".")[-1] in ['mp4', 'mkv']:
                         new_path = str(up_path).split(".")[0] + ".mp4"
                         rename(up_path, new_path) 
                         up_path = new_path
-                    duration= get_media_info(up_path)[0]
+                    duration= (await get_media_info(up_path))[0]
                     if thumb_path is None:
                         thumb_path = take_ss(up_path, duration)
                         if self.__is_cancelled:
@@ -147,7 +148,7 @@ class TelegramUploader():
                             thumb= thumb_path,
                             disable_notification=True,
                             progress=self.__upload_progress)    
-                elif file.endswith(IMAGE_SUFFIXES):
+                elif is_image:
                     if config_dict['LEECH_LOG']:
                         for chat in leech_log:
                             self.__sent_msg = await self.client.send_photo(
@@ -221,7 +222,7 @@ class TelegramUploader():
             except:
                 pass
 
-    def __upload_progress(self, current, total):
+    async def __upload_progress(self, current, total):
         if self.__is_cancelled:
             self.client.stop_transmission()
             return
@@ -244,7 +245,7 @@ class TelegramUploader():
         except:
             return 0
 
-    def cancel_download(self):
+    async def cancel_download(self):
         self.__is_cancelled = True
         LOGGER.info(f"Cancelling Upload: {self.name}")
-        botloop.create_task(self.__listener.onUploadError('Your upload has been stopped!'))
+        await self.__listener.onUploadError('Your upload has been stopped!')

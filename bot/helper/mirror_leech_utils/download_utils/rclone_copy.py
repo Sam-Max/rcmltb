@@ -5,6 +5,7 @@ from os import listdir, path as ospath
 from random import SystemRandom, randrange
 from string import ascii_letters, digits
 from bot import LOGGER, status_dict, status_dict_lock, config_dict
+from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.ext_utils.message_utils import sendMessage, sendStatusMessage
 from bot.helper.ext_utils.rclone_utils import get_rclone_config
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
@@ -94,7 +95,7 @@ class RcloneCopy:
         config[remote]['service_account_file'] = f'accounts/{self.__service_account_index}.json'
         config[remote]['stop_on_upload_limit'] = 'true'
 
-    def cancel_download(self):
+    async def cancel_download(self):
         self.is_user_cancelled= True
         self.err_message= "Cancelled by user"
-        self.process.kill()
+        await run_sync(self.process.kill) 

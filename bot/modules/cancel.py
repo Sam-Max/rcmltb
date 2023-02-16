@@ -1,15 +1,17 @@
 
-import asyncio
-from time import sleep
+from asyncio import sleep, QueueEmpty
 from pyrogram.filters import regex
-from bot import LOGGER, status_dict_lock, OWNER_ID, bot, status_dict, botloop, user_data, m_queue, l_queue
+from bot import status_dict_lock, OWNER_ID, bot, status_dict, user_data, m_queue, l_queue
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.ext_utils.filters import CustomFilters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
 from bot.helper.ext_utils.message_utils import sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker, getAllDownload, getDownloadByGid
+from bot.helper.ext_utils.button_build import ButtonMaker
+from bot.helper.ext_utils.misc_utils import getAllDownload, getDownloadByGid
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
+
 
 
 async def cancel_mirror(client, message):
@@ -17,8 +19,7 @@ async def cancel_mirror(client, message):
     args= message.text.split()
     if len(args) > 1:
         gid = args[1]
-        LOGGER.info(gid)
-        dl = getDownloadByGid(gid)
+        dl = await getDownloadByGid(gid)
         if not dl:
            return await sendMessage(f"GID: <code>{gid}</code> Not Found.", message)
     else:
@@ -30,11 +31,9 @@ async def cancel_mirror(client, message):
         return await sendMessage("This is not for you!", message)
 
     if dl.type() == "RcloneSync":
-        dl.download().kill()
-    elif dl.type() == "Aria":
-        await dl.download().cancel_download()
+        await run_sync(dl.download().kill) 
     else:
-        dl.download().cancel_download()
+        await dl.download().cancel_download()
 
 async def cancell_all_buttons(client, message):
     async with status_dict_lock:
@@ -64,7 +63,7 @@ async def cancel_all_update(client, callbackquery):
                 while True:
                     m_queue.get_nowait()
                     m_queue.task_done()
-            except asyncio.QueueEmpty:
+            except QueueEmpty:
                 await sendMessage(f"{tag} your mirror queue has been cancelled", message)
             return
         elif data[1 ] == "lqueue":
@@ -72,22 +71,24 @@ async def cancel_all_update(client, callbackquery):
                 while True:
                     l_queue.get_nowait()
                     l_queue.task_done()
-            except asyncio.QueueEmpty:
+            except QueueEmpty:
                 await sendMessage(f"{tag} your mirror queue has been cancelled", message)
             return
         elif data[1] == 'close':
             return await query.message.delete()
-        botloop.run_in_executor(None, cancel_all_, data[1], botloop)
+        else:
+            await cancel_all_(data[1])
     else:
         await query.answer(text="You don't have permission to use these buttons", show_alert=True)
 
-def cancel_all_(status, loop):
+async def cancel_all_(status):
     gid = ''
-    while dl := asyncio.run_coroutine_threadsafe(getAllDownload(status), loop).result():
+    while dl := await getAllDownload(status):
         if dl.gid() != gid:
             gid = dl.gid()
-            dl.download().cancel_download()
-            sleep(1)
+            await dl.download().cancel_download()
+            await sleep(1)
+
 
 cancel_mirror_handler = MessageHandler(cancel_mirror, filters.command(BotCommands.CancelCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 cancel_all_handler = MessageHandler(cancell_all_buttons, filters= filters.command(BotCommands.CancelAllCommand) & (CustomFilters.owner_filter | CustomFilters.sudo_filter))

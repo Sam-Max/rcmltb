@@ -1,7 +1,8 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/
 
+from functools import partial
 from time import time
-from bot import aria2, LOGGER
+from bot import aria2, LOGGER, botloop
 from bot.helper.ext_utils.bot_utils import get_readable_time 
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
@@ -106,17 +107,18 @@ class AriaDownloadStatus:
         return "Aria"
 
     async def cancel_download(self):
-        self.__update()
+        await botloop.run_in_executor(None, partial(self.__update))
         if self.__download.seeder and self.seeding:
             LOGGER.info(f"Cancelling Seed: {self.name()}")
-            self.__listener.onUploadError(f"Seeding stopped with Ratio: {self.ratio()} and Time: {self.seeding_time()}")
-            aria2.remove([self.__download], force=True, files=True)
+            await self.__listener.onUploadError(f"Seeding stopped with Ratio: {self.ratio()} and Time: {self.seeding_time()}")
+            await botloop.run_in_executor(None, partial(aria2.remove, [self.__download], force=True, files=True))
         elif downloads := self.__download.followed_by:
             LOGGER.info(f"Cancelling Download: {self.name()}")
             await self.__listener.onDownloadError('Download cancelled by user!') 
             downloads.append(self.__download)
-            aria2.remove(downloads, force=True, files=True)
+            await botloop.run_in_executor(None, partial(aria2.remove, downloads, force=True, files=True))
         else:
             LOGGER.info(f"Cancelling Download: {self.name()}")
             await self.__listener.onDownloadError('Download stopped by user!')
-            aria2.remove([self.__download], force=True, files=True)
+            await botloop.run_in_executor(None, partial(aria2.remove, [self.__download], force=True, files=True))
+           

@@ -1,5 +1,7 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/
 
+from asyncio import sleep
+from functools import partial
 from bot import LOGGER, get_client, botloop
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 
@@ -108,9 +110,11 @@ class QbDownloadStatus:
     def type(self):
         return "Qbit"
 
-    def cancel_download(self):
-        self.__client.torrents_pause(torrent_hashes=self.__hash)
+    async def cancel_download(self):
+        await botloop.run_in_executor(None, partial(self.__client.torrents_pause, torrent_hashes=self.__hash))
         if self.status() != MirrorStatus.STATUS_SEEDING:
             LOGGER.info(f"Cancelling Download: {self.__info.name}")
-            botloop.create_task(self.__listener.onDownloadError('Download stopped by user!'))
-            self.__client.torrents_delete(torrent_hashes=self.__hash, delete_files=True)
+            await sleep(0.3)
+            await self.__listener.onDownloadError('Download stopped by user!')
+            await botloop.run_in_executor(None, partial(self.__client.torrents_delete, torrent_hashes=self.__hash, delete_files=True))
+            

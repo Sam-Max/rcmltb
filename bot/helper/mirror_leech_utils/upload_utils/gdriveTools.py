@@ -15,7 +15,7 @@ from bot import GLOBAL_EXTENSION_FILTER, config_dict, botloop
 from bot.helper.ext_utils.bot_utils import setInterval
 from google.auth.transport.requests import Request
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.button_build import ButtonMaker
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, RetryError
 
 LOGGER = getLogger(__name__)
@@ -423,10 +423,10 @@ class GoogleDriveHelper:
             return msg, "", "", ""
         return "", size, name, files
 
-    def cancel_download(self):
+    async def cancel_download(self):
         self.__is_cancelled = True
         if self.__is_downloading:
             LOGGER.info(f"Cancelling Download: {self.name}")
-            botloop.create_task(self.__listener.onDownloadError('Download stopped by user!'))
+            await self.__listener.onDownloadError('Download stopped by user!')
         else:
             LOGGER.info(f"Cancelling Clone: {self.name}")

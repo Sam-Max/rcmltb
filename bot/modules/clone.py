@@ -3,9 +3,9 @@
 
 from random import SystemRandom
 from string import ascii_letters, digits
-from bot import bot, LOGGER, status_dict, status_dict_lock, Interval, botloop
+from bot import bot, LOGGER, status_dict, status_dict_lock, Interval, config_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import is_gdrive_link
+from bot.helper.ext_utils.bot_utils import is_gdrive_link, run_sync
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import delete_all_messages, deleteMessage, sendMarkup, sendMessage, sendStatusMessage, update_all_messages
 from bot.helper.mirror_leech_utils.status_utils.clone_status import CloneStatus
@@ -13,7 +13,12 @@ from bot.helper.mirror_leech_utils.upload_utils.gdriveTools import GoogleDriveHe
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler
 
+
+
 async def _clone(client, message):
+    if not config_dict['GDRIVE_ID']:
+        await sendMessage(message, 'GDRIVE_ID not Provided!')
+        return
     args = message.text.split()
     reply_to = message.reply_to_message
     link = ''
@@ -29,12 +34,12 @@ async def _clone(client, message):
             tag = f"@{reply_to.from_user.username}"
     if is_gdrive_link(link):
         gd = GoogleDriveHelper()
-        res, size, name, files = await botloop.run_in_executor(None, gd.helper, link)
+        res, size, name, files = await run_sync(gd.helper, link)
         if res != "":
             return await sendMessage(res, message)
         if files <= 20:
             msg= await sendMessage(f"Cloning: <code>{link}</code>", message)
-            result, button = await botloop.run_in_executor(None, gd.clone, link) 
+            result, button = await run_sync(gd.clone, link) 
             await deleteMessage(msg)
         else:
             gd = GoogleDriveHelper(name)
@@ -42,14 +47,15 @@ async def _clone(client, message):
             async with status_dict_lock:
                 status_dict[message.id] = CloneStatus(gd, size, message, gid)
             await sendStatusMessage(message)
-            result, button = await botloop.run_in_executor(None, gd.clone, link) 
+            result, button = await run_sync(gd.clone, link) 
             async with status_dict_lock:
                 del status_dict[message.id]
                 count = len(status_dict)
             try:
                 if count == 0:
-                    Interval[0].cancel()
-                    del Interval[0]
+                    if Interval:
+                        Interval[0].cancel()
+                        del Interval[0]
                     await delete_all_messages()
                 else:
                     await update_all_messages()
@@ -66,5 +72,4 @@ async def _clone(client, message):
 
 
 clone_handler = MessageHandler(_clone, filters= filters.command(BotCommands.CloneCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-
 bot.add_handler(clone_handler)

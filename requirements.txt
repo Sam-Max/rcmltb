@@ -1,10 +1,12 @@
+aiohttp
+aiofiles
+aioshutil
 anytree
 apscheduler
 aria2p
 bencoding
 beautifulsoup4
 cfscrape
-cryptg
 dnspython
 feedparser
 flask==2.0.3
@@ -12,7 +14,6 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 gunicorn
-lk21
 lxml
 pillow
 psutil
@@ -27,6 +28,7 @@ speedtest-cli
 telegraph
 tenacity
 tgCrypto
+uvloop
 xattr
 yt-dlp
 

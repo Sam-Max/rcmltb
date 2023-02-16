@@ -1,19 +1,22 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/generate_drive_token.py
 # Adapted for asyncio framework and pyrogram library
 
-from asyncio import sleep, get_running_loop
+from asyncio import create_subprocess_exec, create_subprocess_shell, run_coroutine_threadsafe, sleep, get_running_loop
+from asyncio.subprocess import PIPE
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial, wraps
 from html import escape
 from math import ceil
-from re import findall as re_findall, IGNORECASE, compile
 from time import time
+from re import findall as re_findall, IGNORECASE, compile, match as re_match
 from psutil import cpu_percent, disk_usage, virtual_memory
-from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict, user_data, m_queue
+from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict, user_data, m_queue, botloop
 from requests import head as rhead
 from threading import Event, Thread
 from urllib.request import urlopen
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.misc_utils import ButtonMaker
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, TaskType, get_progress_bar_rclone, get_progress_bar_string
 
 
@@ -48,7 +51,7 @@ def is_magnet(url: str):
     magnet = re_findall(MAGNET_REGEX, url)
     return bool(magnet)
 
-def get_content_type(link: str) -> str:
+def get_content_type(link):
     try:
         res = rhead(link, allow_redirects=True, timeout=5, headers = {'user-agent': 'Wget/1.12'})
         content_type = res.headers.get('content-type')
@@ -60,6 +63,9 @@ def get_content_type(link: str) -> str:
         except:
             content_type = None
     return content_type
+
+def is_share_link(url):
+    return bool(re_match(r'https?:\/\/.+\.gdtot\.\S+|https?:\/\/(filepress|filebee|appdrive|gdflix)\.\S+', url))
 
 def get_readable_time(seconds: int) -> str:
     result = ''
@@ -224,6 +230,45 @@ class setIntervalThreaded:
 
     def cancel(self):
         self.stopEvent.set()
+
+async def run_sync(func, *args, wait=True, **kwargs):
+    pfunc = partial(func, *args, **kwargs)
+    with ThreadPoolExecutor() as pool:
+        future = botloop.run_in_executor(pool, pfunc)
+        if wait:
+            return await future 
+        else:
+            return future
+
+def run_async(func, *args, wait=True, **kwargs):
+    future = run_coroutine_threadsafe(func(*args, **kwargs), botloop)
+    if wait:
+        return future.result()
+    else:
+        return future
+
+def run_async_task(func, *args, **kwargs):
+    return botloop.create_task(func(*args, **kwargs))
+
+async def cmd_exec(cmd, shell=False):
+    if shell:
+        proc = await create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
+    else:
+        proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = await proc.communicate()
+    stdout = stdout.decode().strip()
+    stderr = stderr.decode().strip()
+    return stdout, stderr, proc.returncode
+
+def run_thread_dec(func):
+    @wraps(func)
+    def wrapper(*args, wait=False, **kwargs):
+        future = run_coroutine_threadsafe(func(*args, **kwargs), botloop)
+        if wait:
+            return future.result()
+        else:
+            return future
+    return wrapper
 
 def command_process(cmd):
     return compile(cmd, IGNORECASE)
