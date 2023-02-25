@@ -59,7 +59,7 @@ def clean_all():
             pass
 
 async def start_cleanup():
-    await run_sync(get_client().torrents_delete, torrent_hashes="all")
+    get_client().torrents_delete(torrent_hashes="all")
     if not config_dict['LOCAL_MIRROR']:
         try:
             await aiormtree(DOWNLOAD_DIR)

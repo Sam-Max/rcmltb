@@ -183,7 +183,7 @@ async def ownerset_callback(client, callback_query):
                         LOGGER.error(e)
                 aria2_options['bt-stop-timeout'] = '0'
                 if DATABASE_URL:
-                    DbManager().update_aria2('bt-stop-timeout', '0')
+                    await DbManager().update_aria2('bt-stop-timeout', '0')
             elif data[3] == 'BASE_URL':
                 await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn web.wserver:app")).wait()
             elif data[3] == 'QB_BASE_URL':
@@ -197,7 +197,7 @@ async def ownerset_callback(client, callback_query):
             await query.answer("Reseted")    
             config_dict[data[3]] = value
             if DATABASE_URL:
-                DbManager().update_config({data[3]: value})
+                await DbManager().update_config({data[3]: value})
             if data[3] in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
                 await initiate_search_tools()    
             await edit_menus(message, 'env')
@@ -236,7 +236,7 @@ async def ownerset_callback(client, callback_query):
                 except Exception as e:
                     LOGGER.error(e)
             if DATABASE_URL:
-               DbManager().update_aria2(data[3], value)
+               await DbManager().update_aria2(data[3], value)
         elif data[2] == 'emptyaria':
             await query.answer()
             aria2_options[data[3]] = ''
@@ -249,7 +249,7 @@ async def ownerset_callback(client, callback_query):
                 except Exception as e:
                     LOGGER.error(e)
             if DATABASE_URL:
-                DbManager().update_aria2(data[3], '')
+               await DbManager().update_aria2(data[3], '')
     elif data[1] == "qbit":
         if data[2] == 'qbit_menu':
             globals()['START'] = 0
@@ -274,7 +274,7 @@ async def ownerset_callback(client, callback_query):
             qbit_options[data[3]] = ''
             await edit_menus(message, 'qbit')
             if DATABASE_URL:
-                DbManager().update_qbittorrent(data[2], '')  
+               await DbManager().update_qbittorrent(data[2], '')  
     elif data[1] == 'edit':
         await query.answer()
         globals()['STATE'] = 'edit'
@@ -383,7 +383,7 @@ async def start_env_listener(client, query, user_id, key):
                     config_dict[key] = value
                     await edit_menus(message, 'env')       
                     if DATABASE_URL:
-                        DbManager().update_config({key: value})
+                        await DbManager().update_config({key: value})
                     if key in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
                         await initiate_search_tools()
             except KeyError:
@@ -430,7 +430,7 @@ async def start_aria_listener(client, query, user_id, key):
                     aria2_options[key] = value
                     await edit_menus(message, 'aria')   
                     if DATABASE_URL:
-                        DbManager().update_aria2(key, value)    
+                        await DbManager().update_aria2(key, value)    
             except KeyError:
                 return await query.answer("Value doesn't exist") 
     finally:
@@ -465,7 +465,7 @@ async def start_qbit_listener(client, query, user_id, key):
                     qbit_options[key] = value
                     await edit_menus(message, 'qbit')   
                     if DATABASE_URL:
-                        DbManager().update_qbittorrent(key, value)    
+                        await DbManager().update_qbittorrent(key, value)    
             except KeyError:
                 return await query.answer("Value doesn't exist")
     finally:

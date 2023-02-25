@@ -18,6 +18,8 @@ from subprocess import Popen, run as srun
 from pyrogram import Client
 from bot.conv_pyrogram import Conversation
 from asyncio import get_event_loop
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from tzlocal import get_localzone
 
 botloop = get_event_loop()
 
@@ -60,16 +62,6 @@ rss_dict = {}
 
 m_queue = Queue()
 l_queue = Queue()
-
-if ospath.exists('pyrogram.session'):
-    osremove('pyrogram.session')
-if ospath.exists('pyrogram.session-journal'):
-    osremove('pyrogram.session-journal')
-    
-if ospath.exists('rss_session.session'):
-    osremove('rss_session.session')
-if ospath.exists('rss_session.session-journal'):
-    osremove('rss_session.session-journal')
 
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
 if len(BOT_TOKEN) == 0:
@@ -473,3 +465,4 @@ else:
             del qb_opt[k]
     qb_client.app_set_preferences(qb_opt)
 
+scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=botloop)

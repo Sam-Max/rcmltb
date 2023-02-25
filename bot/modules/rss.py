@@ -4,19 +4,20 @@
 from asyncio import Lock
 from bot.helper.ext_utils.db_handler import DbManager
 from feedparser import parse as feedparse
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from asyncio import sleep
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.filters import regex, command
 from pyrogram import filters as pfilters
-from bot import DATABASE_URL, LOGGER, RSS_DELAY, bot, rss_dict, config_dict
+from datetime import datetime, timedelta
+from apscheduler.triggers.interval import IntervalTrigger
+from bot import LOGGER, RSS_DELAY, bot, rss_dict, config_dict, scheduler
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage, sendRss
 from bot.helper.ext_utils.button_build import ButtonMaker
 
 rss_dict_lock = Lock()
-rss_job_enabled = True
+
 
 
 async def rss(client, message):
@@ -149,10 +150,9 @@ async def rss_sub(client, message):
                         last_title = rss_d.entries[0]['title']
                         async with rss_dict_lock:
                             if len(rss_dict) == 0:
-                                rss_job.resume()
-                                globals()['rss_job_enabled'] = True
+                                scheduler.resume()
                             rss_dict[title] = {'link': feed_link, 'last_feed': last_link, 'last_title': last_title, 'filters': f_lists}
-                        DbManager().rss_update(title)
+                        await DbManager().rss_update(title)
                         await sendMessage(sub_msg, message)
                         LOGGER.info(f"Rss Feed Added: {title} - {feed_link} - {filters}")
                     except (IndexError, AttributeError) as e:
@@ -185,7 +185,7 @@ async def rss_unsub(client, message):
                         msg = "Rss link not exists! Nothing removed!"
                         await sendMessage(msg, message)
                     else:
-                        DbManager().rss_delete(title)
+                        await DbManager().rss_delete(title)
                         async with rss_dict_lock:
                             del rss_dict[title]
                         await sendMessage(f"Rss link with Title: <code>{title}</code> has been removed!", message)
@@ -198,8 +198,8 @@ async def rss_unsub(client, message):
 async def rss_settings(message):
     buttons = ButtonMaker()
     buttons.cb_buildbutton("Unsubscribe All", "rss unsuball")
-    if rss_job_enabled:
-        buttons.cb_buildbutton("Pause", "rss pause")
+    if scheduler.running :
+        buttons.cb_buildbutton("Shutdown", "rss shutdown")
     else:
         buttons.cb_buildbutton("Start", "rss start")
     buttons.cb_buildbutton("Close", "rss close")
@@ -232,38 +232,39 @@ async def rss_set_update(client, callback_query):
     elif data[1] == 'unsuball':
         await query.answer()
         if len(rss_dict) > 0:
-            DbManager().trunc_table('rss')
+            await DbManager().trunc_table('rss')
             async with rss_dict_lock:
                 rss_dict.clear()
-            rss_job.pause()
-            globals()['rss_job_enabled'] = False
+            scheduler.pause()
             await editMessage("All Rss Subscriptions have been removed.", msg)
-            LOGGER.info("All Rss Subscriptions have been removed.")
         else:
             await editMessage("No subscriptions to remove!", msg)
-    elif data[1] == 'pause':
+    elif data[1] == 'shutdown':
         await query.answer()
-        rss_job.pause()
-        globals()['rss_job_enabled'] = False
-        await editMessage("Rss Paused", msg)
-        LOGGER.info("Rss Paused")
+        scheduler.shutdown(wait=False)
+        await editMessage("Rss Down", msg)
     elif data[1] == 'start':
         await query.answer()
-        rss_job.resume()
-        globals()['rss_job_enabled'] = False
         await editMessage("Rss Started", msg)
-        LOGGER.info("Rss Started")
+        if scheduler.state == 2:
+            scheduler.resume()
+        elif not scheduler.running:
+            scheduler.add_job(rss_monitor, trigger=IntervalTrigger(seconds=config_dict['RSS_DELAY']), id='0', name='RSS', misfire_grace_time=15,
+                      max_instances=1, next_run_time=datetime.now()+timedelta(seconds=20), replace_existing=True)
+            scheduler.start()
     else:
         await query.answer()
         await query.message.delete()
         await query.message.reply_to_message.delete()
 
 async def rss_monitor():
-    async with rss_dict_lock:
-        if len(rss_dict) == 0:
-            rss_job.pause()
-            globals()['rss_job_enabled'] = False
-            return
+    if not config_dict['RSS_CHAT_ID']:
+        LOGGER.warning('RSS_CHAT_ID not added! Shutting down rss scheduler...')
+        scheduler.shutdown(wait=False)
+        return
+    if len(rss_dict) == 0:
+        scheduler.pause()
+        return
     for title, data in list(rss_dict.items()):
         try:
             rss_d = feedparse(data['link'])
@@ -304,20 +305,20 @@ async def rss_monitor():
                 if title not in rss_dict:
                     continue
                 rss_dict[title].update({'last_feed': last_link, 'last_title': last_title})
-            DbManager().rss_update(title)
+            await DbManager().rss_update(title)
             LOGGER.info(f"Feed Name: {title}")
             LOGGER.info(f"Last item: {last_link}")
         except Exception as e:
             LOGGER.error(f"{e} Feed Name: {title} - Feed Link: {data['link']}")
             continue
 
-if DATABASE_URL is not None and config_dict['RSS_CHAT_ID']:
-    rss_handler = MessageHandler(rss, filters= command(BotCommands.RssCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-    rss_buttons_handler = CallbackQueryHandler(rss_set_update, filters= regex("rss"))
+rss_handler = MessageHandler(rss, filters= command(BotCommands.RssCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
+rss_buttons_handler = CallbackQueryHandler(rss_set_update, filters= regex("rss"))
 
-    bot.add_handler(rss_handler)
-    bot.add_handler(rss_buttons_handler)
+bot.add_handler(rss_handler)
+bot.add_handler(rss_buttons_handler)
 
-scheduler = AsyncIOScheduler()
-rss_job = scheduler.add_job(rss_monitor, 'interval', id= "RSS", seconds=RSS_DELAY)
+
+scheduler.add_job(rss_monitor, trigger=IntervalTrigger(seconds=RSS_DELAY), id='0', name='RSS', misfire_grace_time=15,
+                      max_instances=1, next_run_time=datetime.now()+timedelta(seconds=20), replace_existing=True)
 scheduler.start()

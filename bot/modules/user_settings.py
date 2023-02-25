@@ -62,13 +62,13 @@ async def edit_user_settings(client, callback_query):
         await query.answer(text="Your File Will Deliver As Document!", show_alert=True)
         await update_user_settings(message, query.from_user)
         if DATABASE_URL:
-            DbManager().update_user_data(user_id)
+            await DbManager().update_user_data(user_id)
     elif data[2] == "med":
         update_user_ldata(user_id, 'as_doc', False)
         await query.answer(text="Your File Will Deliver As Media!", show_alert=True)
         await update_user_settings(message, query.from_user)
         if DATABASE_URL:
-            DbManager().update_user_data(user_id)
+            await DbManager().update_user_data(user_id)
     elif data[2] == "dthumb":
         path = f"Thumbnails/{user_id}.jpg"
         if ospath.lexists(path):
@@ -77,7 +77,7 @@ async def edit_user_settings(client, callback_query):
             update_user_ldata(user_id, 'thumb', '')
             await update_user_settings(message, query.from_user)
             if DATABASE_URL:
-                DbManager().update_thumb(user_id)
+                await DbManager().update_thumb(user_id)
         else:
             await query.answer(text="Old Settings", show_alert=True)
             await update_user_settings(message, query.from_user)
@@ -104,7 +104,7 @@ async def edit_user_settings(client, callback_query):
                         osremove(photo_dir)
                         await query.answer(text="Thumbnail Added!!", show_alert=True)
                         if DATABASE_URL:
-                            DbManager().update_thumb(user_id, des_dir)
+                            await DbManager().update_thumb(user_id, des_dir)
                 except Exception as ex:
                     await editMessage(str(ex), question)
         finally: 

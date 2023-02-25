@@ -1,9 +1,10 @@
 from asyncio import sleep
 from string import ascii_letters
 from random import SystemRandom
-from telegraph import Telegraph
+from telegraph.aio import Telegraph
 from telegraph.exceptions import RetryAfterError
-from bot import LOGGER
+from bot import LOGGER, botloop
+
 
 
 class TelegraphHelper:
@@ -13,10 +14,9 @@ class TelegraphHelper:
         self.access_token = None
         self.author_name = author_name
         self.author_url = author_url
-        self.create_account()
 
-    def create_account(self):
-        self.telegraph.create_account(
+    async def create_account(self):
+        await self.telegraph.create_account(
             short_name=self.short_name,
             author_name=self.author_name,
             author_url=self.author_url
@@ -26,7 +26,7 @@ class TelegraphHelper:
 
     async def create_page(self, title, content):
         try:
-           return self.telegraph.create_page(
+           return await self.telegraph.create_page(
                 title = title,
                 author_name=self.author_name,
                 author_url=self.author_url,
@@ -39,7 +39,7 @@ class TelegraphHelper:
 
     async def edit_page(self, path, title, content):
         try:
-            return self.telegraph.edit_page(
+            return await self.telegraph.edit_page(
                 path = path,
                 title = title,
                 author_name=self.author_name,
@@ -75,3 +75,4 @@ class TelegraphHelper:
 
 
 telegraph=TelegraphHelper('Rclone-Mirror-Leech-Telegram-Bot', 'https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot')
+botloop.run_until_complete(telegraph.create_account())

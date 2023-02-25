@@ -1,6 +1,6 @@
 from asyncio import create_subprocess_exec
 from time import time
-from bot import Interval, QbInterval, bot, botloop, app, bot
+from bot import Interval, QbInterval, bot, botloop, app, bot, scheduler
 from os import path as ospath, remove as osremove, execl as osexecl
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
@@ -34,6 +34,8 @@ I can also can mirror-leech files and links to Telegram or cloud**\n\n
     
 async def restart(client, message):
     restart_msg= await sendMessage("Restarting...", message) 
+    if scheduler.running:
+        scheduler.shutdown(wait=False)
     if Interval:
         Interval[0].cancel()
         Interval.clear()

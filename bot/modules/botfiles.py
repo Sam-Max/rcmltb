@@ -164,7 +164,7 @@ async def load_config():
                     LOGGER.error(e)
         aria2_options['bt-stop-timeout'] = '0'
         if DATABASE_URL:
-            DbManager().update_aria2('bt-stop-timeout', '0')
+            await DbManager().update_aria2('bt-stop-timeout', '0')
         TORRENT_TIMEOUT = ''
      else:
         for download in downloads:
@@ -175,7 +175,7 @@ async def load_config():
                     LOGGER.error(e)
         aria2_options['bt-stop-timeout'] = TORRENT_TIMEOUT
         if DATABASE_URL:
-            DbManager().update_aria2('bt-stop-timeout', TORRENT_TIMEOUT)
+           await DbManager().update_aria2('bt-stop-timeout', TORRENT_TIMEOUT)
         TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
 
      IS_TEAM_DRIVE = environ.get('IS_TEAM_DRIVE', '')
@@ -325,7 +325,7 @@ async def load_config():
                          'WEB_PINCODE': WEB_PINCODE})
 
      if DATABASE_URL:
-          DbManager().update_config(config_dict)                        
+          await DbManager().update_config(config_dict)                        
      await initiate_search_tools()
      
 async def config_menu(user_id, message, edit=False):
@@ -470,7 +470,7 @@ async def botfiles_callback(client, callback_query):
                srun(["rm", "-rf", "accounts"])
           config_dict['USE_SERVICE_ACCOUNTS'] = False
           if DATABASE_URL:
-               DbManager().update_config({'USE_SERVICE_ACCOUNTS': False})
+               await DbManager().update_config({'USE_SERVICE_ACCOUNTS': False})
           await query.answer()
           await config_menu(user_id, message, True)
      else:
@@ -503,7 +503,7 @@ async def set_config_listener(client, query, message, grclone=False):
                               rclone_path = ospath.join("users", f"{user_id}", "rclone.conf" )
                          path= await client.download_media(response, file_name=rclone_path)
                          if DATABASE_URL:
-                              DbManager().update_private_file(path) 
+                              await DbManager().update_private_file(path) 
                     else:
                          await client.download_media(response, file_name='./')
                          if file_name == 'accounts.zip':
@@ -519,7 +519,7 @@ async def set_config_listener(client, query, message, grclone=False):
                               load_dotenv('config.env', override=True)
                               await load_config()
                          if DATABASE_URL and file_name != 'config.env':
-                              DbManager().update_private_file(file_name)       
+                              await DbManager().update_private_file(file_name)       
                     if ospath.exists('accounts.zip'):
                          remove('accounts.zip')
           except Exception as ex:
