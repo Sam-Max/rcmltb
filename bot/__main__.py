@@ -1,6 +1,7 @@
 from asyncio import create_subprocess_exec
+from signal import signal, SIGINT
 from time import time
-from bot import Interval, QbInterval, bot, botloop, app, bot, scheduler
+from bot import LOGGER, Interval, QbInterval, bot, botloop, app, bot, scheduler
 from os import path as ospath, remove as osremove, execl as osexecl
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
@@ -10,12 +11,14 @@ from .helper.ext_utils.bot_commands import BotCommands
 from .helper.ext_utils.bot_utils import run_sync
 from .helper.ext_utils.filters import CustomFilters
 from .helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
-from .helper.ext_utils.misc_utils import clean_all, start_cleanup
+from .helper.ext_utils.misc_utils import clean_all, exit_clean_up, start_cleanup
 from .helper.ext_utils import db_handler
 from .modules import batch, cancel, botfiles, copy, leech, mirror_leech, myfilesset, owner_settings, cloudselect, search, myfiles, stats, status, clone, storage, cleanup, user_settings, ytdlp, shell, exec, bt_select, rss, serve, sync
 
 
 print("Successfully deployed!!")
+
+
 
 async def start(client, message):
     buttons = ButtonMaker()
@@ -80,10 +83,13 @@ async def main():
     bot.add_handler(restart_handler)
     bot.add_handler(log_handler)
     bot.add_handler(ping_handler)
+    LOGGER.info("Bot Started!")
+    signal(SIGINT, exit_clean_up)
 
 bot.start()
 if app is not None:
     app.start()
+
     
 botloop.run_until_complete(main())
 botloop.run_forever()

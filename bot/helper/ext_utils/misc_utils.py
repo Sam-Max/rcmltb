@@ -1,10 +1,11 @@
 from asyncio import create_subprocess_exec
 from shutil import rmtree
+from sys import exit 
 from bot.helper.ext_utils.bot_utils import cmd_exec, run_sync
 from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.zip_utils import get_path_size
 from aioshutil import rmtree as aiormtree
-from aiofiles.os import remove as aioremove, path as aiopath, makedirs, mkdir
+from aiofiles.os import remove as aioremove, path as aiopath, mkdir
 from os import path as ospath
 from re import search as re_search
 from bot import config_dict, DOWNLOAD_DIR, LOGGER, TG_MAX_FILE_SIZE, aria2, get_client, status_dict, status_dict_lock
@@ -60,12 +61,15 @@ def clean_all():
 
 async def start_cleanup():
     get_client().torrents_delete(torrent_hashes="all")
-    if not config_dict['LOCAL_MIRROR']:
-        try:
-            await aiormtree(DOWNLOAD_DIR)
-        except:
-            pass
-        await makedirs(DOWNLOAD_DIR)
+
+def exit_clean_up(signal, frame):
+    try:
+        LOGGER.info("Please wait, while we clean up the downloads and stop running downloads")
+        clean_all()
+        exit(0)
+    except KeyboardInterrupt:
+        LOGGER.warning("Force Exiting before the cleanup finishes!")
+        exit(1)
 
 def get_readable_size(size):
     """Get size in readable format"""

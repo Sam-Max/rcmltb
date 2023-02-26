@@ -5,6 +5,7 @@ from uvloop import install
 install()
 from asyncio import Lock
 from asyncio import Queue
+from socket import setdefaulttimeout
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from os import environ, remove as osremove, path as ospath, makedirs as osmakedirs
 from threading import Thread
@@ -22,6 +23,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from tzlocal import get_localzone
 
 botloop = get_event_loop()
+
+setdefaulttimeout(600)
 
 botUptime = time()
 

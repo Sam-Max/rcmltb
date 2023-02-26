@@ -34,7 +34,7 @@ class DbManager:
         # User Data
         if await self.__db.users.find_one():
             rows = self.__db.users.find({})  # return a dict ==> {_id, is_sudo, is_auth, as_doc, thumb}
-            for row in rows:
+            async for row in rows:
                 uid = row['_id']
                 del row['_id']
                 path = f"Thumbnails/{uid}.jpg"
@@ -49,7 +49,7 @@ class DbManager:
         # Rss Data
         if await self.__db.rss[bot_id].find_one():
             rows = self.__db.rss[bot_id].find({})  # return a dict ==> {_id, link, last_feed, last_name, filters}
-            for row in rows:
+            async for row in rows:
                 title = row['_id']
                 del row['_id']
                 rss_dict[title] = row
