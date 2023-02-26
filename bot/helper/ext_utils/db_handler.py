@@ -47,7 +47,7 @@ class DbManager:
                 user_data[uid] = row
             LOGGER.info("Users data has been imported from Database")
         # Rss Data
-        if await self.__db.rss[bot_id].find_one():
+        if await self.__db.rss[str(bot_id)].find_one():
             rows = self.__db.rss[bot_id].find({})  # return a dict ==> {_id, link, last_feed, last_name, filters}
             async for row in rows:
                 title = row['_id']
