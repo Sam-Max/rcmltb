@@ -55,7 +55,7 @@ async def sync_cb(client, callbackQuery):
 
 async def start_rc_sync(message, path, destination, listener):
     if config_dict["SERVER_SIDE"]:
-        cmd = ["rclone", "sync", "--server-side-across-configs", "--delete-during", "-P", f'--config={path}', f"{source}:", f"{destination}:"] 
+        cmd = ["rclone", "sync", "--server-side-across-configs", "--delete-during", "-P", f'--config={path}', f"{SOURCE}:", f"{destination}:"] 
     else:
         cmd = ["rclone", "sync", "--delete-during", "-P", f'--config={path}', f"{SOURCE}:", f"{destination}:"] 
     process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
