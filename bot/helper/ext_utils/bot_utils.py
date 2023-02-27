@@ -106,7 +106,10 @@ async def get_readable_message():
             globals()['COUNT'] -= STATUS_LIMIT
             globals()['PAGE_NO'] -= 1
     for index, download in enumerate(list(status_dict.values())[COUNT:], start=1):
-        msg += f"<b>Status: </b> {download.status()}"
+        if download.message.chat.type.name in ['SUPERGROUP', 'CHANNEL']:
+            msg += f"<b><a href='{download.message.link}'>{download.status()}</a>: </b>"
+        else:
+            msg += f"<b>{download.status()}: </b>"
         msg += f"\n<b>Name: </b><code>{escape(str(download.name()))}</code>"
         if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
             if download.type() == TaskType.RCLONE or download.type() == TaskType.RCLONE_SYNC:
@@ -114,20 +117,15 @@ async def get_readable_message():
                 msg += f"\n<b>Processed:</b> {download.processed_bytes()}"
             else:
                 msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
+            if m_queue.qsize() > 0:
                 msg += f"\n<b>Enqueue:</b> {m_queue.qsize()}"
-                msg += f"\n<b>Processed:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
+            msg += f"\n<b>Processed:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
             msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
             if hasattr(download, 'seeders_num'):
                 try:
                     msg += f"\n<b>Seeders:</b> {download.seeders_num()} | <b>Leechers:</b> {download.leechers_num()}"
                 except:
                     pass
-        elif download.status() == MirrorStatus.STATUS_SEEDING:
-            msg += f"\n<b>Size: </b>{download.size()}"
-            msg += f"\n<b>Speed: </b>{download.upload_speed()}"
-            msg += f" | <b>Uploaded: </b>{download.uploaded_bytes()}"
-            msg += f"\n<b>Ratio: </b>{download.ratio()}"
-            msg += f" | <b>Time: </b>{download.seeding_time()}"
         else:
             msg += f"\n<b>Size: </b>{download.size()}"
         msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>"

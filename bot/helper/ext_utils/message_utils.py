@@ -122,14 +122,13 @@ async def update_all_messages(force=False):
             return
         for chat_id in list(status_reply_dict.keys()):
             status_reply_dict[chat_id][1] = time()
-    async with status_dict_lock:
-        msg, buttons = await get_readable_message()
+    msg, buttons = await get_readable_message()
     if msg is None:
         return
     async with status_reply_dict_lock:
         for chat_id in list(status_reply_dict.keys()):
             if status_reply_dict[chat_id] and msg != status_reply_dict[chat_id][0].text:
-                rmsg = await editMessage(status_reply_dict[chat_id][0], msg, buttons)
+                rmsg = await editMessage(msg, status_reply_dict[chat_id][0], buttons)
                 if isinstance(rmsg, str) and rmsg.startswith('Telegram says: [400'):
                     del status_reply_dict[chat_id]
                     continue
