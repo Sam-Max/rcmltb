@@ -1,8 +1,10 @@
-from math import floor
-from os import listdir, rmdir, walk, path as ospath, remove
+
 import time
+from math import floor
+from functools import partial
+from os import listdir, rmdir, walk, path as ospath, remove
 from psutil import cpu_percent, virtual_memory
-from bot import LOGGER, botUptime
+from bot import LOGGER, botUptime, botloop
 from shutil import disk_usage, rmtree
 from bot.helper.ext_utils.human_format import human_readable_bytes, human_readable_timedelta
 
@@ -50,14 +52,14 @@ def get_progress_bar_rclone(percentage):
     ''.join(['■' for i in range(floor(percentage / 10))]),
     ''.join(['□' for i in range(10 - floor(percentage / 10))]))
 
-def clean_unwanted(path: str):
+async def clean_unwanted(path: str):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
-    for dirpath, subdir, files in walk(path, topdown=False):
+    for dirpath, subdir, files in await botloop.run_in_executor(None, partial(walk, path, topdown=False)):
         for filee in files:
             if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
                 remove(ospath.join(dirpath, filee))
         if dirpath.endswith((".unwanted", "splited_files")):
             rmtree(dirpath)
-    for dirpath, subdir, files in walk(path, topdown=False):
+    for dirpath, subdir, files in await botloop.run_in_executor(None, partial(walk, path, topdown=False)):
         if not listdir(dirpath):
             rmdir(dirpath)

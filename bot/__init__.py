@@ -1,8 +1,11 @@
-__version__ = "4.0"
+__version__ = "4.5"
 __author__ = "Sam-Max"
 
+from uvloop import install
+install()
 from asyncio import Lock
 from asyncio import Queue
+from socket import setdefaulttimeout
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from os import environ, remove as osremove, path as ospath, makedirs as osmakedirs
 from threading import Thread
@@ -16,8 +19,12 @@ from subprocess import Popen, run as srun
 from pyrogram import Client
 from bot.conv_pyrogram import Conversation
 from asyncio import get_event_loop
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from tzlocal import get_localzone
 
 botloop = get_event_loop()
+
+setdefaulttimeout(600)
 
 botUptime = time()
 
@@ -59,22 +66,12 @@ rss_dict = {}
 m_queue = Queue()
 l_queue = Queue()
 
-if ospath.exists('pyrogram.session'):
-    osremove('pyrogram.session')
-if ospath.exists('pyrogram.session-journal'):
-    osremove('pyrogram.session-journal')
-    
-if ospath.exists('rss_session.session'):
-    osremove('rss_session.session')
-if ospath.exists('rss_session.session-journal'):
-    osremove('rss_session.session-journal')
-
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
 if len(BOT_TOKEN) == 0:
     LOGGER.error("BOT_TOKEN variable is missing! Exiting now")
     exit(1)
 
-bot_id = int(BOT_TOKEN.split(':', 1)[0])
+bot_id = BOT_TOKEN.split(':', 1)[0]
 
 DATABASE_URL = environ.get('DATABASE_URL', '')
 if len(DATABASE_URL) == 0:
@@ -105,7 +102,7 @@ if DATABASE_URL:
         qbit_options = qbit_opt
     conn.close()
     BOT_TOKEN = environ.get('BOT_TOKEN', '')
-    bot_id = int(BOT_TOKEN.split(':', 1)[0])
+    bot_id = BOT_TOKEN.split(':', 1)[0]
     DATABASE_URL = environ.get('DATABASE_URL', '')
 else:
     config_dict = {}
@@ -311,7 +308,7 @@ if len(LEECH_LOG) != 0:
 BOT_PM = environ.get('BOT_PM', '')
 BOT_PM = BOT_PM.lower() == 'true'
 
-bot = Client(name="pyrogram", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, bot_token=BOT_TOKEN)
+bot = Client(name="pyrogram", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, bot_token=BOT_TOKEN, max_concurrent_transmissions=10)
 Conversation(bot) 
 LOGGER.info("Creating Pyrogram client")
 
@@ -320,7 +317,7 @@ USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 app= None
 if len(USER_SESSION_STRING) != 0:
     LOGGER.info("Creating Pyrogram client from USER_SESSION_STRING")
-    app = Client(name="pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING, no_updates=True)
+    app = Client(name="pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING, takeout=True, no_updates=True, max_concurrent_transmissions=10)
     with app:
         if IS_PREMIUM_USER := app.me.is_premium:
             if not LEECH_LOG:
@@ -404,19 +401,22 @@ if not config_dict:
 Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
 Popen(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT}", shell=True)
 srun(["qbittorrent-nox", "-d", "--profile=."])
+
 if not ospath.exists('.netrc'):
     srun(["touch", ".netrc"])
+srun(["chmod", "600", ".netrc"])    
 srun(["cp", ".netrc", "/root/.netrc"])
-srun(["chmod", "600", ".netrc"])
 srun(["chmod", "+x", "aria.sh"])
 srun("./aria.sh", shell=True)
 sleep(0.5)
+
 if ospath.exists('accounts.zip'):
     if ospath.exists('accounts'):
         srun(["rm", "-rf", "accounts"])
-    srun(["unzip", "-q", "-o", "accounts.zip", "-x", "accounts/emails.txt"])
+    srun(["unzip", "-q", "-o", "accounts.zip", "-w", "**.json", "-d", "accounts/"])
     srun(["chmod", "-R", "777", "accounts"])
     osremove('accounts.zip')
+
 if not ospath.exists('accounts'):
     config_dict['USE_SERVICE_ACCOUNTS'] = False
 
@@ -468,3 +468,4 @@ else:
             del qb_opt[k]
     qb_client.app_set_preferences(qb_opt)
 
+scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=botloop)

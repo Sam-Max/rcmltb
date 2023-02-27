@@ -1,46 +1,50 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/search.py
 # Adapted for asyncio framework and pyrogram library
 
-from functools import partial
 from html import escape
 from urllib.parse import quote
-from bot import LOGGER, bot, get_client, botloop, config_dict
-from requests import get as rget
+from aiohttp import ClientSession
+from bot import LOGGER, bot, get_client, config_dict
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
 from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import editMessage,sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.telegraph_helper import telegraph
 
 PLUGINS = []
 SITES = None
 TELEGRAPH_LIMIT = 300
 
-def initiate_search_tools():
+
+
+async def initiate_search_tools():
     qbclient = get_client()
-    qb_plugins = qbclient.search_plugins()
+    qb_plugins = await run_sync(qbclient.search_plugins)
     if SEARCH_PLUGINS := config_dict['SEARCH_PLUGINS']:
         globals()['PLUGINS'] = []
         src_plugins = eval(SEARCH_PLUGINS)
         if qb_plugins:
             for plugin in qb_plugins:
-                qbclient.search_uninstall_plugin(names=plugin['name'])
-        qbclient.search_install_plugin(src_plugins)
-        qbclient.auth_log_out()
+                 await run_sync(qbclient.search_uninstall_plugin, names=plugin['name'])
+        await run_sync(qbclient.search_install_plugin, src_plugins)
+        await run_sync(qbclient.auth_log_out)
     elif qb_plugins:
         for plugin in qb_plugins:
-            qbclient.search_uninstall_plugin(names=plugin['name'])
+            await run_sync(qbclient.search_uninstall_plugin, names=plugin['name'])
         globals()['PLUGINS'] = []
-    qbclient.auth_log_out()
+    await run_sync(qbclient.auth_log_out)
 
     if SEARCH_API_LINK := config_dict['SEARCH_API_LINK']:
         global SITES
         try:
-            res = rget(f'{SEARCH_API_LINK}/api/v1/sites').json()
-            SITES = {str(site): str(site).capitalize() for site in res['supported_sites']}
+            async with ClientSession(trust_env=True) as c:
+                async with c.get(f'{SEARCH_API_LINK}/api/v1/sites') as res:
+                    data = await res.json()
+            SITES = {str(site): str(site).capitalize() for site in data['supported_sites']}
             SITES['all'] = 'All'
         except Exception:
             LOGGER.error("Can't fetching sites from SEARCH_API_LINK make sure use latest version of API")
@@ -53,14 +57,14 @@ def _api_buttons(user_id, method):
     buttons.cb_buildbutton("Cancel", f"torser {user_id} cancl")
     return buttons.build_menu(2)
 
-def _plugin_buttons(user_id):
+async  def _plugin_buttons(user_id):
     buttons = ButtonMaker()
     if not PLUGINS:
         qbclient = get_client()
-        pl = qbclient.search_plugins()
+        pl = await run_sync(qbclient.search_plugins)
         for name in pl:
             PLUGINS.append(name['name'])
-        qbclient.auth_log_out()
+        await run_sync(qbclient.auth_log_out)
     for siteName in PLUGINS:
         buttons.cb_buildbutton(siteName.capitalize(), f"torser {user_id} {siteName} plugin")
     buttons.cb_buildbutton('All', f"torser {user_id} all plugin")
@@ -92,7 +96,7 @@ async def handle_torrent_search(client, message):
         button = _api_buttons(user_id, "apisearch")
         await sendMarkup('Choose site to search | API:', message, button)
     else:
-        button = _plugin_buttons(user_id)
+        button = await _plugin_buttons(user_id)
         await sendMarkup('Choose site to search | Plugins:', message, button)
 
 async def torrent_search_but(client, callback_query):
@@ -111,7 +115,7 @@ async def torrent_search_but(client, callback_query):
         await editMessage('Choose site:', message, button)
     elif data[2] == 'plugin':
         await query.answer()
-        button = _plugin_buttons(user_id)
+        button = await _plugin_buttons(user_id)
         await editMessage('Choose site:', message, button)
     elif data[2] != "cancl":
         await query.answer()
@@ -156,10 +160,12 @@ async def _search(key, site, message, method):
             else:
                 api = f"{SEARCH_API_LINK}/api/v1/recent?site={site}&limit={SEARCH_LIMIT}"
         try:
-            resp = rget(api)
-            search_results = resp.json()
-            if "error" in search_results.keys():
-                return await sendMessage("No result found for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i>", message)
+            async with ClientSession(trust_env=True) as c:
+                async with c.get(api) as res:
+                    search_results = await res.json()
+            if 'error' in search_results or search_results['total'] == 0:
+                await editMessage(message, f"No result found for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i>")
+                return
             msg = f"<b>Found {min(search_results['total'], TELEGRAPH_LIMIT)}</b>"
             if method == 'apitrend':
                 msg += f" <b>trending result(s)\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
@@ -169,18 +175,19 @@ async def _search(key, site, message, method):
                 msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
             search_results = search_results['data']
         except Exception as e:
+            await editMessage(message, str(e))
             LOGGER.info(str(e)) 
     else:
         LOGGER.info(f"PLUGINS Searching: {key} from {site}")
         client = get_client()
-        search = await botloop.run_in_executor(None, partial(client.search_start, pattern=key, plugins=site, category='all'))
+        search = await run_sync(client.search_start, pattern=key, plugins=site, category='all')
         search_id = search.id
         while True:
-            result_status = await botloop.run_in_executor(None, partial(client.search_status, search_id=search_id))
+            result_status = await run_sync(client.search_status, search_id=search_id)
             status = result_status[0].status
             if status != 'Running':
                 break
-        dict_search_results = await botloop.run_in_executor(None, partial(client.search_results, search_id=search_id))
+        dict_search_results = await run_sync(client.search_results, search_id=search_id)
         search_results = dict_search_results.results
         total_results = dict_search_results.total
         if total_results == 0:
@@ -193,7 +200,8 @@ async def _search(key, site, message, method):
     button = buttons.build_menu(1)
     await editMessage(msg, message, button)
     if not method.startswith('api'):
-        await botloop.run_in_executor(None, partial(client.search_delete, search_id=search_id))
+        await run_sync(client.search_delete, search_id=search_id)
+
 
 async def _getResult(search_results, key, message, method):
     telegraph_content = []
@@ -263,10 +271,12 @@ async def _getResult(search_results, key, message, method):
     LOGGER.info(path)
     return f"https://telegra.ph/{path[0]}"
 
-initiate_search_tools() 
+
+
 
 torrent_search_handler = MessageHandler(handle_torrent_search, filters= filters.command(BotCommands.SearchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 torrent_search_but_handler = CallbackQueryHandler(torrent_search_but, filters= filters.regex("torser"))
+
 
 bot.add_handler(torrent_search_handler)
 bot.add_handler(torrent_search_but_handler)

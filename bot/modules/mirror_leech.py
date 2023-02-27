@@ -8,14 +8,14 @@ from bot import bot, DOWNLOAD_DIR, botloop, config_dict, m_queue
 from pyrogram import filters
 from re import match as re_match, split as re_split
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from pyrogram import filters
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_mega_link, is_url
+from bot.helper.ext_utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_mega_link, is_url, run_async, run_async_task, run_sync
 from bot.helper.ext_utils.direct_link_generator import direct_link_generator
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import deleteMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker, get_readable_size
+from bot.helper.ext_utils.button_build import ButtonMaker
+from bot.helper.ext_utils.misc_utils import get_readable_size
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected, list_remotes
 from bot.helper.mirror_leech_utils.download_utils.aria2_download import add_aria2c_download
@@ -42,8 +42,9 @@ async def handle_multizip_mirror(client, message):
 async def handle_unzip_mirror(client, message):
     await mirror_leech(client, message, extract=True)
 
+
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/mirror_leech.py
-# Adapted for asyncio and pyrogram with rclone modifications added
+# Adapted for asyncio/pyrogram with rclone with minor modifications 
 async def mirror_leech(client, message, isZip=False, extract=False, isLeech=False, multiZip=False):
     user_id= message.from_user.id
     message_id= message.id
@@ -107,17 +108,17 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
     if message.from_user.username:
         tag = f"@{message.from_user.username}"
 
-    reply_message= message.reply_to_message
-    if reply_message is not None:
+    if reply_message:= message.reply_to_message:
         listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, isMultiZip=multiZip, extract=extract, pswd=pswd, isLeech=isLeech)
-        file = reply_message.document or reply_message.video or reply_message.audio or reply_message.photo or None
+        file = reply_message.document or reply_message.video or reply_message.audio or reply_message.photo or \
+               reply_message.voice or reply_message.video_note or reply_message.sticker or reply_message.animation or None
         if reply_message.from_user.username:
             tag = f"@{reply_message.from_user.username}"
         if len(link) == 0 or not is_url(link) and not is_magnet(link):
             if file is None:
                 reply_text= reply_message.text.split(maxsplit=1)[0].strip()     
                 if is_url(reply_text) or is_magnet(reply_text):     
-                        link = reply_message.text.strip() 
+                        link = reply_text
             elif file.mime_type != "application/x-bittorrent":
                 if multi and multiZip:
                     tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.user_id}/multizip/', name, multi, multi_zip=multiZip)
@@ -137,7 +138,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
                     if PARALLEL_TASKS:    
                         await m_queue.put(tg_down)
                     else:
-                        botloop.create_task(tg_down.download()) 
+                        await run_async_task(tg_down.download)
                     if multi > 1:
                         await sleep(4)
                         nextmsg = await client.get_messages(message.chat.id, message.reply_to_message.id + 1)
@@ -195,10 +196,10 @@ Number should be always before |newname or pswd:
 
     if not is_mega_link(link) and not is_magnet(link) and not is_gdrive_link(link) \
         and not link.endswith('.torrent'):
-        content_type = get_content_type(link)
+        content_type = await run_sync(get_content_type, link)
         if content_type is None or re_match(r'text/html|text/plain', content_type):
             try:
-                link = await direct_link_generator(link)
+                link = await run_sync(direct_link_generator, link) 
             except DirectDownloadLinkException as e:
                 if str(e).startswith('ERROR:'):
                     return await sendMessage(str(e), message)
@@ -206,7 +207,7 @@ Number should be always before |newname or pswd:
         if link.endswith('.torrent'):
             content_type = None
         else:
-            content_type = get_content_type(link)
+            content_type = await run_sync(get_content_type, link)
         if content_type is None or re_match(r'application/x-bittorrent|application/octet-stream', content_type):
             try:
                 resp = get(link, timeout=10, headers = {'user-agent': 'Wget/1.12'})
@@ -226,7 +227,7 @@ Number should be always before |newname or pswd:
     if is_gdrive_link(link):
         await add_gd_download(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name)   
     elif is_mega_link(link):
-        await botloop.run_in_executor(None, add_mega_download, link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)
+        await add_mega_download(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)
     elif is_magnet(link) or ospath.exists(link):
         await add_qb_torrent(link, f'{DOWNLOAD_DIR}{listener.uid}', listener)
     else:
@@ -240,7 +241,7 @@ Number should be always before |newname or pswd:
             auth = "Basic " + b64encode(auth.encode()).decode('ascii')
         else:
             auth = ''
-        botloop.create_task(add_aria2c_download(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name, auth))
+        await add_aria2c_download(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name, auth)
 
     if multi > 1:
         await sleep(4)

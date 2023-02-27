@@ -1,4 +1,4 @@
-import asyncio as aio
+from asyncio import create_subprocess_shell, subprocess
 from bot import bot
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
@@ -12,10 +12,7 @@ async def execute(client, message):
     if len(cmd) == 1:
         return await message.reply_text('No command to execute was given.')
     cmd = cmd[1]
-    process = await aio.create_subprocess_shell(
-        cmd,
-        stdout=aio.subprocess.PIPE,
-        stderr=aio.subprocess.PIPE)
+    process = await create_subprocess_shell(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = await process.communicate()
     e = stderr.decode()
     if not e:

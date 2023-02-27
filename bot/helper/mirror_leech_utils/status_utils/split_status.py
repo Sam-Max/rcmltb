@@ -39,11 +39,11 @@ class SplitStatus:
     def download(self):
         return self
 
-    def cancel_download(self):
+    async def cancel_download(self):
         LOGGER.info(f'Cancelling Split: {self.__name}')
         if self.__listener.suproc is not None:
             self.__listener.suproc.kill()
-        self.__listener.onUploadError('splitting stopped by user!')
+        await self.__listener.onUploadError('Splitting stopped by user!')
 
     def type(self):
         return "Split"

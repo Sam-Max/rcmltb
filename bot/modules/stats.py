@@ -1,11 +1,11 @@
 #Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/__main__.py
 
+from asyncio import create_subprocess_shell
 from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, boot_time
 from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
 from time import time
 from os import path as ospath
-from subprocess import check_output
 from bot.helper.ext_utils.message_utils import sendMessage
 from bot import bot, botUptime
 from bot.helper.ext_utils.bot_commands import BotCommands
@@ -13,9 +13,13 @@ from bot.helper.ext_utils.bot_utils import get_readable_time
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.filters import CustomFilters
 
+
+
 async def stats(client, message):
     if ospath.exists('.git'):
-        last_commit = check_output(["git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'"], shell=True).decode()
+        proc = await create_subprocess_shell("git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'")
+        stdout, _ = await proc.communicate()
+        last_commit = stdout
     else:
         last_commit = 'No UPSTREAM_REPO'
     total, used, free, disk = disk_usage('/')
@@ -38,6 +42,8 @@ async def stats(client, message):
             f'<b>Memory Free:</b> {get_readable_file_size(memory.available)}\n'\
             f'<b>Memory Used:</b> {get_readable_file_size(memory.used)}\n'
     await sendMessage(stats, message)
+        
+
         
 stats_handler = MessageHandler(stats, filters= command(BotCommands.StatsCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 

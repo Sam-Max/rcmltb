@@ -9,13 +9,15 @@ from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.rclone_utils import get_rclone_config, is_rclone_config
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendStatusMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.modules.listener import MirrorLeechListener
 from bot.helper.mirror_leech_utils.status_utils.sync_status import SyncStatus
 
 
 SOURCE= None
 listener_dict= {}
+
+
 
 async def handle_sync(client, message):
     user_id= message.from_user.id
@@ -53,7 +55,7 @@ async def sync_cb(client, callbackQuery):
 
 async def start_rc_sync(message, path, destination, listener):
     if config_dict["SERVER_SIDE"]:
-        cmd = ["rclone", "sync", "--server-side-across-configs", "--delete-during", "-P", f'--config={path}', f"{source}:", f"{destination}:"] 
+        cmd = ["rclone", "sync", "--server-side-across-configs", "--delete-during", "-P", f'--config={path}', f"{SOURCE}:", f"{destination}:"] 
     else:
         cmd = ["rclone", "sync", "--delete-during", "-P", f'--config={path}', f"{SOURCE}:", f"{destination}:"] 
     process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
@@ -84,6 +86,8 @@ async def list_remotes(user_id, drive_type='source'):
         button.cb_buildbutton(f"📁{remote}", f"sync^{drive_type}^{remote}")
     button.cb_buildbutton("✘ Close Menu", f"sync^close")
     return button
+
+
 
 sync = MessageHandler(handle_sync, filters=command(BotCommands.SyncCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 sync_callback= CallbackQueryHandler(sync_cb, filters= regex("sync"))

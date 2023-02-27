@@ -7,16 +7,17 @@ from pyrogram.filters import regex, command
 from bot import DOWNLOAD_DIR, LOGGER, bot
 from re import split as re_split
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import is_url
+from bot.helper.ext_utils.bot_utils import is_url, run_sync
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected
 from bot.helper.mirror_leech_utils.download_utils.yt_dlp_helper import YoutubeDLHelper
 from bot.modules.listener import MirrorLeechListener
 
 listener_dict = {}
+
 
 
 async def _ytdl(client, message, isZip= False, isLeech=False):
@@ -110,7 +111,7 @@ You can add tuple and dict also. Use double quotes inside dict.
     listener = MirrorLeechListener(message, tag, user_id, isZip=isZip, pswd=pswd, isLeech=isLeech)
     ydl = YoutubeDLHelper(message)
     try:
-        result = ydl.extractMetaData(link, name, opt, True)
+        result = await run_sync(ydl.extractMetaData, link, name, opt, True)
     except Exception as e:
         msg = str(e).replace('<', ' ').replace('>', ' ')
         return await sendMessage(tag + " " + msg, message)
@@ -188,9 +189,10 @@ You can add tuple and dict also. Use double quotes inside dict.
         buttons.cb_buildbutton("Best Audio", f"qu {msg_id} {best_audio}")
         buttons.cb_buildbutton("Cancel", f"qu {msg_id} close")
         YTBUTTONS = buttons.build_menu(2)
-        listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict]
         await sendMarkup('Choose Video Quality:', message, YTBUTTONS)
 
+    listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict]
+    
     if multi > 1:
         await sleep(4)
         nextmsg = await client.get_messages(message.chat.id, message.reply_to_message.id + 1)
@@ -281,8 +283,10 @@ async def select_format(client, callback_query):
         ydl_hp = YoutubeDLHelper(listener)
         LOGGER.info(f"Downloading with YT-DLP: {link}")
         await message.delete()
+        del listener_dict[task_id]
         await ydl_hp.add_download(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, opt)
-    del listener_dict[task_id]
+
+
 
 async def ytdlmirror(client, message):
     await _ytdl(client, message)
@@ -295,6 +299,7 @@ async def ytdlleech(client, message):
 
 async def ytdlzipleech(client, message):
     await _ytdl(client, message, isZip= True, isLeech=True)    
+
 
 ytdl_handler = MessageHandler(ytdlmirror, filters= command(BotCommands.YtdlMirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 ytdl_leech_handler = MessageHandler(ytdlleech, filters= command(BotCommands.YtdlLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

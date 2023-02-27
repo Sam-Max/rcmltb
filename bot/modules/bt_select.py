@@ -2,15 +2,18 @@ from pyrogram.handlers import CallbackQueryHandler
 from pyrogram import filters
 from os import remove, path as ospath
 from bot import bot, aria2, LOGGER
+from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.ext_utils.message_utils import sendStatusMessage
 from bot.helper.ext_utils.misc_utils import getDownloadByGid
+
+
 
 async def get_confirm(client, callback_query):
     query = callback_query
     user_id = query.from_user.id
     data = query.data
     data = data.split()
-    dl = getDownloadByGid(data[2])
+    dl = await getDownloadByGid(data[2])
     if not dl:
         await query.answer(text="This task has been cancelled!", show_alert=True)
         await query.message.delete()
@@ -29,9 +32,9 @@ async def get_confirm(client, callback_query):
         id_ = data[3]
         if len(id_) > 20:
             client = dl.client()
-            tor_info = client.torrents_info(torrent_hash=id_)[0]
+            tor_info = (await run_sync(client.torrents_info, torrent_hash=id_))[0]
             path = tor_info.content_path.rsplit('/', 1)[0]
-            res = client.torrents_files(torrent_hash=id_)
+            res = await run_sync(client.torrents_files, torrent_hash=id_)
             for f in res:
                 if f.priority == 0:
                     f_paths = [f"{path}/{f.name}", f"{path}/{f.name}.!qB"]
@@ -41,9 +44,9 @@ async def get_confirm(client, callback_query):
                                remove(f_path)
                            except:
                                pass
-            client.torrents_resume(torrent_hashes=id_)
+            await run_sync(client.torrents_resume, torrent_hashes=id_)
         else:
-            res = aria2.client.get_files(id_)
+            res = await run_sync(aria2.client.get_files, id_)
             for f in res:
                 if f['selected'] == 'false' and ospath.exists(f['path']):
                     try:
@@ -51,7 +54,7 @@ async def get_confirm(client, callback_query):
                     except:
                         pass
             try:
-                aria2.client.unpause(id_)
+                await run_sync(aria2.client.unpause, id_)
             except Exception as e:
                 LOGGER.error(f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
         await sendStatusMessage(listener.message)

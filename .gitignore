@@ -10,5 +10,7 @@ config.env
 *.pyc
 .netrc
 .vscode
+pyrogram.session
+pyrogram_session.session
 Thumbnails/*
 

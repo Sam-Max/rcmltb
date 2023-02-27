@@ -52,7 +52,7 @@ class RcloneLeech:
         else:
             await self.__listener.onDownloadError("Cancelled by user")
     
-    def cancel_download(self):
-        self.process.kill()
+    async def cancel_download(self):
+        await run_sync(self.process.kill) 
 
         

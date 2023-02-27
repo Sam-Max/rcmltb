@@ -5,11 +5,13 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
 from bot import DATABASE_URL, bot, config_dict, user_data
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import update_user_ldata
+from bot.helper.ext_utils.bot_utils import run_sync, update_user_ldata
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.button_build import ButtonMaker
+
+
 
 def get_user_settings(from_user):
     user_id = from_user.id
@@ -60,13 +62,13 @@ async def edit_user_settings(client, callback_query):
         await query.answer(text="Your File Will Deliver As Document!", show_alert=True)
         await update_user_settings(message, query.from_user)
         if DATABASE_URL:
-            DbManager().update_user_data(user_id)
+            await DbManager().update_user_data(user_id)
     elif data[2] == "med":
         update_user_ldata(user_id, 'as_doc', False)
         await query.answer(text="Your File Will Deliver As Media!", show_alert=True)
         await update_user_settings(message, query.from_user)
         if DATABASE_URL:
-            DbManager().update_user_data(user_id)
+            await DbManager().update_user_data(user_id)
     elif data[2] == "dthumb":
         path = f"Thumbnails/{user_id}.jpg"
         if ospath.lexists(path):
@@ -75,7 +77,7 @@ async def edit_user_settings(client, callback_query):
             update_user_ldata(user_id, 'thumb', '')
             await update_user_settings(message, query.from_user)
             if DATABASE_URL:
-                DbManager().update_thumb(user_id)
+                await DbManager().update_thumb(user_id)
         else:
             await query.answer(text="Old Settings", show_alert=True)
             await update_user_settings(message, query.from_user)
@@ -98,11 +100,11 @@ async def edit_user_settings(client, callback_query):
                             mkdir(path)
                         photo_dir = await client.download_media(response)
                         des_dir = ospath.join(path, f'{user_id}.jpg')
-                        Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
+                        await run_sync(Image.open(photo_dir).convert("RGB").save, des_dir, "JPEG")
                         osremove(photo_dir)
                         await query.answer(text="Thumbnail Added!!", show_alert=True)
                         if DATABASE_URL:
-                            DbManager().update_thumb(user_id, des_dir)
+                            await DbManager().update_thumb(user_id, des_dir)
                 except Exception as ex:
                     await editMessage(str(ex), question)
         finally: 
@@ -117,6 +119,7 @@ async def edit_user_settings(client, callback_query):
         await query.answer()
         await query.message.delete()
         await query.message.reply_to_message.delete()
+
 
 
 user_set_handler = MessageHandler(user_settings, filters= filters.command(BotCommands.UserSetCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

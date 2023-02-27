@@ -4,7 +4,7 @@
 from asyncio import sleep
 from os import remove
 from time import time
-from bot import LOGGER, bot, Interval, rss_session, config_dict, status_reply_dict_lock, status_reply_dict
+from bot import LOGGER, bot, Interval, rss_session, config_dict, status_reply_dict_lock, status_reply_dict, status_dict_lock
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from pyrogram.enums.parse_mode import ParseMode
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
@@ -109,10 +109,10 @@ async def sendFile(message, name: str, caption=""):
 
 async def delete_all_messages():
     async with status_reply_dict_lock:
-        for data in list(status_reply_dict.values()):
+        for key, data in list(status_reply_dict.items()):
             try:
+                del status_reply_dict[key]
                 await deleteMessage(data[0])
-                del status_reply_dict[data[0].chat.id]
             except Exception as e:
                 LOGGER.error(str(e))
 
@@ -120,22 +120,18 @@ async def update_all_messages(force=False):
     async with status_reply_dict_lock:
         if not status_reply_dict or not Interval or (not force and time() - list(status_reply_dict.values())[0][1] < 3):
             return
-        for chat_id in status_reply_dict:
+        for chat_id in list(status_reply_dict.keys()):
             status_reply_dict[chat_id][1] = time()
-
     msg, buttons = await get_readable_message()
     if msg is None:
         return
     async with status_reply_dict_lock:
-        for chat_id in status_reply_dict:
+        for chat_id in list(status_reply_dict.keys()):
             if status_reply_dict[chat_id] and msg != status_reply_dict[chat_id][0].text:
-                if buttons == "":
-                    rmsg = await editMessage(msg, status_reply_dict[chat_id][0])
-                else:
-                    rmsg = await editMessage(msg, status_reply_dict[chat_id][0], buttons)
-                if rmsg == "Message to edit not found":
+                rmsg = await editMessage(msg, status_reply_dict[chat_id][0], buttons)
+                if isinstance(rmsg, str) and rmsg.startswith('Telegram says: [400'):
                     del status_reply_dict[chat_id]
-                    return
+                    continue
                 status_reply_dict[chat_id][0].text = msg
                 status_reply_dict[chat_id][1] = time()
 
@@ -144,15 +140,14 @@ async def sendStatusMessage(msg):
     if progress is None:
         return
     async with status_reply_dict_lock:
-        if msg.chat.id in status_reply_dict:
-            message = status_reply_dict[msg.chat.id][0]
+        chat_id = msg.chat.id
+        if chat_id in list(status_reply_dict.keys()):
+            message = status_reply_dict[chat_id][0]
             await deleteMessage(message)
-            del status_reply_dict[msg.chat.id]
-        if buttons == "":
-            message = await sendMessage(progress, msg)
-        else:
-            message = await sendMarkup(progress, msg, buttons)
-        status_reply_dict[msg.chat.id] = [message, time()]
+            del status_reply_dict[chat_id]
+        message = await sendMarkup(progress, msg, buttons)
+        message.text = progress
+        status_reply_dict[chat_id] = [message, time()]
         if not Interval:
             Interval.append(setInterval(config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))
 

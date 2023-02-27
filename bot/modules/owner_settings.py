@@ -1,18 +1,15 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/bot_settings.py
-# Some modifications from source
-
-from asyncio import TimeoutError
+from asyncio import TimeoutError, create_subprocess_exec, create_subprocess_shell
 from subprocess import Popen, run as srun
 from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, LOGGER, TG_MAX_FILE_SIZE, bot, Interval, aria2, config_dict, aria2_options, aria2c_global, get_client, qbit_options, status_reply_dict_lock, status_dict, leech_log
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import setInterval 
+from bot.helper.ext_utils.bot_utils import run_sync, setInterval 
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, sendFile, sendMarkup, sendMessage, update_all_messages
-from bot.helper.ext_utils.misc_utils import ButtonMaker
+from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_data_holder import update_rclone_data
 from bot.modules.search import initiate_search_tools
 
@@ -30,6 +27,8 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'QB_SERVER_PORT': 80,
                   'RC_INDEX_PORT': 8080,
                   'RSS_DELAY': 900}
+
+
 
 async def handle_ownerset(client, message):
     text, buttons= get_env_menu()
@@ -175,32 +174,32 @@ async def ownerset_callback(client, callback_query):
                 GLOBAL_EXTENSION_FILTER.clear()
                 GLOBAL_EXTENSION_FILTER.append('.aria2')
             elif data[3] == 'TORRENT_TIMEOUT':
-                downloads = aria2.get_downloads()
+                downloads = await run_sync(aria2.get_downloads)
                 for download in downloads:
                   if not download.is_complete:
                     try:
-                        aria2.client.change_option(download.gid, {'bt-stop-timeout': '0'})
+                        await run_sync(aria2.client.change_option, download.gid, {'bt-stop-timeout': '0'})
                     except Exception as e:
                         LOGGER.error(e)
                 aria2_options['bt-stop-timeout'] = '0'
                 if DATABASE_URL:
-                    DbManager().update_aria2('bt-stop-timeout', '0')
+                    await DbManager().update_aria2('bt-stop-timeout', '0')
             elif data[3] == 'BASE_URL':
-                srun(["pkill", "-9", "-f", "gunicorn web.wserver:app"])
+                await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn web.wserver:app")).wait()
             elif data[3] == 'QB_BASE_URL':
-                srun(["pkill", "-9", "-f", "gunicorn qbitweb.wserver:app"])    
+                await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn qbitweb.wserver:app")).wait()
             elif data[3] == 'SERVER_PORT':
-                srun(["pkill", "-9", "-f", f"gunicorn web.wserver:app"])
-                Popen("gunicorn web.wserver:app --bind 0.0.0.0:81", shell=True)
+                await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn web.wserver:app")).wait()
+                await create_subprocess_shell("gunicorn web.wserver:app --bind 0.0.0.0:81")
             elif data[3] == 'QB_SERVER_PORT':
-                srun(["pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app"])
-                Popen("gunicorn qbitweb.wserver:app --bind 0.0.0.0:80", shell=True)
+                await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app")).wait()
+                await create_subprocess_shell("gunicorn qbitweb.wserver:app --bind 0.0.0.0:80")
             await query.answer("Reseted")    
             config_dict[data[3]] = value
             if DATABASE_URL:
-                DbManager().update_config({data[3]: value})
+                await DbManager().update_config({data[3]: value})
             if data[3] in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
-                initiate_search_tools()    
+                await initiate_search_tools()    
             await edit_menus(message, 'env')
     elif data[1] == "aria":
         if data[2] == 'aria_menu':
@@ -221,7 +220,7 @@ async def ownerset_callback(client, callback_query):
                 value = None
             await query.answer(text=f'{value}', show_alert=True)
         elif data[2] == 'resetaria':
-            aria2_defaults = aria2.client.get_global_option()
+            aria2_defaults = await run_sync(aria2.client.get_global_option)
             if aria2_defaults[data[3]] == aria2_options[data[3]]:
                 await query.answer(text='Value already same as you added in aria.sh!', show_alert= True)
                 return
@@ -229,28 +228,28 @@ async def ownerset_callback(client, callback_query):
             value = aria2_defaults[data[3]]
             aria2_options[data[3]] = value
             await edit_menus(message, "aria")
-            downloads = aria2.get_downloads()
+            downloads = await run_sync(aria2.get_downloads)
             for download in downloads:
               if not download.is_complete:
                 try:
-                    aria2.client.change_option(download.gid, {data[2]: value})
+                    await run_sync(aria2.client.change_option, download.gid, {data[2]: value})
                 except Exception as e:
                     LOGGER.error(e)
             if DATABASE_URL:
-               DbManager().update_aria2(data[3], value)
+               await DbManager().update_aria2(data[3], value)
         elif data[2] == 'emptyaria':
             await query.answer()
             aria2_options[data[3]] = ''
             await edit_menus(message, 'aria')
-            downloads = aria2.get_downloads()
+            downloads = await run_sync(aria2.get_downloads)
             for download in downloads:
               if not download.is_complete:
                 try:
-                    aria2.client.change_option(download.gid, {data[2]: ''})
+                    await run_sync(aria2.client.change_option, download.gid, {data[2]: ''})
                 except Exception as e:
                     LOGGER.error(e)
             if DATABASE_URL:
-                DbManager().update_aria2(data[3], '')
+               await DbManager().update_aria2(data[3], '')
     elif data[1] == "qbit":
         if data[2] == 'qbit_menu':
             globals()['START'] = 0
@@ -271,12 +270,11 @@ async def ownerset_callback(client, callback_query):
             await query.answer(text=f'{value}', show_alert=True) 
         elif data[2] == 'emptyqbit':
             await query.answer()
-            client = get_client()
-            client.app_set_preferences({data[3]: ''})
+            await run_sync(get_client().app_set_preferences, {data[3]: ''})
             qbit_options[data[3]] = ''
             await edit_menus(message, 'qbit')
             if DATABASE_URL:
-                DbManager().update_qbittorrent(data[2], '')  
+               await DbManager().update_qbittorrent(data[2], '')  
     elif data[1] == 'edit':
         await query.answer()
         globals()['STATE'] = 'edit'
@@ -352,11 +350,11 @@ async def start_env_listener(client, query, user_id, key):
                                 Interval.append(setInterval(value, update_all_messages))
                     elif key == 'TORRENT_TIMEOUT':
                         value = int(value)
-                        downloads = aria2.get_downloads()
+                        downloads = await run_sync(aria2.get_downloads)
                         for download in downloads:
                             if not download.is_complete:
                                 try:
-                                    aria2.client.change_option(download.gid, {'bt-stop-timeout': f'{value}'})
+                                    await run_sync(aria2.client.change_option, download.gid, {'bt-stop-timeout': f'{value}'})
                                 except Exception as e:
                                     LOGGER.error(e)
                         aria2_options['bt-stop-timeout'] = f'{value}'
@@ -385,9 +383,9 @@ async def start_env_listener(client, query, user_id, key):
                     config_dict[key] = value
                     await edit_menus(message, 'env')       
                     if DATABASE_URL:
-                        DbManager().update_config({key: value})
+                        await DbManager().update_config({key: value})
                     if key in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
-                        initiate_search_tools()
+                        await initiate_search_tools()
             except KeyError:
                 return await query.answer("Value doesn't exist") 
     finally:
@@ -420,19 +418,19 @@ async def start_aria_listener(client, query, user_id, key):
                     elif value.lower() == 'false':
                         value = 'false'
                     if key in aria2c_global:
-                        aria2.set_global_options({key: value})
+                        await run_sync(aria2.set_global_options, {key: value})
                     else:
-                        downloads = aria2.get_downloads()
+                        downloads = await run_sync(aria2.get_downloads)
                         for download in downloads:
                             if not download.is_complete:
                                 try:
-                                    aria2.client.change_option(download.gid, {key: value})
+                                    await run_sync(aria2.client.change_option, download.gid, {key: value})
                                 except Exception as e:
                                     LOGGER.error(e)
                     aria2_options[key] = value
                     await edit_menus(message, 'aria')   
                     if DATABASE_URL:
-                        DbManager().update_aria2(key, value)    
+                        await DbManager().update_aria2(key, value)    
             except KeyError:
                 return await query.answer("Value doesn't exist") 
     finally:
@@ -462,13 +460,12 @@ async def start_qbit_listener(client, query, user_id, key):
                     elif key == 'max_ratio':
                         value = float(value)
                     elif value.isdigit():
-                        value = int(value)
-                    client = get_client()
-                    client.app_set_preferences({key: value})
+                        value = int(value)                   
+                    await run_sync(get_client().app_set_preferences, {key: value})
                     qbit_options[key] = value
                     await edit_menus(message, 'qbit')   
                     if DATABASE_URL:
-                        DbManager().update_qbittorrent(key, value)    
+                        await DbManager().update_qbittorrent(key, value)    
             except KeyError:
                 return await query.answer("Value doesn't exist")
     finally:
@@ -477,6 +474,7 @@ async def start_qbit_listener(client, query, user_id, key):
         
 owner_settings_handler = MessageHandler(handle_ownerset, filters= command(BotCommands.OwnerSetCommand) & (CustomFilters.owner_filter))
 owner_settings_cb = CallbackQueryHandler(ownerset_callback, filters= regex(r'ownersetmenu'))
+
 
 bot.add_handler(owner_settings_handler)
 bot.add_handler(owner_settings_cb)

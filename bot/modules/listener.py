@@ -6,13 +6,12 @@ from requests import utils as rutils
 from os import listdir, path as ospath, remove as osremove, walk
 from re import search
 from bot import DOWNLOAD_DIR, LOGGER, SERVER_PORT, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2, config_dict
-from subprocess import Popen
 from pyrogram.enums import ChatType
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.human_format import get_readable_file_size, human_readable_bytes
 from bot.helper.ext_utils.message_utils import delete_all_messages, sendMarkup, sendMessage, update_all_messages
-from bot.helper.ext_utils.misc_utils import ButtonMaker, clean_download, clean_target, split_file
-from bot.helper.ext_utils.rclone_utils import get_gid
+from bot.helper.ext_utils.button_build import ButtonMaker
+from bot.helper.ext_utils.misc_utils import clean_download, clean_target, split_file
 from bot.helper.ext_utils.zip_utils import get_base_name, get_path_size
 from bot.helper.mirror_leech_utils.status_utils.tg_upload_status import TgUploadStatus
 from bot.helper.mirror_leech_utils.upload_utils.rclone_upload import RcloneMirror
@@ -50,9 +49,9 @@ class MirrorLeechListener:
         except:
             pass
 
-    def onDownloadStart(self):
-        LOGGER.info("onDownloadStart")
-    
+    async def onDownloadStart(self):
+        pass
+        
     async def onMultiZipComplete(self):
         async with status_dict_lock:
             download = status_dict[self.uid]
@@ -66,18 +65,22 @@ class MirrorLeechListener:
         LEECH_SPLIT_SIZE = config_dict['LEECH_SPLIT_SIZE']  
         if self.__pswd is not None:
             if self.__isLeech and int(f_size) > LEECH_SPLIT_SIZE:
+                cmd = ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, f_path]
+                self.__suproc = await create_subprocess_exec(*cmd)
                 LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
-                self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
             else:
                 LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
-                self.__suproc = Popen(["7z", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
+                cmd =  ["7z", "a", "-mx=0", f"-p{self.__pswd}", path, f_path]
+                self.__suproc = await create_subprocess_exec(*cmd)
         elif self.__isLeech and int(f_size) > LEECH_SPLIT_SIZE:
             LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
-            self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, f_path])
+            cmd= ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, f_path]
+            self.__suproc = await create_subprocess_exec(*cmd)
         else:
             LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
-            self.__suproc = Popen(["7z", "a", "-mx=0", path, f_path])
-        self.__suproc.wait()
+            cmd= ["7z", "a", "-mx=0", path, f_path]
+            self.__suproc = await create_subprocess_exec(*cmd)
+        await self.__suproc.wait()
         if self.__suproc.returncode == -9:
             return
         for dirpath, _, files in walk(f_path, topdown=False):        
@@ -118,20 +121,24 @@ class MirrorLeechListener:
             if self.__pswd is not None:
                 if self.__isLeech and int(f_size) > LEECH_SPLIT_SIZE:
                     LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
-                    self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
+                    cmd= ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, f_path]
+                    self.__suproc = await create_subprocess_exec(*cmd)
                 else:
                     LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
-                    self.__suproc = Popen(["7z", "a", "-mx=0", f"-p{self.__pswd}", path, f_path])
+                    cmd= ["7z", "a", "-mx=0", f"-p{self.__pswd}", path, f_path]
+                    self.__suproc = await create_subprocess_exec(*cmd)
             elif self.__isLeech and int(f_size) > LEECH_SPLIT_SIZE:
                 LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}.0*')
-                self.__suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, f_path])
+                cmd= ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, f_path]
+                self.__suproc = await create_subprocess_exec(*cmd)
             else:
                 LOGGER.info(f'Zip: orig_path: {f_path}, zip_path: {path}')
-                self.__suproc = Popen(["7z", "a", "-mx=0", path, f_path])
-            self.__suproc.wait()
+                cmd= ["7z", "a", "-mx=0", path, f_path]
+                self.__suproc = await create_subprocess_exec(*cmd)
+            await self.__suproc.wait()
             if self.__suproc.returncode == -9:
                 return
-            clean_target(f_path)
+            await clean_target(f_path)
         elif self.__extract:
             try:
                 if ospath.isfile(f_path):
@@ -146,10 +153,12 @@ class MirrorLeechListener:
                             if search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$|\.zip$|\.7z$|^.(?!.*\.part\d+\.rar)(?=.*\.rar$)', file):
                                 t_path = ospath.join(dirpath, file)
                                 if self.__pswd is not None:
-                                    self.__suproc = Popen(["7z", "x", f"-p{self.__pswd}", t_path, f"-o{dirpath}", "-aot"])
+                                    cmd= ["7z", "x", f"-p{self.__pswd}", t_path, f"-o{dirpath}", "-aot"]
+                                    self.__suproc = await create_subprocess_exec(*cmd)
                                 else:
-                                    self.__suproc = Popen(["7z", "x", t_path, f"-o{dirpath}", "-aot"])
-                                    self.__suproc.wait()
+                                    cmd= ["7z", "x", t_path, f"-o{dirpath}", "-aot"]
+                                    self.__suproc = await create_subprocess_exec(*cmd)
+                                await self.__suproc.wait()
                                 if self.__suproc.returncode == -9:
                                     return
                                 elif self.__suproc.returncode != 0:
@@ -165,10 +174,12 @@ class MirrorLeechListener:
                 else:
                     path = self.dir
                     if self.__pswd is not None:
-                        self.__suproc = Popen(["7z", "x", f"-p{self.__pswd}", f_path, f"-o{path}", "-aot"])
+                        cmd= ["7z", "x", f"-p{self.__pswd}", f_path, f"-o{path}", "-aot"]
+                        self.__suproc = await create_subprocess_exec(*cmd)
                     else:
-                        self.__suproc = Popen(["7z", "x", f_path, f"-o{path}", "-aot"])
-                    self.__suproc.wait()
+                        cmd= ["7z", "x", f_path, f"-o{path}", "-aot"]
+                        self.__suproc = await create_subprocess_exec(*cmd)
+                    await self.__suproc.wait()
                     if self.__suproc.returncode == -9:
                         return
                     elif self.__suproc.returncode == 0:
@@ -194,7 +205,7 @@ class MirrorLeechListener:
             if not self.__isZip:
                 checked = False
                 LEECH_SPLIT_SIZE = config_dict['LEECH_SPLIT_SIZE']
-                for dirpath, subdir, files in walk(up_dir, topdown=False):
+                for dirpath, _, files in walk(up_dir, topdown=False):
                     for file_ in files:
                         f_path = ospath.join(dirpath, file_)
                         f_size = ospath.getsize(f_path)
@@ -204,7 +215,7 @@ class MirrorLeechListener:
                                 async with status_dict_lock:
                                     status_dict[self.uid] = SplitStatus(up_name, f_size, gid, self)
                                 LOGGER.info(f"Splitting: {up_name}")
-                            res = split_file(f_path, f_size, file_, dirpath, LEECH_SPLIT_SIZE, self)
+                            res = await split_file(f_path, f_size, file_, dirpath, LEECH_SPLIT_SIZE, self)
                             if not res:
                                 return
                             if res == "errored":
@@ -277,7 +288,7 @@ class MirrorLeechListener:
         else:
             LOGGER.info(err.decode().strip())
             await sendMessage(format_out, self.message)
-        clean_download(self.dir)
+        await clean_download(self.dir)
         async with status_dict_lock:
             try:
                 del status_dict[self.uid]
@@ -291,7 +302,7 @@ class MirrorLeechListener:
 
     async def onRcloneSyncComplete(self, msg):
         await sendMessage(msg, self.message)
-        clean_download(self.dir)
+        await clean_download(self.dir)
         async with status_dict_lock:
             try:
                 del status_dict[self.uid]
@@ -331,10 +342,10 @@ class MirrorLeechListener:
         else:
             await sendMessage(msg, self.message)
         if self.__isMultiZip:
-            clean_download(self.multizip_dir)
+            await clean_download(self.multizip_dir)
         else:
             if not config_dict['MULTI_REMOTE_UP']:
-                clean_download(self.dir)
+                await clean_download(self.dir)
         async with status_dict_lock:
             try:
                 del status_dict[self.uid]
@@ -365,9 +376,9 @@ class MirrorLeechListener:
             if fmsg != '':
                 await sendMessage(msg + fmsg, self.message)
         if self.__isMultiZip:
-            clean_download(self.multizip_dir)
+            await clean_download(self.multizip_dir)
         else:
-            clean_download(self.dir)
+            await clean_download(self.dir)
         async with status_dict_lock:
             try:
                 del status_dict[self.uid]
@@ -382,9 +393,9 @@ class MirrorLeechListener:
     async def onDownloadError(self, error):
         error = error.replace('<', ' ').replace('>', ' ')
         if self.__isMultiZip:
-            clean_download(self.multizip_dir)
+            await clean_download(self.multizip_dir)
         else:
-            clean_download(self.dir)
+            await clean_download(self.dir)
         async with status_dict_lock:
             if self.uid in status_dict.keys():
                 del status_dict[self.uid]
@@ -398,7 +409,7 @@ class MirrorLeechListener:
 
     async def onUploadError(self, error):
         e_str = error.replace('<', '').replace('>', '')
-        clean_download(self.dir)
+        await clean_download(self.dir)
         async with status_dict_lock:
             try:
                 del status_dict[self.uid]
