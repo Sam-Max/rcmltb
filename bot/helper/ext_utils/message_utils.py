@@ -137,8 +137,7 @@ async def update_all_messages(force=False):
                 status_reply_dict[chat_id][1] = time()
 
 async def sendStatusMessage(msg):
-    async with status_dict_lock:
-        progress, buttons = await get_readable_message()
+    progress, buttons = await get_readable_message()
     if progress is None:
         return
     async with status_reply_dict_lock:

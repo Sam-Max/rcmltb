@@ -71,7 +71,7 @@ if len(BOT_TOKEN) == 0:
     LOGGER.error("BOT_TOKEN variable is missing! Exiting now")
     exit(1)
 
-bot_id = int(BOT_TOKEN.split(':', 1)[0])
+bot_id = BOT_TOKEN.split(':', 1)[0]
 
 DATABASE_URL = environ.get('DATABASE_URL', '')
 if len(DATABASE_URL) == 0:
@@ -102,7 +102,7 @@ if DATABASE_URL:
         qbit_options = qbit_opt
     conn.close()
     BOT_TOKEN = environ.get('BOT_TOKEN', '')
-    bot_id = int(BOT_TOKEN.split(':', 1)[0])
+    bot_id = BOT_TOKEN.split(':', 1)[0]
     DATABASE_URL = environ.get('DATABASE_URL', '')
 else:
     config_dict = {}

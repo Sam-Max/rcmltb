@@ -215,7 +215,7 @@ class MirrorLeechListener:
                                 async with status_dict_lock:
                                     status_dict[self.uid] = SplitStatus(up_name, f_size, gid, self)
                                 LOGGER.info(f"Splitting: {up_name}")
-                            res = split_file(f_path, f_size, file_, dirpath, LEECH_SPLIT_SIZE, self)
+                            res = await split_file(f_path, f_size, file_, dirpath, LEECH_SPLIT_SIZE, self)
                             if not res:
                                 return
                             if res == "errored":

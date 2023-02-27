@@ -1,7 +1,4 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
-
-from asyncio import run_coroutine_threadsafe
-from time import sleep
+from asyncio import run_coroutine_threadsafe, sleep
 from bot import LOGGER, config_dict, status_dict_lock, status_dict, aria2, botloop, aria2c_global, aria2_options
 from bot.helper.ext_utils.bot_utils import is_magnet, run_sync, run_thread_dec
 from bot.helper.ext_utils.message_utils import sendMessage, sendStatusMessage
@@ -15,14 +12,14 @@ async def __onDownloadStarted(api, gid):
     download = await run_sync(api.get_download, gid)
     if download.is_metadata:
         LOGGER.info(f'onDownloadStarted: {gid} METADATA')
-        sleep(1)
+        await sleep(1)
     else:
         LOGGER.info(f'onDownloadStarted: {download.name} - Gid: {gid}')
 
 @run_thread_dec
 async def __onDownloadComplete(api, gid):
     try:
-        download = api.get_download(gid)
+        download = await run_sync(api.get_download, gid)
     except:
         return
     if download.followed_by_ids:
@@ -31,44 +28,45 @@ async def __onDownloadComplete(api, gid):
     else:
         LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
         if dl := await getDownloadByGid(gid):
-            future= run_coroutine_threadsafe(dl.listener().onDownloadComplete(), botloop)
-            future.result()
-            api.remove([download], force=True, files=True)
+            listener = dl.listener()
+            await listener.onDownloadComplete()
+            await run_sync(api.remove, [download], force=True, files=True)
 
 @run_thread_dec
 async def __onBtDownloadComplete(api, gid):
-    sleep(1)
-    download = api.get_download(gid)
+    await sleep(1)
+    download = await run_sync(api.get_download, gid)
     LOGGER.info(f"onBtDownloadComplete: {download.name} - Gid: {gid}")
     if dl := await getDownloadByGid(gid):
         listener = dl.listener()
         try:
-            api.client.force_pause(gid)
+            await run_sync(api.client.force_pause, gid)
         except Exception as e:
             LOGGER.error(f"{e} GID: {gid}" )
-        future= run_coroutine_threadsafe(listener.onDownloadComplete(), botloop)
-        future.result()
+        await listener.onDownloadComplete()
         download = download.live
-        api.remove([download], force=True, files=True)
+        await run_sync(api.remove, [download], force=True, files=True)
 
 @run_thread_dec
 async def __onDownloadStopped(api, gid):
-    sleep(6)
+    await sleep(6)
     if dl := await getDownloadByGid(gid):
-        run_coroutine_threadsafe(dl.listener().onDownloadError('Dead torrent!'), botloop)
+        listener = dl.listener()
+        await listener.onDownloadError('Dead torrent!')
 
 @run_thread_dec      
 async def __onDownloadError(api, gid):
     LOGGER.info(f"onDownloadError: {gid}")
     error = "None"
     try:
-        download = api.get_download(gid)
+        download = await run_sync(api.get_download, gid)
         error = download.error_message
         LOGGER.info(f"Download Error: {error}")
     except:
         pass
     if dl := await getDownloadByGid(gid):
-        run_coroutine_threadsafe(dl.listener().onDownloadError(error), botloop)
+        listener = dl.listener()
+        await listener.onDownloadError(error)
 
 def start_listener():
     aria2.listen_to_notifications(threaded=True,
@@ -91,7 +89,7 @@ async def add_aria2c_download(link: str, path, listener, filename, auth):
     if TORRENT_TIMEOUT := config_dict['TORRENT_TIMEOUT']:
         args['bt-stop-timeout'] = str(TORRENT_TIMEOUT)
     if is_magnet(link):
-        download = await run_sync(aria2.add_magnet, link, args)  
+        download = await run_sync(aria2.add_magnet, link, args)
     else:
         download = await run_sync(aria2.add_uris, [link], args)
     if download.error_message:

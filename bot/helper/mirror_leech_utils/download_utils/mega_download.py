@@ -1,15 +1,12 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
-# Adapted for asyncio framework and pyrogram library
-
 from random import SystemRandom
 from string import ascii_letters, digits
 from os import makedirs
-from threading import Event
+from asyncio import Event
 from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
 from bot import LOGGER, config_dict, status_dict, status_dict_lock
 from bot.helper.ext_utils.message_utils import sendMessage, sendStatusMessage
 from bot.helper.mirror_leech_utils.status_utils.mega_status import MegaDownloadStatus
-from bot.helper.ext_utils.bot_utils import get_mega_link_type, run_async, run_async_task, run_sync
+from bot.helper.ext_utils.bot_utils import get_mega_link_type, run_async, run_sync
 
 
 
@@ -77,7 +74,7 @@ class MegaAppListener(MegaListener):
         LOGGER.error(f'Mega Request error in {error}')
         if not self.is_cancelled:
             self.is_cancelled = True
-            run_async_task(self.listener.onDownloadError(f"RequestTempError: {error.toString()}"))
+            run_async(self.listener.onDownloadError, f"RequestTempError: {error.toString()}")
         self.error = error.toString()
         run_async(self.event_setter)
 
@@ -95,7 +92,7 @@ class MegaAppListener(MegaListener):
                 run_async(self.event_setter)
                 return
             elif transfer.isFinished() and (transfer.isFolderTransfer() or transfer.getFileName() == self.name):
-                run_async_task(self.listener.onDownloadComplete())
+                run_async(self.listener.onDownloadComplete)
                 run_async(self.event_setter)
         except Exception as e:
             LOGGER.error(e)
@@ -112,7 +109,7 @@ class MegaAppListener(MegaListener):
         self.error = errStr
         if not self.is_cancelled:
             self.is_cancelled = True
-            run_async_task(self.listener.onDownloadError(f"TransferTempError: {errStr} ({filen})"))
+            run_async(self.listener.onDownloadError, f"TransferTempError: {errStr} ({filen})")
             run_async(self.event_setter)
 
     async def event_setter(self):
@@ -129,7 +126,7 @@ class AsyncExecutor:
     async def do(self, function, args):
         self.continue_event.clear()
         await run_sync(function,*args)
-        self.continue_event.wait()
+        await self.continue_event.wait()
         
 async def add_mega_download(mega_link: str, path: str, listener, name: str):
     MEGA_API_KEY = config_dict['MEGA_API_KEY']

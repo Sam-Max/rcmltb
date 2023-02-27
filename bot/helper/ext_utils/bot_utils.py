@@ -12,7 +12,7 @@ from re import findall as re_findall, IGNORECASE, compile, match as re_match
 from psutil import cpu_percent, disk_usage, virtual_memory
 from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict, user_data, m_queue, botloop
 from requests import head as rhead
-from threading import Event, Thread
+from threading import Thread
 from urllib.request import urlopen
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.button_build import ButtonMaker
