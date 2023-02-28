@@ -372,8 +372,8 @@ async def start_env_listener(client, query, user_id, key):
                             leech_log.append(int(id_.strip()))
                     elif key == 'SERVER_PORT':
                         value = int(value)
-                        srun(["pkill", "-9", "-f", "gunicorn"])
-                        Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{value}", shell=True)
+                        await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn web.wserver:app")).wait()
+                        await create_subprocess_shell("gunicorn web.wserver:app --bind 0.0.0.0:{value}")
                     elif key == 'EXTENSION_FILTER':
                         fx = value.split()
                         GLOBAL_EXTENSION_FILTER.clear()

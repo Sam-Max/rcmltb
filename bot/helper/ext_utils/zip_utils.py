@@ -65,10 +65,11 @@ async def split_in_zip(path, size=None):
 #https://github.com/anasty17/mirror-leech-telegram-bot/ -- fs_utils.py 
 
 def get_base_name(orig_path: str):
-    ext = [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]
-    if len(ext) > 0:
-        ext = ext[0]
-        return re_split(ext + '$', orig_path, maxsplit=1, flags=I)[0]
+    extension = next(
+        (ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)), ''
+    )
+    if extension != '':
+        return re_split(f'{extension}$', orig_path, maxsplit=1, flags=I)[0]
     else:
         raise NotSupportedExtractionArchive('File format not supported for extraction')
     

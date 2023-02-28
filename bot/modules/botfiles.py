@@ -1,4 +1,4 @@
-from asyncio import TimeoutError, create_subprocess_exec
+from asyncio import TimeoutError, create_subprocess_exec, create_subprocess_shell
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex, command
 from pyrogram import filters
@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from subprocess import Popen, run as srun
 from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, OWNER_ID, Interval, aria2, aria2_options, bot, config_dict, status_dict, status_reply_dict_lock, user_data, leech_log
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import setInterval
+from bot.helper.ext_utils.bot_utils import run_sync, setInterval
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessage, update_all_messages
@@ -154,7 +154,7 @@ async def load_config():
      RSS_USER_SESSION_STRING = environ.get('RSS_USER_SESSION_STRING', '')
 
      TORRENT_TIMEOUT = environ.get('TORRENT_TIMEOUT', '')
-     downloads = aria2.get_downloads()
+     downloads = await run_sync(aria2.get_downloads)
      if len(TORRENT_TIMEOUT) == 0:
         for download in downloads:
             if not download.is_complete:
@@ -199,10 +199,10 @@ async def load_config():
      BASE_URL = environ.get('BASE_URL', '').rstrip("/")
      if len(BASE_URL) == 0:
           BASE_URL = ''
-          srun(["pkill", "-9", "-f", f"gunicorn web.wserver:app"])
+          await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn web.wserver:app")).wait()
      else:
-          srun(["pkill", "-9", "-f", f"gunicorn web.wserver:app"])
-          Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
+          await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn web.wserver:app")).wait()
+          await create_subprocess_shell("gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}")
 
      QB_SERVER_PORT = environ.get('QB_SERVER_PORT', '')
      if len(QB_SERVER_PORT) == 0:
@@ -211,10 +211,10 @@ async def load_config():
      QB_BASE_URL = environ.get('QB_BASE_URL', '').rstrip("/")
      if len(QB_BASE_URL) == 0:
           QB_BASE_URL = ''
-          srun(["pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app"])
+          await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app")).wait()
      else:
-          srun(["pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app"])
-          Popen(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT}", shell=True)
+          await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app")).wait()
+          await create_subprocess_shell("gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT}")
 
      UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
      if len(UPSTREAM_REPO) == 0:

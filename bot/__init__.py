@@ -317,7 +317,7 @@ USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 app= None
 if len(USER_SESSION_STRING) != 0:
     LOGGER.info("Creating Pyrogram client from USER_SESSION_STRING")
-    app = Client(name="pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING, takeout=True, no_updates=True, max_concurrent_transmissions=10)
+    app = Client(name="pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING, no_updates=True, max_concurrent_transmissions=10)
     with app:
         if IS_PREMIUM_USER := app.me.is_premium:
             if not LEECH_LOG:
@@ -413,7 +413,7 @@ sleep(0.5)
 if ospath.exists('accounts.zip'):
     if ospath.exists('accounts'):
         srun(["rm", "-rf", "accounts"])
-    srun(["unzip", "-q", "-o", "accounts.zip", "-w", "**.json", "-d", "accounts/"])
+    srun(["7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"])
     srun(["chmod", "-R", "777", "accounts"])
     osremove('accounts.zip')
 
