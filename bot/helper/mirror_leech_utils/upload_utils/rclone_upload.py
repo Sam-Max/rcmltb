@@ -5,6 +5,7 @@ from random import SystemRandom
 from os import path as ospath, remove as osremove, walk
 from string import ascii_letters, digits
 from bot import GLOBAL_EXTENSION_FILTER, LOGGER, status_dict, status_dict_lock, remotes_data, config_dict
+from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import sendStatusMessage
@@ -53,7 +54,7 @@ class RcloneMirror:
                                     break
                         cmd = ['rclone', 'copy', f"--config={conf_path}", str(self.__path), f"{remote}:", '-P']     
                         await self.upload(cmd, conf_path, mime_type, remote, base="/")
-                clean_download(self.__path)
+                await clean_download(self.__path)
             else:
                 remote = get_rclone_data('CLOUDSEL_REMOTE', self.__user_id)
                 base = get_rclone_data('CLOUDSEL_BASE_DIR', self.__user_id)
@@ -94,6 +95,6 @@ class RcloneMirror:
             LOGGER.info(str(error))
             await self.__listener.onUploadError("Cancelled by user")
 
-    def cancel_download(self):
-        self.process.kill()
+    async def cancel_download(self):
+        await run_sync(self.process.kill)
         

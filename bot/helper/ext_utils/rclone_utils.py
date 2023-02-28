@@ -34,7 +34,7 @@ async def is_rclone_config(user_id, message, isLeech=False):
             if isLeech:
                 return True
             else:
-                await sendMessage("Send a rclone config file, use /botfiles", message)
+                await sendMessage("Send a rclone config file, use /botfiles command", message)
                 return False
     else:
         path= ospath.join("users", "grclone", "rclone.conf")
