@@ -7,11 +7,13 @@ from os import listdir, path as ospath, remove as osremove, walk
 from re import search
 from bot import DOWNLOAD_DIR, LOGGER, SERVER_PORT, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2, config_dict
 from pyrogram.enums import ChatType
+from bot.helper.ext_utils.bot_utils import is_archive, is_archive_split, is_first_archive_split
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.human_format import get_readable_file_size, human_readable_bytes
 from bot.helper.ext_utils.message_utils import delete_all_messages, sendMarkup, sendMessage, update_all_messages
 from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.misc_utils import clean_download, clean_target, split_file
+from bot.helper.ext_utils.rclone_utils import get_gid
 from bot.helper.ext_utils.zip_utils import get_base_name, get_path_size
 from bot.helper.mirror_leech_utils.status_utils.tg_upload_status import TgUploadStatus
 from bot.helper.mirror_leech_utils.upload_utils.rclone_upload import RcloneMirror
@@ -29,7 +31,7 @@ class MirrorLeechListener:
         self.user_id = user_id
         self.__isZip = isZip
         self.__isMultiZip = isMultiZip
-        self.__extract = extract
+        self.extract = extract
         self.__pswd = pswd
         self.tag = tag
         self.seed = seed
@@ -139,7 +141,7 @@ class MirrorLeechListener:
             if self.__suproc.returncode == -9:
                 return
             await clean_target(f_path)
-        elif self.__extract:
+        elif self.extract:
             try:
                 if ospath.isfile(f_path):
                     path = get_base_name(f_path)
@@ -150,14 +152,13 @@ class MirrorLeechListener:
                     path = f_path    
                     for dirpath, _, files in walk(f_path, topdown=False):
                         for file in files:
-                            if search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$|\.zip$|\.7z$|^.(?!.*\.part\d+\.rar)(?=.*\.rar$)', file):
+                            if is_first_archive_split(file) or is_archive(file) and not file.endswith('.rar'):
                                 t_path = ospath.join(dirpath, file)
                                 if self.__pswd is not None:
                                     cmd= ["7z", "x", f"-p{self.__pswd}", t_path, f"-o{dirpath}", "-aot"]
-                                    self.__suproc = await create_subprocess_exec(*cmd)
                                 else:
                                     cmd= ["7z", "x", t_path, f"-o{dirpath}", "-aot"]
-                                    self.__suproc = await create_subprocess_exec(*cmd)
+                                self.__suproc = await create_subprocess_exec(*cmd)
                                 await self.__suproc.wait()
                                 if self.__suproc.returncode == -9:
                                     return
@@ -165,7 +166,7 @@ class MirrorLeechListener:
                                     LOGGER.error('Unable to extract archive splits!')
                         if self.__suproc is not None and self.__suproc.returncode == 0:
                             for file in files:
-                                if search(r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$|\.zip$|\.rar$|\.7z$', file):
+                                if is_archive_split(file) or is_archive(file):
                                     del_path = ospath.join(dirpath, file)
                                     try:
                                         osremove(del_path)
@@ -174,11 +175,10 @@ class MirrorLeechListener:
                 else:
                     path = self.dir
                     if self.__pswd is not None:
-                        cmd= ["7z", "x", f"-p{self.__pswd}", f_path, f"-o{path}", "-aot"]
-                        self.__suproc = await create_subprocess_exec(*cmd)
+                        cmd= ["7z", "x", f"-p{self.__pswd}", f_path, f"-o{path}", "-aot", "-xr!@PaxHeader"]
                     else:
-                        cmd= ["7z", "x", f_path, f"-o{path}", "-aot"]
-                        self.__suproc = await create_subprocess_exec(*cmd)
+                        cmd= ["7z", "x", f_path, f"-o{path}", "-aot", "-xr!@PaxHeader"]
+                    self.__suproc = await create_subprocess_exec(*cmd)
                     await self.__suproc.wait()
                     if self.__suproc.returncode == -9:
                         return
@@ -325,22 +325,26 @@ class MirrorLeechListener:
         return_code = await process.wait()
         if return_code == 0:
             buttons.url_buildbutton("Cloud Link 🔗", url)
-        if isGdrive:
-            if GD_INDEX_URL:= config_dict['GD_INDEX_URL']:
-                url_path = rutils.quote(f'{name}')
-                share_url = f'{GD_INDEX_URL}/{url_path}'
-                if type == "Folder":
-                    share_url += '/'
-                    buttons.url_buildbutton("⚡ Index Link", share_url)
-                else:
-                    buttons.url_buildbutton("⚡ Index Link", share_url)
-                if config_dict['VIEW_LINK']:
-                    share_urls = f'{GD_INDEX_URL}/{url_path}?a=view'
-                    buttons.url_buildbutton("🌐 View Link", share_urls)
-        if return_code == 0 or config_dict['GD_INDEX_URL']:
-            await sendMarkup(msg, self.message, reply_markup= buttons.build_menu(2))
         else:
-            await sendMessage(msg, self.message)
+            if isGdrive:
+                if type == "Folder":
+                    if gid:= await get_gid(remote, base, f"{name}", conf, isdir=True):
+                        link = f"https://drive.google.com/folderview?id={gid[0]}"
+                        buttons.url_buildbutton('Cloud Link 🔗', link)
+                else:
+                    if gid:= await get_gid(remote, base, f"{name}", conf, isdir=False):
+                        link = f"https://drive.google.com/file/d/{gid[0]}/view"
+                        buttons.url_buildbutton('Cloud Link 🔗', link)
+        if isGdrive and (GD_INDEX_URL:= config_dict['GD_INDEX_URL']):
+            url_path = rutils.quote(f'{name}')
+            share_url = f'{GD_INDEX_URL}/{url_path}/' if type == "Folder" else f'{GD_INDEX_URL}/{url_path}'
+            buttons.url_buildbutton("⚡ Index Link", share_url)
+            if config_dict['VIEW_LINK']:
+                share_urls = f'{GD_INDEX_URL}/{url_path}?a=view'
+                buttons.url_buildbutton("🌐 View Link", share_urls) 
+            await sendMarkup(msg, self.message, buttons.build_menu(2))   
+        else:
+            await sendMarkup(msg, self.message, buttons.build_menu(1))   
         if self.__isMultiZip:
             await clean_download(self.multizip_dir)
         else:

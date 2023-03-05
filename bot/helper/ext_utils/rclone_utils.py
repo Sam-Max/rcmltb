@@ -1,6 +1,6 @@
 from configparser import ConfigParser
 from json import loads as jsonloads
-from re import escape
+from re import escape as rescape
 from os import path as ospath
 from asyncio.subprocess import PIPE, create_subprocess_exec
 from bot import LOGGER, OWNER_ID, config_dict, remotes_data
@@ -75,14 +75,13 @@ async def list_remotes(message, rclone_remote, base_dir, callback, edit=False):
     else:
         await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
-async def get_gid(remote, path, ename, conf_path, isdir=True):
-    name = escape(ename)
+
+async def get_gid(remote, path, name, conf, isdir=True):
+    name = rescape(name)
     if isdir:
-        cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{remote}:{path}", "--dirs-only",
-                        "-f", f"+ {name}", "-f", "- *"]
+        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{path}", "--dirs-only", "-f", f"+ {name}/", "-f", "- *"]
     else:
-        cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{remote}:{path}", "--files-only",
-                        "-f", f"+ {name}", "-f", "- *"]
+        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{path}", "--files-only", "-f", f"+ {name}", "-f", "- *"]
     process = await create_subprocess_exec(*cmd,stdout= PIPE,stderr= PIPE)
     stdout, stderr = await process.communicate()
     return_code = await process.wait()
@@ -96,8 +95,7 @@ async def get_gid(remote, path, ename, conf_path, isdir=True):
         name = data[0]["Name"]
         return (id, name)
     except Exception:
-        LOGGER.error("Error while getting id ::- {}".format(stdout))
-        return ""
+        LOGGER.error("Error while getting id- {}".format(stdout))
         
 
         

@@ -8,7 +8,7 @@ from functools import partial, wraps
 from html import escape
 from math import ceil
 from time import time
-from re import findall as re_findall, IGNORECASE, compile, match as re_match
+from re import IGNORECASE, compile, match as re_match, search
 from psutil import cpu_percent, disk_usage, virtual_memory
 from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict, user_data, m_queue, botloop
 from requests import head as rhead
@@ -20,16 +20,35 @@ from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, TaskType, get_progress_bar_rclone, get_progress_bar_string
 
 
-MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
-URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
+MAGNET_REGEX = r'magnet:\?xt=urn:(btih|btmh):[a-zA-Z0-9]*\s*'
+URL_REGEX = r'^(?!\/)(rtmps?:\/\/|mms:\/\/|rtsp:\/\/|https?:\/\/|ftp:\/\/)?([^\/:]+:[^\/@]+@)?(www\.)?(?=[^\/:\s]+\.[^\/:\s]+)([^\/:\s]+\.[^\/:\s]+)(:\d+)?(\/[^#\s]*[\s\S]*)?(\?[^#\s]*)?(#.*)?$'
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
 COUNT = 0
 PAGE_NO = 1
 PAGES = 0
 
-def is_url(url: str):
-    url = re_findall(URL_REGEX, url)
+ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".tgz", ".lzma2",
+            ".zip", ".7z", ".z", ".rar", ".iso", ".wim", ".cab", ".apm", ".arj", ".chm",
+            ".cpio", ".cramfs", ".deb", ".dmg", ".fat", ".hfs", ".lzh", ".lzma", ".mbr",
+            ".msi", ".mslz", ".nsis", ".ntfs", ".rpm", ".squashfs", ".udf", ".vhd", ".xar"]
+
+FIRST_SPLIT_REGEX = r'(\.|_)part0*1\.rar$|(\.|_)7z\.0*1$|(\.|_)zip\.0*1$|^(?!.*(\.|_)part\d+\.rar$).*\.rar$'
+
+SPLIT_REGEX = r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$'
+
+
+def is_first_archive_split(file):
+    return bool(search(FIRST_SPLIT_REGEX, file))
+
+def is_archive(file):
+    return file.endswith(tuple(ARCH_EXT))
+
+def is_archive_split(file):
+    return bool(search(SPLIT_REGEX, file))
+
+def is_url(url):
+    url = re_match(URL_REGEX, url)
     return bool(url)
 
 def is_gdrive_link(url: str):
@@ -47,8 +66,8 @@ def get_mega_link_type(url: str):
         return "folder"
     return "file"
 
-def is_magnet(url: str):
-    magnet = re_findall(MAGNET_REGEX, url)
+def is_magnet(url):
+    magnet = re_match(MAGNET_REGEX, url)
     return bool(magnet)
 
 def get_content_type(link):
@@ -67,7 +86,7 @@ def get_content_type(link):
 def is_share_link(url):
     return bool(re_match(r'https?:\/\/.+\.gdtot\.\S+|https?:\/\/(filepress|filebee|appdrive|gdflix)\.\S+', url))
 
-def get_readable_time(seconds: int) -> str:
+def get_readable_time(seconds):
     result = ''
     (days, remainder) = divmod(seconds, 86400)
     days = int(days)

@@ -1,6 +1,5 @@
 #Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/__main__.py
 
-from asyncio import create_subprocess_shell
 from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, boot_time
 from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
@@ -9,7 +8,7 @@ from os import path as ospath
 from bot.helper.ext_utils.message_utils import sendMessage
 from bot import bot, botUptime
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import get_readable_time
+from bot.helper.ext_utils.bot_utils import cmd_exec, get_readable_time
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.filters import CustomFilters
 
@@ -17,9 +16,8 @@ from bot.helper.ext_utils.filters import CustomFilters
 
 async def stats(client, message):
     if ospath.exists('.git'):
-        proc = await create_subprocess_shell("git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'")
-        stdout, _ = await proc.communicate()
-        last_commit = stdout
+        last_commit = await cmd_exec("git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'", True)
+        last_commit = last_commit[0]
     else:
         last_commit = 'No UPSTREAM_REPO'
     total, used, free, disk = disk_usage('/')
