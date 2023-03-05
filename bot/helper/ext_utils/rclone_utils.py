@@ -99,8 +99,8 @@ async def get_gdlink(remote, path, name, conf, type, buttons, isdir=True):
         else:
             link = f"https://drive.google.com/file/d/{id}/view"
             buttons.url_buildbutton('Cloud Link 🔗', link)
-        return buttons
     except Exception:
+        buttons.cb_buildbutton("🚫", "none")
         LOGGER.error("Error while getting id- {}".format(stdout))
     
     
