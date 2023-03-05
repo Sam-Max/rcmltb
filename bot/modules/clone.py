@@ -16,8 +16,8 @@ from pyrogram.handlers import MessageHandler
 
 
 async def _clone(client, message):
-    if not config_dict['GDRIVE_ID']:
-        await sendMessage(message, 'GDRIVE_ID not Provided!')
+    if not config_dict['GDRIVE_FOLDER_ID']:
+        await sendMessage(message, 'GDRIVE_FOLDER_ID not Provided!')
         return
     args = message.text.split()
     reply_to = message.reply_to_message
