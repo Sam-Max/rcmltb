@@ -328,7 +328,7 @@ class MirrorLeechListener:
             await sendMarkup(msg, self.message, buttons.build_menu(2))
         else:
             if isGdrive:
-                await get_gdlink(remote, base, f"{name}", conf, type, buttons, isdir=True)
+                await get_gdlink(remote, base, f"{name}", conf, type, buttons)
                 await add_index_link(name, type, buttons)
                 await sendMarkup(msg, self.message, buttons.build_menu(2))   
             else:

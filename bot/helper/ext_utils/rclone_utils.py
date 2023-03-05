@@ -76,9 +76,9 @@ async def list_remotes(message, rclone_remote, base_dir, callback, edit=False):
         await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
 
-async def get_gdlink(remote, path, name, conf, type, buttons, isdir=True):
+async def get_gdlink(remote, path, name, conf, type, buttons):
     name = rescape(name)
-    if isdir:
+    if type == "Folder":
         cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{path}", "--dirs-only", "-f", f"+ {name}/", "-f", "- *"]
     else:
         cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{path}", "--files-only", "-f", f"+ {name}", "-f", "- *"]
