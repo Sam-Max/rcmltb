@@ -324,7 +324,8 @@ class MirrorLeechListener:
         return_code = await process.wait()
         if return_code == 0:
             buttons.url_buildbutton("Cloud Link 🔗", url)
-            await add_index_link(name, type, buttons)
+            if isGdrive:
+                await add_index_link(name, type, buttons)
             await sendMarkup(msg, self.message, buttons.build_menu(2))
         else:
             if isGdrive:
