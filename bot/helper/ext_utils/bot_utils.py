@@ -11,7 +11,7 @@ from time import time
 from re import IGNORECASE, compile, match as re_match, search
 from psutil import cpu_percent, disk_usage, virtual_memory
 from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict, user_data, m_queue, botloop
-from requests import head as rhead
+from requests import head as rhead, utils as rutils
 from threading import Thread
 from urllib.request import urlopen
 from bot.helper.ext_utils.bot_commands import BotCommands
@@ -85,6 +85,15 @@ def get_content_type(link):
 
 def is_share_link(url):
     return bool(re_match(r'https?:\/\/.+\.gdtot\.\S+|https?:\/\/(filepress|filebee|appdrive|gdflix)\.\S+', url))
+
+async def add_index_link(name, type, buttons):
+    if GD_INDEX_URL:= config_dict['GD_INDEX_URL']:
+        url_path = rutils.quote(f'{name}')
+        share_url = f'{GD_INDEX_URL}/{url_path}/' if type == "Folder" else f'{GD_INDEX_URL}/{url_path}'
+        buttons.url_buildbutton("⚡ Index Link", share_url)
+        if config_dict['VIEW_LINK']:
+            share_urls = f'{GD_INDEX_URL}/{url_path}?a=view'
+            buttons.url_buildbutton("🌐 View Link", share_urls) 
 
 def get_readable_time(seconds):
     result = ''

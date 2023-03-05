@@ -4,7 +4,7 @@ from string import ascii_letters, digits
 from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
-from bot import LOGGER, bot, config_dict, status_dict_lock, status_dict
+from bot import bot, config_dict, status_dict_lock, status_dict
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.rclone_utils import get_rclone_config, is_rclone_config

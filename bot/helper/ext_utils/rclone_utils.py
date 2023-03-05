@@ -76,7 +76,7 @@ async def list_remotes(message, rclone_remote, base_dir, callback, edit=False):
         await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
 
-async def get_gid(remote, path, name, conf, isdir=True):
+async def get_gdlink(remote, path, name, conf, type, buttons, isdir=True):
     name = rescape(name)
     if isdir:
         cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{path}", "--dirs-only", "-f", f"+ {name}/", "-f", "- *"]
@@ -89,13 +89,21 @@ async def get_gid(remote, path, name, conf, isdir=True):
     if return_code != 0:
         err = stderr.decode().strip()
         LOGGER.error(f'Error: {err}') 
+        return
     try:
         data = jsonloads(stdout)
         id = data[0]["ID"]
-        name = data[0]["Name"]
-        return (id, name)
+        if type == "Folder":
+            link = f"https://drive.google.com/folderview?id={id}"
+            buttons.url_buildbutton('Cloud Link 🔗', link)
+        else:
+            link = f"https://drive.google.com/file/d/{id}/view"
+            buttons.url_buildbutton('Cloud Link 🔗', link)
+        return buttons
     except Exception:
         LOGGER.error("Error while getting id- {}".format(stdout))
+    
+    
         
 
         

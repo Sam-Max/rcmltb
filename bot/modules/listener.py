@@ -2,18 +2,17 @@ from asyncio import create_subprocess_exec, sleep
 from asyncio.subprocess import PIPE
 from html import escape
 from json import loads
-from requests import utils as rutils
 from os import listdir, path as ospath, remove as osremove, walk
 from re import search
 from bot import DOWNLOAD_DIR, LOGGER, SERVER_PORT, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2, config_dict
 from pyrogram.enums import ChatType
-from bot.helper.ext_utils.bot_utils import is_archive, is_archive_split, is_first_archive_split
+from bot.helper.ext_utils.bot_utils import add_index_link, is_archive, is_archive_split, is_first_archive_split
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.human_format import get_readable_file_size, human_readable_bytes
 from bot.helper.ext_utils.message_utils import delete_all_messages, sendMarkup, sendMessage, update_all_messages
 from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.misc_utils import clean_download, clean_target, split_file
-from bot.helper.ext_utils.rclone_utils import get_gid
+from bot.helper.ext_utils.rclone_utils import get_gdlink
 from bot.helper.ext_utils.zip_utils import get_base_name, get_path_size
 from bot.helper.mirror_leech_utils.status_utils.tg_upload_status import TgUploadStatus
 from bot.helper.mirror_leech_utils.upload_utils.rclone_upload import RcloneMirror
@@ -325,26 +324,15 @@ class MirrorLeechListener:
         return_code = await process.wait()
         if return_code == 0:
             buttons.url_buildbutton("Cloud Link 🔗", url)
+            await add_index_link(name, type, buttons)
+            await sendMarkup(msg, self.message, buttons.build_menu(2))
         else:
             if isGdrive:
-                if type == "Folder":
-                    if gid:= await get_gid(remote, base, f"{name}", conf, isdir=True):
-                        link = f"https://drive.google.com/folderview?id={gid[0]}"
-                        buttons.url_buildbutton('Cloud Link 🔗', link)
-                else:
-                    if gid:= await get_gid(remote, base, f"{name}", conf, isdir=False):
-                        link = f"https://drive.google.com/file/d/{gid[0]}/view"
-                        buttons.url_buildbutton('Cloud Link 🔗', link)
-        if isGdrive and (GD_INDEX_URL:= config_dict['GD_INDEX_URL']):
-            url_path = rutils.quote(f'{name}')
-            share_url = f'{GD_INDEX_URL}/{url_path}/' if type == "Folder" else f'{GD_INDEX_URL}/{url_path}'
-            buttons.url_buildbutton("⚡ Index Link", share_url)
-            if config_dict['VIEW_LINK']:
-                share_urls = f'{GD_INDEX_URL}/{url_path}?a=view'
-                buttons.url_buildbutton("🌐 View Link", share_urls) 
-            await sendMarkup(msg, self.message, buttons.build_menu(2))   
-        else:
-            await sendMarkup(msg, self.message, buttons.build_menu(1))   
+                buttons = await get_gdlink(remote, base, f"{name}", conf, type, buttons, isdir=True)
+                await add_index_link(name, type, buttons)
+                await sendMarkup(msg, self.message, buttons.build_menu(2))   
+            else:
+                await sendMessage(msg, self.message)   
         if self.__isMultiZip:
             await clean_download(self.multizip_dir)
         else:
