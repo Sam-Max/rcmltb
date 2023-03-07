@@ -4,6 +4,7 @@ aioshutil
 anytree
 apscheduler
 aria2p
+asyncio
 bencoding
 beautifulsoup4
 cfscrape
@@ -14,6 +15,7 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 gunicorn
+git+https://github.com/zevtyardt/lk21.git
 httpx
 lxml
 motor
