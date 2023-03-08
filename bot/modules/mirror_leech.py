@@ -118,7 +118,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
             if file is None:
                 reply_text= reply_message.text.split(maxsplit=1)[0].strip()     
                 if is_url(reply_text) or is_magnet(reply_text):     
-                        link = reply_text
+                    link = reply_text
             elif file.mime_type != "application/x-bittorrent":
                 if multi and multiZip:
                     tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.user_id}/multizip/', name, multi, multi_zip=multiZip)
@@ -163,7 +163,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
             else:
                 link = await client.download_media(file)
     
-    if not is_url(link) and not is_magnet(link):
+    if not is_url(link) and not is_magnet(link) and not ospath.exists(link):
         if multiZip:
              help_msg = '''
 <b>Multi zip by replying to first file:</b>

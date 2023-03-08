@@ -127,6 +127,7 @@ def new_thread(fn):
 
 async def get_readable_message():
     msg = ""
+    button= None
     if STATUS_LIMIT := config_dict['STATUS_LIMIT']:
         tasks = len(status_dict)
         globals()['PAGES'] = ceil(tasks/STATUS_LIMIT)
@@ -135,7 +136,10 @@ async def get_readable_message():
             globals()['PAGE_NO'] -= 1
     for index, download in enumerate(list(status_dict.values())[COUNT:], start=1):
         msg += f"<b>{download.status()}: </b>"
-        msg += f"\n<b>Name: </b><code>{escape(str(download.name()))}</code>"
+        if download.type() == TaskType.RCLONE:
+            msg += f"\n<code>{str(download.name()).upper()}</code>"
+        else:
+            msg += f"\n<b>Name: </b><code>{escape(str(download.name()))}</code>"
         if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
             if download.type() == TaskType.RCLONE or download.type() == TaskType.RCLONE_SYNC:
                 msg += f"\n{get_progress_bar_rclone(download.progress())} {download.progress()}%"
@@ -153,8 +157,7 @@ async def get_readable_message():
                     pass
         else:
             msg += f"\n<b>Size: </b>{download.size()}"
-        msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>"
-        msg += "\n\n"
+        msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>\n\n"
         if index == STATUS_LIMIT:
             break
     if len(msg) == 0:
@@ -180,9 +183,6 @@ async def get_readable_message():
                 up_speed += float(spd.split('K')[0]) * 1024
             elif 'M' in spd:
                 up_speed += float(spd.split('M')[0]) * 1048576
-    bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
-    bmsg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botUptime)}"
-    bmsg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
     if STATUS_LIMIT and tasks > STATUS_LIMIT:
         msg += f"<b>Page:</b> {PAGE_NO}/{PAGES} | <b>Tasks:</b> {tasks}\n"
         buttons = ButtonMaker()
@@ -190,8 +190,10 @@ async def get_readable_message():
         buttons.cb_buildbutton("⏩", "status nex")
         buttons.cb_buildbutton("♻️", "status ref")
         button = buttons.build_menu(3)
-        return msg + bmsg, button
-    return msg + bmsg, None
+    msg += f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
+    msg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botUptime)}"
+    msg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
+    return msg, button
 
 async def turn(data):
     STATUS_LIMIT = config_dict['STATUS_LIMIT']

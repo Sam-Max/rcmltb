@@ -1,6 +1,6 @@
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
-import configparser
+from configparser import ConfigParser
 from os import listdir, path as ospath
 from random import SystemRandom, randrange
 from string import ascii_letters, digits
@@ -18,14 +18,14 @@ class RcloneCopy:
     def __init__(self, user_id, listener= None) -> None:
         self.__listener = listener
         self._user_id= user_id
-        self.size= 0
-        self.name= ""
-        self.err_message= ""
-        self.is_user_cancelled= False
+        self.name= None
         self.process= None
+        self.size= 0
         self.__sa_count = 0
         self.__service_account_index = 0
-        self.sa_error= ''
+        self.is_user_cancelled= False
+        self.err_message= ""
+        self.sa_error= ""
         self.status_type= MirrorStatus.STATUS_COPYING
 
     async def copy(self, origin_drive, origin_dir, dest_drive, dest_dir):
@@ -35,7 +35,7 @@ class RcloneCopy:
                 globals()['SERVICE_ACCOUNTS_NUMBER'] = len(listdir("accounts"))
                 if self.__sa_count == 0:
                     self.__service_account_index = randrange(SERVICE_ACCOUNTS_NUMBER)
-                config = configparser.ConfigParser()
+                config = ConfigParser()
                 config.read(conf_path)
                 if SERVICE_ACCOUNTS_REMOTE:= config_dict['SERVICE_ACCOUNTS_REMOTE']:
                     if SERVICE_ACCOUNTS_REMOTE in config:
@@ -57,6 +57,7 @@ class RcloneCopy:
             f'{dest_drive}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '-P']
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
+        self.name = f'{origin_drive}:{origin_dir} ➡️ {dest_drive}:{dest_dir}'
         async with status_dict_lock:
             status = RcloneStatus(self, gid)
             status_dict[self.__listener.uid] = status
@@ -87,13 +88,15 @@ class RcloneCopy:
         LOGGER.info(f"Switching to {self.__service_account_index}.json service account")
 
     def __create_teamdrive_sa_config(self, config, remote):
-        config[remote]['type'] =  'drive' 
-        config[remote]['scope'] = 'drive'  
-        config[remote]['client_id'] = ''    
-        config[remote]['client_secret'] = ''
-        config[remote]['token'] = ''    
-        config[remote]['service_account_file'] = f'accounts/{self.__service_account_index}.json'
-        config[remote]['stop_on_upload_limit'] = 'true'
+        config[remote].update({
+            'type': 'drive',
+            'scope': 'drive',
+            'client_id': '',
+            'client_secret': '',
+            'token': '',
+            'service_account_file': f'accounts/{self.__service_account_index}.json',
+            'stop_on_upload_limit': 'true',
+        })
 
     async def cancel_download(self):
         self.is_user_cancelled= True

@@ -17,6 +17,8 @@ from bot.modules.listener import MirrorLeechListener
 
 listener_dict = {}
 
+
+
 async def handle_copy(client, message):
     user_id= message.from_user.id
     message_id= message.id
