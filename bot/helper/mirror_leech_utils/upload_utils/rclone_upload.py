@@ -37,26 +37,17 @@ class RcloneMirror:
             mime_type = 'File'
 
         config_file = get_rclone_config(self.__user_id)
-        conf = ConfigParser()
-        conf.read(config_file)
-
         is_multi_remote_up = config_dict['MULTI_REMOTE_UP']
         is_owner_query = CustomFilters._owner_query(self.__user_id)
+        foldername = self.name.replace(".", "")
 
         if config_dict['MULTI_RCLONE_CONFIG'] or is_owner_query:
             if is_multi_remote_up:
                 if len(remotes_data) > 0:
                     for remote in remotes_data:
-                        for r in conf.sections():
-
-                            if remote == str(r):
-                                if conf[r]['type'] == 'drive':
-                                    self.__isGdrive = True
-                                    break
-
+                        await self.check_isGdrive(remote, config_file)
                         if mime_type == 'Folder':
-                            self.name = self.name.replace(".", "")
-                            cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:/{self.name}", '-P']
+                            cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:/{foldername}", '-P']
                         else:
                             cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:", '-P']
                         await self.upload(cmd, config_file, mime_type, remote)
@@ -64,35 +55,23 @@ class RcloneMirror:
             else:
                 remote = get_rclone_data('CLOUDSEL_REMOTE', self.__user_id)
                 base = get_rclone_data('CLOUDSEL_BASE_DIR', self.__user_id)
-                
-                for r in conf.sections():
-                    if remote == str(r):
-                        if conf[r]['type'] == 'drive':
-                            self.__isGdrive = True
-                            break
+                await self.check_isGdrive(remote, config_file)
 
                 if mime_type == 'Folder':
-                    self.name = self.name.replace(".", "")
-                    cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:/{self.name}", '-P']
+                    cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:{base}{foldername}", '-P']
                 else:
-                    cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:", '-P']
+                    cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:{base}", '-P']
+                LOGGER.info(cmd)
                 await self.upload(cmd, config_file, mime_type, remote, base)
         else:
             if DEFAULT_GLOBAL_REMOTE := config_dict['DEFAULT_GLOBAL_REMOTE']:
-                remote= DEFAULT_GLOBAL_REMOTE
-
-                for r in conf.sections():
-                    if remote == str(r):
-                        if conf[r]['type'] == 'drive':
-                            self.__isGdrive = True
-                            break
+                await self.check_isGdrive(DEFAULT_GLOBAL_REMOTE, config_file)                
 
                 if mime_type == 'Folder':
-                    self.name = self.name.replace(".", "")
-                    cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:/{self.name}", '-P']
+                    cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{DEFAULT_GLOBAL_REMOTE}:/{foldername}", '-P']
                 else:
-                    cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:", '-P']
-                await self.upload(cmd, config_file, mime_type, remote)
+                    cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{DEFAULT_GLOBAL_REMOTE}:", '-P']
+                await self.upload(cmd, config_file, mime_type, DEFAULT_GLOBAL_REMOTE)
             else:
                 return await self.__listener.onUploadError("DEFAULT_GLOBAL_REMOTE not found")
         
@@ -109,9 +88,8 @@ class RcloneMirror:
             size = get_readable_file_size(self.size)
             await self.__listener.onRcloneUploadComplete(self.name, size, config_file, remote, base, mime_type, self.__isGdrive)
         else:
-            error= await self.process.stderr.read()
-            LOGGER.info(str(error))
-            await self.__listener.onUploadError("Cancelled by user")
+            LOGGER.info(str(await self.process.stderr.read()))
+            await self.__listener.onUploadError("Upload cancelled!")
 
     async def delete_files_with_extensions(self):
         for dirpath, _, files in walk(self.__path):
@@ -122,7 +100,17 @@ class RcloneMirror:
                         osremove(del_file)
                     except:
                         return
-
+    
+    async def check_isGdrive(self, remote, config_file):
+        conf = ConfigParser()
+        conf.read(config_file)
+        for r in conf.sections():
+            if str(r) == remote:
+                if conf[r]['type'] == 'drive':
+                    self.__isGdrive = True
+                else:
+                    self.__isGdrive = False
+                
     async def cancel_download(self):
         await run_sync(self.process.kill)
         

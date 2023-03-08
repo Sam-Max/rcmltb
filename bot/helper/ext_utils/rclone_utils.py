@@ -76,12 +76,15 @@ async def list_remotes(message, rclone_remote, base_dir, callback, edit=False):
         await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
 
-async def get_gdlink(remote, path, name, conf, type, buttons):
-    name = rescape(name)
+async def get_gdlink(remote, base, name, conf, type, buttons):
     if type == "Folder":
-        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{path}", "--dirs-only", "-f", f"+ {name}/", "-f", "- *"]
+        name = name.replace(".", "")
+        ename = rescape(name)
+        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{base}", "--dirs-only", "-f", f"+ {ename}/", "-f", "- *"]
     else:
-        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{path}", "--files-only", "-f", f"+ {name}", "-f", "- *"]
+        ename = rescape(name)
+        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{base}", "--files-only", "-f", f"+ {ename}", "-f", "- *"]
+    LOGGER.info(cmd)
     process = await create_subprocess_exec(*cmd,stdout= PIPE,stderr= PIPE)
     stdout, stderr = await process.communicate()
     return_code = await process.wait()
@@ -100,8 +103,8 @@ async def get_gdlink(remote, path, name, conf, type, buttons):
             link = f"https://drive.google.com/file/d/{id}/view"
             buttons.url_buildbutton('Cloud Link 🔗', link)
     except Exception:
-        buttons.cb_buildbutton("🚫", "none")
-        LOGGER.error("Error while getting id- {}".format(stdout))
+        buttons.cb_buildbutton("🚫", "close")
+        LOGGER.error("Error while getting id")
     
     
         
