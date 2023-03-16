@@ -3,7 +3,7 @@ from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
-from bot import LOGGER, bot
+from bot import LOGGER, bot, config_dict
 from json import loads as jsonloads
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
@@ -17,8 +17,12 @@ from bot.modules.myfilesset import calculate_size, delete_empty_dir, delete_sele
 
 
 async def handle_myfiles(client, message):
-    if await is_rclone_config(message.from_user.id, message):
-        await list_remotes(message)
+    user_id= message.from_user.id
+    if await is_rclone_config(user_id, message):
+        if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id):
+            await list_remotes(message)
+        else:
+            await sendMessage("Not allowed to use", message)
 
 async def list_remotes(message, edit=False):
     if message.reply_to_message:
