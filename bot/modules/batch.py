@@ -42,13 +42,14 @@ async def _batch(client, message, isLeech=False):
     msg+= "2. URL links separated each link by new line\n"        
     msg+= "3. TXT file with URL links separated each link by new line\n\n"        
     msg+= "/ignore to cancel"        
-    await sendMessage(msg, message)
+    question= await sendMessage(msg, message)
     try:
         response = await client.listen.Message(filters.document | filters.text, id= filters.user(user_id), timeout=60)
         try:
             if response.text:
                 if "/ignore" in response.text:
                     await client.listen.Cancel(filters.user(user_id))
+                    await question.delete()
                 else:
                     lines= response.text.split("\n")  
                     if len(lines) > 1:
