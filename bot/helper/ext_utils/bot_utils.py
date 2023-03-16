@@ -51,13 +51,13 @@ def is_url(url):
     url = re_match(URL_REGEX, url)
     return bool(url)
 
-def is_gdrive_link(url: str):
+def is_gdrive_link(url):
     return "drive.google.com" in url
 
-def is_mega_link(url: str):
+def is_mega_link(url):
     return "mega.nz" in url or "mega.co.nz" in url
 
-def get_mega_link_type(url: str):
+def get_mega_link_type(url):
     if "folder" in url:
         return "folder"
     elif "file" in url:

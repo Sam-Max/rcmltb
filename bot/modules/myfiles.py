@@ -237,8 +237,8 @@ async def next_page_myfiles(client, callback_query):
 
     remote= get_rclone_data("MYFILES_REMOTE", user_id)
     base_dir= get_rclone_data("MYFILES_BASE_DIR", user_id)
-    await editMessage(f"Your cloud files are listed below\n\n<b>Path:</b><code>{remote}:{base_dir}</code>", message, 
-                      reply_markup= buttons.build_menu(1))
+    await editMessage(f"Your cloud files are listed below\n\n<b>Path:</b><code>{remote}:{base_dir}</code>", 
+                      message, reply_markup= buttons.build_menu(1))
 
 
 myfiles_handler = MessageHandler(handle_myfiles, filters= filters.command(BotCommands.MyFilesCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

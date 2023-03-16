@@ -1,4 +1,3 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/modules/rss.py
 # Adapted for asyncio framework and pyrogram library and some extra modifications
 
 from asyncio import Lock

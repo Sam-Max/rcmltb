@@ -1,7 +1,3 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
-# Adapted for asyncio framework and pyrogram library
-
-from functools import partial
 from hashlib import sha1
 from base64 import b16encode, b32decode
 from bencoding import bencode, bdecode
@@ -9,7 +5,7 @@ from time import time
 from asyncio import Lock, sleep
 from re import search as re_search
 from os import remove
-from bot import QbInterval, status_dict, status_dict_lock, get_client, botloop, config_dict, LOGGER
+from bot import QbInterval, status_dict, status_dict_lock, get_client, config_dict, LOGGER
 from bot.helper.ext_utils.bot_utils import get_readable_time, run_sync, setInterval
 from bot.helper.ext_utils.message_utils import deleteMessage, sendMarkup, sendMessage, sendStatusMessage, update_all_messages
 from bot.helper.ext_utils.misc_utils import bt_selection_buttons, getDownloadByGid
@@ -37,7 +33,7 @@ def __get_hash_file(path):
     return str(hash_)
 
 async def add_qb_torrent(link, path, listener):
-    client = get_client()
+    client = await run_sync(get_client)
     ADD_TIME = time()
     try:
         if link.startswith('magnet:'):
@@ -61,8 +57,8 @@ async def add_qb_torrent(link, path, listener):
                     tor_info = await run_sync(client.torrents_info, torrent_hashes=ext_hash)
                     if len(tor_info) > 0:
                         break
-                    elif time() - ADD_TIME >= 60:
-                        msg = "Not added, maybe it will took time and u should remove it manually using eval!"
+                    elif time() - ADD_TIME >= 120:
+                        msg = msg = "Not added! Check if the link is valid or not. If it's torrent file then report, this happens if torrent file size above 10mb."
                         await sendMessage(msg, listener.message)
                         await __remove_torrent(client, ext_hash)
                         await run_sync(client.auth_log_out)
@@ -174,10 +170,11 @@ async def __onDownloadComplete(client, tor):
        await __remove_torrent(client, tor.hash)
 
 async def __qb_listener():
-    client = get_client()
+    client = await run_sync(get_client)
     if len(await run_sync(client.torrents_info)) == 0:
         QbInterval[0].cancel()
         QbInterval.clear()
+        await run_sync(client.auth_log_out)
         return
     try:
         for tor_info in await run_sync(client.torrents_info):
@@ -216,3 +213,5 @@ async def __qb_listener():
                 await __onSeedFinish(client, tor_info)
     except Exception as e:
         LOGGER.error(str(e))
+    finally:
+        await run_sync(client.auth_log_out)

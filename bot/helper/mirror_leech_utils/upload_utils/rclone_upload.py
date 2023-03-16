@@ -5,7 +5,6 @@ from random import SystemRandom
 from os import path as ospath, remove as osremove, walk
 from string import ascii_letters, digits
 from bot import GLOBAL_EXTENSION_FILTER, LOGGER, status_dict, status_dict_lock, remotes_data, config_dict
-from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import sendStatusMessage
@@ -26,6 +25,7 @@ class RcloneMirror:
         self.size= size
         self.process= None
         self.__isGdrive= False
+        self.__is_cancelled = False
         self.status_type = MirrorStatus.STATUS_UPLOADING
 
     async def mirror(self):
@@ -61,7 +61,6 @@ class RcloneMirror:
                     cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:{base}{foldername}", '-P']
                 else:
                     cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:{base}", '-P']
-                LOGGER.info(cmd)
                 await self.upload(cmd, config_file, mime_type, remote, base)
         else:
             if DEFAULT_GLOBAL_REMOTE := config_dict['DEFAULT_GLOBAL_REMOTE']:
@@ -84,12 +83,14 @@ class RcloneMirror:
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         await status.read_stdout()
         return_code = await self.process.wait()
+        if self.__is_cancelled:
+            return
         if return_code == 0:
             size = get_readable_file_size(self.size)
             await self.__listener.onRcloneUploadComplete(self.name, size, config_file, remote, base, mime_type, self.__isGdrive)
         else:
-            LOGGER.info(str(await self.process.stderr.read()))
-            await self.__listener.onUploadError("Upload cancelled!")
+            error= await self.process.stderr.read()
+            await self.__listener.onUploadError(f"Error: {error}!")
 
     async def delete_files_with_extensions(self):
         for dirpath, _, files in walk(self.__path):
@@ -112,5 +113,7 @@ class RcloneMirror:
                     self.__isGdrive = False
                 
     async def cancel_download(self):
-        await run_sync(self.process.kill)
+        self.__is_cancelled = True
+        self.process.kill()
+        await self.__listener.onUploadError('Upload cancelled!')
         

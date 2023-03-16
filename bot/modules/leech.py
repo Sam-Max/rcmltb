@@ -130,19 +130,16 @@ async def list_remotes(message, edit=False):
         user_id= message.reply_to_message.from_user.id
     else:
         user_id= message.from_user.id
-   
     path= get_rclone_config(user_id)
     if not path:
         await sendMessage("Send a rclone config file, use /botfiles command", message)
         return
-    
     conf = ConfigParser()
     conf.read(path)
     buttons = ButtonMaker()
     for remote in conf.sections():
         buttons.cb_buildbutton(f"📁 {remote}", f"leechmenu^remote^{remote}^{user_id}") 
     buttons.cb_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}")
-    
     if edit:
         await editMessage("Select cloud where your files are stored\n\n<b>", message, reply_markup= buttons.build_menu(2))
     else:
@@ -303,6 +300,7 @@ async def selection_callback(client, callback_query):
     else:
         await query.answer()
         await message.delete()
+
 
 leech_handler = MessageHandler(handle_leech, filters= command(BotCommands.LeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 zip_leech_handler = MessageHandler(handle_zip_leech_command, filters= command(BotCommands.ZipLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

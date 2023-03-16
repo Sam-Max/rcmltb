@@ -1,18 +1,17 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
-
 from os import path as ospath, mkdir
 from PIL import Image
 from time import time
 from subprocess import run as srun
 from bot.helper.ext_utils.misc_utils import get_media_info
 
-def take_ss(video_file, duration):
+
+async def take_ss(video_file, duration):
     des_dir = 'Thumbnails'
     if not ospath.exists(des_dir):
         mkdir(des_dir)
     des_dir = ospath.join(des_dir, f"{time()}.jpg")
     if duration is None:
-        duration = get_media_info(video_file)[0]
+        duration = (await get_media_info(video_file))[0]
     if duration == 0:
         duration = 3
     duration = duration // 2

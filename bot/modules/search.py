@@ -22,7 +22,7 @@ TELEGRAPH_LIMIT = 300
 
 
 async def initiate_search_tools():
-    qbclient = get_client()
+    qbclient = await run_sync(get_client)
     qb_plugins = await run_sync(qbclient.search_plugins)
     if SEARCH_PLUGINS := config_dict['SEARCH_PLUGINS']:
         globals()['PLUGINS'] = []
@@ -60,7 +60,7 @@ def _api_buttons(user_id, method):
 async  def _plugin_buttons(user_id):
     buttons = ButtonMaker()
     if not PLUGINS:
-        qbclient = get_client()
+        qbclient = await run_sync(get_client)
         pl = await run_sync(qbclient.search_plugins)
         for name in pl:
             PLUGINS.append(name['name'])
@@ -179,7 +179,7 @@ async def _search(key, site, message, method):
             LOGGER.info(str(e)) 
     else:
         LOGGER.info(f"PLUGINS Searching: {key} from {site}")
-        client = get_client()
+        client = await run_sync(get_client)
         search = await run_sync(client.search_start, pattern=key, plugins=site, category='all')
         search_id = search.id
         while True:
@@ -270,8 +270,6 @@ async def _getResult(search_results, key, message, method):
         await telegraph.edit_telegraph(path, telegraph_content)
     LOGGER.info(path)
     return f"https://telegra.ph/{path[0]}"
-
-
 
 
 torrent_search_handler = MessageHandler(handle_torrent_search, filters= filters.command(BotCommands.SearchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

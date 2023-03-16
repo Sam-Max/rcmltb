@@ -236,7 +236,7 @@ def get_video_resolution(path):
         LOGGER.error(f"get_video_resolution: {e}")
         return 480, 320
 
-def bt_selection_buttons(id_: str):
+def bt_selection_buttons(id_):
     if len(id_) > 20:
         gid = id_[:12]
     else:

@@ -29,7 +29,7 @@ async def handle_cloudselect(client, message):
         else:
             await sendMessage("Not allowed to use", message)        
 
-async def list_remotes(message, rclone_remote= "", base_dir= "", edit=False):
+async def list_remotes(message, rclone_remote, base_dir, edit=False):
     if message.reply_to_message:
         user_id= message.reply_to_message.from_user.id
     else:
@@ -53,7 +53,10 @@ async def list_remotes(message, rclone_remote= "", base_dir= "", edit=False):
     if config_dict['MULTI_REMOTE_UP']:
         msg= f"Select all clouds where you want to upload file"
     else:
-        msg= f"Select cloud where you want to upload file\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>"
+        if rclone_remote and base_dir:
+            msg= f"Select cloud where you want to upload file\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>"
+        else:
+            msg= f"Select cloud where you want to upload file\n\n"
     if edit:
         await editMessage(msg, message, reply_markup= buttons.build_menu(2))
     else:
@@ -129,7 +132,7 @@ async def cloudselect_callback(client, callback_query):
     elif cmd[1] == "remote":
         if config_dict['MULTI_REMOTE_UP'] and user_id== OWNER_ID:
             remotes_data.append(cmd[2])
-            await list_remotes(message, cmd[2], edit=True)
+            await list_remotes(message, cmd[2], "", edit=True)
         else:
             update_rclone_data("CLOUDSEL_BASE_DIR", "/", user_id) #Reset Dir
             update_rclone_data("CLOUDSEL_REMOTE", cmd[2], user_id)
@@ -146,7 +149,7 @@ async def cloudselect_callback(client, callback_query):
     elif cmd[1] == "back":
         if len(base_dir) == 0: 
             await query.answer() 
-            await list_remotes(message, edit=True)
+            await list_remotes(message, "", "", edit=True)
             return 
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
@@ -160,7 +163,7 @@ async def cloudselect_callback(client, callback_query):
         await query.answer()
     elif cmd[1] == "reset":
         remotes_data.clear()
-        await list_remotes(message, edit=True)
+        await list_remotes(message, "", "", edit=True)
     else:
         await query.answer()
         await message.delete()
@@ -210,6 +213,7 @@ async def next_page_cloudselect(client, callback_query):
     cloudselect_remote= get_rclone_data("CLOUDSEL_REMOTE", user_id)
     base_dir= get_rclone_data("CLOUDSEL_BASE_DIR", user_id)
     await editMessage(f"Select folder where you want to store files\n\n<b>Path:</b><code>{cloudselect_remote}:{base_dir}</code>", message, reply_markup= buttons.build_menu(1))
+ 
  
 cloudselect_handler = MessageHandler(handle_cloudselect, filters= filters.command(BotCommands.CloudSelectCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 next_cloudselect_cb= CallbackQueryHandler(next_page_cloudselect, filters= regex("next_cloudselect"))

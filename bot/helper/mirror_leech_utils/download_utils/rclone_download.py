@@ -3,7 +3,6 @@ from asyncio.subprocess import PIPE
 from os import path as ospath
 from random import SystemRandom
 from string import ascii_letters, digits
-from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import sendStatusMessage
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data
@@ -24,6 +23,7 @@ class RcloneLeech:
         self.size= 0
         self.name= None
         self.process= None
+        self.__is_cancelled = False
         self.status_type= MirrorStatus.STATUS_DOWNLOADING
 
     async def leech(self):
@@ -48,12 +48,17 @@ class RcloneLeech:
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE)
         await status.read_stdout()
         return_code = await self.process.wait()
+        if self.__is_cancelled:
+            return
         if return_code == 0:
             await self.__listener.onDownloadComplete()
         else:
-            await self.__listener.onDownloadError("Cancelled by user")
+            error= await self.process.stderr.read()
+            await self.__listener.onDownloadError(f"Error: {error}!")
     
     async def cancel_download(self):
-        await run_sync(self.process.kill) 
+        self.__is_cancelled = True
+        self.process.kill() 
+        await self.__listener.onDownloadError('Download cancelled!')
 
         

@@ -263,11 +263,11 @@ async def rclone_rename(client, message, remote, remote_path, tag):
                               dest = list_base[:-1]
                               dest = "/".join(dest)
                               file = list_base[-1]
-                              _, ext= splitext(file)
+                              pathname, ext= splitext(file)
                               path = f'{dest}/{new_name}{ext}'
                          else:
                               file = list_base[0]
-                              _, ext= splitext(file)
+                              pathname, ext= splitext(file)
                               path = f'{new_name}{ext}'
                          cmd = ["rclone", "moveto", f'--config={conf_path}', f"{remote}:{remote_path}", f"{remote}:{path}"]
                          process = await exec(*cmd, stdout=PIPE, stderr=PIPE)

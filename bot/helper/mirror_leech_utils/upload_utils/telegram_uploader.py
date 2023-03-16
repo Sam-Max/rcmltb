@@ -73,7 +73,7 @@ class TelegramUploader():
                         up_path = new_path
                     duration= (await get_media_info(up_path))[0]
                     if thumb_path is None:
-                        thumb_path = take_ss(up_path, duration)
+                        thumb_path = await take_ss(up_path, duration)
                         if self.__is_cancelled:
                             if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
                                 osremove(thumb_path)
@@ -176,7 +176,7 @@ class TelegramUploader():
                     notMedia = True
             if self.__as_doc or notMedia:
                 if is_video and thumb_path is None:
-                    thumb_path = take_ss(up_path, None)
+                    thumb_path = await take_ss(up_path, None)
                     if self.__is_cancelled:
                         if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
                             osremove(thumb_path)

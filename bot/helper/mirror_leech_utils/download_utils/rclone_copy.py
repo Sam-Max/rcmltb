@@ -23,8 +23,7 @@ class RcloneCopy:
         self.size= 0
         self.__sa_count = 0
         self.__service_account_index = 0
-        self.is_user_cancelled= False
-        self.err_message= ""
+        self.__is_cancelled= False
         self.sa_error= ""
         self.status_type= MirrorStatus.STATUS_COPYING
 
@@ -64,20 +63,18 @@ class RcloneCopy:
         await sendStatusMessage(self.__listener.message)
         await status.read_stdout()
         return_code = await self.process.wait()
+        if self.__is_cancelled:
+            return
         if return_code == 0:
             await self.__listener.onRcloneCopyComplete(conf_path, origin_dir, dest_drive, dest_dir)
         else:
-            if self.is_user_cancelled:
-                await self.__listener.onDownloadError(self.err_message)
-            else:
-                err_message = await self.process.stderr.read()
-                err_message= err_message.decode()
-                LOGGER.info(f'Error: {err_message}')
-                if any(i in err_message for i in ['userRateLimitExceeded', 'User rate limit exceeded.']):
-                    await self.__listener.onDownloadError(error)
-                    self.__switchServiceAccount()
-                    return await self.copy(origin_drive, origin_dir, dest_drive, dest_dir)
-                await self.__listener.onDownloadError(err_message)
+            err_message = await self.process.stderr.read()
+            err_message= err_message.decode()
+            LOGGER.info(f'Error: {err_message}')
+            if any(i in err_message for i in ['userRateLimitExceeded', 'User rate limit exceeded.']):
+                self.__switchServiceAccount()
+                return await self.copy(origin_drive, origin_dir, dest_drive, dest_dir)
+            await self.__listener.onDownloadError(err_message)
                 
     def __switchServiceAccount(self):
         if self.__service_account_index == SERVICE_ACCOUNTS_NUMBER - 1:
@@ -99,6 +96,6 @@ class RcloneCopy:
         })
 
     async def cancel_download(self):
-        self.is_user_cancelled= True
-        self.err_message= "Cancelled by user"
-        await run_sync(self.process.kill) 
+        self.__is_cancelled= True
+        await self.__listener.onDownloadError("Copy cancelled!")
+        self.process.kill() 

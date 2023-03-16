@@ -69,7 +69,7 @@ class TelegramDownloader:
                 file_name= self.__path,
                 progress= self.onDownloadProgress)
             if self.__is_cancelled:
-                await self.__onDownloadError("Cancelled by user")
+                await self.__onDownloadError("Cancelled by user!")
                 return
         except Exception as e:
             LOGGER.error(str(e))
