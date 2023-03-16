@@ -42,7 +42,7 @@ class RcloneLeech:
         else:
             self.name = ospath.basename(self.__dest_path)
         async with status_dict_lock:
-            status = RcloneStatus(self, gid)
+            status = RcloneStatus(self, self.__listener, gid)
             status_dict[self.__listener.uid] = status
         await sendStatusMessage(self.__listener.message)
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE)

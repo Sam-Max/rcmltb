@@ -5,7 +5,6 @@ from os import listdir, path as ospath
 from random import SystemRandom, randrange
 from string import ascii_letters, digits
 from bot import LOGGER, status_dict, status_dict_lock, config_dict
-from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.ext_utils.message_utils import sendMessage, sendStatusMessage
 from bot.helper.ext_utils.rclone_utils import get_rclone_config
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
@@ -58,7 +57,7 @@ class RcloneCopy:
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         self.name = f'{origin_drive}:{origin_dir} ➡️ {dest_drive}:{dest_dir}'
         async with status_dict_lock:
-            status = RcloneStatus(self, gid)
+            status = RcloneStatus(self, self.__listener, gid)
             status_dict[self.__listener.uid] = status
         await sendStatusMessage(self.__listener.message)
         await status.read_stdout()

@@ -77,7 +77,7 @@ class RcloneMirror:
     async def upload(self, cmd, config_file, mime_type, remote, base="/"):
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         async with status_dict_lock:
-            status = RcloneStatus(self, gid)
+            status = RcloneStatus(self, self.__listener, gid)
             status_dict[self.__listener.uid] = status
         await sendStatusMessage(self.__listener.message)
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)

@@ -6,7 +6,7 @@ from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 
 class RcloneStatus:
-    def __init__(self, obj, gid):
+    def __init__(self, obj, listener, gid):
         self.__obj = obj
         self.__gid = gid
         self.__percent= 0
@@ -14,6 +14,7 @@ class RcloneStatus:
         self.__transfered_bytes = 0 
         self.__blank= 0
         self.__eta= "-"
+        self.message = listener.message
         self.is_rclone= True
 
     async def read_stdout(self):
