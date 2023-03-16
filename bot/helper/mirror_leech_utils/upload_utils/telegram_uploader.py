@@ -118,7 +118,7 @@ class TelegramUploader():
                             duration= duration,
                             progress= self.__upload_progress)
                 elif is_audio:
-                    duration, artist, title = get_media_info(up_path)
+                    duration, artist, title = await get_media_info(up_path)
                     if config_dict['LEECH_LOG']:
                         for chat in leech_log:
                             self.__sent_msg = await self.client.send_audio(

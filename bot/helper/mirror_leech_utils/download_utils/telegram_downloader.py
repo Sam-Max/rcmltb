@@ -55,7 +55,7 @@ class TelegramDownloader:
             self.__path= self.__path
         else:
             if self.name == "":
-                name = self.__file.file_name
+                name = self.__file.file_name if hasattr(self.__file, 'file_name') else 'None'
             else:
                 name = self.name
                 self.__path = self.__path + name

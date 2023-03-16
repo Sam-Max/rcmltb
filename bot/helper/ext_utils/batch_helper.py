@@ -27,7 +27,7 @@ async def check_link(link):
             await client.get_messages(chat, msg_id)
             return True, None
         except ValueError:
-            return False, "**Invalid Link!**"
+            return False, "Invalid Link!"
         except Exception:
             msg= "Make sure you joined the channel and set string session!!"
             return False, msg
