@@ -2,7 +2,7 @@ from asyncio import sleep
 from os import walk, rename, path as ospath, remove as osremove
 from time import time
 from bot import GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, bot, app, user_data, leech_log
-from pyrogram.errors import FloodWait
+from pyrogram.errors import FloodWait, RPCError
 from PIL import Image
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.misc_utils import get_document_type, get_media_info
@@ -46,140 +46,38 @@ class TelegramUploader():
                         LOGGER.error(f"{f_size} size is zero, telegram don't upload zero size files")
                         self.__corrupted += 1
                         continue
-                    await self.__upload_file(f_path, file)
                     if self.__is_cancelled:
                         return
+                    self._last_uploaded = 0
+                    await self.__upload_file(f_path, file)
                     if (not self.__listener.isPrivate or config_dict['LEECH_LOG']) and not self.__is_corrupted:
                         self.__msgs_dict[self.__sent_msg.link] = file
-                    self._last_uploaded = 0
                     await sleep(1)
+                    if not self.__is_cancelled and ospath.exists(f_path):
+                        try:
+                            osremove(f_path)
+                        except:
+                            pass
+        if self.__total_files == 0:
+            await self.__listener.onUploadError("No files to upload. In case you have filled EXTENSION_FILTER, then check if all files have those extensions or not.")
+            return
         if self.__total_files <= self.__corrupted:
-            return await self.__listener.onUploadError('Files Corrupted. Check logs')
+            await self.__listener.onUploadError('Files Corrupted. Check logs')
+            return 
+        LOGGER.info(f"Leech Completed: {self.name}")
         size = get_readable_file_size(self.__size)
         await self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)    
     
     async def __upload_file(self, up_path, file):
         thumb_path = self.__thumb
-        notMedia = False
         self.__is_corrupted = False
         cap= f"<code>{file}</code>"
         try:
             is_video, is_audio, is_image = await get_document_type(up_path)
-            if not self.__as_doc:
-                if is_video:
-                    if not str(up_path).split(".")[-1] in ['mp4', 'mkv']:
-                        new_path = str(up_path).split(".")[0] + ".mp4"
-                        rename(up_path, new_path) 
-                        up_path = new_path
-                    duration= (await get_media_info(up_path))[0]
-                    if thumb_path is None:
-                        thumb_path = await take_ss(up_path, duration)
-                        if self.__is_cancelled:
-                            if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
-                                osremove(thumb_path)
-                            return
-                    if thumb_path is not None:
-                        with Image.open(thumb_path) as img:
-                            width, height = img.size
-                    else:
-                        width = 480
-                        height = 320
-                    if config_dict['LEECH_LOG']:
-                        for chat in leech_log:
-                            self.__sent_msg = await self.client.send_video(
-                                chat_id= int(chat),
-                                video=up_path,
-                                caption=cap,
-                                duration=duration,
-                                width=width,
-                                height=height,
-                                thumb=thumb_path,
-                                supports_streaming=True,
-                                disable_notification=True,
-                                progress=self.__upload_progress)
-                            if config_dict['BOT_PM']:
-                                try:
-                                    await bot.copy_message(
-                                        chat_id= self.__user_id, 
-                                        from_chat_id= self.__sent_msg.chat.id, 
-                                        message_id= self.__sent_msg.id)
-                                except Exception as err:
-                                    LOGGER.error(f"Failed To Send Video in PM:\n {err}")
-                    else:
-                        self.__sent_msg= await self.__sent_msg.reply_video(
-                            video= up_path,
-                            width= width,
-                            height= height,
-                            caption= cap,
-                            quote=True,
-                            disable_notification=True,
-                            thumb= thumb_path,
-                            supports_streaming= True,
-                            duration= duration,
-                            progress= self.__upload_progress)
-                elif is_audio:
-                    duration, artist, title = await get_media_info(up_path)
-                    if config_dict['LEECH_LOG']:
-                        for chat in leech_log:
-                            self.__sent_msg = await self.client.send_audio(
-                                chat_id= int(chat),
-                                audio=up_path,
-                                duration=duration,
-                                performer=artist,
-                                title=title,
-                                thumb=thumb_path,
-                                progress=self.__upload_progress)
-                            if config_dict['BOT_PM']:
-                                try:
-                                    await bot.copy_message(
-                                        chat_id= self.__user_id, 
-                                        from_chat_id= self.__sent_msg.chat.id, 
-                                        message_id= self.__sent_msg.id)
-                                except Exception as err:
-                                    LOGGER.error(f"Failed To Send Video in PM:\n {err}")
-                    else:
-                        self.__sent_msg = await self.__sent_msg.reply_audio(
-                            audio=up_path,
-                            quote=True,
-                            caption=cap,
-                            duration=duration,
-                            performer=artist,
-                            title=title,
-                            thumb= thumb_path,
-                            disable_notification=True,
-                            progress=self.__upload_progress)    
-                elif is_image:
-                    if config_dict['LEECH_LOG']:
-                        for chat in leech_log:
-                            self.__sent_msg = await self.client.send_photo(
-                                chat_id= int(chat),
-                                photo=up_path,
-                                caption=cap,
-                                disable_notification=True,
-                                progress=self.__upload_progress)
-                            if config_dict['BOT_PM']:
-                                try:
-                                    await bot.copy_message(
-                                        chat_id= self.__user_id, 
-                                        from_chat_id= self.__sent_msg.chat.id, 
-                                        message_id= self.__sent_msg.id)
-                                except Exception as err:
-                                    LOGGER.error(f"Failed To Send Video in PM:\n {err}")
-                    else:
-                        self.__sent_msg = await self.__sent_msg.reply_photo(
-                            photo=up_path,
-                            caption=cap,
-                            quote=True,
-                            disable_notification=True,
-                            progress= self.__upload_progress)
-                else:
-                    notMedia = True
-            if self.__as_doc or notMedia:
+            if self.__as_doc or (not is_video and not is_audio and not is_image):
                 if is_video and thumb_path is None:
                     thumb_path = await take_ss(up_path, None)
                     if self.__is_cancelled:
-                        if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
-                            osremove(thumb_path)
                         return
                 if config_dict['LEECH_LOG']:
                     for chat in leech_log:
@@ -206,21 +104,121 @@ class TelegramUploader():
                         thumb= thumb_path,
                         disable_notification=True,
                         progress= self.__upload_progress)
+            if is_video:
+                if not str(up_path).split(".")[-1] in ['mp4', 'mkv']:
+                    new_path = str(up_path).split(".")[0] + ".mp4"
+                    rename(up_path, new_path) 
+                    up_path = new_path
+                duration= (await get_media_info(up_path))[0]
+                if thumb_path is None:
+                    thumb_path = await take_ss(up_path, duration)
+                    if self.__is_cancelled:
+                        return
+                if thumb_path is not None:
+                    with Image.open(thumb_path) as img:
+                        width, height = img.size
+                else:
+                    width = 480
+                    height = 320
+                if config_dict['LEECH_LOG']:
+                    for chat in leech_log:
+                        self.__sent_msg = await self.client.send_video(
+                            chat_id= int(chat),
+                            video=up_path,
+                            caption=cap,
+                            duration=duration,
+                            width=width,
+                            height=height,
+                            thumb=thumb_path,
+                            supports_streaming=True,
+                            disable_notification=True,
+                            progress=self.__upload_progress)
+                        if config_dict['BOT_PM']:
+                            try:
+                                await bot.copy_message(
+                                    chat_id= self.__user_id, 
+                                    from_chat_id= self.__sent_msg.chat.id, 
+                                    message_id= self.__sent_msg.id)
+                            except Exception as err:
+                                LOGGER.error(f"Failed To Send Video in PM:\n {err}")
+                else:
+                    self.__sent_msg= await self.__sent_msg.reply_video(
+                        video= up_path,
+                        width= width,
+                        height= height,
+                        caption= cap,
+                        quote=True,
+                        disable_notification=True,
+                        thumb= thumb_path,
+                        supports_streaming= True,
+                        duration= duration,
+                        progress= self.__upload_progress)
+            elif is_audio:
+                duration, artist, title = await get_media_info(up_path)
+                if config_dict['LEECH_LOG']:
+                    for chat in leech_log:
+                        self.__sent_msg = await self.client.send_audio(
+                            chat_id= int(chat),
+                            audio=up_path,
+                            duration=duration,
+                            performer=artist,
+                            title=title,
+                            thumb=thumb_path,
+                            progress=self.__upload_progress)
+                        if config_dict['BOT_PM']:
+                            try:
+                                await bot.copy_message(
+                                    chat_id= self.__user_id, 
+                                    from_chat_id= self.__sent_msg.chat.id, 
+                                    message_id= self.__sent_msg.id)
+                            except Exception as err:
+                                LOGGER.error(f"Failed To Send Video in PM:\n {err}")
+                else:
+                    self.__sent_msg = await self.__sent_msg.reply_audio(
+                        audio=up_path,
+                        quote=True,
+                        caption=cap,
+                        duration=duration,
+                        performer=artist,
+                        title=title,
+                        thumb= thumb_path,
+                        disable_notification=True,
+                        progress=self.__upload_progress)    
+            elif is_image:
+                if config_dict['LEECH_LOG']:
+                    for chat in leech_log:
+                        self.__sent_msg = await self.client.send_photo(
+                            chat_id= int(chat),
+                            photo=up_path,
+                            caption=cap,
+                            disable_notification=True,
+                            progress=self.__upload_progress)
+                        if config_dict['BOT_PM']:
+                            try:
+                                await bot.copy_message(
+                                    chat_id= self.__user_id, 
+                                    from_chat_id= self.__sent_msg.chat.id, 
+                                    message_id= self.__sent_msg.id)
+                            except Exception as err:
+                                LOGGER.error(f"Failed To Send Video in PM:\n {err}")
+                else:
+                    self.__sent_msg = await self.__sent_msg.reply_photo(
+                        photo=up_path,
+                        caption=cap,
+                        quote=True,
+                        disable_notification=True,
+                        progress= self.__upload_progress)
+            if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
+                osremove(thumb_path)
         except FloodWait as f:
             LOGGER.warning(str(f))
             await sleep(f.value)
-        except Exception as ex:
-            LOGGER.error(f"{ex} Path: {up_path}")
-            self.__corrupted += 1
-            self.__is_corrupted = True
-        finally:
+        except Exception as err:
             if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
                 osremove(thumb_path)
-        if not self.__is_cancelled :
-            try:
-                osremove(up_path)
-            except:
-                pass
+            err_type = "RPCError: " if isinstance(err, RPCError) else ""
+            LOGGER.error(f"{err_type}{err}. Path: {up_path}")
+            raise err
 
     async def __upload_progress(self, current, total):
         if self.__is_cancelled:

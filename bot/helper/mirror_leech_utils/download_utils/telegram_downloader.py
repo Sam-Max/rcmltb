@@ -6,7 +6,7 @@ from bot.helper.mirror_leech_utils.status_utils.tg_download_status import Telegr
 
 
 class TelegramDownloader:
-    def __init__(self, file, client, listener, path, name, multi=0, multi_zip=False) -> None:
+    def __init__(self, file, client, listener, path, name, multi=0, multi_zip=False):
         self.__client= client
         self.__listener = listener
         self.name = name
@@ -47,6 +47,8 @@ class TelegramDownloader:
             pass
 
     async def download(self):
+        if self.__file == None:
+            return
         if self.__multi_zip:
             if self.name == "":
                 name = "multizip"

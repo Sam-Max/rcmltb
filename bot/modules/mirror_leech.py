@@ -1,15 +1,15 @@
-from base64 import b64encode
-from os import path as ospath
-from time import time
-from requests import get
 from bot import DOWNLOAD_DIR, LOGGER, OWNER_ID, PARALLEL_TASKS, bot, config_dict
 from asyncio import Queue, TimeoutError, sleep
 from bot import bot, DOWNLOAD_DIR, botloop, config_dict, m_queue
 from pyrogram import filters
+from requests import get as rget
+from time import time
+from base64 import b64encode
+from os import path as ospath
 from re import match as re_match, split as re_split
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_mega_link, is_url, run_async, run_async_task, run_sync
+from bot.helper.ext_utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_mega_link, is_url, run_async_task, run_sync
 from bot.helper.ext_utils.direct_link_generator import direct_link_generator
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.filters import CustomFilters
@@ -17,7 +17,7 @@ from bot.helper.ext_utils.message_utils import deleteMessage, sendMarkup, sendMe
 from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.misc_utils import get_readable_size
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
-from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected, list_remotes
+from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected, list_remotes_ml
 from bot.helper.mirror_leech_utils.download_utils.aria2_download import add_aria2c_download
 from bot.helper.mirror_leech_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_leech_utils.download_utils.mega_download import add_mega_download
@@ -210,7 +210,7 @@ Number should be always before |newname or pswd:
             content_type = await run_sync(get_content_type, link)
         if content_type is None or re_match(r'application/x-bittorrent|application/octet-stream', content_type):
             try:
-                resp = get(link, timeout=10, headers = {'user-agent': 'Wget/1.12'})
+                resp = rget(link, timeout=10, headers = {'user-agent': 'Wget/1.12'})
                 if resp.status_code == 200:
                     file_name = str(time()).replace(".", "") + ".torrent"
                     with open(file_name, "wb") as t:
@@ -275,7 +275,7 @@ async def mirror_menu(client, query):
         await query_message.delete()
         if config_dict['REMOTE_SELECTION'] and not is_Leech:
             update_rclone_data('NAME', "", user_id) 
-            await list_remotes(message, rclone_remote, base_dir, "mirrorselect")    
+            await list_remotes_ml(message, rclone_remote, base_dir, "mirrorselect")    
         else:
             tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
             if PARALLEL_TASKS:    
@@ -299,7 +299,7 @@ async def mirror_menu(client, query):
                     name = response.text.strip()
                     if config_dict['REMOTE_SELECTION'] and not is_Leech:
                         update_rclone_data('NAME', name, user_id) 
-                        await list_remotes(message, rclone_remote, base_dir, "mirrorselect")   
+                        await list_remotes_ml(message, rclone_remote, base_dir, "mirrorselect")   
                     else:
                         tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', name)
                         if PARALLEL_TASKS:    

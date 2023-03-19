@@ -142,25 +142,23 @@ async def get_bulk_msg(message, msg_link, multi, isLeech, value=0):
                 msg = await client.get_messages(chat, msg_id)
             else:
                 msg = await bot.get_messages(chat, msg_id)
-            file = msg.document or msg.video or msg.audio or msg.photo or None
-            if file is None:
-                return
-            if multi:
-                tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
-                run_async_task(tg_down.download)
-                if multi > 1:
-                    msg = f"{multi - 1}"
-                    await sleep(4)
-                    nextmsg = await sendMessage(msg, message)
-                    nextmsg = await bot.get_messages(message.chat.id, nextmsg.id)
-                    nextmsg.from_user.id = message.from_user.id
-                    value += 1
-                    multi -= 1
-                    try:
-                        await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value) 
-                    except FloodWait as fw:
-                        await sleep(fw.seconds + 5)
-                        await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value)  
+            file = msg.document or msg.video or msg.photo or msg.audio or \
+                   msg.voice or msg.video_note or msg.animation or None
+            tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
+            run_async_task(tg_down.download)
+            if multi > 1:
+                msg = f"{multi - 1}"
+                await sleep(4)
+                nextmsg = await sendMessage(msg, message)
+                nextmsg = await bot.get_messages(message.chat.id, nextmsg.id)
+                nextmsg.from_user.id = message.from_user.id
+                value += 1
+                multi -= 1
+                try:
+                    await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value) 
+                except FloodWait as fw:
+                    await sleep(fw.seconds + 5)
+                    await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value)  
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await sendMessage("Have you joined the channel?", message)
         except Exception as e:
@@ -172,26 +170,24 @@ async def get_bulk_msg(message, msg_link, multi, isLeech, value=0):
                 msg = await client.get_messages(chat, msg_id)
             else:
                 msg = await bot.get_messages(chat, msg_id)
-            file = msg.document or msg.video or msg.audio or msg.photo or None
-            if file is None:
-                return
-            if multi:
-                tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
-                run_async_task(tg_down.download)
-                if multi > 1:
-                    msg = f"{multi - 1}"
-                    await sleep(4)
-                    nextmsg = await sendMessage(msg, message)
-                    nextmsg = await bot.get_messages(message.chat.id, nextmsg.id)
-                    nextmsg.from_user.id = message.from_user.id
-                    value += 1
-                    multi -= 1
-                    try:
-                        await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value) 
-                    except FloodWait as fw:
-                        LOGGER.info("2")
-                        await sleep(fw.seconds + 5)
-                        await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value)     
+            file = msg.document or msg.video or msg.photo or msg.audio or \
+                   msg.voice or msg.video_note or msg.animation or None
+            tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
+            run_async_task(tg_down.download)
+            if multi > 1:
+                msg = f"{multi - 1}"
+                await sleep(4)
+                nextmsg = await sendMessage(msg, message)
+                nextmsg = await bot.get_messages(message.chat.id, nextmsg.id)
+                nextmsg.from_user.id = message.from_user.id
+                value += 1
+                multi -= 1
+                try:
+                    await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value) 
+                except FloodWait as fw:
+                    LOGGER.info("2")
+                    await sleep(fw.seconds + 5)
+                    await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value)  
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
             await sendMessage("Have you joined the channel?", message)
             return 
