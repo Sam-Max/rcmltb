@@ -113,6 +113,7 @@ async def myfiles_callback(client, callback_query):
     user_id= query.from_user.id
     base_dir= get_rclone_data("MYFILES_BASE_DIR", user_id)
     rclone_remote = get_rclone_data("MYFILES_REMOTE", user_id)
+    is_folder= False
 
     if int(cmd[-1]) != user_id:
         await query.answer("This menu is not for you!", show_alert=True)
@@ -162,8 +163,6 @@ async def myfiles_callback(client, callback_query):
     elif cmd[1] == "delete":
         if cmd[2] == "folder":
             is_folder= True
-        if cmd[2] == "file":
-            is_folder= False
         await delete_selection(message, user_id, is_folder=is_folder)
         await query.answer()
     elif cmd[1] == "size":
@@ -184,8 +183,6 @@ async def myfiles_callback(client, callback_query):
     elif cmd[1]== "yes":
         if cmd[2] == "folder":
             is_folder= True
-        elif cmd[2] == "file":
-            is_folder= False
         await delete_selected(message, user_id, base_dir , rclone_remote, is_folder=is_folder)
         await query.answer()
     elif cmd[1]== "no":
@@ -211,6 +208,7 @@ async def next_page_myfiles(client, callback_query):
 
     buttons = ButtonMaker()
     buttons.cb_buildbutton(f"⚙️ Folder Options", f"myfilesmenu^folder_action^{user_id}")
+    buttons.cb_buildbutton("🔍 Search", f"myfilesmenu^search^{user_id}")
 
     next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset)
     rcloneListButtonMaker(result_list= next_list_info,
