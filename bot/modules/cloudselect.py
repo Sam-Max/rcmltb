@@ -135,17 +135,18 @@ async def cloudselect_callback(client, callback_query):
             remotes_data.append(cmd[2])
             await list_remotes(message, cmd[2], "", edit=True)
         else:
-            update_rclone_data("CLOUDSEL_BASE_DIR", "/", user_id) #Reset Dir
+            #Reset Dir
+            update_rclone_data("CLOUDSEL_BASE_DIR", "", user_id) #Reset Dir
             update_rclone_data("CLOUDSEL_REMOTE", cmd[2], user_id)
             if user_id == OWNER_ID:
                 config_dict.update({'DEFAULT_OWNER_REMOTE': cmd[2]}) 
-            await list_folder(message, remote_name= cmd[2], remote_base="/", edit=True)
+            await list_folder(message, cmd[2], "", edit=True)
             await query.answer()
     elif cmd[1] == "remote_dir":
         path = get_rclone_data(cmd[2], user_id)
         base_dir += path + "/"
         update_rclone_data("CLOUDSEL_BASE_DIR", base_dir, user_id)
-        await list_folder(message, remote_name= rclone_remote, remote_base=base_dir, edit=True)
+        await list_folder(message, rclone_remote, base_dir, edit=True)
         await query.answer()
     elif cmd[1] == "back":
         if len(base_dir) == 0: 
@@ -158,7 +159,7 @@ async def cloudselect_callback(client, callback_query):
             base_dir_string += dir + "/"
         base_dir = base_dir_string
         update_rclone_data("CLOUDSEL_BASE_DIR", base_dir, user_id)
-        await list_folder(message, remote_name= rclone_remote, remote_base=base_dir, edit=True)
+        await list_folder(message, rclone_remote, base_dir, edit=True)
         await query.answer() 
     elif cmd[1] == "pages":
         await query.answer()

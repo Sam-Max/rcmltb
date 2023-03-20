@@ -80,18 +80,16 @@ async def leech_menu_cb(client, callback_query):
     if int(cmd[-1]) != user_id:
         return await query.answer("This menu is not for you!", show_alert=True)
     elif cmd[1] == "remote":
-        #Reset menu
+        # Reset Dir
         update_rclone_data("LEECH_BASE_DIR", "", user_id)
-        base_dir= get_rclone_data("LEECH_BASE_DIR", user_id)
-        remote_name= cmd[2]
-        update_rclone_data("LEECH_REMOTE", remote_name, user_id)
-        await list_folder(message, remote_name= remote_name, remote_base=base_dir, edit=True)
+        update_rclone_data("LEECH_REMOTE", cmd[2], user_id)
+        await list_folder(message, cmd[2], "", edit=True)
         await query.answer()   
     elif cmd[1] == "remote_dir":
         path = get_rclone_data(cmd[2], user_id)
         base_dir += path + "/"
         update_rclone_data("LEECH_BASE_DIR", base_dir, user_id)
-        await list_folder(message, remote_name= rclone_remote, remote_base=base_dir, edit=True)
+        await list_folder(message, rclone_remote, base_dir, edit=True)
         await query.answer()   
     elif cmd[1] == "leech_file":
         await query.answer()      
@@ -117,7 +115,7 @@ async def leech_menu_cb(client, callback_query):
             base_dir_string += dir + "/"
         base_dir = base_dir_string
         update_rclone_data("LEECH_BASE_DIR", base_dir, user_id)
-        await list_folder(message, remote_name= rclone_remote, remote_base=base_dir, edit=True)
+        await list_folder(message, rclone_remote, base_dir, edit=True)
         await query.answer()
     elif cmd[1] == "pages":
         await query.answer()
@@ -145,7 +143,7 @@ async def list_remotes(message, edit=False):
     else:
         await sendMarkup("Select cloud where your files are stored\n\n<b>", message, reply_markup= buttons.build_menu(2))
 
-async def list_folder(message, remote_name, remote_base, back= "back", edit=False):
+async def list_folder(message, remote_name, remote_base, edit=False):
     user_id= message.reply_to_message.from_user.id
     msg_id= message.reply_to_message.id
     info= listener_dict[msg_id] 
@@ -196,9 +194,9 @@ async def list_folder(message, remote_name, remote_base, back= "back", edit=Fals
             buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"leechmenu^pages^{user_id}", 'footer')        
         else: 
             buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"leechmenu^pages^{user_id}", 'footer')
-            buttons.cb_buildbutton("NEXT ⏩", f"next_leech {next_offset} {back}", 'footer')
+            buttons.cb_buildbutton("NEXT ⏩", f"next_leech {next_offset} back", 'footer')
 
-    buttons.cb_buildbutton("⬅️ Back", f"leechmenu^{back}^{user_id}", 'footer_second')
+    buttons.cb_buildbutton("⬅️ Back", f"leechmenu^back^{user_id}", 'footer_second')
     buttons.cb_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}", 'footer_second')
 
     msg = f'Select folder or file that you want to leech\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>'

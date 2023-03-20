@@ -37,7 +37,7 @@ async def serve_cb(client, callbackQuery):
     RC_INDEX_PASS= config_dict['RC_INDEX_PASS']
     RC_INDEX_PORT= config_dict['RC_INDEX_PORT']
   
-    if data[1] == "drive":
+    if data[1] == "remote":
         SELECTED_REMOTE.append(data[2]) 
         await protocol_selection(message)
     elif data[1] == "all":
@@ -94,7 +94,7 @@ async def list_remotes(message):
     conf = ConfigParser()
     conf.read(path)
     for remote in conf.sections():
-        button.cb_buildbutton(f"📁{remote}", f"servemenu^drive^{remote}")
+        button.cb_buildbutton(f"📁{remote}", f"servemenu^remote^{remote}")
     button.cb_buildbutton("🌐 All", f"servemenu^all")
     button.cb_buildbutton("✘ Close Menu", f"servemenu^close")
     await sendMarkup("Select cloud to serve as index", message, reply_markup= button.build_menu(2))

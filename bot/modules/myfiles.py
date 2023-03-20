@@ -118,12 +118,10 @@ async def myfiles_callback(client, callback_query):
     if int(cmd[-1]) != user_id:
         await query.answer("This menu is not for you!", show_alert=True)
     elif cmd[1] == "remote":
-        #Reset Menu
+        #Reset Dir
         update_rclone_data("MYFILES_BASE_DIR", "", user_id)
-        base_dir= get_rclone_data("MYFILES_BASE_DIR", user_id)
-        remote_name= cmd[2]  
-        update_rclone_data("MYFILES_REMOTE", remote_name, user_id)
-        await list_folder(message, remote_name= remote_name, remote_base=base_dir, edit=True)
+        update_rclone_data("MYFILES_REMOTE", cmd[2]  , user_id)
+        await list_folder(message, cmd[2], "", edit=True)
         await query.answer() 
     elif cmd[1] == "remote_dir":
         path = get_rclone_data(cmd[2], user_id)

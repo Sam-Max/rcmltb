@@ -27,7 +27,7 @@ async def list_remotes(message, edit= False):
      conf.read(conf_path)
 
      for remote in conf.sections():
-          buttons.cb_buildbutton(f"📁{remote}", f"cleanupmenu^drive^{remote}^{user_id}") 
+          buttons.cb_buildbutton(f"📁{remote}", f"cleanupmenu^remote^{remote}^{user_id}") 
 
      buttons.cb_buildbutton("✘ Close Menu", f"cleanupmenu^close^{user_id}", 'footer')
     
@@ -47,23 +47,23 @@ async def cleanup_callback(client, callback_query):
      if int(cmd[-1]) != user_id:
           return await query.answer("This menu is not for you!", show_alert=True)
 
-     if cmd[1] == "drive":
+     if cmd[1] == "remote":
           await rclone_cleanup(message, cmd[2], user_id, tag)
 
      elif cmd[1] == "back":
           await list_remotes(message, edit=True)
           await query.answer()
 
-     elif cmd[1] == "close":
+     else:
           await query.answer()
           await message.delete()     
 
-async def rclone_cleanup(message, drive_name, user_id, tag):
+async def rclone_cleanup(message, remote_name, user_id, tag):
      conf_path = get_rclone_config(user_id)
      msg= "**⏳Cleaning remote trash**\n"
      msg += "\nIt may take some time depending on number of files"
      edit_msg= await editMessage(msg, message)
-     cmd = ["rclone", "cleanup", f'--config={conf_path}', f"{drive_name}:"] 
+     cmd = ["rclone", "cleanup", f'--config={conf_path}', f"{remote_name}:"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
      return_code = await process.wait()

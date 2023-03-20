@@ -29,7 +29,7 @@ async def list_drive(message, edit= False):
      conf = ConfigParser()
      conf.read(conf_path)
      for remote in conf.sections():
-          buttons.cb_buildbutton(f"📁{remote}", f"storagemenu^drive^{remote}^{user_id}") 
+          buttons.cb_buildbutton(f"📁{remote}", f"storagemenu^remote^{remote}^{user_id}") 
 
      buttons.cb_buildbutton("✘ Close Menu", f"storagemenu^close^{user_id}")
     
@@ -49,7 +49,7 @@ async def storage_menu_cb(client, callback_query):
      if int(cmd[-1]) != user_id:
           return await query.answer("This menu is not for you!", show_alert=True)
 
-     if cmd[1] == "drive":
+     if cmd[1] == "remote":
           await rclone_about(message, query, cmd[2], user_id)
 
      elif cmd[1] == "back":
@@ -60,10 +60,10 @@ async def storage_menu_cb(client, callback_query):
           await query.answer()
           await message.delete()     
 
-async def rclone_about(message, query, drive_name, user_id):
+async def rclone_about(message, query, remote_name, user_id):
      button= ButtonMaker()
      conf_path = get_rclone_config(user_id)
-     cmd = ["rclone", "about", "--json", f'--config={conf_path}', f"{drive_name}:"] 
+     cmd = ["rclone", "about", "--json", f'--config={conf_path}', f"{remote_name}:"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
      return_code = await process.wait()
