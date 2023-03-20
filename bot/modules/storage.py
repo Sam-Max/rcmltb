@@ -16,9 +16,9 @@ from bot.helper.ext_utils.button_build import ButtonMaker
 
 async def handle_storage(client, message):
      if await is_rclone_config(message.from_user.id, message):
-          await list_drive(message)
+          await list_remotes(message)
 
-async def list_drive(message, edit= False):
+async def list_remotes(message, edit= False):
      if message.reply_to_message:
         user_id= message.reply_to_message.from_user.id
      else:
@@ -53,7 +53,7 @@ async def storage_menu_cb(client, callback_query):
           await rclone_about(message, query, cmd[2], user_id)
 
      elif cmd[1] == "back":
-          await list_drive(message, edit=True)
+          await list_remotes(message, edit=True)
           await query.answer()
 
      elif cmd[1] == "close":

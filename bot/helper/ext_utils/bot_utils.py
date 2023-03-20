@@ -137,7 +137,7 @@ async def get_readable_message():
     for index, download in enumerate(list(status_dict.values())[COUNT:], start=1):
         msg += f"<b>{download.status()}: </b>"
         if download.type() == TaskType.RCLONE:
-            msg += f"\n<code>{str(download.name()).upper()}</code>"
+            msg += f"\n<code>{str(download.name())}</code>"
         else:
             msg += f"\n<b>Name: </b><code>{escape(str(download.name()))}</code>"
         if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:

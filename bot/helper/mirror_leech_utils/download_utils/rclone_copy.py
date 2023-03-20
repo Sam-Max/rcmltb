@@ -26,7 +26,7 @@ class RcloneCopy:
         self.sa_error= ""
         self.status_type= MirrorStatus.STATUS_COPYING
 
-    async def copy(self, origin_drive, origin_dir, dest_drive, dest_dir):
+    async def copy(self, origin_remote, origin_dir, dest_remote, dest_dir):
         conf_path = get_rclone_config(self._user_id)
         if config_dict['USE_SERVICE_ACCOUNTS']:
             if ospath.exists("accounts"):
@@ -48,14 +48,14 @@ class RcloneCopy:
                 else:
                     return await sendMessage("You need to set SERVICE_ACCOUNTS_REMOTE variable", self.__listener.message)
         if config_dict['SERVER_SIDE']:
-            cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
-            f'{dest_drive}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '--drive-server-side-across-configs', '-P']
+            cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_remote}:{origin_dir}',
+            f'{dest_remote}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '--drive-server-side-across-configs', '-P']
         else:
-            cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_drive}:{origin_dir}',
-            f'{dest_drive}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '-P']
+            cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_remote}:{origin_dir}',
+            f'{dest_remote}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '-P']
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
-        self.name = f'{origin_drive}:{origin_dir} ➡️ {dest_drive}:{dest_dir}'
+        self.name = f'{origin_remote}:{origin_dir}➡️{dest_remote}:{dest_dir}'
         async with status_dict_lock:
             status = RcloneStatus(self, self.__listener, gid)
             status_dict[self.__listener.uid] = status
@@ -65,14 +65,14 @@ class RcloneCopy:
         if self.__is_cancelled:
             return
         if return_code == 0:
-            await self.__listener.onRcloneCopyComplete(conf_path, origin_dir, dest_drive, dest_dir)
+            await self.__listener.onRcloneCopyComplete(conf_path, origin_dir, dest_remote, dest_dir)
         else:
             err_message = await self.process.stderr.read()
             err_message= err_message.decode()
             LOGGER.info(f'Error: {err_message}')
             if any(i in err_message for i in ['userRateLimitExceeded', 'User rate limit exceeded.']):
                 self.__switchServiceAccount()
-                return await self.copy(origin_drive, origin_dir, dest_drive, dest_dir)
+                return await self.copy(origin_remote, origin_dir, dest_remote, dest_dir)
             await self.__listener.onDownloadError(err_message)
                 
     def __switchServiceAccount(self):

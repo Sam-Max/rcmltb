@@ -259,9 +259,9 @@ class MirrorLeechListener:
             else:
                 await RcloneMirror(up_dir, up_name, size, self.user_id, self).mirror()
 
-    async def onRcloneCopyComplete(self, conf, origin_dir, dest_drive, dest_dir):
+    async def onRcloneCopyComplete(self, conf, origin_dir, dest_remote, dest_dir):
         #Calculate Size
-        cmd = ["rclone", "size", f'--config={conf}', "--json", f"{dest_drive}:{dest_dir}{origin_dir}"]
+        cmd = ["rclone", "size", f'--config={conf}', "--json", f"{dest_remote}:{dest_dir}{origin_dir}"]
         process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         out, err = await process.communicate()
         output = out.decode().strip()
@@ -275,7 +275,7 @@ class MirrorLeechListener:
         format_out += f"\n**Total Size**: {size}"
         format_out += f"\n<b>cc: </b>{self.tag}"
         #Get Link
-        cmd = ["rclone", "link", f'--config={conf}', f"{dest_drive}:{dest_dir}{origin_dir}"]
+        cmd = ["rclone", "link", f'--config={conf}', f"{dest_remote}:{dest_dir}{origin_dir}"]
         process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         out, err = await process.communicate()
         url = out.decode().strip()

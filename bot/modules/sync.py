@@ -43,7 +43,7 @@ async def sync_cb(client, callbackQuery):
     if data[1] == "source":
         await query.answer()
         globals()['SOURCE']= data[2]
-        button= await list_remotes(user_id, drive_type='destination')
+        button= await list_remotes(user_id, remote_type='destination')
         await editMarkup("Select <b>destination</b> cloud", message, reply_markup= button.build_menu(2))
     elif data[1] == "destination":  
         await query.answer()
@@ -77,13 +77,13 @@ async def start_rc_sync(message, path, destination, listener):
         await listener.onRcloneSyncComplete(msg)
     await message.delete()
 
-async def list_remotes(user_id, drive_type='source'):
+async def list_remotes(user_id, remote_type='source'):
     button = ButtonMaker()
     path= get_rclone_config(user_id)
     conf = ConfigParser()
     conf.read(path)
     for remote in conf.sections():
-        button.cb_buildbutton(f"📁{remote}", f"sync^{drive_type}^{remote}")
+        button.cb_buildbutton(f"📁{remote}", f"sync^{remote_type}^{remote}")
     button.cb_buildbutton("✘ Close Menu", f"sync^close")
     return button
 

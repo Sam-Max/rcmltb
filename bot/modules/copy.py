@@ -29,11 +29,11 @@ async def handle_copy(client, message):
         listener= MirrorLeechListener(message, tag, user_id)
         listener_dict[message_id] = [listener]
         if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id): 
-            await list_remotes(message, callback="remote_origin", rclone_drive=origin_remote, base_dir=origin_dir)
+            await list_remotes(message, callback="remote_origin", rclone_remote=origin_remote, base_dir=origin_dir)
         else:
             await sendMessage("Not allowed to use", message)
 
-async def list_remotes(message, callback, rclone_drive, base_dir, is_second_menu=False, edit=False):
+async def list_remotes(message, callback, rclone_remote, base_dir, is_second_menu=False, edit=False):
     if message.reply_to_message:
         user_id= message.reply_to_message.from_user.id
     else:
@@ -47,8 +47,8 @@ async def list_remotes(message, callback, rclone_drive, base_dir, is_second_menu
     if is_second_menu:
         msg = 'Select folder where you want to copy' 
     else:
-        if rclone_drive and base_dir:
-            msg = f"Select cloud where your files are stored\n\n<b>Path: </b><code>{rclone_drive}:{base_dir}</code>"
+        if rclone_remote and base_dir:
+            msg = f"Select cloud where your files are stored\n\n<b>Path: </b><code>{rclone_remote}:{base_dir}</code>"
         else:
             msg = f"Select cloud where your files are stored\n\n"
     buttons.cb_buildbutton("✘ Close Menu", f"copymenu^close^{user_id}", 'footer')
@@ -164,12 +164,12 @@ async def copy_menu_callback(client, callback_query):
             path = get_rclone_data(cmd[2], user_id)
             origin_dir_= origin_dir + path  
             update_rclone_data("COPY_ORIGIN_DIR", origin_dir_, user_id)
-        await list_remotes(message, callback="remote_dest", rclone_drive= dest_remote, base_dir= dest_dir, edit=True, is_second_menu=True)   
+        await list_remotes(message, callback="remote_dest", rclone_remote= dest_remote, base_dir= dest_dir, edit=True, is_second_menu=True)   
         await query.answer()   
     elif cmd[1] == "remote_dest":
         #Clean Menu
         update_rclone_data("COPY_DESTINATION_DIR", "", user_id)
-        update_rclone_data("COPY_DESTINATION_REMOTE", dest_remote, user_id)
+        update_rclone_data("COPY_DESTINATION_REMOTE", cmd[2], user_id)
         await list_folder(message, cmd[2], "", dir_callback="dir_dest", back_callback= "back_dest", edit=True, is_second_menu=True)
         await query.answer() 
     elif cmd[1] == "dir_dest":
@@ -192,7 +192,7 @@ async def copy_menu_callback(client, callback_query):
     if cmd[1] == "back_origin":
         if len(origin_dir) == 0:
             await query.answer() 
-            await list_remotes(message, callback="remote_origin", rclone_drive= dest_remote, base_dir= dest_dir, edit=True) 
+            await list_remotes(message, callback="remote_origin", rclone_remote= dest_remote, base_dir= dest_dir, edit=True) 
             return
         origin_dir_list= origin_dir.split("/")[:-2]
         origin_dir_string = "" 
@@ -206,7 +206,7 @@ async def copy_menu_callback(client, callback_query):
     elif cmd[1] == "back_dest":
         if len(dest_dir) == 0:
             await query.answer() 
-            await list_remotes(message, callback="remote_dest", rclone_drive= dest_remote, base_dir= dest_dir, edit=True, is_second_menu=True)             
+            await list_remotes(message, callback="remote_dest", rclone_remote= dest_remote, base_dir= dest_dir, edit=True, is_second_menu=True)             
             return
         dest_dir_list= dest_dir.split("/")[:-2]
         dest_dir_string = "" 
