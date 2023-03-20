@@ -103,6 +103,7 @@ async def list_folder(message, remote_name, remote_base, edit=False):
             dir_callback = "remote_dir",
             file_callback= "",
             user_id= user_id)
+        
         if offset == 0 and total <= 10:
             buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"cloudselectmenu^pages^{user_id}", 'footer') 
         else:
@@ -207,7 +208,7 @@ async def next_page_cloudselect(client, callback_query):
         buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "cloudselectmenu^pages", 'footer')
         buttons.cb_buildbutton("NEXT ⏩", f"next_cloudselect{_next_offset} {data_back_cb}", 'footer_second')
 
-    buttons.cb_buildbutton("⬅️ Back", f"cloudselectlmenu^{data_back_cb}^{user_id}", 'footer_third')
+    buttons.cb_buildbutton("⬅️ Back", f"cloudselectmenu^{data_back_cb}^{user_id}", 'footer_third')
     buttons.cb_buildbutton("✘ Close Menu", f"cloudselectmenu^close^{user_id}", 'footer_third')
 
     cloudselect_remote= get_rclone_data("CLOUDSEL_REMOTE", user_id)
