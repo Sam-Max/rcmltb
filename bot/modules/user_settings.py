@@ -85,30 +85,28 @@ async def edit_user_settings(client, callback_query):
         await query.answer()
         question= await editMessage("Send a photo to save as custom thumbnail, /ignore to cancel", message)
         try:
-            response = await client.listen.Message(filters.photo | filters.text, id=filters.user(user_id), timeout = 60)
+            response = await client.listen.Message(filters.photo | filters.text, id=filters.user(user_id), timeout= 60)
+            try: 
+                if response.text:
+                    if "/ignore" in response.text:
+                        await client.listen.Cancel(filters.user(user_id))
+                else:  
+                    path = "Thumbnails/"
+                    if not ospath.isdir(path):
+                        mkdir(path)
+                    photo_dir = await client.download_media(response)
+                    des_dir = ospath.join(path, f'{user_id}.jpg')
+                    await run_sync(Image.open(photo_dir).convert("RGB").save, des_dir, "JPEG")
+                    osremove(photo_dir)
+                    await query.answer(text="Thumbnail Added!!", show_alert=True)
+                    if DATABASE_URL:
+                        await DbManager().update_thumb(user_id, des_dir)
+            except Exception as ex:
+                await editMessage(str(ex), question)
         except asyncio.TimeoutError:
             await sendMessage("Too late 60s gone, try again!", message)
-        else:
-            if response:
-                try: 
-                    if response.text:
-                        if "/ignore" in response.text:
-                            await client.listen.Cancel(filters.user(user_id))
-                    else:  
-                        path = "Thumbnails/"
-                        if not ospath.isdir(path):
-                            mkdir(path)
-                        photo_dir = await client.download_media(response)
-                        des_dir = ospath.join(path, f'{user_id}.jpg')
-                        await run_sync(Image.open(photo_dir).convert("RGB").save, des_dir, "JPEG")
-                        osremove(photo_dir)
-                        await query.answer(text="Thumbnail Added!!", show_alert=True)
-                        if DATABASE_URL:
-                            await DbManager().update_thumb(user_id, des_dir)
-                except Exception as ex:
-                    await editMessage(str(ex), question)
         finally: 
-            await update_user_settings(message, message.from_user)
+            await update_user_settings(message, query.from_user)
     elif data[2] == 'back':
         await query.answer()
         await update_user_settings(message, query.from_user)

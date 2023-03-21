@@ -193,16 +193,16 @@ async def load_config():
      EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '')
      EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
 
-     SERVER_PORT = environ.get('SERVER_PORT', '')
-     SERVER_PORT = 81 if len(SERVER_PORT) == 0 else int(SERVER_PORT)
+     LOCAL_MIRROR_PORT = environ.get('LOCAL_MIRROR_PORT', '')
+     LOCAL_MIRROR_PORT = 81 if len(LOCAL_MIRROR_PORT) == 0 else int(LOCAL_MIRROR_PORT)
      
-     BASE_URL = environ.get('BASE_URL', '').rstrip("/")
-     if len(BASE_URL) == 0:
-          BASE_URL = ''
+     LOCAL_MIRROR_URL = environ.get('LOCAL_MIRROR_URL', '').rstrip("/")
+     if len(LOCAL_MIRROR_URL) == 0:
+          LOCAL_MIRROR_URL = ''
           await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn web.wserver:app")).wait()
      else:
           await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn web.wserver:app")).wait()
-          await create_subprocess_shell("gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}")
+          await create_subprocess_shell("gunicorn web.wserver:app --bind 0.0.0.0:{LOCAL_MIRROR_PORT}")
 
      QB_SERVER_PORT = environ.get('QB_SERVER_PORT', '')
      if len(QB_SERVER_PORT) == 0:
@@ -253,6 +253,18 @@ async def load_config():
      LOCAL_MIRROR = environ.get('LOCAL_MIRROR', '')
      LOCAL_MIRROR = LOCAL_MIRROR.lower() == 'true'
 
+     RCLONE_COPY_FLAGS = environ.get('RCLONE_COPY_FLAGS', '')
+     if len(RCLONE_COPY_FLAGS) == 0:
+          RCLONE_COPY_FLAGS = ''
+
+     RCLONE_UPLOAD_FLAGS = environ.get('RCLONE_UPLOAD_FLAGS', '')
+     if len(RCLONE_UPLOAD_FLAGS) == 0:
+          RCLONE_UPLOAD_FLAGS = ''
+
+     RCLONE_DOWNLOAD_FLAGS = environ.get('RCLONE_DOWNLOAD_FLAGS', '')
+     if len(RCLONE_DOWNLOAD_FLAGS) == 0:
+          RCLONE_DOWNLOAD_FLAGS = ''
+
      RC_INDEX_USER = environ.get('RC_INDEX_USER', '')
      RC_INDEX_USER = 'admin' if len(RC_INDEX_USER) == 0 else RC_INDEX_USER
 
@@ -271,7 +283,7 @@ async def load_config():
                          'ALLOWED_CHATS': ALLOWED_CHATS,
                          'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                          'AUTO_MIRROR': AUTO_MIRROR,
-                         'BASE_URL': BASE_URL,
+                         'LOCAL_MIRROR_URL': LOCAL_MIRROR_URL,
                          'BOT_PM': BOT_PM,
                          'BOT_TOKEN': BOT_TOKEN,
                          'CMD_INDEX': CMD_INDEX,
@@ -292,6 +304,9 @@ async def load_config():
                          'MULTI_REMOTE_UP': MULTI_REMOTE_UP,
                          'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
                          'OWNER_ID': OWNER_ID,
+                         'RCLONE_COPY_FLAGS': RCLONE_COPY_FLAGS,
+                         'RCLONE_UPLOAD_FLAGS': RCLONE_UPLOAD_FLAGS,
+                         'RCLONE_DOWNLOAD_FLAGS': RCLONE_DOWNLOAD_FLAGS,
                          'REMOTE_SELECTION': REMOTE_SELECTION,
                          'PARALLEL_TASKS': PARALLEL_TASKS,
                          'QB_BASE_URL': QB_BASE_URL,
@@ -303,7 +318,7 @@ async def load_config():
                          'SEARCH_PLUGINS': SEARCH_PLUGINS,
                          'SEARCH_API_LINK': SEARCH_API_LINK,
                          'SEARCH_LIMIT': SEARCH_LIMIT,
-                         'SERVER_PORT': SERVER_PORT,
+                         'LOCAL_MIRROR_PORT': LOCAL_MIRROR_PORT,
                          'SERVICE_ACCOUNTS_REMOTE': SERVICE_ACCOUNTS_REMOTE,
                          'SERVER_SIDE': SERVER_SIDE,
                          'RC_INDEX_URL': RC_INDEX_URL,
@@ -329,52 +344,51 @@ async def load_config():
      await initiate_search_tools()
      
 async def config_menu(user_id, message, edit=False):
-     conf_path= get_rclone_config(user_id)
+     path= ospath.join("users", f"{user_id}", "rclone.conf")
      buttons= ButtonMaker()
      fstr= ''
-     if conf_path is not None and ospath.exists(conf_path):
-          cmd = ["rclone", "listremotes", f'--config={conf_path}'] 
-          process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
-          stdout, stderr = await process.communicate()
-          return_code = await process.wait()
-          stdout = stdout.decode().strip()
-          info= stdout.split("\n")
-          for i in info:
-               rstr = i.replace(":", "")
-               fstr += f"- {rstr}\n"
-          if return_code != 0:
-               err = stderr.decode().strip()
-               return await sendMessage(f'Error: {err}', message)  
-     path= ospath.join("users", f"{user_id}", "rclone.conf")
      msg= "❇️ **Rclone configuration**"
      if ospath.exists(path):
-          msg+= "\n\n**Here is list of drives in config file:**"
-          msg+= f"\n{fstr}"
-          buttons.cb_buildbutton("🗂 Get rclone.conf", f"configmenu^get_rclone_conf^{user_id}")
-          buttons.cb_buildbutton("🗑 rclone.conf", f"configmenu^delete_config^{user_id}")
+        cmd = ["rclone", "listremotes", f'--config={path}'] 
+        process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = await process.communicate()
+        return_code = await process.wait()
+        if return_code != 0:
+            err = stderr.decode().strip()
+            await sendMessage(f'Error: {err}', message)  
+            return
+        stdout = stdout.decode().strip()
+        info= stdout.split("\n")
+        for i in info:
+            rstr = i.replace(":", "")
+            fstr += f"- {rstr}\n"
+        msg+= "\n\n**Here is list of drives in config file:**"
+        msg+= f"\n{fstr}"
+        buttons.cb_buildbutton("🗂 rclone.conf", f"configmenu^get_rclone_conf^{user_id}")
+        buttons.cb_buildbutton("🗑 rclone.conf", f"configmenu^delete_config^{user_id}")
      else:
-          buttons.cb_buildbutton("📃rclone.conf", f"configmenu^change_rclone_conf^{user_id}", 'footer')
-     if user_id == OWNER_ID:
-          if ospath.exists(ospath.join("users", "grclone", "rclone.conf")):
-               buttons.cb_buildbutton("🗂 Get rclone.conf (🌐)", f"configmenu^get_grclone_conf^{user_id}")
+        buttons.cb_buildbutton("📃rclone.conf", f"configmenu^change_rclone_conf^{user_id}", 'footer')
+     if CustomFilters._owner_query(user_id):
+          global_rc= ospath.join("users", "grclone", "rclone.conf")
+          if ospath.exists(global_rc):
+               buttons.cb_buildbutton("🗂 rclone.conf (🌐)", f"configmenu^get_grclone_conf^{user_id}")
                buttons.cb_buildbutton("🗑 rclone.conf (🌐)", f"configmenu^delete_grclone_conf^{user_id}")
           else:
-               buttons.cb_buildbutton("📃rclone.conf (🌐)", f"configmenu^change_grclone_conf^{user_id}", 'footer')
+               buttons.cb_buildbutton("📃 rclone.conf (🌐)", f"configmenu^change_grclone_conf^{user_id}", 'footer')
           if ospath.exists("token.pickle"):
-               buttons.cb_buildbutton("🗂 Get token.pickle", f"configmenu^get_pickle^{user_id}")
+               buttons.cb_buildbutton("🗂 token.pickle", f"configmenu^get_pickle^{user_id}")
                buttons.cb_buildbutton("🗑 token.pickle", f"configmenu^delete_pickle^{user_id}")
           else:
-               buttons.cb_buildbutton("📃token.pickle", f"configmenu^change_pickle^{user_id}", 'footer_second' )
+               buttons.cb_buildbutton("📃 token.pickle", f"configmenu^change_pickle^{user_id}", 'footer_second' )
           if ospath.exists("accounts"):
                buttons.cb_buildbutton("🗑 accounts folder", f"configmenu^delete_acc^{user_id}")
           else:
-               buttons.cb_buildbutton("📃accounts.zip", f"configmenu^change_acc^{user_id}", 'footer_second')
+               buttons.cb_buildbutton("📃 accounts.zip", f"configmenu^change_acc^{user_id}", 'footer_second')
           if ospath.exists("config.env"):
-               buttons.cb_buildbutton("🗂 Get config.env", f"configmenu^get_config_env^{user_id}")
+               buttons.cb_buildbutton("🗂 config.env", f"configmenu^get_config_env^{user_id}")
                buttons.cb_buildbutton("🗑 config.env", f"configmenu^delete_config_env^{user_id}")
           else:
                buttons.cb_buildbutton("📃config.env", f"configmenu^change_config_env^{user_id}", 'footer')
-
      buttons.cb_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}", 'footer_third')
      if edit:
           await editMarkup(msg, message, reply_markup= buttons.build_menu(2))

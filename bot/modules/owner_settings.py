@@ -23,7 +23,7 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'STATUS_UPDATE_INTERVAL': 10,
                   'LEECH_SPLIT_SIZE': TG_MAX_FILE_SIZE,
                   'SEARCH_LIMIT': 0,
-                  'SERVER_PORT': 81,
+                  'LOCAL_MIRROR_PORT': 81,
                   'QB_SERVER_PORT': 80,
                   'RC_INDEX_PORT': 8080,
                   'RSS_DELAY': 900}
@@ -184,11 +184,11 @@ async def ownerset_callback(client, callback_query):
                 aria2_options['bt-stop-timeout'] = '0'
                 if DATABASE_URL:
                     await DbManager().update_aria2('bt-stop-timeout', '0')
-            elif data[3] == 'BASE_URL':
+            elif data[3] == 'LOCAL_MIRROR_URL':
                 await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn web.wserver:app")).wait()
             elif data[3] == 'QB_BASE_URL':
                 await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn qbitweb.wserver:app")).wait()
-            elif data[3] == 'SERVER_PORT':
+            elif data[3] == 'LOCAL_MIRROR_PORT':
                 await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn web.wserver:app")).wait()
                 await create_subprocess_shell("gunicorn web.wserver:app --bind 0.0.0.0:81")
             elif data[3] == 'QB_SERVER_PORT':
@@ -370,7 +370,7 @@ async def start_env_listener(client, query, user_id, key):
                         aid = value.split()
                         for id_ in aid:
                             leech_log.append(int(id_.strip()))
-                    elif key == 'SERVER_PORT':
+                    elif key == 'LOCAL_MIRROR_PORT':
                         value = int(value)
                         await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn web.wserver:app")).wait()
                         await create_subprocess_shell("gunicorn web.wserver:app --bind 0.0.0.0:{value}")

@@ -3,7 +3,8 @@ from json import loads as jsonloads
 from re import escape as rescape
 from os import path as ospath
 from asyncio.subprocess import PIPE, create_subprocess_exec
-from bot import LOGGER, OWNER_ID, config_dict, remotes_data
+from bot import GLOBAL_EXTENSION_FILTER, LOGGER, OWNER_ID, config_dict, remotes_data
+from bot.helper.ext_utils.exceptions import NotRclonePathFound
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.button_build import ButtonMaker
@@ -48,7 +49,10 @@ def get_rclone_config(user_id):
         rc_path = ospath.join("users", f"{user_id}" , "rclone.conf")
     else:
         rc_path = ospath.join("users", "grclone", "rclone.conf")      
-    if ospath.exists(rc_path): return rc_path
+    if ospath.exists(rc_path): 
+        return rc_path 
+    else:
+        raise NotRclonePathFound(f"ERROR: Rclone path not found")
 
 async def list_remotes_ml(message, rclone_remote, base_dir, callback, edit=False):
     user_id= message.from_user.id
@@ -68,20 +72,40 @@ async def list_remotes_ml(message, rclone_remote, base_dir, callback, edit=False
     else:
         await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
+async def setRcloneFlags(cmd, type):
+    ext = '*.{' + ','.join(GLOBAL_EXTENSION_FILTER) + '}'
+    cmd.extend(('--exclude', ext))
+    if type == "copy":
+        if flags := config_dict.get('RCLONE_COPY_FLAGS'):
+            append_flags(flags,cmd)
+    elif type == "upload":
+        if flags := config_dict.get('RCLONE_UPLOAD_FLAGS'):
+            append_flags(flags,cmd)
+    elif type == "download":
+        if flags := config_dict.get('RCLONE_DOWNLOAD_FLAGS'):
+            append_flags(flags,cmd)
+           
+def append_flags(flags, cmd):
+    rcflags = flags.split(',')
+    for flag in rcflags:
+        if ":" in flag:
+            key, value = flag.split(":")
+            cmd.extend((key, value))
+        elif len(flag) > 0:
+            cmd.append(flag)
+
 async def get_gdlink(remote, base, name, conf, type, buttons):
     if type == "Folder":
-        name = name.replace(".", "")
-        ename = rescape(name)
-        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{base}", "--dirs-only", "-f", f"+ {ename}/", "-f", "- *"]
+        s_name = rescape(name.replace(".", ""))
+        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{base}", "--dirs-only", "-f", f"+ {s_name}/", "-f", "- *"]
     else:
-        ename = rescape(name)
-        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{base}", "--files-only", "-f", f"+ {ename}", "-f", "- *"]
+        s_name = rescape(name)
+        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{base}", "--files-only", "-f", f"+ {s_name}", "-f", "- *"]
     
     process = await create_subprocess_exec(*cmd,stdout= PIPE,stderr= PIPE)
     stdout, stderr = await process.communicate()
     return_code = await process.wait()
     stdout = stdout.decode().strip()
-
     if return_code != 0:
         err = stderr.decode().strip()
         LOGGER.error(f'Error: {err}') 
@@ -91,11 +115,11 @@ async def get_gdlink(remote, base, name, conf, type, buttons):
         data = jsonloads(stdout)
         id = data[0]["ID"]
         if type == "Folder":
-            link = f"https://drive.google.com/folderview?id={id}"
+            link = f'https://drive.google.com/drive/folders/{id}'
             buttons.url_buildbutton('Cloud Link 🔗', link)
         else:
-            link = f"https://drive.google.com/file/d/{id}/view"
+            link = f'https://drive.google.com/uc?id={id}&export=download'
             buttons.url_buildbutton('Cloud Link 🔗', link)
     except Exception:
-        buttons.cb_buildbutton("🚫", "close")
+        link = 'https://drive.google.com/file/d/err/view'
         LOGGER.error("Error while getting id")

@@ -226,6 +226,18 @@ MULTI_RCLONE_CONFIG = MULTI_RCLONE_CONFIG.lower() == 'true'
 REMOTE_SELECTION = environ.get('REMOTE_SELECTION', '')
 REMOTE_SELECTION = REMOTE_SELECTION.lower() == 'true'
 
+RCLONE_COPY_FLAGS = environ.get('RCLONE_COPY_FLAGS', '')
+if len(RCLONE_COPY_FLAGS) == 0:
+    RCLONE_COPY_FLAGS = ''
+
+RCLONE_UPLOAD_FLAGS = environ.get('RCLONE_UPLOAD_FLAGS', '')
+if len(RCLONE_UPLOAD_FLAGS) == 0:
+    RCLONE_UPLOAD_FLAGS = ''
+
+RCLONE_DOWNLOAD_FLAGS = environ.get('RCLONE_DOWNLOAD_FLAGS', '')
+if len(RCLONE_DOWNLOAD_FLAGS) == 0:
+    RCLONE_DOWNLOAD_FLAGS = ''
+
 SERVER_SIDE = environ.get('SERVER_SIDE', '')
 SERVER_SIDE = SERVER_SIDE.lower() == 'true' 
 
@@ -241,14 +253,14 @@ RSS_COMMAND = environ.get('RSS_COMMAND', '')
 if len(RSS_COMMAND) == 0:
     RSS_COMMAND = ''
 
-BASE_URL = environ.get('BASE_URL', '').rstrip("/")
-if len(BASE_URL) == 0:
-    LOGGER.warning('BASE_URL not provided!')
-    BASE_URL = ''
+LOCAL_MIRROR_URL = environ.get('LOCAL_MIRROR_URL', '').rstrip("/")
+if len(LOCAL_MIRROR_URL) == 0:
+    LOGGER.warning('LOCAL_MIRROR_URL not provided!')
+    LOCAL_MIRROR_URL = ''
 
-SERVER_PORT = environ.get('SERVER_PORT', '')
-if len(SERVER_PORT) == 0:
-    SERVER_PORT = 81
+LOCAL_MIRROR_PORT = environ.get('LOCAL_MIRROR_PORT', '')
+if len(LOCAL_MIRROR_PORT) == 0:
+    LOCAL_MIRROR_PORT = 81
 
 QB_BASE_URL = environ.get('QB_BASE_URL', '').rstrip("/")
 if len(QB_BASE_URL) == 0:
@@ -344,7 +356,7 @@ if not config_dict:
                    'ALLOWED_CHATS': ALLOWED_CHATS,
                    'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                    'AUTO_MIRROR': AUTO_MIRROR,
-                   'BASE_URL': BASE_URL,
+                   'LOCAL_MIRROR_URL': LOCAL_MIRROR_URL,
                    'BOT_TOKEN': BOT_TOKEN,
                    'BOT_PM': BOT_PM,
                    'CMD_INDEX': CMD_INDEX,
@@ -369,6 +381,9 @@ if not config_dict:
                    'PARALLEL_TASKS': PARALLEL_TASKS,
                    'QB_BASE_URL': QB_BASE_URL,
                    'QB_SERVER_PORT': QB_SERVER_PORT,
+                   'RCLONE_COPY_FLAGS': RCLONE_COPY_FLAGS,
+                   'RCLONE_UPLOAD_FLAGS': RCLONE_UPLOAD_FLAGS,
+                   'RCLONE_DOWNLOAD_FLAGS': RCLONE_DOWNLOAD_FLAGS,
                    'REMOTE_SELECTION': REMOTE_SELECTION,
                    'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                    'RSS_CHAT_ID': RSS_CHAT_ID,
@@ -378,7 +393,7 @@ if not config_dict:
                    'SERVER_SIDE': SERVER_SIDE,
                    'SEARCH_API_LINK': SEARCH_API_LINK,
                    'SEARCH_LIMIT': SEARCH_LIMIT,
-                   'SERVER_PORT': SERVER_PORT,
+                   'LOCAL_MIRROR_PORT': LOCAL_MIRROR_PORT,
                    'SERVICE_ACCOUNTS_REMOTE': SERVICE_ACCOUNTS_REMOTE,
                    'RC_INDEX_URL': RC_INDEX_URL,
                    'RC_INDEX_PORT': RC_INDEX_PORT,
@@ -398,7 +413,8 @@ if not config_dict:
                    'VIEW_LINK': VIEW_LINK,
                    'WEB_PINCODE': WEB_PINCODE}
 
-Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
+if LOCAL_MIRROR:
+    Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{LOCAL_MIRROR_PORT}", shell=True)
 Popen(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT}", shell=True)
 srun(["qbittorrent-nox", "-d", "--profile=."])
 

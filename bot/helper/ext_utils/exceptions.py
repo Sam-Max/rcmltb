@@ -6,4 +6,10 @@ class NotSupportedExtractionArchive(Exception):
     """The archive format use is trying to extract is not supported"""
     pass
 
+class NotRclonePathFound(Exception):
+    """Rclone path not found"""
+    pass
+
+
+
 

@@ -4,7 +4,7 @@ from html import escape
 from json import loads
 from os import listdir, path as ospath, remove as osremove, walk
 from re import search
-from bot import DOWNLOAD_DIR, LOGGER, SERVER_PORT, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2, config_dict
+from bot import DOWNLOAD_DIR, LOGGER, LOCAL_MIRROR_PORT, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, aria2, config_dict
 from pyrogram.enums import ChatType
 from bot.helper.ext_utils.bot_utils import add_index_link, is_archive, is_archive_split, is_first_archive_split
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
@@ -238,9 +238,9 @@ class MirrorLeechListener:
             await tg_up.upload()    
         else:
             if config_dict['LOCAL_MIRROR']:
-                if BASE_URL:= config_dict['BASE_URL']:
+                if LOCAL_MIRROR_URL:= config_dict['LOCAL_MIRROR_URL']:
                     buttons= ButtonMaker()
-                    server_url = f'{BASE_URL}:{SERVER_PORT}/downloads/'
+                    server_url = f'{LOCAL_MIRROR_URL}:{LOCAL_MIRROR_PORT}/downloads/'
                     buttons.url_buildbutton("🖥 Local Server", server_url)
                     size = get_readable_file_size(size)
                     msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"

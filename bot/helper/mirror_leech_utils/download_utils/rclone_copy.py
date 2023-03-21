@@ -6,7 +6,7 @@ from random import SystemRandom, randrange
 from string import ascii_letters, digits
 from bot import LOGGER, status_dict, status_dict_lock, config_dict
 from bot.helper.ext_utils.message_utils import sendMessage, sendStatusMessage
-from bot.helper.ext_utils.rclone_utils import get_rclone_config
+from bot.helper.ext_utils.rclone_utils import get_rclone_config, setRcloneFlags
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
@@ -53,6 +53,7 @@ class RcloneCopy:
         else:
             cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_remote}:{origin_dir}',
             f'{dest_remote}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '-P']
+        await setRcloneFlags(cmd, 'copy')
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         self.name = f'{origin_remote}:{origin_dir}➡️{dest_remote}:{dest_dir}'
@@ -93,7 +94,7 @@ class RcloneCopy:
             'service_account_file': f'accounts/{self.__service_account_index}.json',
             'stop_on_upload_limit': 'true',
         })
-
+    
     async def cancel_download(self):
         self.__is_cancelled= True
         await self.__listener.onDownloadError("Copy cancelled!")
