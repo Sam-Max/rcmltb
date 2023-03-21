@@ -51,13 +51,13 @@ async def serve_cb(client, callbackQuery):
         cmd = ["rclone", "serve", "webdav", f"--addr=:{RC_INDEX_PORT}", f"--user={RC_INDEX_USER}", f"--pass={RC_INDEX_PASS}", f'--config={path}', f"{SELECTED_REMOTE[0]}:"] 
         await rclone_serve(cmd, message)
     elif data[1] == "stop":
-        process_dict['status'] = 'inactive'
-        _, _, return_code= await cmd_exec(["kill", "-9", f"{process_dict['pid']}"])
+        _, stderr, return_code= await cmd_exec(["kill", "-9", f"{process_dict['pid']}"])
         if return_code == 0:
             await query.answer('Server stopped')
+            process_dict['status'] = 'inactive'
             await message.delete()
-            LOGGER.info(f"Process killed!")
         else:
+            LOGGER.info(f'Error: {stderr}')
             process_dict['status'] = 'active'
     else:
         await query.answer()
@@ -85,11 +85,8 @@ async def rclone_serve(cmd, message):
     stderr = stderr.decode().strip()
 
     if process.returncode != 0:
-        if process_dict['status'] == 'inactive': # If user clicked on stop button
-            await message.delete()
-        else:
-            await sendMessage(f'Error: {stderr}', message)
-            process_dict['status']= 'inactive'
+        LOGGER.info(f'Error: {stderr}')
+        process_dict['status']= 'inactive'
 
 async def list_remotes(message):
     SELECTED_REMOTE.clear()
