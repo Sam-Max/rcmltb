@@ -72,7 +72,7 @@ async def search_action(client, message, query, remote, user_id):
                     else:
                          search_msg= await sendMessage("**⏳Searching file(s) on remote...**\n\nPlease wait, it may take some time", question)
                          conf_path = get_rclone_config(user_id)
-                         cmd = ["rclone", "lsjson", "--files-only", "--ignore-case", "-R", f'--config={conf_path}', "--include", f"*{text}*", f"{remote}:"] 
+                         cmd = ["rclone", "lsjson", "--files-only", '--fast-list', '--no-modtime', "--ignore-case", "-R", f'--config={conf_path}', "--include", f"*{text}*", f"{remote}:"] 
                          process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
                          out, err = await process.communicate()
                          out = out.decode().strip()
@@ -144,7 +144,7 @@ async def delete_empty_dir(message, user_id, remote, remote_path):
 
 async def rclone_size(message, remote_path, remote, conf_path):
      await editMessage("**⏳Calculating Folder Size...**\n\nPlease wait, it will take some time depending on number of files", message)
-     cmd = ["rclone", "size", f'--config={conf_path}', f"{remote}:{remote_path}", "--json"] 
+     cmd = ["rclone", "size", '--fast-list', f'--config={conf_path}', f"{remote}:{remote_path}", "--json"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
      stdout = stdout.decode().strip()

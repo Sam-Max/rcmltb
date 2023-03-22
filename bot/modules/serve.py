@@ -53,7 +53,7 @@ async def serve_cb(client, callbackQuery):
     elif data[1] == "stop":
         _, stderr, return_code= await cmd_exec(["kill", "-9", f"{process_dict['pid']}"])
         if return_code == 0:
-            await query.answer('Server stopped')
+            await query.answer(text='Server stopped', show_alert=True)
             process_dict['status'] = 'inactive'
             await message.delete()
         else:

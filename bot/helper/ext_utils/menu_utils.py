@@ -27,8 +27,7 @@ def rcloneListButtonMaker(result_list, buttons, menu_type, dir_callback, file_ca
     for index, dir in enumerate(result_list):
         path = dir["Path"]
         update_rclone_data(str(index), path, user_id)
-        size= dir['Size']
-        size= get_readable_file_size(size)
+        size= get_readable_file_size(dir['Size'])
 
         if dir['MimeType'] == 'inode/directory': 
             buttons.cb_buildbutton(f"📁 {path}", data= f"{menu_type}^{dir_callback}^{index}^{user_id}") 

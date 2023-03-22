@@ -51,7 +51,7 @@ async def list_folder(message, remote_name, remote_base, edit=False):
     buttons.cb_buildbutton(f"⚙️ Folder Options", f"myfilesmenu^folder_action^{user_id}")
     buttons.cb_buildbutton("🔍 Search", f"myfilesmenu^search^{user_id}")
 
-    cmd = ["rclone", "lsjson", f'--config={path}', f"{remote_name}:{remote_base}" ] 
+    cmd = ["rclone", "lsjson", '--fast-list', '--no-modtime', f'--config={path}', f"{remote_name}:{remote_base}" ] 
     process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
     out, err = await process.communicate()
     out = out.decode().strip()

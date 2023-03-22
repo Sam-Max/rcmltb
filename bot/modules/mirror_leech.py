@@ -138,7 +138,7 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
                     if PARALLEL_TASKS:    
                         await m_queue.put(tg_down)
                     else:
-                        await run_async_task(tg_down.download)
+                        run_async_task(tg_down.download)
                     if multi > 1:
                         await sleep(4)
                         nextmsg = await client.get_messages(message.chat.id, message.reply_to_message.id + 1)

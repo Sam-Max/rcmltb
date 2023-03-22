@@ -48,10 +48,10 @@ class RcloneCopy:
                 else:
                     return await sendMessage("You need to set SERVICE_ACCOUNTS_REMOTE variable", self.__listener.message)
         if config_dict['SERVER_SIDE']:
-            cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_remote}:{origin_dir}',
+            cmd = ['rclone', 'copy', f'--config={conf_path}', "--ignore-case", f'{origin_remote}:{origin_dir}',
             f'{dest_remote}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '--drive-server-side-across-configs', '-P']
         else:
-            cmd = ['rclone', 'copy', f'--config={conf_path}', f'{origin_remote}:{origin_dir}',
+            cmd = ['rclone', 'copy', f'--config={conf_path}', "--ignore-case", f'{origin_remote}:{origin_dir}',
             f'{dest_remote}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '-P']
         await setRcloneFlags(cmd, 'copy')
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)

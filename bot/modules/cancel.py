@@ -86,7 +86,8 @@ async def cancel_all_(status):
     while dl := await getAllDownload(status):
         if dl.gid() != gid:
             gid = dl.gid()
-            await dl.download().cancel_download()
+            obj= dl.download()
+            await obj.cancel_download()
             await sleep(1)
 
 

@@ -65,11 +65,11 @@ async def list_folder(message, remote_name, drive_base, dir_callback, back_callb
         if is_second_menu:
             file_callback = 'copy'
             buttons.cb_buildbutton(f"✅ Select this folder", f"copymenu^copy^{user_id}")
-            cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{remote_name}:{drive_base}", "--dirs-only"] 
+            cmd = ["rclone", "lsjson", '--fast-list', '--no-modtime', f'--config={conf_path}', f"{remote_name}:{drive_base}", "--dirs-only"] 
         else:
             file_callback = 'second_menu'
             buttons.cb_buildbutton(f"✅ Select this folder", f"copymenu^second_menu^_^False^{user_id}")
-            cmd = ["rclone", "lsjson", f'--config={conf_path}', f"{remote_name}:{drive_base}"] 
+            cmd = ["rclone", "lsjson", '--fast-list', '--no-modtime', f'--config={conf_path}', f"{remote_name}:{drive_base}"] 
 
         process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
         out, err = await process.communicate()
