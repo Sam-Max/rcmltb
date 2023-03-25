@@ -1,16 +1,15 @@
-from configparser import ConfigParser
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
-from bot import LOGGER, bot, config_dict
+from bot import bot, config_dict
 from json import loads as jsonloads
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.button_build import ButtonMaker
-from bot.helper.ext_utils.rclone_utils import get_rclone_config, is_rclone_config
+from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config, list_remotes
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.modules.myfilesset import calculate_size, delete_empty_dir, delete_selected, delete_selection, myfiles_settings, rclone_dedupe, rclone_mkdir, rclone_rename, search_action
 
@@ -20,34 +19,14 @@ async def handle_myfiles(client, message):
     user_id= message.from_user.id
     if await is_rclone_config(user_id, message):
         if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id):
-            await list_remotes(message)
+            await list_remotes(message, menu_type='myfilesmenu')
         else:
             await sendMessage("Not allowed to use", message)
-
-async def list_remotes(message, edit=False):
-    if message.reply_to_message:
-        user_id= message.reply_to_message.from_user.id
-    else:
-        user_id= message.from_user.id
-
-    buttons = ButtonMaker()
-    path= get_rclone_config(user_id)
-    conf = ConfigParser()
-    conf.read(path)
-    for remote in conf.sections():
-        buttons.cb_buildbutton(f"📁 {remote}", f"myfilesmenu^remote^{remote}^{user_id}")
-
-    buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer')
-
-    if edit:
-        await editMessage("Select your cloud to list files", message, reply_markup= buttons.build_menu(2))
-    else:
-        await sendMarkup("Select your cloud to list files", message, reply_markup= buttons.build_menu(2))
 
 async def list_folder(message, remote_name, remote_base, edit=False):
     user_id= message.reply_to_message.from_user.id
     buttons = ButtonMaker()
-    path = get_rclone_config(user_id)
+    path = await get_rclone_path(user_id, message)
     buttons.cb_buildbutton(f"⚙️ Folder Options", f"myfilesmenu^folder_action^{user_id}")
     buttons.cb_buildbutton("🔍 Search", f"myfilesmenu^search^{user_id}")
 
@@ -132,7 +111,7 @@ async def myfiles_callback(client, callback_query):
     # Handle back button
     elif cmd[1] == "back":
         if len(base_dir) == 0: 
-            await list_remotes(message, edit=True)
+            await list_remotes(message, menu_type='myfilesmenu', edit=True)
             await query.answer()
             return 
         base_dir_split= base_dir.split("/")[:-2]
@@ -144,7 +123,7 @@ async def myfiles_callback(client, callback_query):
         await list_folder(message, remote_name= rclone_remote, remote_base=base_dir, edit=True)
         await query.answer()
     elif cmd[1] == "back_remotes_menu":
-        await list_remotes(message, edit=True)
+        await list_remotes(message, menu_type='myfilesmenu', edit=True)
         await query.answer()
     #Handle actions
     elif cmd[1] == "file_action":

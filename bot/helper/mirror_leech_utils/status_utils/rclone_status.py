@@ -19,8 +19,8 @@ class RcloneStatus:
 
     async def read_stdout(self):
         while True:
-            data = await self.__obj.process.stdout.readline()
-            if match:= findall('Transferred:.*ETA.*', data.decode().strip()):
+            data = (await self.__obj.process.stdout.readline()).decode()
+            if match:= findall('Transferred:.*ETA.*', data):
                 self.info = match[0].replace('Transferred:', '').strip().split(',')
                 self.__transfered_bytes = self.info[0]
                 try:

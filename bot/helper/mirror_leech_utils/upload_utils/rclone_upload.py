@@ -4,13 +4,13 @@ from configparser import ConfigParser
 from random import SystemRandom
 from os import path as ospath, remove as osremove, walk
 from string import ascii_letters, digits
-from bot import GLOBAL_EXTENSION_FILTER, LOGGER, status_dict, status_dict_lock, remotes_data, config_dict
+from bot import GLOBAL_EXTENSION_FILTER, LOGGER, status_dict, status_dict_lock, remotes_multi, config_dict
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.message_utils import sendStatusMessage
 from bot.helper.ext_utils.misc_utils import clean_download
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data
-from bot.helper.ext_utils.rclone_utils import get_rclone_config, setRcloneFlags
+from bot.helper.ext_utils.rclone_utils import get_rclone_path, setRcloneFlags
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
@@ -36,15 +36,14 @@ class RcloneMirror:
         else:
             mime_type = 'File'
 
-        config_file = get_rclone_config(self.__user_id)
+        config_file = await get_rclone_path(self.__user_id, self.__listener.message)
         is_multi_remote_up = config_dict['MULTI_REMOTE_UP']
         is_owner_query = CustomFilters._owner_query(self.__user_id)
         foldername = self.name.replace(".", "")
 
         if config_dict['MULTI_RCLONE_CONFIG'] or is_owner_query:
-            if is_multi_remote_up:
-                if len(remotes_data) > 0:
-                    for remote in remotes_data:
+            if is_multi_remote_up and len(remotes_multi) > 0:
+                    for remote in remotes_multi:
                         await self.check_isGdrive(remote, config_file)
                         if mime_type == 'Folder':
                             cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:/{foldername}", '-P']
@@ -52,7 +51,7 @@ class RcloneMirror:
                             cmd = ['rclone', 'copy', f"--config={config_file}", str(self.__path), f"{remote}:", '-P']
                         await setRcloneFlags(cmd, "upload")
                         await self.upload(cmd, config_file, mime_type, remote)
-                await clean_download(self.__path)
+                    await clean_download(self.__path)
             else:
                 remote = get_rclone_data('CLOUDSEL_REMOTE', self.__user_id)
                 base = get_rclone_data('CLOUDSEL_BASE_DIR', self.__user_id)

@@ -6,7 +6,7 @@ from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMark
 from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.misc_utils import get_readable_size
 from pyrogram import filters
-from bot.helper.ext_utils.rclone_utils import get_rclone_config
+from bot.helper.ext_utils.rclone_utils import get_rclone_path
 
 
 
@@ -46,7 +46,7 @@ async def myfiles_settings(message, remote, remote_path, edit=False, is_folder=F
 
 async def calculate_size(message, remote_path, remote, user_id):
      buttons= ButtonMaker()
-     path = get_rclone_config(user_id)
+     path = await get_rclone_path(user_id, message)
      data = await rclone_size(message, remote_path, remote, path)
      if data is not None:
           total_size = get_readable_size(data[1])
@@ -56,7 +56,7 @@ async def calculate_size(message, remote_path, remote, user_id):
           await editMessage(msg, message, reply_markup= buttons.build_menu(1))
 
 async def search_action(client, message, query, remote, user_id):
-     conf_path = get_rclone_config(user_id)
+     conf_path = await get_rclone_path(user_id, message)
      question= await sendMessage("Send file name to search, /ignore to cancel", message)
      try:
           response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout=60)
@@ -71,7 +71,7 @@ async def search_action(client, message, query, remote, user_id):
                          await client.listen.Cancel(filters.user(user_id))
                     else:
                          search_msg= await sendMessage("**⏳Searching file(s) on remote...**\n\nPlease wait, it may take some time", question)
-                         conf_path = get_rclone_config(user_id)
+                         conf_path = await get_rclone_path(user_id, message)
                          cmd = ["rclone", "lsjson", "--files-only", '--fast-list', '--no-modtime', "--ignore-case", "-R", f'--config={conf_path}', "--include", f"*{text}*", f"{remote}:"] 
                          process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
                          out, err = await process.communicate()
@@ -122,7 +122,7 @@ async def delete_selection(message, user_id, is_folder=False):
 async def delete_selected(message, user_id, remote_path, remote, is_folder=False):   
      buttons= ButtonMaker()
      msg= ""
-     conf_path = get_rclone_config(user_id)
+     conf_path = await get_rclone_path(user_id, message)
      if is_folder:
           await rclone_purge(message, remote_path, remote, conf_path)    
           msg += f"The folder has been deleted successfully!!"
@@ -135,7 +135,7 @@ async def delete_selected(message, user_id, remote_path, remote, is_folder=False
 
 async def delete_empty_dir(message, user_id, remote, remote_path):
      buttons= ButtonMaker()
-     conf_path = get_rclone_config(user_id)
+     conf_path = await get_rclone_path(user_id, message)
      await rclone_rmdirs(message, remote, remote_path, conf_path)
      buttons.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
      buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer')
@@ -191,7 +191,7 @@ async def rclone_rmdirs(message, remote, remote_path, conf_path):
 
 async def rclone_mkdir(client, message, remote, remote_path, tag):
      user_id= message.reply_to_message.from_user.id
-     conf_path = get_rclone_config(user_id)
+     conf_path = await get_rclone_path(user_id, message)
      question= await sendMessage("Send name for directory, /ignore to cancel", message)
      try:
           response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout= 30)
@@ -226,7 +226,7 @@ async def rclone_dedupe(message, remote, remote_path, user_id, tag):
      msg= "**⏳Deleting duplicate files**\n"
      msg += "\nIt may take some time depending on number of duplicates files"
      edit_msg= await editMessage(msg, message)
-     conf_path = get_rclone_config(user_id)
+     conf_path = await get_rclone_path(user_id, message)
      cmd = ["rclone", "dedupe", "newest", "--tpslimit", "4", "--transfers", "1", "--fast-list", f'--config={conf_path}', f"{remote}:{remote_path}"] 
      process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
      stdout, stderr = await process.communicate()
@@ -243,7 +243,7 @@ async def rclone_dedupe(message, remote, remote_path, user_id, tag):
 
 async def rclone_rename(client, message, remote, remote_path, tag):
      user_id= message.reply_to_message.from_user.id
-     conf_path = get_rclone_config(user_id)
+     conf_path = await get_rclone_path(user_id, message)
      question= await sendMessage("Send new name for file, /ignore to cancel", message)
      try:
           response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout= 30)

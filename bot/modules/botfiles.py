@@ -13,7 +13,7 @@ from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessage, update_all_messages
 from bot.helper.ext_utils.button_build import ButtonMaker
-from bot.helper.ext_utils.rclone_utils import get_rclone_config
+from bot.helper.ext_utils.rclone_utils import get_rclone_path
 from bot.modules.search import initiate_search_tools
 
 
@@ -415,7 +415,7 @@ async def botfiles_callback(client, callback_query):
      if int(cmd[-1]) != user_id:
           return await query.answer("This menu is not for you!", show_alert=True)
      if cmd[1] == "get_rclone_conf":
-          path= get_rclone_config(user_id)
+          path= await get_rclone_path(user_id, message)
           try:
                await client.send_document(document=path, chat_id=message.chat.id)
           except ValueError as err:
@@ -450,7 +450,7 @@ async def botfiles_callback(client, callback_query):
           await set_config_listener(client, query, message)
           await config_menu(user_id, message, True)
      elif cmd[1] == "delete_config":
-          path= get_rclone_config(user_id)
+          path= await get_rclone_path(user_id, message)
           try:
                remove(path)
           except FileNotFoundError as err:

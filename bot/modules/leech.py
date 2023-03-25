@@ -1,7 +1,6 @@
 from asyncio import TimeoutError
 from json import loads as jsonloads
 from os import path as ospath
-from configparser import ConfigParser
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
@@ -12,7 +11,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.button_build import ButtonMaker
-from bot.helper.ext_utils.rclone_utils import get_rclone_config, is_rclone_config
+from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config, list_remotes
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.helper.mirror_leech_utils.download_utils.rclone_download import RcloneLeech
 from bot.modules.listener import MirrorLeechListener
@@ -107,7 +106,7 @@ async def leech_menu_cb(client, callback_query):
     elif cmd[1] == "back":
         if len(base_dir) == 0:
             await query.answer() 
-            await list_remotes(message, edit=True)
+            await list_remotes(message, menu_type='leechmenu', edit=True)
             return 
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
@@ -123,26 +122,6 @@ async def leech_menu_cb(client, callback_query):
         await query.answer()
         await message.delete()
 
-async def list_remotes(message, edit=False):
-    if message.reply_to_message:
-        user_id= message.reply_to_message.from_user.id
-    else:
-        user_id= message.from_user.id
-    path= get_rclone_config(user_id)
-    if not path:
-        await sendMessage("Send a rclone config file, use /botfiles command", message)
-        return
-    conf = ConfigParser()
-    conf.read(path)
-    buttons = ButtonMaker()
-    for remote in conf.sections():
-        buttons.cb_buildbutton(f"📁 {remote}", f"leechmenu^remote^{remote}^{user_id}") 
-    buttons.cb_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}")
-    if edit:
-        await editMessage("Select cloud where your files are stored\n\n<b>", message, reply_markup= buttons.build_menu(2))
-    else:
-        await sendMarkup("Select cloud where your files are stored\n\n<b>", message, reply_markup= buttons.build_menu(2))
-
 async def list_folder(message, remote_name, remote_base, edit=False):
     user_id= message.reply_to_message.from_user.id
     msg_id= message.reply_to_message.id
@@ -150,7 +129,7 @@ async def list_folder(message, remote_name, remote_base, edit=False):
     is_zip= info[1]
     extract= info[2]
     buttons = ButtonMaker()
-    path = get_rclone_config(user_id)
+    path = await get_rclone_path(user_id, message)
     buttons.cb_buildbutton("✅ Select this folder", f"leechmenu^leech_folder^{user_id}")
 
     cmd = ["rclone", "lsjson", '--fast-list', '--no-modtime', f'--config={path}', f"{remote_name}:{remote_base}" ] 
@@ -289,8 +268,9 @@ async def selection_callback(client, callback_query):
         finally:
             await question.delete()
     elif cmd[1] == "remotes":
-        await list_remotes(message, edit=True)
-        await query.answer()
+        if await is_rclone_config(user_id, message):
+            await list_remotes(message, menu_type='leechmenu', edit=True)
+            await query.answer()
     else:
         await query.answer()
         await message.delete()

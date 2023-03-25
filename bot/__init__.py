@@ -43,8 +43,8 @@ Interval = []
 QbInterval = []
 GLOBAL_EXTENSION_FILTER = ['.aria2']
 user_data = {}
-remotes_data = []
 leech_log = []
+remotes_multi= []
 aria2_options = {}
 qbit_options = {}
 

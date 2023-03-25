@@ -6,7 +6,7 @@ from random import SystemRandom, randrange
 from string import ascii_letters, digits
 from bot import LOGGER, status_dict, status_dict_lock, config_dict
 from bot.helper.ext_utils.message_utils import sendMessage, sendStatusMessage
-from bot.helper.ext_utils.rclone_utils import get_rclone_config, setRcloneFlags
+from bot.helper.ext_utils.rclone_utils import get_rclone_path, setRcloneFlags
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
@@ -14,7 +14,7 @@ SERVICE_ACCOUNTS_NUMBER = 100
 
 
 class RcloneCopy:
-    def __init__(self, user_id, listener= None) -> None:
+    def __init__(self, user_id, listener) -> None:
         self.__listener = listener
         self._user_id= user_id
         self.name= None
@@ -27,7 +27,7 @@ class RcloneCopy:
         self.status_type= MirrorStatus.STATUS_COPYING
 
     async def copy(self, origin_remote, origin_dir, dest_remote, dest_dir):
-        conf_path = get_rclone_config(self._user_id)
+        conf_path = await get_rclone_path(self._user_id, self.__listener.message)
         if config_dict['USE_SERVICE_ACCOUNTS']:
             if ospath.exists("accounts"):
                 globals()['SERVICE_ACCOUNTS_NUMBER'] = len(listdir("accounts"))

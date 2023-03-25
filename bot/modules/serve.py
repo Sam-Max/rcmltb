@@ -9,7 +9,7 @@ from bot.helper.ext_utils.bot_utils import cmd_exec
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessage
 from bot.helper.ext_utils.button_build import ButtonMaker
-from bot.helper.ext_utils.rclone_utils import get_rclone_config, is_rclone_config
+from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config
 
 
 SELECTED_REMOTE = []
@@ -32,7 +32,7 @@ async def serve_cb(client, callbackQuery):
     data= query.data
     data = data.split("^")
     message= query.message
-    path = get_rclone_config(OWNER_ID)
+    path = await get_rclone_path(OWNER_ID)
 
     RC_INDEX_USER= config_dict['RC_INDEX_USER']
     RC_INDEX_PASS= config_dict['RC_INDEX_PASS']
@@ -91,7 +91,7 @@ async def rclone_serve(cmd, message):
 async def list_remotes(message):
     SELECTED_REMOTE.clear()
     button = ButtonMaker()
-    path= get_rclone_config(OWNER_ID)
+    path= await get_rclone_path(OWNER_ID)
     conf = ConfigParser()
     conf.read(path)
     for remote in conf.sections():

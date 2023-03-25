@@ -86,14 +86,18 @@ def get_content_type(link):
 def is_share_link(url):
     return bool(re_match(r'https?:\/\/.+\.gdtot\.\S+|https?:\/\/(filepress|filebee|appdrive|gdflix)\.\S+', url))
 
-async def add_index_link(name, type, buttons):
+def add_index_link(name, type, buttons):
     if GD_INDEX_URL:= config_dict['GD_INDEX_URL']:
         url_path = rutils.quote(f'{name}')
-        share_url = f'{GD_INDEX_URL}/{url_path}/' if type == "Folder" else f'{GD_INDEX_URL}/{url_path}'
-        buttons.url_buildbutton("⚡ Index Link", share_url)
-        if config_dict['VIEW_LINK']:
-            share_urls = f'{GD_INDEX_URL}/{url_path}?a=view'
-            buttons.url_buildbutton("🌐 View Link", share_urls) 
+        share_url = f'{GD_INDEX_URL}/{url_path}'
+        if type == "Folder":
+            share_url += '/'
+            buttons.url_buildbutton("⚡ Index Link", share_url)
+        else:
+            buttons.url_buildbutton("⚡ Index Link", share_url)
+            if config_dict['VIEW_LINK']:
+                share_urls = f'{GD_INDEX_URL}/{url_path}?a=view'
+                buttons.url_buildbutton("🌐 View Link", share_urls) 
 
 def get_readable_time(seconds):
     result = ''

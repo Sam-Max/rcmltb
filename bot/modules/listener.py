@@ -12,7 +12,7 @@ from bot.helper.ext_utils.human_format import get_readable_file_size, human_read
 from bot.helper.ext_utils.message_utils import delete_all_messages, sendMarkup, sendMessage, update_all_messages
 from bot.helper.ext_utils.button_build import ButtonMaker
 from bot.helper.ext_utils.misc_utils import clean_download, clean_target, split_file
-from bot.helper.ext_utils.rclone_utils import get_gdlink
+from bot.helper.ext_utils.rclone_utils import get_drive_link
 from bot.helper.ext_utils.zip_utils import get_base_name, get_path_size
 from bot.helper.mirror_leech_utils.status_utils.tg_upload_status import TgUploadStatus
 from bot.helper.mirror_leech_utils.upload_utils.rclone_upload import RcloneMirror
@@ -325,12 +325,12 @@ class MirrorLeechListener:
         if return_code == 0:
             buttons.url_buildbutton("Cloud Link 🔗", url)
             if isGdrive:
-                await add_index_link(name, type, buttons)
+                add_index_link(name, type, buttons)
             await sendMarkup(msg, self.message, buttons.build_menu(2))
         else:
             if isGdrive:
-                await get_gdlink(remote, base, name, conf, type, buttons)
-                await add_index_link(name, type, buttons)
+                await get_drive_link(remote, base, name, conf, type, buttons)
+                add_index_link(name, type, buttons)
                 await sendMarkup(msg, self.message, buttons.build_menu(2))   
             else:
                 await sendMessage(msg, self.message)   
