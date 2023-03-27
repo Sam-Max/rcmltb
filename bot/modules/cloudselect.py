@@ -1,12 +1,10 @@
-from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from bot import OWNER_ID, bot, config_dict, remotes_multi
-from json import loads as jsonloads
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
-from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
+from bot.helper.ext_utils.message_utils import editMessage, sendMessage
 from bot.helper.ext_utils.button_build import ButtonMaker
-from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config, list_remotes
+from bot.helper.ext_utils.rclone_utils import create_next_buttons, is_rclone_config, list_folder, list_remotes
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from pyrogram.filters import regex
 from pyrogram import filters
@@ -20,7 +18,7 @@ async def handle_cloudselect(client, message):
     if await is_rclone_config(user_id, message):
         if DEFAULT_OWNER_REMOTE := config_dict['DEFAULT_OWNER_REMOTE']:
             if user_id == OWNER_ID:
-                update_rclone_data("CLOUDSEL_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
+                update_rclone_data("CLOUD_SELECT_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
         if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id): 
             await list_remotes(message, menu_type='cloudselectmenu') 
         else:
@@ -32,8 +30,8 @@ async def cloudselect_callback(client, callback_query):
     cmd = data.split("^")
     message = query.message
     user_id= query.from_user.id
-    base_dir= get_rclone_data("CLOUDSEL_BASE_DIR", user_id)
-    rclone_remote = get_rclone_data("CLOUDSEL_REMOTE", user_id)
+    base_dir= get_rclone_data("CLOUD_SELECT_BASE_DIR", user_id)
+    rclone_remote = get_rclone_data("CLOUD_SELECT_REMOTE", user_id)
 
     if int(cmd[-1]) != user_id:
         await query.answer("This menu is not for you!", show_alert=True)
@@ -43,17 +41,17 @@ async def cloudselect_callback(client, callback_query):
             remotes_multi.append(cmd[2])
             await list_remotes(message, menu_type='cloudselectmenu', edit=True)
             return
-        update_rclone_data("CLOUDSEL_BASE_DIR", "", user_id) #Reset Dir
-        update_rclone_data("CLOUDSEL_REMOTE", cmd[2], user_id)
+        update_rclone_data("CLOUD_SELECT_BASE_DIR", "", user_id) #Reset Dir
+        update_rclone_data("CLOUD_SELECT_REMOTE", cmd[2], user_id)
         if user_id == OWNER_ID:
             config_dict.update({'DEFAULT_OWNER_REMOTE': cmd[2]}) 
-        await list_folder(message, cmd[2], "", edit=True)
+        await list_folder(message, cmd[2], "", menu_type=Menus.CLOUDSELECT, edit=True)
         await query.answer()
     elif cmd[1] == "remote_dir":
         path = get_rclone_data(cmd[2], user_id)
         base_dir += path + "/"
-        update_rclone_data("CLOUDSEL_BASE_DIR", base_dir, user_id)
-        await list_folder(message, rclone_remote, base_dir, edit=True)
+        update_rclone_data("CLOUD_SELECT_BASE_DIR", base_dir, user_id)
+        await list_folder(message, rclone_remote, base_dir, menu_type=Menus.CLOUDSELECT, edit=True)
         await query.answer()
     elif cmd[1] == "back":
         if len(base_dir) == 0: 
@@ -65,8 +63,8 @@ async def cloudselect_callback(client, callback_query):
         for dir in base_dir_split: 
             base_dir_string += dir + "/"
         base_dir = base_dir_string
-        update_rclone_data("CLOUDSEL_BASE_DIR", base_dir, user_id)
-        await list_folder(message, rclone_remote, base_dir, edit=True)
+        update_rclone_data("CLOUD_SELECT_BASE_DIR", base_dir, user_id)
+        await list_folder(message, rclone_remote, base_dir, menu_type=Menus.CLOUDSELECT, edit=True)
         await query.answer() 
     elif cmd[1] == "pages":
         await query.answer()
@@ -77,71 +75,13 @@ async def cloudselect_callback(client, callback_query):
         await query.answer()
         await message.delete()
 
-async def list_folder(message, remote_name, remote_base, edit=False):
-    user_id= message.reply_to_message.from_user.id
-    buttons = ButtonMaker()
-    path = await get_rclone_path(user_id, message)
-    buttons.cb_buildbutton(f"✅ Select this folder", f"cloudselectmenu^close^{user_id}")
-    
-    cmd = ["rclone", "lsjson", '--dirs-only', '--fast-list', '--no-modtime', f'--config={path}', f"{remote_name}:{remote_base}" ] 
-    process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
-    out, err = await process.communicate()
-    out = out.decode().strip()
-    return_code = await process.wait()
-    if return_code != 0:
-        err = err.decode().strip()
-        return await sendMessage(f'Error: {err}', message)
-    list_info = jsonloads(out)
-    list_info.sort(key=lambda x: x["Size"])
-    update_rclone_data("list_info", list_info, user_id)
-    
-    if len(list_info) == 0:
-        buttons.cb_buildbutton("❌Nothing to show❌", "cloudselectmenu^pages^{user_id}")
-    else:
-        total = len(list_info)
-        max_results= 10
-        offset= 0
-        start = offset
-        end = max_results + start
-        next_offset = offset + max_results
-
-        if end > total:
-            list_info= list_info[offset:]    
-        elif offset >= total:
-            list_info= []    
-        else:
-            list_info= list_info[start:end]       
-        
-        rcloneListButtonMaker(result_list= list_info,
-            buttons=buttons,
-            menu_type= Menus.CLOUDSEL, 
-            dir_callback = "remote_dir",
-            file_callback= "",
-            user_id= user_id)
-        
-        if offset == 0 and total <= 10:
-            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"cloudselectmenu^pages^{user_id}", 'footer') 
-        else:
-            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"cloudselectmenu^pages^{user_id}", 'footer')
-            buttons.cb_buildbutton("NEXT ⏩", f"next_cloudselect {next_offset} back", 'footer')
-
-    buttons.cb_buildbutton("⬅️ Back", f"cloudselectmenu^back^{user_id}", 'footer_second')
-    buttons.cb_buildbutton("✘ Close Menu", f"cloudselectmenu^close^{user_id}", 'footer_second')
-
-    msg= f"Select folder where you want to store files\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>"
-    if edit:
-        await editMessage(msg, message, reply_markup= buttons.build_menu(1))
-    else:
-        await sendMarkup(msg, message, reply_markup= buttons.build_menu(1))
-
-
 async def next_page_cloudselect(client, callback_query):
     query= callback_query
     data= query.data
     message= query.message
     await query.answer()
     user_id= message.reply_to_message.from_user.id
-    _, next_offset, data_back_cb = data.split()
+    _, next_offset, _, data_back_cb = data.split()
     list_info = get_rclone_data("list_info", user_id)
     total = len(list_info)
     next_offset = int(next_offset)
@@ -154,33 +94,25 @@ async def next_page_cloudselect(client, callback_query):
     
     rcloneListButtonMaker(result_list= next_list_info, 
         buttons= buttons,
-        menu_type= Menus.CLOUDSEL,
+        menu_type= Menus.CLOUDSELECT,
         dir_callback = "remote_dir",
         file_callback= "",
         user_id= user_id)
+    
+    await create_next_buttons(next_offset, 
+        prev_offset, 
+        _next_offset, 
+        data_back_cb, 
+        total, 
+        user_id, 
+        buttons, 
+        filter= 'next_cloudselect',
+        menu_type='cloudselectmenu')
 
-    if next_offset == 0:
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "cloudselectmenu^pages", 'footer')
-        buttons.cb_buildbutton("NEXT ⏩", f"next_cloudselect {_next_offset} {data_back_cb}", 'footer')
-
-    elif next_offset >= total:
-        buttons.cb_buildbutton("⏪ BACK", f"next_cloudselect {prev_offset} {data_back_cb}", 'footer')
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "cloudselectmenu^pages", 'footer')
-
-    elif next_offset + 10 > total:
-        buttons.cb_buildbutton("⏪ BACK", f"next_cloudselect {prev_offset} {data_back_cb}", 'footer')                              
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "cloudselectmenu^pages", 'footer')
-    else:
-        buttons.cb_buildbutton("⏪ BACK", f"next_cloudselect{prev_offset} {data_back_cb}", 'footer_second')
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "cloudselectmenu^pages", 'footer')
-        buttons.cb_buildbutton("NEXT ⏩", f"next_cloudselect{_next_offset} {data_back_cb}", 'footer_second')
-
-    buttons.cb_buildbutton("⬅️ Back", f"cloudselectmenu^{data_back_cb}^{user_id}", 'footer_third')
-    buttons.cb_buildbutton("✘ Close Menu", f"cloudselectmenu^close^{user_id}", 'footer_third')
-
-    cloudselect_remote= get_rclone_data("CLOUDSEL_REMOTE", user_id)
-    base_dir= get_rclone_data("CLOUDSEL_BASE_DIR", user_id)
-    await editMessage(f"Select folder where you want to store files\n\n<b>Path:</b><code>{cloudselect_remote}:{base_dir}</code>", message, reply_markup= buttons.build_menu(1))
+    cloudselect_remote= get_rclone_data("CLOUD_SELECT_REMOTE", user_id)
+    base_dir= get_rclone_data("CLOUD_SELECT_BASE_DIR", user_id)
+    msg= f"Select folder where you want to store files\n\n<b>Path:</b><code>{cloudselect_remote}:{base_dir}</code>"
+    await editMessage(msg, message, reply_markup= buttons.build_menu(1))
  
  
 cloudselect_handler = MessageHandler(handle_cloudselect, filters= filters.command(BotCommands.CloudSelectCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

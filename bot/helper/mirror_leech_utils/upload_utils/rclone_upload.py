@@ -53,8 +53,8 @@ class RcloneMirror:
                         await self.upload(cmd, config_file, mime_type, remote)
                     await clean_download(self.__path)
             else:
-                remote = get_rclone_data('CLOUDSEL_REMOTE', self.__user_id)
-                base = get_rclone_data('CLOUDSEL_BASE_DIR', self.__user_id)
+                remote = get_rclone_data('CLOUD_SELECT_REMOTE', self.__user_id)
+                base = get_rclone_data('CLOUD_SELECT_BASE_DIR', self.__user_id)
                 await self.check_isGdrive(remote, config_file)
 
                 if mime_type == 'Folder':

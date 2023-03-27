@@ -1,15 +1,13 @@
-from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from bot import bot, config_dict
-from json import loads as jsonloads
 from bot.helper.ext_utils.bot_commands import BotCommands
 from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
-from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
+from bot.helper.ext_utils.message_utils import editMessage, sendMessage
 from bot.helper.ext_utils.button_build import ButtonMaker
-from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config, list_remotes
+from bot.helper.ext_utils.rclone_utils import create_next_buttons, is_rclone_config, list_folder, list_remotes
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.modules.myfilesset import calculate_size, delete_empty_dir, delete_selected, delete_selection, myfiles_settings, rclone_dedupe, rclone_mkdir, rclone_rename, search_action
 
@@ -22,66 +20,6 @@ async def handle_myfiles(client, message):
             await list_remotes(message, menu_type='myfilesmenu')
         else:
             await sendMessage("Not allowed to use", message)
-
-async def list_folder(message, remote_name, remote_base, edit=False):
-    user_id= message.reply_to_message.from_user.id
-    buttons = ButtonMaker()
-    path = await get_rclone_path(user_id, message)
-    buttons.cb_buildbutton(f"⚙️ Folder Options", f"myfilesmenu^folder_action^{user_id}")
-    buttons.cb_buildbutton("🔍 Search", f"myfilesmenu^search^{user_id}")
-
-    cmd = ["rclone", "lsjson", '--fast-list', '--no-modtime', f'--config={path}', f"{remote_name}:{remote_base}" ] 
-    process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
-    out, err = await process.communicate()
-    out = out.decode().strip()
-    return_code = await process.wait()
-    if return_code != 0:
-        err = err.decode().strip()
-        return await sendMessage(f'Error: {err}', message)
-
-    list_info = jsonloads(out)
-    list_info.sort(key=lambda x: x["Size"])
-    update_rclone_data("list_info", list_info, user_id)
-
-    if len(list_info) == 0:
-        buttons.cb_buildbutton("❌Nothing to show❌", f"myfilesmenu^pages^{user_id}")   
-    else:
-        total = len(list_info)
-        max_results= 10
-        offset= 0
-        start = offset
-        end = max_results + start
-        next_offset = offset + max_results
-
-        if end > total:
-            list_info= list_info[offset:]    
-        elif offset >= total:
-            list_info= []    
-        else:
-            list_info= list_info[start:end]       
-        
-        rcloneListButtonMaker(result_list= list_info,
-            buttons=buttons,
-            menu_type= Menus.MYFILES, 
-            dir_callback = "remote_dir",
-            file_callback= "file_action",
-            user_id= user_id)
-
-        if offset == 0 and total <= 10:
-            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", "myfilesmenu^pages", 'footer') 
-        else: 
-            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", "myfilesmenu^pages", 'footer')
-            buttons.cb_buildbutton("NEXT ⏩", f"next_myfiles {next_offset} back", 'footer')   
-
-    buttons.cb_buildbutton(f"⬅️ Back", f"myfilesmenu^back^{user_id}", 'footer_second')
-    buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer_second')
-
-    msg= f"Your cloud files are listed below\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>"
-
-    if edit:
-        await editMessage(msg, message, reply_markup= buttons.build_menu(1))
-    else:
-        await sendMarkup(msg, message, reply_markup= buttons.build_menu(1))
 
 async def myfiles_callback(client, callback_query):
     query= callback_query
@@ -100,13 +38,13 @@ async def myfiles_callback(client, callback_query):
         #Reset Dir
         update_rclone_data("MYFILES_BASE_DIR", "", user_id)
         update_rclone_data("MYFILES_REMOTE", cmd[2]  , user_id)
-        await list_folder(message, cmd[2], "", edit=True)
+        await list_folder(message, cmd[2], "", menu_type= Menus.MYFILES, edit=True)
         await query.answer() 
     elif cmd[1] == "remote_dir":
         path = get_rclone_data(cmd[2], user_id)
         base_dir += path + "/"
         update_rclone_data("MYFILES_BASE_DIR", base_dir, user_id)
-        await list_folder(message, remote_name= rclone_remote, remote_base=base_dir, edit=True)
+        await list_folder(message, rclone_remote, base_dir, menu_type= Menus.MYFILES, edit=True)
         await query.answer()
     # Handle back button
     elif cmd[1] == "back":
@@ -120,7 +58,7 @@ async def myfiles_callback(client, callback_query):
             base_dir_string += dir + "/"
         base_dir = base_dir_string
         update_rclone_data("MYFILES_BASE_DIR", base_dir, user_id)
-        await list_folder(message, remote_name= rclone_remote, remote_base=base_dir, edit=True)
+        await list_folder(message, rclone_remote, base_dir, menu_type= Menus.MYFILES, edit=True)
         await query.answer()
     elif cmd[1] == "back_remotes_menu":
         await list_remotes(message, menu_type='myfilesmenu', edit=True)
@@ -177,7 +115,7 @@ async def next_page_myfiles(client, callback_query):
     message= query.message
     await query.answer()
     user_id= message.reply_to_message.from_user.id
-    _, next_offset, data_back_cb = data.split()
+    _, next_offset, _, data_back_cb = data.split()
     list_info = get_rclone_data("list_info", user_id)
     total = len(list_info)
     next_offset = int(next_offset)
@@ -188,36 +126,28 @@ async def next_page_myfiles(client, callback_query):
     buttons.cb_buildbutton("🔍 Search", f"myfilesmenu^search^{user_id}")
 
     next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset)
+
     rcloneListButtonMaker(result_list= next_list_info,
         buttons=buttons,
         menu_type= Menus.MYFILES, 
         dir_callback = "remote_dir",
         file_callback= "file_action",
         user_id= user_id)
-
-    if next_offset == 0:
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "myfilesmenu^pages", 'footer')
-        buttons.cb_buildbutton("NEXT ⏩", f"next_myfiles {_next_offset} {data_back_cb}", 'footer')
-
-    elif next_offset >= total:
-        buttons.cb_buildbutton("⏪ BACK", f"next_myfiles {prev_offset} {data_back_cb}", 'footer')
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "myfilesmenu^pages", 'footer')
-
-    elif next_offset + 10 > total:
-        buttons.cb_buildbutton("⏪ BACK", f"next_myfiles {prev_offset} {data_back_cb}", 'footer')                               
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}","myfilesmenu^pages", 'footer')
-    else:
-        buttons.cb_buildbutton("⏪ BACK", f"next_myfiles {prev_offset} {data_back_cb}", 'footer_second')
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "myfilesmenu^pages", 'footer')
-        buttons.cb_buildbutton("NEXT ⏩", f"next_myfiles {_next_offset} {data_back_cb}", 'footer_second')
-
-    buttons.cb_buildbutton("⬅️ Back", f"myfilesmenu^{data_back_cb}^{user_id}", 'footer_third')
-    buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", 'footer_third')
+    
+    await create_next_buttons(next_offset, 
+        prev_offset, 
+        _next_offset, 
+        data_back_cb, 
+        total, 
+        user_id, 
+        buttons, 
+        filter= 'next_myfiles',
+        menu_type='myfilesmenu')
 
     remote= get_rclone_data("MYFILES_REMOTE", user_id)
     base_dir= get_rclone_data("MYFILES_BASE_DIR", user_id)
-    await editMessage(f"Your cloud files are listed below\n\n<b>Path:</b><code>{remote}:{base_dir}</code>", 
-                      message, reply_markup= buttons.build_menu(1))
+    msg = f"Your cloud files are listed below\n\n<b>Path:</b><code>{remote}:{base_dir}</code>"
+    await editMessage(msg, message, reply_markup= buttons.build_menu(1))
 
 
 myfiles_handler = MessageHandler(handle_myfiles, filters= filters.command(BotCommands.MyFilesCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

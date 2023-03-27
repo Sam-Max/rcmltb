@@ -1,7 +1,5 @@
 from asyncio import TimeoutError
-from json import loads as jsonloads
 from os import path as ospath
-from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
@@ -11,7 +9,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMarkup, sendMessage
 from bot.helper.ext_utils.button_build import ButtonMaker
-from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config, list_remotes
+from bot.helper.ext_utils.rclone_utils import create_next_buttons, is_rclone_config, list_folder, list_remotes
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.helper.mirror_leech_utils.download_utils.rclone_download import RcloneLeech
 from bot.modules.listener import MirrorLeechListener
@@ -82,13 +80,13 @@ async def leech_menu_cb(client, callback_query):
         # Reset Dir
         update_rclone_data("LEECH_BASE_DIR", "", user_id)
         update_rclone_data("LEECH_REMOTE", cmd[2], user_id)
-        await list_folder(message, cmd[2], "", edit=True)
+        await list_folder(message, cmd[2], "", menu_type=Menus.LEECH, listener_dict= listener_dict, edit=True)
         await query.answer()   
     elif cmd[1] == "remote_dir":
         path = get_rclone_data(cmd[2], user_id)
         base_dir += path + "/"
         update_rclone_data("LEECH_BASE_DIR", base_dir, user_id)
-        await list_folder(message, rclone_remote, base_dir, edit=True)
+        await list_folder(message, rclone_remote, base_dir, menu_type=Menus.LEECH, listener_dict= listener_dict, edit=True)
         await query.answer()   
     elif cmd[1] == "leech_file":
         await query.answer()      
@@ -114,7 +112,7 @@ async def leech_menu_cb(client, callback_query):
             base_dir_string += dir + "/"
         base_dir = base_dir_string
         update_rclone_data("LEECH_BASE_DIR", base_dir, user_id)
-        await list_folder(message, rclone_remote, base_dir, edit=True)
+        await list_folder(message, rclone_remote, base_dir, menu_type=Menus.LEECH, listener_dict= listener_dict, edit=True)
         await query.answer()
     elif cmd[1] == "pages":
         await query.answer()
@@ -122,80 +120,13 @@ async def leech_menu_cb(client, callback_query):
         await query.answer()
         await message.delete()
 
-async def list_folder(message, remote_name, remote_base, edit=False):
-    user_id= message.reply_to_message.from_user.id
-    msg_id= message.reply_to_message.id
-    info= listener_dict[msg_id] 
-    is_zip= info[1]
-    extract= info[2]
-    buttons = ButtonMaker()
-    path = await get_rclone_path(user_id, message)
-    buttons.cb_buildbutton("✅ Select this folder", f"leechmenu^leech_folder^{user_id}")
-
-    cmd = ["rclone", "lsjson", '--fast-list', '--no-modtime', f'--config={path}', f"{remote_name}:{remote_base}" ] 
-    process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
-    out, err = await process.communicate()
-    out = out.decode().strip()
-    return_code = await process.wait()
-    if return_code != 0:
-        err = err.decode().strip()
-        return await sendMessage(f'Error: {err}', message)
-
-    list_info = jsonloads(out)
-    list_info.sort(key=lambda x: x["Size"])
-    update_rclone_data("list_info", list_info, user_id)
-
-    if len(list_info) == 0:
-        buttons.cb_buildbutton("❌Nothing to show❌", f"leechmenu^pages^{user_id}")
-    else:
-        total = len(list_info)
-        max_results= 10
-        offset= 0
-        start = offset
-        end = max_results + start
-        next_offset = offset + max_results
-
-        if end > total:
-            list_info= list_info[offset:]    
-        elif offset >= total:
-            list_info= []    
-        else:
-            list_info= list_info[start:end]       
-        
-        rcloneListButtonMaker(result_list= list_info,
-            buttons=buttons,
-            menu_type= Menus.LEECH, 
-            dir_callback = "remote_dir",
-            file_callback= 'leech_file',
-            user_id= user_id)
-
-        if offset == 0 and total <= 10:
-            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"leechmenu^pages^{user_id}", 'footer')        
-        else: 
-            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"leechmenu^pages^{user_id}", 'footer')
-            buttons.cb_buildbutton("NEXT ⏩", f"next_leech {next_offset} back", 'footer')
-
-    buttons.cb_buildbutton("⬅️ Back", f"leechmenu^back^{user_id}", 'footer_second')
-    buttons.cb_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}", 'footer_second')
-
-    msg = f'Select folder or file that you want to leech\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>'
-    if is_zip:
-        msg = f'Select file that you want to zip\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>' 
-    if extract:
-        msg = f'Select file that you want to extract\n\n<b>Path:</b><code>{remote_name}:{remote_base}</code>'
-
-    if edit:
-        await editMessage(msg, message, reply_markup= buttons.build_menu(1))
-    else:
-        await sendMarkup(msg, message, reply_markup= buttons.build_menu(1))
- 
 async def next_page_leech(client, callback_query):
     query= callback_query
     data = query.data
     message= query.message
     await query.answer()
     user_id= message.reply_to_message.from_user.id
-    _, next_offset, data_back_cb= data.split()
+    _, next_offset, _, data_back_cb= data.split()
     list_info = get_rclone_data("list_info", user_id)
     total = len(list_info)
     next_offset = int(next_offset)
@@ -212,30 +143,21 @@ async def next_page_leech(client, callback_query):
         dir_callback = "remote_dir",
         file_callback= 'leech_file',
         user_id= user_id)
-
-    if next_offset == 0:
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "leechmenu^pages", 'footer')
-        buttons.cb_buildbutton("NEXT ⏩", f"next_leech {_next_offset} {data_back_cb}", 'footer')
     
-    elif next_offset >= total:
-        buttons.cb_buildbutton("⏪ BACK", f"next_leech {prev_offset} {data_back_cb}", 'footer') 
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "leechmenu^pages", 'footer')
-   
-    elif next_offset + 10 > total:
-        buttons.cb_buildbutton("⏪ BACK", f"next_leech {prev_offset} {data_back_cb}", 'footer')
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "leechmenu^pages", 'footer')
-    else:
-        buttons.cb_buildbutton("⏪ BACK", f"next_leech {prev_offset} {data_back_cb}", 'footer_second')
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", "leechmenu^pages", 'footer')
-        buttons.cb_buildbutton("NEXT ⏩", f"next_leech {_next_offset} {data_back_cb}", 'footer_second')
-
-    buttons.cb_buildbutton("⬅️ Back", f"leechmenu^{data_back_cb}^{user_id}", 'footer_third')
-    buttons.cb_buildbutton("✘ Close Menu", f"leechmenu^close^{user_id}", 'footer_third')
+    await create_next_buttons(next_offset, 
+        prev_offset, 
+        _next_offset, 
+        data_back_cb, 
+        total, 
+        user_id, 
+        buttons, 
+        filter= 'next_leech',
+        menu_type='leechmenu')
 
     leech_remote= get_rclone_data("LEECH_REMOTE", user_id)
     base_dir= get_rclone_data("LEECH_BASE_DIR", user_id)
-    await editMessage(f"Select folder or file that you want to leech\n\n<b>Path:</b><code>{leech_remote}:{base_dir}</code>", message, 
-                        reply_markup= buttons.build_menu(1))    
+    msg= f"Select folder or file that you want to leech\n\n<b>Path:</b><code>{leech_remote}:{base_dir}</code>"
+    await editMessage(msg, message, reply_markup= buttons.build_menu(1))    
            
 async def selection_callback(client, callback_query):
     query= callback_query
