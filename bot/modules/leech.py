@@ -75,7 +75,8 @@ async def leech_menu_cb(client, callback_query):
     rclone_remote = get_rclone_data("LEECH_REMOTE", user_id)
 
     if int(cmd[-1]) != user_id:
-        return await query.answer("This menu is not for you!", show_alert=True)
+         await query.answer("This menu is not for you!", show_alert=True)
+         return
     elif cmd[1] == "remote":
         # Reset Dir
         update_rclone_data("LEECH_BASE_DIR", "", user_id)
@@ -152,7 +153,7 @@ async def next_page_leech(client, callback_query):
         user_id, 
         buttons, 
         filter= 'next_leech',
-        menu_type='leechmenu')
+        menu_type=Menus.LEECH)
 
     leech_remote= get_rclone_data("LEECH_REMOTE", user_id)
     base_dir= get_rclone_data("LEECH_BASE_DIR", user_id)

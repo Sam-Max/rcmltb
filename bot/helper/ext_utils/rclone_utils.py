@@ -204,16 +204,16 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, listener_dict
 
     info = jsonloads(out)
     if is_second_menu:
-        list_sorted= sorted(info, key=lambda x: x["Name"])
+        info_sorted= sorted(info, key=lambda x: x["Name"])
     else:
-        list_sorted= sorted(info, key=lambda x: x["Size"])
+        info_sorted= sorted(info, key=lambda x: x["Size"])
     
-    update_rclone_data("list_info", list_sorted, user_id)
+    update_rclone_data("list_info", info_sorted, user_id)
     
-    if len(info) == 0:
+    if len(info_sorted) == 0:
         buttons.cb_buildbutton("❌Nothing to show❌", f"{menu_type}^pages^{user_id}")
     else:
-        total = len(info)
+        total = len(info_sorted)
         max_results= 10
         offset= 0
         start = offset
@@ -221,13 +221,13 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, listener_dict
         next_offset = offset + max_results
 
         if end > total:
-            list_info= info[offset:]    
+            info= info_sorted[offset:]    
         elif offset >= total:
-            list_info= []    
+            info= []    
         else:
-            list_info= info[start:end]       
+            info= info_sorted[start:end]       
         
-        rcloneListButtonMaker(result_list= list_info,
+        rcloneListButtonMaker(result_list= info,
             buttons=buttons,
             menu_type= menu_type, 
             dir_callback = dir_callback,
