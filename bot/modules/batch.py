@@ -31,17 +31,22 @@ async def _batch(client, message, isLeech=False):
     if not isLeech:
         if await is_rclone_config(user_id, message):
             pass
-        else:
+        else: 
             return
         if await is_remote_selected(user_id, message):
             pass
-        else:
+        else: 
             return
-    msg= "Send me one of the followings: \n\n"                
-    msg+= "1. Telegram message link from public or private channel\n"        
-    msg+= "2. URL links separated each link by new line\n"        
-    msg+= "3. TXT file with URL links separated each link by new line\n\n"        
-    msg+= "/ignore to cancel"        
+    msg= '''
+    Send me one of the followings:               
+
+    1. Telegram message link from public or private channel        
+    2. URL links separated each link by new line 
+       For direct link authorization: 
+       link <b>username</b> <b>password</b>
+    3. TXT file with URL links separated each link by new line        
+    
+    /ignore to cancel'''       
     question= await sendMessage(msg, message)
     try:
         response = await client.listen.Message(filters.document | filters.text, id= filters.user(user_id), timeout=60)
@@ -51,22 +56,40 @@ async def _batch(client, message, isLeech=False):
                     await client.listen.Cancel(filters.user(user_id))
                     await question.delete()
                 else:
-                    lines= response.text.split("\n")  
+                    lines= response.text.split("\n") 
                     if len(lines) > 1:
                         count= 0
                         for link in lines:
-                            link.strip()
+                            args= link.split()
+                            if len(args) > 1:
+                                user= args[1]
+                                if len(args) > 2:
+                                    password = args[2]
+                                else:
+                                    password = ''
+                                auth = f"\n{user}\n{password}"
+                            else:
+                                auth= ''
                             if link != "\n":
                                 count += 1
-                            if len(link) > 1:
+                            if auth:
+                                 if isLeech:
+                                    cmd= f"/leech {args[0]}{auth}"
+                                 else:    
+                                    cmd= f"/mirror {args[0]}{auth}"
+                            else:
                                 if isLeech:
-                                    msg= await bot.send_message(message.chat.id, f"/leech {link}", disable_web_page_preview=True)
-                                else:
-                                    msg= await bot.send_message(message.chat.id, f"/mirror {link}", disable_web_page_preview=True)
-                                msg = await client.get_messages(message.chat.id, msg.id)
-                                msg.from_user.id = message.from_user.id
-                                run_async_task(mirror_leech, client, msg, isLeech=isLeech)
-                                await sleep(4)
+                                    cmd= f"/leech {link}"
+                                else:    
+                                    cmd= f"/mirror {link}"
+                            if isLeech:
+                                msg= await bot.send_message(message.chat.id, cmd, disable_web_page_preview=True)
+                            else:
+                                msg= await bot.send_message(message.chat.id, cmd, disable_web_page_preview=True)
+                            msg = await client.get_messages(message.chat.id, msg.id)
+                            msg.from_user.id = message.from_user.id
+                            run_async_task(mirror_leech, client, msg, isLeech=isLeech)
+                            await sleep(4)
                     else:
                         _link = get_link(response.text)
                         await sendMessage("Send me the number of files to save from given link, /ignore to cancel", message)
