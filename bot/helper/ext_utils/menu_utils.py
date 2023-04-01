@@ -1,5 +1,4 @@
 
-from bot import LOGGER
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.rclone_data_holder import update_rclone_data
 

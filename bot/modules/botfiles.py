@@ -400,10 +400,10 @@ async def handle_botfiles(client, message):
      if config_dict['MULTI_RCLONE_CONFIG']: 
           await config_menu(user_id, message)    
      else:
-        if CustomFilters._owner_query(user_id):  
-          await config_menu(user_id, message) 
-        else:
-          await sendMessage("Not allowed to use", message)
+          if CustomFilters._owner_query(user_id):  
+               await config_menu(user_id, message) 
+          else:
+               await sendMessage("Not allowed to use", message)
 
 async def botfiles_callback(client, callback_query):
      query= callback_query
@@ -499,9 +499,9 @@ async def set_config_listener(client, query, message, grclone=False):
           user_id= message.from_user.id
      question= await client.send_message(message.chat.id, text= "Send file, /ignore to cancel")
      try:
-          response = await client.listen.Message(filters.document | filters.text, id= filters.user(user_id), timeout = 30)
+          response = await client.listen.Message(filters.document | filters.text, id= filters.user(user_id), timeout=60)
      except TimeoutError:
-          await client.send_message(message.chat.id, text="Too late 30s gone, try again!")
+          await client.send_message(message.chat.id, text="Too late 60s gone, try again!")
      else:
           try:
                if response.text:

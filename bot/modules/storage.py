@@ -25,7 +25,8 @@ async def storage_menu_cb(client, callback_query):
      user_id= query.from_user.id
 
      if int(cmd[-1]) != user_id:
-          return await query.answer("This menu is not for you!", show_alert=True)
+          await query.answer("This menu is not for you!", show_alert=True)
+          return
 
      if cmd[1] == "remote":
           await rclone_about(message, query, cmd[2], user_id)
@@ -48,10 +49,12 @@ async def rclone_about(message, query, remote_name, user_id):
      stdout = stdout.decode().strip()
      if return_code != 0:
           err = stderr.decode().strip()
-          return await sendMessage(f'Error: {err}', message)
+          await sendMessage(f'Error: {err}', message)
+          return
      info = loads(stdout)
      if len(info) == 0:
-          return await query.answer("Team Drive with Unlimited Storage", show_alert=True)
+          await query.answer("Team Drive with Unlimited Storage", show_alert=True)
+          return
      result_msg= "<b>🗂 Storage Details</b>\n"
      try:
           used = get_readable_file_size(info['used'])

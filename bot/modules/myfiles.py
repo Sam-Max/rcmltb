@@ -7,7 +7,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import editMessage, sendMessage
 from bot.helper.ext_utils.button_build import ButtonMaker
-from bot.helper.ext_utils.rclone_utils import create_next_buttons, is_rclone_config, list_folder, list_remotes
+from bot.helper.ext_utils.rclone_utils import create_next_buttons, is_rclone_config, is_valid_path, list_folder, list_remotes
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.modules.myfilesset import calculate_size, delete_empty_dir, delete_selected, delete_selection, myfiles_settings, rclone_dedupe, rclone_mkdir, rclone_rename, search_action
 
@@ -34,23 +34,21 @@ async def myfiles_callback(client, callback_query):
 
     if int(cmd[-1]) != user_id:
         await query.answer("This menu is not for you!", show_alert=True)
-    elif cmd[1] == "remote":
-        #Reset Dir
-        update_rclone_data("MYFILES_BASE_DIR", "", user_id)
+        return
+    if cmd[1] == "remote":
+        update_rclone_data("MYFILES_BASE_DIR", "", user_id)  #Reset Dir
         update_rclone_data("MYFILES_REMOTE", cmd[2]  , user_id)
         await list_folder(message, cmd[2], "", menu_type= Menus.MYFILES, edit=True)
-        await query.answer() 
     elif cmd[1] == "remote_dir":
         path = get_rclone_data(cmd[2], user_id)
         base_dir += path + "/"
-        update_rclone_data("MYFILES_BASE_DIR", base_dir, user_id)
-        await list_folder(message, rclone_remote, base_dir, menu_type= Menus.MYFILES, edit=True)
-        await query.answer()
+        if await is_valid_path(rclone_remote, base_dir, message):
+            update_rclone_data("MYFILES_BASE_DIR", base_dir, user_id)
+            await list_folder(message, rclone_remote, base_dir, menu_type= Menus.MYFILES, edit=True)
     # Handle back button
     elif cmd[1] == "back":
         if len(base_dir) == 0: 
             await list_remotes(message, menu_type='myfilesmenu', edit=True)
-            await query.answer()
             return 
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
@@ -59,10 +57,8 @@ async def myfiles_callback(client, callback_query):
         base_dir = base_dir_string
         update_rclone_data("MYFILES_BASE_DIR", base_dir, user_id)
         await list_folder(message, rclone_remote, base_dir, menu_type= Menus.MYFILES, edit=True)
-        await query.answer()
     elif cmd[1] == "back_remotes_menu":
         await list_remotes(message, menu_type='myfilesmenu', edit=True)
-        await query.answer()
     #Handle actions
     elif cmd[1] == "file_action":
         path = get_rclone_data(cmd[2], user_id)

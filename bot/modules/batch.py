@@ -38,15 +38,15 @@ async def _batch(client, message, isLeech=False):
         else: 
             return
     msg= '''
-    Send me one of the followings:               
+Send me one of the followings:               
 
-    1. Telegram message link from public or private channel        
-    2. URL links separated each link by new line 
-       For direct link authorization: 
-       link <b>username</b> <b>password</b>
-    3. TXT file with URL links separated each link by new line        
-    
-    /ignore to cancel'''       
+1. Telegram message link from public or private channel        
+2. URL links separated each link by new line 
+   For direct link authorization: 
+   link <b>username</b> <b>password</b>
+3. TXT file with URL links separated each link by new line        
+
+/ignore to cancel'''       
     question= await sendMessage(msg, message)
     try:
         response = await client.listen.Message(filters.document | filters.text, id= filters.user(user_id), timeout=60)

@@ -6,7 +6,7 @@ from bot.helper.ext_utils.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMessage
 from bot.helper.ext_utils.button_build import ButtonMaker
-from bot.helper.ext_utils.rclone_utils import create_next_buttons, is_rclone_config, list_folder, list_remotes
+from bot.helper.ext_utils.rclone_utils import create_next_buttons, is_rclone_config, is_valid_path, list_folder, list_remotes
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.helper.mirror_leech_utils.download_utils.rclone_copy import RcloneCopy
 from bot.modules.listener import MirrorLeechListener
@@ -47,17 +47,15 @@ async def copy_menu_callback(client, callback_query):
     
     #First Menu
     if cmd[1] == "remote_origin":
-        #Reset Dir
-        update_rclone_data("COPY_ORIGIN_DIR", "", user_id)
+        update_rclone_data("COPY_ORIGIN_DIR", "", user_id) #Reset Dir
         update_rclone_data("COPY_ORIGIN_REMOTE", cmd[2], user_id)
         await list_folder(message, cmd[2], "", menu_type= Menus.COPY, edit=True)
-        await query.answer()
     elif cmd[1] == "origin_dir":
         path = get_rclone_data(cmd[2], user_id)
-        origin_dir_= origin_dir + path  + "/"
-        update_rclone_data("COPY_ORIGIN_DIR", origin_dir_, user_id)
-        await list_folder(message, origin_remote, origin_dir_, menu_type= Menus.COPY, edit=True)
-        await query.answer() 
+        origin_dir_= origin_dir + path + "/"
+        if await is_valid_path(origin_remote, origin_dir_, message):
+            update_rclone_data("COPY_ORIGIN_DIR", origin_dir_, user_id)
+            await list_folder(message, origin_remote, origin_dir_, menu_type= Menus.COPY, edit=True)
 
     #Second Menu
     elif cmd[1] == "second_menu":
@@ -66,19 +64,16 @@ async def copy_menu_callback(client, callback_query):
             origin_dir_= origin_dir + path  
             update_rclone_data("COPY_ORIGIN_DIR", origin_dir_, user_id)
         await list_remotes(message, menu_type=Menus.COPY, remote_type="remote_dest", is_second_menu=True, edit=True)   
-        await query.answer()   
     elif cmd[1] == "remote_dest":
-        #Clean Menu
-        update_rclone_data("COPY_DESTINATION_DIR", "", user_id)
+        update_rclone_data("COPY_DESTINATION_DIR", "", user_id) #Reset Dir
         update_rclone_data("COPY_DESTINATION_REMOTE", cmd[2], user_id)
         await list_folder(message, cmd[2], "", menu_type= Menus.COPY, edit=True, is_second_menu=True)
-        await query.answer() 
     elif cmd[1] == "dest_dir":
         path = get_rclone_data(cmd[2], user_id)
         _destination_dir= destination_dir + path + "/"
-        update_rclone_data("COPY_DESTINATION_DIR", _destination_dir, user_id)
-        await list_folder(message, destination_remote, _destination_dir, menu_type= Menus.COPY, edit=True, is_second_menu=True)
-        await query.answer()     
+        if await is_valid_path(destination_remote, _destination_dir, message):
+            update_rclone_data("COPY_DESTINATION_DIR", _destination_dir, user_id)
+            await list_folder(message, destination_remote, _destination_dir, menu_type= Menus.COPY, edit=True, is_second_menu=True)
     
     if cmd[1] == "copy":
         await query.answer()      
@@ -88,13 +83,11 @@ async def copy_menu_callback(client, callback_query):
     elif cmd[1] == "pages":
         await query.answer()
     elif cmd[1] == "close":
-        await query.answer()
         await message.delete()
 
     # Origin Menu Back Button
     if cmd[1] == "back_origin":
         if len(origin_dir) == 0:
-            await query.answer() 
             await list_remotes(message, menu_type=Menus.COPY, remote_type="remote_origin", edit=True) 
             return
         origin_dir_list= origin_dir.split("/")[:-2]
@@ -104,12 +97,10 @@ async def copy_menu_callback(client, callback_query):
         origin_dir= origin_dir_string
         update_rclone_data("COPY_ORIGIN_DIR", origin_dir, user_id)
         await list_folder(message, origin_remote, origin_dir, menu_type= Menus.COPY, edit=True)
-        await query.answer() 
 
     # Destination Menu Back Button
     if cmd[1] == "back_dest":
         if len(destination_dir) == 0:
-            await query.answer() 
             await list_remotes(message, menu_type=Menus.COPY, remote_type="remote_dest", is_second_menu=True, edit=True)             
             return
         destination_dir_list= destination_dir.split("/")[:-2]
@@ -119,7 +110,6 @@ async def copy_menu_callback(client, callback_query):
         destination_dir= destination_dir_string
         update_rclone_data("COPY_DESTINATION_DIR", destination_dir, user_id)
         await list_folder(message, destination_remote, destination_dir, menu_type= Menus.COPY, edit=True, is_second_menu=True)
-        await query.answer() 
           
 async def next_page_copy(client, callback_query):
     query= callback_query

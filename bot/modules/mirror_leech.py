@@ -173,23 +173,23 @@ Number should be always before | zipname
              '''
         else:
              help_msg = '''         
-<code>/cmd</code> link |newname pswd: xx(zip/unzip)
+1. <code>/mirror</code> link |newname pswd: xx(zip/unzip)
 
-<b>By replying</b>   
-<code>/cmd</code> |newname pswd: xx(zip/unzip)
+2. <b>Replying to link/file</b>   
+<code>/mirror</code> |newname pswd: xx(zip/unzip)
 
-<b>Direct link authorization:</b>
-<code>/cmd</code> link |newname pswd: xx(zip/unzip)
+3. <b>Direct link authorization:</b>
+<code>/mirror</code> link |newname pswd: xx(zip/unzip)
 <b>username</b>
 <b>password</b>
 
-<b>qBittorrent Selection</b>    
-<code>/cmd</code> <b>s</b> link or by replying to link
+4. <b>Bittorrent selection</b>    
+<code>/mirror</code> <b>s</b> link or by replying to link
 
-<b>Multi links by replying to first link/file:</b>
-<code>/cmd</code> 5(number of links/files)
+5. <b>Multi links by replying to first link/file:</b>
+<code>/mirror</code> 5(number of links/files)
 Number should be always before |newname or pswd:
-                '''
+'''
         return await sendMessage(help_msg, message)
 
     listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, extract=extract, pswd=pswd, select=select, isLeech=isLeech)
@@ -368,9 +368,9 @@ async def worker(queue: Queue):
         
 # Create worker tasks to process the queue concurrently.        
 if PARALLEL_TASKS:
-    LOGGER.info("Creating worker tasks")
+    LOGGER.info("Creating parallel tasks")
     for i in range(PARALLEL_TASKS):
-        task = botloop.create_task(worker(m_queue))
+        run_async_task(worker, m_queue)
 
 mirror_handler = MessageHandler(handle_mirror,filters=filters.command(BotCommands.MirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
 zip_mirror_handler = MessageHandler(handle_zip_mirror,filters=filters.command(BotCommands.ZipMirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

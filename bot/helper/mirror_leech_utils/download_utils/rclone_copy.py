@@ -97,5 +97,9 @@ class RcloneCopy:
     
     async def cancel_download(self):
         self.__is_cancelled= True
+        if self.process is not None:
+            try:
+                self.process.kill()
+            except:
+                pass
         await self.__listener.onDownloadError("Copy cancelled!")
-        self.process.kill() 

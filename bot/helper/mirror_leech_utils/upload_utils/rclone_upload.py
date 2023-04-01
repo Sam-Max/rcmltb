@@ -116,6 +116,10 @@ class RcloneMirror:
                 
     async def cancel_download(self):
         self.__is_cancelled = True
-        self.process.kill()
+        if self.process is not None:
+            try:
+                self.process.kill()
+            except:
+                pass
         await self.__listener.onUploadError('Upload cancelled!')
         

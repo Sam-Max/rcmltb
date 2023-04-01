@@ -136,6 +136,17 @@ async def create_next_buttons(next_offset, prev_offset, _next_offset, data_back_
     buttons.cb_buildbutton("⬅️ Back", f"{menu_type}^{data_back_cb}^{user_id}", 'footer_third')
     buttons.cb_buildbutton("✘ Close Menu", f"{menu_type}^close^{user_id}", 'footer_third')
 
+async def is_valid_path(remote, path, message):
+    user_id= message.reply_to_message.from_user.id
+    rc_path = await get_rclone_path(user_id, message)
+    cmd = ["rclone", "lsjson", f'--config={rc_path}', f"{remote}:{path}"]
+    process = await create_subprocess_exec(*cmd)
+    return_code = await process.wait()
+    if return_code != 0:
+        LOGGER.info('Error: Path not valid')
+        return False
+    return True
+
 async def list_folder(message, rclone_remote, base_dir, menu_type, listener_dict={}, is_second_menu=False, edit=False):
     user_id= message.reply_to_message.from_user.id
     buttons = ButtonMaker()
