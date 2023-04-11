@@ -536,13 +536,6 @@ async def set_config_listener(client, query, message, grclone=False):
                          path= await client.download_media(response, file_name=rclone_path)
                          if DATABASE_URL:
                               await DbManager().update_private_file(path)
-                    if file_name == "terabox.txt":
-                        if ospath.exists('terabox.txt'):
-                            remove('terabox.txt')
-                        terabox_path = ospath.join("terabox.txt")
-                        path= await client.download_media(response, file_name=terabox_path)
-                    if DATABASE_URL:
-                        await DbManager().update_private_file(path)
                     else:
                          await client.download_media(response, file_name='./')
                          if file_name == 'accounts.zip':
