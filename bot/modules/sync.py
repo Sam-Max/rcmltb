@@ -4,11 +4,11 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from bot import bot, config_dict, status_dict_lock, status_dict
-from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.filters import CustomFilters
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config, list_remotes
-from bot.helper.ext_utils.message_utils import sendStatusMessage
-from bot.modules.listener import MirrorLeechListener
+from bot.helper.telegram_helper.message_utils import sendStatusMessage
+from bot.modules.tasks_listener import MirrorLeechListener
 from bot.helper.mirror_leech_utils.status_utils.sync_status import SyncStatus
 
 

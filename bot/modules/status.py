@@ -6,11 +6,11 @@ from psutil import cpu_percent, virtual_memory, disk_usage
 from bot import DOWNLOAD_DIR, bot, Interval, status_dict, status_dict_lock, status_reply_dict_lock, config_dict, botUptime
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
-from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval, turn
-from bot.helper.ext_utils.filters import CustomFilters
+from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.message_utils import auto_delete_message, sendMessage, sendStatusMessage, update_all_messages
+from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage, sendStatusMessage, update_all_messages
 
 
 
@@ -43,11 +43,8 @@ async def status_pages(client, callback_query):
     data = query.data.split()
     if data[1] == "ref":
         await update_all_messages(True)
-        return
-    done = await turn(data)
-    if not done:
-        await query.message.delete()
-
+    else:
+        await turn(data)
 
 
 status_handlers = MessageHandler(status_handler, filters= filters.command(BotCommands.StatusCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

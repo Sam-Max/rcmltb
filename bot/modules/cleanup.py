@@ -2,9 +2,9 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from bot import bot
-from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.filters import CustomFilters
-from bot.helper.ext_utils.message_utils import editMessage, sendMessage
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config, list_remotes
 
 
@@ -22,8 +22,8 @@ async def cleanup_callback(client, callback_query):
      user_id= query.from_user.id
 
      if int(cmd[-1]) != user_id:
-          return await query.answer("This menu is not for you!", show_alert=True)
-
+          await query.answer("This menu is not for you!", show_alert=True)
+          return
      if cmd[1] == "remote":
           await rclone_cleanup(message, cmd[2], user_id, tag)
      elif cmd[1] == "back":
@@ -45,10 +45,11 @@ async def rclone_cleanup(message, remote_name, user_id, tag):
      stdout = stdout.decode().strip()
      if return_code != 0:
           err = stderr.decode().strip()
-          return await sendMessage(f'Error: {err}', message)
-     msg= "<b>Trash successfully cleaned ✅</b>\n"
-     msg+= f'<b>cc:</b> {tag}\n'
-     await editMessage(msg, edit_msg)     
+          await sendMessage(f'Error: {err}', message)
+     else:
+          msg= "<b>Trash successfully cleaned ✅</b>\n"
+          msg+= f'<b>cc:</b> {tag}\n'
+          await editMessage(msg, edit_msg)     
 
 
 handle_cleanup = MessageHandler(cleanup, filters=command(BotCommands.CleanupCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))

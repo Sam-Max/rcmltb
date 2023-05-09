@@ -2,11 +2,11 @@ from pyrogram.filters import regex
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from bot import bot, config_dict
-from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.filters import CustomFilters
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
-from bot.helper.ext_utils.message_utils import editMessage, sendMessage
-from bot.helper.ext_utils.button_build import ButtonMaker
+from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
+from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_utils import create_next_buttons, is_rclone_config, is_valid_path, list_folder, list_remotes
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.modules.myfilesset import calculate_size, delete_empty_dir, delete_selected, delete_selection, myfiles_settings, rclone_dedupe, rclone_mkdir, rclone_rename, search_action
@@ -123,7 +123,7 @@ async def next_page_myfiles(client, callback_query):
 
     next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset)
 
-    rcloneListButtonMaker(result_list= next_list_info,
+    rcloneListButtonMaker(info= next_list_info,
         buttons=buttons,
         menu_type= Menus.MYFILES, 
         dir_callback = "remote_dir",

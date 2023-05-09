@@ -1,24 +1,34 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
-# Adapted for pyrogram library and asyncio
-
 from asyncio import sleep
-from os import remove
 from time import time
-from bot import LOGGER, bot, Interval, rss_session, config_dict, status_reply_dict_lock, status_reply_dict, status_dict_lock
+from bot import LOGGER, bot, Interval, app, config_dict, status_reply_dict_lock, status_reply_dict, status_dict_lock
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from pyrogram.enums.parse_mode import ParseMode
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 
 
-async def sendMessage(text: str, message):
+async def sendMessage(text: str, message, reply_markup=None):
     try:
         return await bot.send_message(message.chat.id, 
-                            reply_to_message_id=message.id,
+                            reply_to_message_id= message.id,
                             text=text, 
+                            reply_markup= reply_markup,
                             disable_web_page_preview=True)
     except FloodWait as fw:
-        await sleep(fw.value)
-        return await sendMessage(text, message)
+        await sleep(fw.value * 1.2)
+        return await sendMessage(text, message, reply_markup)
+    except Exception as e:
+        LOGGER.error(str(e))
+
+async def sendPhoto(text, message, path, reply_markup):
+    try:
+        return await bot.send_photo(chat_id=message.chat.id, 
+                            reply_to_message_id=message.id,
+                            photo=path,
+                            caption=text, 
+                            reply_markup=reply_markup)
+    except FloodWait as fw:
+        await sleep(fw.value * 1.2)
+        return await sendPhoto(text, message, path, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
 
@@ -29,7 +39,7 @@ async def sendMarkup(text: str, message, reply_markup):
                             text=text, 
                             reply_markup=reply_markup)
     except FloodWait as fw:
-        await sleep(fw.value)
+        await sleep(fw.value * 1.2)
         return await sendMarkup(text, message, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
@@ -41,7 +51,7 @@ async def editMarkup(text: str, message, reply_markup):
                             text=text, 
                             reply_markup=reply_markup)
     except FloodWait as fw:
-        await sleep(fw.value)
+        await sleep(fw.value * 1.2)
         return await editMarkup(text, message, reply_markup) 
     except MessageNotModified:
         await sleep(1)                               
@@ -52,10 +62,11 @@ async def editMessage(text: str, message, reply_markup=None):
     try:
         return await bot.edit_message_text(text=text, 
                             message_id=message.id,
+                            disable_web_page_preview=True,
                             chat_id=message.chat.id, 
                             reply_markup=reply_markup)
     except FloodWait as fw:
-        await sleep(fw.value)
+        await sleep(fw.value * 1.2)
         return await editMessage(text, message, reply_markup)
     except MessageNotModified:
         await sleep(1)
@@ -63,28 +74,21 @@ async def editMessage(text: str, message, reply_markup=None):
         LOGGER.error(str(e))
         return str(e)
 
-async def sendRss(text: str):
-    if not rss_session:
-        try:
-            return await bot.send_message(config_dict['RSS_CHAT_ID'], text, disable_web_page_preview=True)
-        except FloodWait as e:
-            LOGGER.warning(str(e))
-            await sleep(e.value * 1.5)
-            return await sendRss(text)
-        except Exception as e:
-            LOGGER.error(str(e))
-            return
-    else:
-        try:
-            with rss_session:
-                return rss_session.send_message(config_dict['RSS_CHAT_ID'], text, disable_web_page_preview=True)
-        except FloodWait as e:
-            LOGGER.warning(str(e))
-            await sleep(e.value * 1.5)
-            return await sendRss(text)
-        except Exception as e:
-            LOGGER.error(str(e))
-            return
+async def sendRss(text):
+    try:
+        if app:
+            return await app.send_message(chat_id=config_dict['RSS_CHAT_ID'], text=text, disable_web_page_preview=True,
+                                           disable_notification=True)
+        else:
+            return await bot.send_message(chat_id=config_dict['RSS_CHAT_ID'], text=text, disable_web_page_preview=True,
+                                          disable_notification=True)
+    except FloodWait as f:
+        LOGGER.warning(str(f))
+        await sleep(f.value * 1.2)
+        return await sendRss(text)
+    except Exception as e:
+        LOGGER.error(str(e))
+        return str(e)
             
 async def deleteMessage(message):
     try:
@@ -93,16 +97,13 @@ async def deleteMessage(message):
     except Exception as e:
         LOGGER.error(str(e))
 
-async def sendFile(message, name: str, caption=""):
+async def sendFile(message, file, caption=''):
     try:
-        with open(name, 'rb') as f:
-            await bot.send_document(document=f, file_name=f.name, reply_to_message_id=message.id,
-                             caption=caption, parse_mode=ParseMode.HTML, chat_id=message.chat.id)
-        remove(name)
-        return
+        return await bot.send_document(document=file, reply_to_message_id=message.id,
+                                caption=caption, parse_mode=ParseMode.HTML, chat_id=message.chat.id)
     except FloodWait as fw:
-        await sleep(fw.value)
-        return await sendFile(message, name, caption)
+        await sleep(fw.value * 1.2)
+        return await sendFile(message, file, caption)
     except Exception as e:
         LOGGER.error(str(e))
         return

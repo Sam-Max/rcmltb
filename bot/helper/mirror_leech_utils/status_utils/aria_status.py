@@ -1,9 +1,6 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
-
-from functools import partial
 from time import time
-from bot import aria2, LOGGER, botloop
-from bot.helper.ext_utils.bot_utils import get_readable_time 
+from bot import aria2, LOGGER
+from bot.helper.ext_utils.bot_utils import get_readable_time, run_sync 
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 
@@ -12,10 +9,10 @@ def get_download(gid):
         return aria2.get_download(gid)
     except Exception as e:
         LOGGER.error(f'{e}: Aria2c, Error while getting torrent info')
-        return get_download(gid)
+        return None
 
 
-class AriaDownloadStatus:
+class AriaStatus:
     def __init__(self, gid, listener, seeding=False):
         self.__gid = gid
         self.__listener= listener
@@ -25,32 +22,21 @@ class AriaDownloadStatus:
         self.message = listener.message
 
     def __update(self):
-        self.__download = self.__download.live
         if self.__download is None:
              self.__download = get_download(self.__gid)
-        elif self.__download.followed_by_ids:
+        else:
+            self.__download = self.__download.live
+        if self.__download.followed_by_ids:
             self.__gid = self.__download.followed_by_ids[0]
             self.__download = get_download(self.__gid)
 
     def progress(self):
-        """
-        Calculates the progress of the mirror (upload or download)
-        :return: returns progress in percentage
-        """
         return self.__download.progress_string()
-
-    def size_raw(self):
-        """
-        Gets total size of the mirror file/folder
-        :return: total size of mirror
-        """
-        return self.__download.total_length
-
+    
     def processed_bytes(self):
-        return self.__download.completed_length
+        return self.__download.completed_length_string()
 
     def speed(self):
-        self.__update()
         return self.__download.download_speed_string()
 
     def name(self):
@@ -66,7 +52,10 @@ class AriaDownloadStatus:
         self.__update()
         download = self.__download
         if download.is_waiting:
-            return MirrorStatus.STATUS_WAITING
+            if self.seeding:
+                return MirrorStatus.STATUS_QUEUEUP
+            else:
+                return MirrorStatus.STATUS_QUEUEDL
         elif download.is_paused:
             return MirrorStatus.STATUS_PAUSED
         elif download.seeder and self.seeding:
@@ -91,7 +80,7 @@ class AriaDownloadStatus:
         return f"{round(self.__download.upload_length / self.__download.completed_length, 3)}"
 
     def seeding_time(self):
-        return f"{get_readable_time(time() - self.start_time)}"
+        return get_readable_time(time() - self.start_time)
         
     def listener(self):
         return self.__listener
@@ -107,18 +96,19 @@ class AriaDownloadStatus:
         return "Aria"
 
     async def cancel_download(self):
-        await botloop.run_in_executor(None, partial(self.__update))
+        self.__update()
+        await run_sync(self.__update)
         if self.__download.seeder and self.seeding:
             LOGGER.info(f"Cancelling Seed: {self.name()}")
             await self.__listener.onUploadError(f"Seeding stopped with Ratio: {self.ratio()} and Time: {self.seeding_time()}")
-            await botloop.run_in_executor(None, partial(aria2.remove, [self.__download], force=True, files=True))
+            await run_sync(aria2.remove, [self.__download], force=True, files=True)
         elif downloads := self.__download.followed_by:
             LOGGER.info(f"Cancelling Download: {self.name()}")
             await self.__listener.onDownloadError('Download cancelled by user!') 
             downloads.append(self.__download)
-            await botloop.run_in_executor(None, partial(aria2.remove, downloads, force=True, files=True))
+            await run_sync(aria2.remove, downloads, force=True, files=True)
         else:
             LOGGER.info(f"Cancelling Download: {self.name()}")
             await self.__listener.onDownloadError('Download stopped by user!')
-            await botloop.run_in_executor(None, partial(aria2.remove, [self.__download], force=True, files=True))
+            await run_sync(aria2.remove, [self.__download], force=True, files=True)
            

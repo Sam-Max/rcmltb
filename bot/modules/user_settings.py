@@ -1,15 +1,18 @@
 import asyncio
+from html import escape
 from os import remove as osremove, path as ospath, mkdir
 from PIL import Image
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
-from bot import DATABASE_URL, bot, config_dict, user_data
-from bot.helper.ext_utils.bot_commands import BotCommands
+from bot import DATABASE_URL, IS_PREMIUM_USER, TG_MAX_FILE_SIZE, bot, config_dict, user_data
+from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import run_sync, update_user_ldata
 from bot.helper.ext_utils.db_handler import DbManager
-from bot.helper.ext_utils.filters import CustomFilters
-from bot.helper.ext_utils.message_utils import editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.button_build import ButtonMaker
+from bot.helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.message_utils import editMessage, sendFile, sendMarkup, sendMessage
+from bot.helper.telegram_helper.button_build import ButtonMaker
+
+
 
 
 
@@ -18,27 +21,48 @@ def get_user_settings(from_user):
     name = from_user.first_name
     buttons = ButtonMaker()
     thumbpath = f"Thumbnails/{user_id}.jpg"
-    user_dict = user_data.get(user_id, False)
-    if not user_dict and config_dict['AS_DOCUMENT'] or user_dict and user_dict.get('as_doc'):
+    user_dict = user_data.get(user_id, {})
+    if user_dict.get('as_doc', False) or 'as_doc' not in user_dict and config_dict['AS_DOCUMENT']:
         ltype = "DOCUMENT"
-        buttons.cb_buildbutton("Send As Media", f"userset {user_id} med")
+        buttons.cb_buildbutton("Send As Media", f"userset {user_id} doc")
     else:
         ltype = "MEDIA"
         buttons.cb_buildbutton("Send As Document", f"userset {user_id} doc")
 
+    buttons.cb_buildbutton("Leech Splits", f"userset {user_id} lss")
+    if user_dict.get('split_size', False):
+        split_size = user_dict['split_size']
+    else:
+        split_size = config_dict['LEECH_SPLIT_SIZE']
+
+    if user_dict.get('equal_splits', False) or 'equal_splits' not in user_dict and config_dict['EQUAL_SPLITS']:
+        equal_splits = 'Enabled'
+    else:
+        equal_splits = 'Disabled'
+    
+    buttons.cb_buildbutton("YT-DLP Options", f"userset {user_id} yto")
+    if user_dict.get('yt_opt', False):
+        ytopt = user_dict['yt_opt']
+    elif 'yt_opt' not in user_dict and (YTO := config_dict['YT_DLP_OPTIONS']):
+        ytopt = YTO
+    else:
+        ytopt = 'None'
+
+    buttons.cb_buildbutton("Thumbnail", f"userset {user_id} sthumb")
     if ospath.exists(thumbpath):
         thumbmsg = "Exists"
-        buttons.cb_buildbutton("Change Thumbnail", f"userset {user_id} sthumb")
-        buttons.cb_buildbutton("Delete Thumbnail", f"userset {user_id} dthumb")
     else:
         thumbmsg = "Not Exists"  
-        buttons.cb_buildbutton("Set Thumbnail", f"userset {user_id} sthumb")
-
+       
     buttons.cb_buildbutton("✘ Close Menu", f"userset {user_id} close")
 
-    text = f"<u>Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n\n"\
-           f"Leech Type <b>{ltype}</b>\n"\
-           f"Custom Thumbnail <b>{thumbmsg}</b>"
+    text = f"""<b>Settings for {name}</b>
+Leech Type: <b>{ltype}</b>
+Custom Thumbnail: <b>{thumbmsg}</b>
+Leech Split Size: <b>{split_size}</b>
+Equal Splits: <b>{equal_splits}</b>
+Yy-dlp options: <b><code>{escape(ytopt)}</code></b>"""
+
     return text, buttons.build_menu(1)
 
 async def update_user_settings(message, from_user):
@@ -49,31 +73,50 @@ async def user_settings(client, message):
     msg, button = get_user_settings(message.from_user)
     await sendMarkup(msg, message, button)
 
-async def edit_user_settings(client, callback_query):
-    query = callback_query
+async def set_yt_options(client, message, query):
+    user_id = message.from_user.id
+    value = message.text
+    update_user_ldata(user_id, 'yt_opt', value)
+    await message.delete()
+    await update_user_settings(message, query.from_user)
+    if DATABASE_URL:
+        await DbManager().update_user_data(user_id)
+
+async def leech_split_size(client, message, query):
+    user_id = message.from_user.id
+    value = min(int(message.text), TG_MAX_FILE_SIZE)
+    update_user_ldata(user_id, 'split_size', value)
+    await message.delete()
+    await update_user_settings(message, query.from_user)
+    if DATABASE_URL:
+        await DbManager().update_user_data(user_id)
+
+async def edit_user_settings(client, query):
     message = query.message
     user_id = query.from_user.id
-    data = query.data
-    data = data.split()
+    from_user = query.from_user
+    data = query.data.split()
+    user_dict = user_data.get(user_id, {})
+    thumb_path = f"Thumbnails/{user_id}.jpg"
+
     if user_id != int(data[1]):
         await query.answer(text="Not Yours!", show_alert=True)
     elif data[2] == "doc":
-        update_user_ldata(user_id, 'as_doc', True)
-        await query.answer(text="Your File Will Deliver As Document!", show_alert=True)
+        update_user_ldata(user_id, 'as_doc', not user_dict.get("as_doc", False))
+        await query.answer()
         await update_user_settings(message, query.from_user)
         if DATABASE_URL:
             await DbManager().update_user_data(user_id)
-    elif data[2] == "med":
-        update_user_ldata(user_id, 'as_doc', False)
-        await query.answer(text="Your File Will Deliver As Media!", show_alert=True)
+    elif data[2] == 'vthumb':
+        await query.answer()
+        await client.listen.Cancel(filters.user(user_id))
+        await sendFile(message, thumb_path, from_user.mention)
         await update_user_settings(message, query.from_user)
-        if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
     elif data[2] == "dthumb":
-        path = f"Thumbnails/{user_id}.jpg"
-        if ospath.lexists(path):
-            await query.answer(text="Thumbnail Removed!", show_alert=True)
-            osremove(path)
+        await client.listen.Cancel(filters.user(user_id))
+        if ospath.lexists(thumb_path):
+            await query.answer()
+            osremove(thumb_path)
             update_user_ldata(user_id, 'thumb', '')
             await update_user_settings(message, query.from_user)
             if DATABASE_URL:
@@ -83,13 +126,18 @@ async def edit_user_settings(client, callback_query):
             await update_user_settings(message, query.from_user)
     elif data[2] == "sthumb":
         await query.answer()
-        question= await editMessage("Send a photo to save as custom thumbnail, /ignore to cancel", message)
+        buttons = ButtonMaker()
+        if ospath.exists(thumb_path):
+            buttons.cb_buildbutton("View Thumbnail", f"userset {user_id} vthumb")
+            buttons.cb_buildbutton("Delete Thumbnail", f"userset {user_id} dthumb")
+        buttons.cb_buildbutton("Back", f"userset {user_id} back")
+        buttons.cb_buildbutton("Close", f"userset {user_id} close")
+        question= await editMessage("Send a photo to save as custom thumbnail, /ignore to cancel", message, buttons.build_menu(1))
         try:
             response = await client.listen.Message(filters.photo | filters.text, id=filters.user(user_id), timeout= 60)
             try: 
-                if response.text:
-                    if "/ignore" in response.text:
-                        await client.listen.Cancel(filters.user(user_id))
+                if response.text and "/ignore" in response.text:
+                    await client.listen.Cancel(filters.user(user_id))
                 else:  
                     path = "Thumbnails/"
                     if not ospath.isdir(path):
@@ -98,19 +146,82 @@ async def edit_user_settings(client, callback_query):
                     des_dir = ospath.join(path, f'{user_id}.jpg')
                     await run_sync(Image.open(photo_dir).convert("RGB").save, des_dir, "JPEG")
                     osremove(photo_dir)
-                    await query.answer(text="Thumbnail Added!!", show_alert=True)
+                    update_user_ldata(user_id, 'thumb', des_dir)
+                    await update_user_settings(message, query.from_user)
                     if DATABASE_URL:
                         await DbManager().update_thumb(user_id, des_dir)
             except Exception as ex:
                 await editMessage(str(ex), question)
         except asyncio.TimeoutError:
             await sendMessage("Too late 60s gone, try again!", message)
-        finally: 
-            await update_user_settings(message, query.from_user)
+    elif data[2] == 'yto':
+        await query.answer()
+        buttons = ButtonMaker()
+        buttons.cb_buildbutton("Back", f"userset {user_id} back")
+        if user_dict.get('yt_opt', False) or config_dict['YT_DLP_OPTIONS']:
+            buttons.cb_buildbutton("Remove YT-DLP Options", f"userset {user_id} ryto", 'header')
+        buttons.cb_buildbutton("Close", f"userset {user_id} close")
+        rmsg = '''
+Send YT-DLP Options. Timeout: 60 sec
+Format: key:value|key:value|key:value.
+Example: format:bv*+mergeall[vcodec=none]|nocheckcertificate:True
+Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official/177'>script</a> to convert cli arguments to api options.
+        '''
+        await editMessage(rmsg, message, buttons.build_menu(1))
+        try:
+            response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout= 60)
+            if response.text:
+                if "/ignore" in response.text:
+                    await client.listen.Cancel(filters.user(user_id))
+                else:  
+                    await set_yt_options(client, response, query)
+        except asyncio.TimeoutError:
+            await sendMessage("Too late 60s gone, try again!", message)
+    elif data[2] == 'ryto':
+        await query.answer()
+        update_user_ldata(user_id, 'yt_opt', '')
+        await update_user_settings(message, query.from_user)
+        if DATABASE_URL:
+            await DbManager().update_user_data(user_id)
+    elif data[2] == 'lss':
+        await query.answer()
+        buttons = ButtonMaker()
+        if user_dict.get('split_size', False):
+            buttons.cb_buildbutton("Reset Split Size", f"userset {user_id} rlss")
+        if user_dict.get('equal_splits', False) or 'equal_splits' not in user_dict and config_dict['EQUAL_SPLITS']:
+            buttons.cb_buildbutton("Disable Equal Splits", f"userset {user_id} esplits")
+        else:
+            buttons.cb_buildbutton("Enable Equal Splits", f"userset {user_id} esplits")
+        buttons.cb_buildbutton("Back", f"userset {user_id} back")
+        buttons.cb_buildbutton("Close", f"userset {user_id} close")
+        await editMessage(f'Send Leech split size in bytes, /ignore to cancel. IS_PREMIUM_USER: {IS_PREMIUM_USER}. Timeout: 60 sec', message, buttons.build_menu(1))
+        try:
+            response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout= 60)
+            if response.text:
+                if "/ignore" in response.text:
+                    await client.listen.Cancel(filters.user(user_id))
+                else:  
+                    await leech_split_size(client, response, query)
+        except asyncio.TimeoutError:
+            await sendMessage("Too late 60s gone, try again!", message)
+    elif data[2] == 'rlss':
+        await query.answer()
+        update_user_ldata(user_id, 'split_size', '')
+        await update_user_settings(message, query.from_user)
+        if DATABASE_URL:
+            await DbManager().update_user_data(user_id)
+    elif data[2] == 'esplits':
+        await query.answer()
+        update_user_ldata(user_id, 'equal_splits', not user_dict.get('equal_splits', False))
+        await update_user_settings(message, query.from_user)
+        if DATABASE_URL:
+            await DbManager().update_user_data(user_id)
     elif data[2] == 'back':
+        await client.listen.Cancel(filters.user(user_id))
         await query.answer()
         await update_user_settings(message, query.from_user)
     elif data[2] == "close":
+        await client.listen.Cancel(filters.user(user_id))
         await query.answer()
         await message.delete()
     else:

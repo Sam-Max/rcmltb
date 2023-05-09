@@ -3,22 +3,23 @@ from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from os import environ, path as ospath, remove
+from os import environ, getcwd, path as ospath, remove as osremove
 from dotenv import load_dotenv
-from subprocess import Popen, run as srun
+from subprocess import run as srun
 from bot import DATABASE_URL, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, OWNER_ID, Interval, aria2, aria2_options, bot, config_dict, status_dict, status_reply_dict_lock, user_data, leech_log
-from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import run_sync, setInterval
 from bot.helper.ext_utils.db_handler import DbManager
-from bot.helper.ext_utils.filters import CustomFilters
-from bot.helper.ext_utils.message_utils import editMarkup, sendMarkup, sendMessage, update_all_messages
-from bot.helper.ext_utils.button_build import ButtonMaker
+from bot.helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.message_utils import editMarkup, sendMarkup, sendMessage, update_all_messages
+from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_utils import get_rclone_path
 from bot.modules.search import initiate_search_tools
 
 
 
 async def load_config():
+
      BOT_TOKEN = environ.get('BOT_TOKEN', '')
      if len(BOT_TOKEN) == 0:
           BOT_TOKEN = config_dict['BOT_TOKEN']
@@ -81,16 +82,14 @@ async def load_config():
           GLOBAL_EXTENSION_FILTER.clear()
           GLOBAL_EXTENSION_FILTER.append('.aria2')
           for x in fx:
+               if x.strip().startswith('.'):
+                    x = x.lstrip('.')
                GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
 
-     MEGA_API_KEY = environ.get('MEGA_API_KEY', '')
-     if len(MEGA_API_KEY) == 0:
-          MEGA_API_KEY = ''
-
-     MEGA_EMAIL_ID = environ.get('MEGA_EMAIL_ID', '')
+     MEGA_EMAIL = environ.get('MEGA_EMAIL', '')
      MEGA_PASSWORD = environ.get('MEGA_PASSWORD', '')
-     if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
-          MEGA_EMAIL_ID = ''
+     if len(MEGA_EMAIL) == 0 or len(MEGA_PASSWORD) == 0:
+          MEGA_EMAIL = ''
           MEGA_PASSWORD = ''
 
      UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
@@ -101,15 +100,12 @@ async def load_config():
      if len(SEARCH_API_LINK) == 0:
           SEARCH_API_LINK = ''
 
-     RSS_COMMAND = environ.get('RSS_COMMAND', '')
-     if len(RSS_COMMAND) == 0:
-          RSS_COMMAND = ''
-
      SEARCH_PLUGINS = environ.get('SEARCH_PLUGINS', '')
      if len(SEARCH_PLUGINS) == 0:
           SEARCH_PLUGINS = ''
 
      TG_MAX_FILE_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
+
      LEECH_SPLIT_SIZE = environ.get('LEECH_SPLIT_SIZE', '')
      if len(LEECH_SPLIT_SIZE) == 0 or int(LEECH_SPLIT_SIZE) > TG_MAX_FILE_SIZE:
           LEECH_SPLIT_SIZE = TG_MAX_FILE_SIZE
@@ -143,6 +139,10 @@ async def load_config():
      PARALLEL_TASKS = environ.get('PARALLEL_TASKS', '')
      PARALLEL_TASKS = "" if len(PARALLEL_TASKS) == 0 else int(PARALLEL_TASKS)
 
+     YT_DLP_OPTIONS = environ.get('YT_DLP_OPTIONS', '')
+     if len(YT_DLP_OPTIONS) == 0:
+        YT_DLP_OPTIONS = ''
+
      RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
      RSS_CHAT_ID = '' if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
 
@@ -151,15 +151,13 @@ async def load_config():
 
      USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 
-     RSS_USER_SESSION_STRING = environ.get('RSS_USER_SESSION_STRING', '')
-
      TORRENT_TIMEOUT = environ.get('TORRENT_TIMEOUT', '')
      downloads = await run_sync(aria2.get_downloads)
      if len(TORRENT_TIMEOUT) == 0:
         for download in downloads:
             if not download.is_complete:
                 try:
-                    aria2.client.change_option(download.gid, {'bt-stop-timeout': '0'})
+                    await run_sync(aria2.client.change_option(download.gid, {'bt-stop-timeout': '0'}))
                 except Exception as e:
                     LOGGER.error(e)
         aria2_options['bt-stop-timeout'] = '0'
@@ -170,7 +168,7 @@ async def load_config():
         for download in downloads:
             if not download.is_complete:
                 try:
-                    aria2.client.change_option(download.gid, {'bt-stop-timeout': TORRENT_TIMEOUT})
+                    await run_sync(aria2.client.change_option(download.gid, {'bt-stop-timeout': TORRENT_TIMEOUT}))
                 except Exception as e:
                     LOGGER.error(e)
         aria2_options['bt-stop-timeout'] = TORRENT_TIMEOUT
@@ -192,17 +190,6 @@ async def load_config():
 
      EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '')
      EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
-
-     LOCAL_MIRROR_PORT = environ.get('LOCAL_MIRROR_PORT', '')
-     LOCAL_MIRROR_PORT = 81 if len(LOCAL_MIRROR_PORT) == 0 else int(LOCAL_MIRROR_PORT)
-     
-     LOCAL_MIRROR_URL = environ.get('LOCAL_MIRROR_URL', '').rstrip("/")
-     if len(LOCAL_MIRROR_URL) == 0:
-          LOCAL_MIRROR_URL = ''
-          await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn web.wserver:app")).wait()
-     else:
-          await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn web.wserver:app")).wait()
-          await create_subprocess_shell("gunicorn web.wserver:app --bind 0.0.0.0:{LOCAL_MIRROR_PORT}")
 
      QB_SERVER_PORT = environ.get('QB_SERVER_PORT', '')
      if len(QB_SERVER_PORT) == 0:
@@ -283,7 +270,6 @@ async def load_config():
                          'ALLOWED_CHATS': ALLOWED_CHATS,
                          'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                          'AUTO_MIRROR': AUTO_MIRROR,
-                         'LOCAL_MIRROR_URL': LOCAL_MIRROR_URL,
                          'BOT_PM': BOT_PM,
                          'BOT_TOKEN': BOT_TOKEN,
                          'CMD_INDEX': CMD_INDEX,
@@ -298,8 +284,7 @@ async def load_config():
                          'LOCAL_MIRROR': LOCAL_MIRROR,
                          'LEECH_LOG': LEECH_LOG,
                          'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
-                         'MEGA_API_KEY': MEGA_API_KEY,
-                         'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
+                         'MEGA_EMAIL': MEGA_EMAIL,
                          'MEGA_PASSWORD': MEGA_PASSWORD,
                          'MULTI_REMOTE_UP': MULTI_REMOTE_UP,
                          'MULTI_RCLONE_CONFIG': MULTI_RCLONE_CONFIG, 
@@ -311,14 +296,11 @@ async def load_config():
                          'PARALLEL_TASKS': PARALLEL_TASKS,
                          'QB_BASE_URL': QB_BASE_URL,
                          'QB_SERVER_PORT': QB_SERVER_PORT,
-                         'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                          'RSS_CHAT_ID': RSS_CHAT_ID,
-                         'RSS_COMMAND': RSS_COMMAND,
                          'RSS_DELAY': RSS_DELAY,
                          'SEARCH_PLUGINS': SEARCH_PLUGINS,
                          'SEARCH_API_LINK': SEARCH_API_LINK,
                          'SEARCH_LIMIT': SEARCH_LIMIT,
-                         'LOCAL_MIRROR_PORT': LOCAL_MIRROR_PORT,
                          'SERVICE_ACCOUNTS_REMOTE': SERVICE_ACCOUNTS_REMOTE,
                          'SERVER_SIDE': SERVER_SIDE,
                          'RC_INDEX_URL': RC_INDEX_URL,
@@ -337,6 +319,7 @@ async def load_config():
                          'USER_SESSION_STRING': USER_SESSION_STRING,
                          'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
                          'VIEW_LINK': VIEW_LINK,
+                         'YT_DLP_OPTIONS': YT_DLP_OPTIONS,
                          'WEB_PINCODE': WEB_PINCODE})
 
      if DATABASE_URL:
@@ -344,7 +327,8 @@ async def load_config():
      await initiate_search_tools()
      
 async def config_menu(user_id, message, edit=False):
-     path= ospath.join("users", f"{user_id}", "rclone.conf")
+     path = f'{getcwd()}/rclone/'
+     path= ospath.join(path, f"{user_id}", "rclone.conf")
      buttons= ButtonMaker()
      fstr= ''
      msg= "❇️ **Rclone configuration**"
@@ -369,7 +353,8 @@ async def config_menu(user_id, message, edit=False):
      else:
         buttons.cb_buildbutton("📃rclone.conf", f"configmenu^change_rclone_conf^{user_id}", 'footer')
      if CustomFilters._owner_query(user_id):
-          global_rc= ospath.join("users", "grclone", "rclone.conf")
+          path = f'{getcwd()}/rclone/'
+          global_rc= ospath.join(path, "rclone_global", "rclone.conf")
           if ospath.exists(global_rc):
                buttons.cb_buildbutton("🗂 rclone.conf (🌐)", f"configmenu^get_grclone_conf^{user_id}")
                buttons.cb_buildbutton("🗑 rclone.conf (🌐)", f"configmenu^delete_grclone_conf^{user_id}")
@@ -413,16 +398,14 @@ async def botfiles_callback(client, callback_query):
      user_id= query.from_user.id
 
      if int(cmd[-1]) != user_id:
-          return await query.answer("This menu is not for you!", show_alert=True)
+          await query.answer("This menu is not for you!", show_alert=True)
+          return
      if cmd[1] == "get_rclone_conf":
           path= await get_rclone_path(user_id, message)
-          try:
-               await client.send_document(document=path, chat_id=message.chat.id)
-          except ValueError as err:
-               await sendMessage(str(err), message)
+          await client.send_document(document=path, chat_id=message.chat.id)
           await query.answer()
      elif cmd[1] == "get_grclone_conf":
-          path= ospath.join("users", "grclone", "rclone.conf")    
+          path= ospath.join("rclone/rclone_global", "rclone.conf")    
           try:
                await client.send_document(document=path, chat_id=message.chat.id)
           except ValueError as err:
@@ -451,31 +434,28 @@ async def botfiles_callback(client, callback_query):
           await config_menu(user_id, message, True)
      elif cmd[1] == "delete_config":
           path= await get_rclone_path(user_id, message)
-          try:
-               remove(path)
-          except FileNotFoundError as err:
-               await sendMessage(str(err), message)
+          osremove(path)
           await query.answer()
           await config_menu(user_id, message, True)
      elif cmd[1] == "delete_grclone_conf":
-          path= ospath.join("users", "grclone", "rclone.conf")    
-          try:
-               remove(path)
-          except FileNotFoundError as err:
+          path= ospath.join("rclone/rclone_global", "rclone.conf")  
+          try:  
+               osremove(path)
+          except Exception as err:
                await sendMessage(str(err), message)
           await query.answer()
           await config_menu(user_id, message, True)
      elif cmd[1] == "delete_config_env":
-          try:
-               remove("config.env")
-          except FileNotFoundError as err:
+          try:  
+               osremove("config.env")
+          except Exception as err:
                await sendMessage(str(err), message)
           await query.answer()
           await config_menu(user_id, message, True)
      elif cmd[1] == "delete_pickle":
-          try:
-               remove("token.pickle")
-          except FileNotFoundError as err:
+          try:  
+               osremove("token.pickle")
+          except Exception as err:
                await sendMessage(str(err), message)
           await query.answer()     
           await config_menu(user_id, message, True)
@@ -492,7 +472,7 @@ async def botfiles_callback(client, callback_query):
           await message.delete()
 
 
-async def set_config_listener(client, query, message, grclone=False):
+async def set_config_listener(client, query, message, rclone_global=False):
      if message.reply_to_message:
           user_id= message.reply_to_message.from_user.id
      else:
@@ -504,20 +484,22 @@ async def set_config_listener(client, query, message, grclone=False):
           await client.send_message(message.chat.id, text="Too late 60s gone, try again!")
      else:
           try:
-               if response.text:
-                    if "/ignore" in response.text:
-                         await client.listen.Cancel(filters.user(user_id))
-                         await query.answer()
+               if response.text and "/ignore" in response.text:
+                    await client.listen.Cancel(filters.user(user_id))
+                    await query.answer()
                else:
                     file_name = response.document.file_name
                     if file_name == "rclone.conf":
-                         if grclone:
-                              rclone_path = ospath.join("users", "grclone", "rclone.conf" )
+                         path = f'{getcwd()}/rclone/'
+                         if rclone_global:
+                              type= "rclone_global"
+                              rclone_path = ospath.join(path, "rclone_global", "rclone.conf" )
                          else:
-                              rclone_path = ospath.join("users", f"{user_id}", "rclone.conf" )
+                              type= "rclone"
+                              rclone_path = ospath.join(path, f"{user_id}", "rclone.conf" )
                          path= await client.download_media(response, file_name=rclone_path)
                          if DATABASE_URL:
-                              await DbManager().update_private_file(path) 
+                              await DbManager().update_user_doc(user_id, type, rclone_path) 
                     else:
                          await client.download_media(response, file_name='./')
                          if file_name == 'accounts.zip':
@@ -535,7 +517,7 @@ async def set_config_listener(client, query, message, grclone=False):
                          if DATABASE_URL and file_name != 'config.env':
                               await DbManager().update_private_file(file_name)       
                     if ospath.exists('accounts.zip'):
-                         remove('accounts.zip')
+                         osremove('accounts.zip')
           except Exception as ex:
                await sendMessage(str(ex), message) 
      finally:
@@ -543,8 +525,5 @@ async def set_config_listener(client, query, message, grclone=False):
 
 
 
-botfiles_handler = MessageHandler(handle_botfiles, filters= command(BotCommands.BotFilesCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-botfiles_cb = CallbackQueryHandler(botfiles_callback, filters= regex(r'configmenu'))
-
-bot.add_handler(botfiles_handler)
-bot.add_handler(botfiles_cb)
+bot.add_handler(MessageHandler(handle_botfiles, filters= command(BotCommands.BotFilesCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter)))
+bot.add_handler(CallbackQueryHandler(botfiles_callback, filters= regex(r'configmenu')))

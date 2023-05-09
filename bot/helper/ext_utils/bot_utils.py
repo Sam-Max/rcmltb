@@ -1,32 +1,30 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/generate_drive_token.py
-# Adapted for asyncio framework and pyrogram library
-
-from asyncio import create_subprocess_exec, create_subprocess_shell, run_coroutine_threadsafe, sleep, get_running_loop
+from asyncio import create_subprocess_exec, create_subprocess_shell, run_coroutine_threadsafe, sleep
 from asyncio.subprocess import PIPE
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial, wraps
 from html import escape
-from math import ceil
 from time import time
+from os import walk, path as ospath, remove as osremove, rmdir, listdir
+from shutil import rmtree
 from re import IGNORECASE, compile, match as re_match, search
 from psutil import cpu_percent, disk_usage, virtual_memory
-from bot import DOWNLOAD_DIR, status_dict_lock, status_dict, botUptime, config_dict, user_data, m_queue, botloop
+from bot import DOWNLOAD_DIR, LOGGER, status_dict_lock, status_dict, botUptime, config_dict, user_data, m_queue, botloop
 from requests import head as rhead, utils as rutils
-from threading import Thread
 from urllib.request import urlopen
-from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.button_build import ButtonMaker
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus, TaskType, get_progress_bar_rclone, get_progress_bar_string
 
 
+THREADPOOL = ThreadPoolExecutor(max_workers=1000)
 MAGNET_REGEX = r'magnet:\?xt=urn:(btih|btmh):[a-zA-Z0-9]*\s*'
 URL_REGEX = r'^(?!\/)(rtmps?:\/\/|mms:\/\/|rtsp:\/\/|https?:\/\/|ftp:\/\/)?([^\/:]+:[^\/@]+@)?(www\.)?(?=[^\/:\s]+\.[^\/:\s]+)([^\/:\s]+\.[^\/:\s]+)(:\d+)?(\/[^#\s]*[\s\S]*)?(\?[^#\s]*)?(#.*)?$'
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
-COUNT = 0
+STATUS_START = 0
 PAGE_NO = 1
-PAGES = 0
+PAGES = 1
 
 ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".tgz", ".lzma2",
             ".zip", ".7z", ".z", ".rar", ".iso", ".wim", ".cab", ".apm", ".arj", ".chm",
@@ -48,8 +46,7 @@ def is_archive_split(file):
     return bool(search(SPLIT_REGEX, file))
 
 def is_url(url):
-    url = re_match(URL_REGEX, url)
-    return bool(url)
+    return bool(re_match(URL_REGEX, url))
 
 def is_gdrive_link(url):
     return "drive.google.com" in url
@@ -60,15 +57,13 @@ def is_mega_link(url):
 def get_mega_link_type(url):
     if "folder" in url:
         return "folder"
-    elif "file" in url:
-        return "file"
     elif "/#F!" in url:
         return "folder"
-    return "file"
+    else:
+        return "file"
 
 def is_magnet(url):
-    magnet = re_match(MAGNET_REGEX, url)
-    return bool(magnet)
+   return bool(re_match(MAGNET_REGEX, url))
 
 def get_content_type(link):
     try:
@@ -117,77 +112,73 @@ def get_readable_time(seconds):
     result += f'{seconds}s'
     return result
 
-def new_thread(fn):
-    """To use as decorator to make a function call threaded.
-    Needs import
-    from threading import Thread"""
-
-    def wrapper(*args, **kwargs):
-        thread = Thread(target=fn, args=args, kwargs=kwargs)
-        thread.start()
-        return thread
-
-    return wrapper
-
 async def get_readable_message():
     msg = ""
     button= None
-    if STATUS_LIMIT := config_dict['STATUS_LIMIT']:
-        tasks = len(status_dict)
-        globals()['PAGES'] = ceil(tasks/STATUS_LIMIT)
-        if PAGE_NO > PAGES and PAGES != 0:
-            globals()['COUNT'] -= STATUS_LIMIT
-            globals()['PAGE_NO'] -= 1
-    for index, download in enumerate(list(status_dict.values())[COUNT:], start=1):
-        msg += f"<b>{download.status()}: </b>"
+    STATUS_LIMIT = config_dict['STATUS_LIMIT']
+    tasks = len(status_dict)
+    globals()['PAGES'] = (tasks + STATUS_LIMIT - 1) // STATUS_LIMIT
+    if PAGE_NO > PAGES and PAGES != 0:
+        globals()['STATUS_START'] = STATUS_LIMIT * (PAGES - 1)
+        globals()['PAGE_NO'] = PAGES
+    for download in list(status_dict.values())[STATUS_START:STATUS_LIMIT+STATUS_START]:
+        if download.message.chat.type.name in ['SUPERGROUP', 'CHANNEL']:
+            msg += f"<b><a href='{download.message.link}'>{download.status()}</a>: </b>"
+        else:
+            msg += f"<b>{download.status()}: </b>"
         if download.type() == TaskType.RCLONE:
             msg += f"\n<code>{str(download.name())}</code>"
         else:
-            msg += f"\n<b>Name: </b><code>{escape(str(download.name()))}</code>"
+            msg += f"<code>{escape(f'{download.name()}')}</code>"
         if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
             if download.type() == TaskType.RCLONE or download.type() == TaskType.RCLONE_SYNC:
                 msg += f"\n{get_progress_bar_rclone(download.progress())} {download.progress()}%"
                 msg += f"\n<b>Processed:</b> {download.processed_bytes()}"
             else:
-                msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
+                msg += f"\n{get_progress_bar_string(download.progress())} {download.progress()}"
                 if m_queue.qsize() > 0:
                     msg += f"\n<b>Enqueue:</b> {m_queue.qsize()}"
-                msg += f"\n<b>Processed:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
+                msg += f"\n<b>Processed:</b> {download.processed_bytes()} of {download.size()}"
             msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
             if hasattr(download, 'seeders_num'):
                 try:
                     msg += f"\n<b>Seeders:</b> {download.seeders_num()} | <b>Leechers:</b> {download.leechers_num()}"
                 except:
                     pass
+        elif download.status() == MirrorStatus.STATUS_SEEDING:
+            msg += f"\n<b>Size: </b>{download.size()}"
+            msg += f"\n<b>Speed: </b>{download.upload_speed()}"
+            msg += f" | <b>Uploaded: </b>{download.uploaded_bytes()}"
+            msg += f"\n<b>Ratio: </b>{download.ratio()}"
+            msg += f" | <b>Time: </b>{download.seeding_time()}"
         else:
             msg += f"\n<b>Size: </b>{download.size()}"
         msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>\n\n"
-        if index == STATUS_LIMIT:
-            break
     if len(msg) == 0:
         return None, None
     dl_speed = 0
     up_speed = 0
-    for download in list(status_dict.values()):
-        if download.status() == MirrorStatus.STATUS_DOWNLOADING:
+    for download in status_dict.values():
+        tstatus = download.status()
+        if tstatus == MirrorStatus.STATUS_DOWNLOADING:
             spd = download.speed()
             if 'K' in spd:
                 dl_speed += float(spd.split('K')[0]) * 1024
             elif 'M' in spd:
                 dl_speed += float(spd.split('M')[0]) * 1048576
-        elif download.status() == MirrorStatus.STATUS_UPLOADING:
+        elif tstatus == MirrorStatus.STATUS_UPLOADING:
             spd = download.speed()
-            if 'KB/s' in spd:
+            if 'K' in spd:
                 up_speed += float(spd.split('K')[0]) * 1024
-            elif 'MB/s' in spd:
+            elif 'M' in spd:
                 up_speed += float(spd.split('M')[0]) * 1048576
-        elif download.status() == MirrorStatus.STATUS_SEEDING:
+        elif tstatus == MirrorStatus.STATUS_SEEDING:
             spd = download.upload_speed()
             if 'K' in spd:
                 up_speed += float(spd.split('K')[0]) * 1024
             elif 'M' in spd:
                 up_speed += float(spd.split('M')[0]) * 1048576
-    if STATUS_LIMIT and tasks > STATUS_LIMIT:
+    if tasks > STATUS_LIMIT:
         msg += f"<b>Page:</b> {PAGE_NO}/{PAGES} | <b>Tasks:</b> {tasks}\n"
         buttons = ButtonMaker()
         buttons.cb_buildbutton("⏪", "status pre")
@@ -201,40 +192,33 @@ async def get_readable_message():
 
 async def turn(data):
     STATUS_LIMIT = config_dict['STATUS_LIMIT']
-    try:
-        global COUNT, PAGE_NO
-        async with status_dict_lock:
-            if data[1] == "nex":
-                if PAGE_NO == PAGES:
-                    COUNT = 0
-                    PAGE_NO = 1
-                else:
-                    COUNT += STATUS_LIMIT
-                    PAGE_NO += 1
-            elif data[1] == "pre":
-                if PAGE_NO == 1:
-                    COUNT = STATUS_LIMIT * (PAGES - 1)
-                    PAGE_NO = PAGES
-                else:
-                    COUNT -= STATUS_LIMIT
-                    PAGE_NO -= 1
-        return True
-    except:
-        return False
+    global STATUS_START, PAGE_NO
+    async with status_dict_lock:
+        if data[1] == "nex":
+            if PAGE_NO == PAGES:
+                STATUS_START = 0
+                PAGE_NO = 1
+            else:
+                STATUS_START += STATUS_LIMIT
+                PAGE_NO += 1
+        elif data[1] == "pre":
+            if PAGE_NO == 1:
+                STATUS_START = STATUS_LIMIT * (PAGES - 1)
+                PAGE_NO = PAGES
+            else:
+                STATUS_START -= STATUS_LIMIT
+                PAGE_NO -= 1
 
 class setInterval:
     def __init__(self, interval, action):
         self.interval = interval
         self.action = action
         self.is_cancelled= False
-        self.loop= get_running_loop()
-        self.loop.create_task(self.setInterval())
+        botloop.create_task(self.setInterval())
 
     async def setInterval(self):
-        nextTime = time() + self.interval
         while True:
-            await sleep(nextTime - time())
-            nextTime = time() + self.interval
+            await sleep(self.interval)
             await self.action()
             if self.is_cancelled:
                 break
@@ -244,12 +228,11 @@ class setInterval:
 
 async def run_sync(func, *args, wait=True, **kwargs):
     pfunc = partial(func, *args, **kwargs)
-    with ThreadPoolExecutor() as pool:
-        future = botloop.run_in_executor(pool, pfunc)
-        if wait:
-            return await future 
-        else:
-            return future
+    future = botloop.run_in_executor(THREADPOOL, pfunc)
+    if wait:
+        return await future 
+    else:
+        return future
 
 def run_async(func, *args, wait=True, **kwargs):
     future = run_coroutine_threadsafe(func(*args, **kwargs), botloop)
@@ -260,6 +243,19 @@ def run_async(func, *args, wait=True, **kwargs):
 
 def run_async_task(func, *args, **kwargs):
     return botloop.create_task(func(*args, **kwargs))
+
+def new_task(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return botloop.create_task(func(*args, **kwargs))
+    return wrapper
+
+def new_thread(func):
+    @wraps(func)
+    def wrapper(*args, wait=False, **kwargs):
+        future = run_coroutine_threadsafe(func(*args, **kwargs), botloop)
+        return future.result() if wait else future
+    return wrapper
 
 async def cmd_exec(cmd, shell=False):
     if shell:
@@ -285,7 +281,17 @@ def command_process(cmd):
     return compile(cmd, IGNORECASE)
 
 def update_user_ldata(id_, key, value):
-    if id_ in user_data:
-        user_data[id_][key] = value
-    else:
-        user_data[id_] = {key: value}
+    user_data.setdefault(id_, {})
+    user_data[id_][key] = value
+        
+async def clean_unwanted(path):
+    LOGGER.info(f"Cleaning unwanted files/folders: {path}")
+    for dirpath, _, files in await run_sync(walk, path, topdown=False):
+        for filee in files:
+            if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
+                osremove(ospath.join(dirpath, filee))
+        if dirpath.endswith((".unwanted")):
+            rmtree(dirpath)
+    for dirpath, _, files in await run_sync(walk, path, topdown=False):
+        if not listdir(dirpath):
+            rmdir(dirpath)

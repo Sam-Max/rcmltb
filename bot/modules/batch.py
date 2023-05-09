@@ -4,14 +4,14 @@ from pyrogram.errors import FloodWait
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 from pyrogram import filters
 from bot.helper.ext_utils.bot_utils import run_async_task
-from bot.helper.ext_utils.filters import CustomFilters
+from bot.helper.telegram_helper.filters import CustomFilters
 from pyrogram.handlers import MessageHandler
 from bot.helper.ext_utils.batch_helper import check_link, get_link
-from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.message_utils import sendMessage
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.message_utils import sendMessage
 from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected
 from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import TelegramDownloader
-from bot.modules.listener import MirrorLeechListener
+from bot.modules.tasks_listener import MirrorLeechListener
 from os import path as ospath
 from subprocess import run as srun
 from bot.modules.mirror_leech import mirror_leech
@@ -97,12 +97,16 @@ Send me one of the followings:
                             _range = await client.listen.Message(filters.text, id= filters.user(user_id), timeout=60)
                             try:
                                 if "/ignore" in _range.text:
-                                    return await client.listen.Cancel(filters.user(user_id))
-                                multi = int(_range.text)
+                                    await client.listen.Cancel(filters.user(user_id))
+                                    return
+                                else:
+                                    multi = int(_range.text)
                             except ValueError:
-                                return await sendMessage("Range must be an integer!", message)
+                                await sendMessage("Range must be an integer!", message)
+                                return
                         except TimeoutError:
-                            return await sendMessage("Too late 30s gone, try again!", message)
+                            await sendMessage("Too late 30s gone, try again!", message)
+                            return
                         suceed, msg = await check_link(_link)
                         if suceed != True:
                             await sendMessage(msg, message)
@@ -138,9 +142,9 @@ Send me one of the followings:
                 else:
                     await sendMessage("Send a txt file", message)
         except Exception:
-            return await sendMessage("No link found.", message)
+            await sendMessage("No link found.", message)
     except TimeoutError:
-        return await sendMessage("Too late 60s gone, try again!", message)
+        await sendMessage("Too late 60s gone, try again!", message)
 
 ##############################################
 

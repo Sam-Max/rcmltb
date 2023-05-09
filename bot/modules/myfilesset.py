@@ -2,8 +2,8 @@ from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from json import loads as jsonloads
 from asyncio import sleep, TimeoutError
 from os.path import splitext
-from bot.helper.ext_utils.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.button_build import ButtonMaker
+from bot.helper.telegram_helper.message_utils import editMarkup, editMessage, sendMarkup, sendMessage
+from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.misc_utils import get_readable_size
 from pyrogram import filters
 from bot.helper.ext_utils.rclone_utils import get_rclone_path
@@ -67,7 +67,6 @@ async def search_action(client, message, query, remote, user_id):
                text= response.text
                try:
                     if "/ignore" in text:
-                         await query.answer("Okay cancelled!")
                          await client.listen.Cancel(filters.user(user_id))
                     else:
                          search_msg= await sendMessage("**⏳Searching file(s) on remote...**\n\nPlease wait, it may take some time", question)
@@ -166,7 +165,7 @@ async def rclone_purge(message,remote_path, remote, conf_path):
      return_code = await process.wait()
      if return_code != 0:
           err = stderr.decode().strip()
-          return await sendMessage(f'Error: {err}', message)
+          await sendMessage(f'Error: {err}', message)
 
 async def rclone_delete(message, remote_path, remote, conf_path):
      cmd = ["rclone", "delete", f'--config={conf_path}', f"{remote}:{remote_path}"] 
@@ -176,7 +175,7 @@ async def rclone_delete(message, remote_path, remote, conf_path):
      return_code = await process.wait()
      if return_code != 0:
           err = stderr.decode().strip()
-          return await sendMessage(f'Error: {err}', message)
+          await sendMessage(f'Error: {err}', message)
 
 async def rclone_rmdirs(message, remote, remote_path, conf_path):
      await editMessage("**⏳Removing empty directories...**\n\nPlease wait, it may take some time depending on number of dirs", message)
@@ -187,7 +186,7 @@ async def rclone_rmdirs(message, remote, remote_path, conf_path):
      return_code = await process.wait()
      if return_code != 0:
           err = stderr.decode().strip()
-          return await sendMessage(f'Error: {err}', message)
+          await sendMessage(f'Error: {err}', message)
 
 async def rclone_mkdir(client, message, remote, remote_path, tag):
      user_id= message.reply_to_message.from_user.id
@@ -212,11 +211,12 @@ async def rclone_mkdir(client, message, remote, remote_path, tag):
                          return_code = await process.wait()
                          if return_code != 0:
                               err = stderr.decode().strip()
-                              return await sendMessage(f'Error: {err}', message)
-                         msg = "<b>Directory created successfully.\n\n</b>" 
-                         msg += f"<b>Path: </b><code>{remote}:{path}</code>\n\n"
-                         msg += f'<b>cc:</b> {tag}\n\n' 
-                         await editMessage(msg, edit_mgs)
+                              await sendMessage(f'Error: {err}', message)
+                         else:
+                              msg = "<b>Directory created successfully.\n\n</b>" 
+                              msg += f"<b>Path: </b><code>{remote}:{path}</code>\n\n"
+                              msg += f'<b>cc:</b> {tag}\n\n' 
+                              await editMessage(msg, edit_mgs)
                except Exception as ex:
                     await sendMessage(str(ex), message) 
      finally:
@@ -234,12 +234,13 @@ async def rclone_dedupe(message, remote, remote_path, user_id, tag):
      return_code = await process.wait()
      if return_code != 0:
           err = stderr.decode().strip()
-          return await sendMessage(f'Error: {err}', message)
-     msg= "<b>Dedupe completed successfully ✅</b>\n"
-     msg += f'<b>cc:</b> {tag}\n'
-     button= ButtonMaker()
-     button.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
-     await editMarkup(msg, edit_msg, reply_markup=button.build_menu(1))
+          await sendMessage(f'Error: {err}', message)
+     else:
+          msg= "<b>Dedupe completed successfully ✅</b>\n"
+          msg += f'<b>cc:</b> {tag}\n'
+          button= ButtonMaker()
+          button.cb_buildbutton("⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", 'footer')
+          await editMarkup(msg, edit_msg, reply_markup=button.build_menu(1))
 
 async def rclone_rename(client, message, remote, remote_path, tag):
      user_id= message.reply_to_message.from_user.id
@@ -253,7 +254,6 @@ async def rclone_rename(client, message, remote, remote_path, tag):
           if response:
                try:
                     if "/ignore" in response.text:
-                         await question.reply("Okay cancelled!")
                          await client.listen.Cancel(filters.user(user_id))
                     else:
                          new_name= response.text
@@ -276,12 +276,13 @@ async def rclone_rename(client, message, remote, remote_path, tag):
                          return_code = await process.wait()
                          if return_code != 0:
                               err = stderr.decode().strip()
-                              return await sendMessage(f'Error: {err}', message)
-                         msg= "<b>File renamed successfully.</b>\n\n"
-                         msg += f"<b>Old path: </b><code>{remote}:{remote_path}</code>\n\n"
-                         msg += f"<b>New path: </b><code>{remote}:{path}</code>\n\n"
-                         msg += f'<b>cc: {tag}</b>'     
-                         await editMessage(msg, edit_msg)
+                              await sendMessage(f'Error: {err}', message)
+                         else:
+                              msg= "<b>File renamed successfully.</b>\n\n"
+                              msg += f"<b>Old path: </b><code>{remote}:{remote_path}</code>\n\n"
+                              msg += f"<b>New path: </b><code>{remote}:{path}</code>\n\n"
+                              msg += f'<b>cc: {tag}</b>'     
+                              await editMessage(msg, edit_msg)
                except Exception as ex:
                     await sendMessage(str(ex), message) 
      finally:

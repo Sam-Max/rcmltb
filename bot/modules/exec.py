@@ -1,7 +1,7 @@
 from asyncio import create_subprocess_shell, subprocess
 from bot import bot
-from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.filters import CustomFilters
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.filters import CustomFilters
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
 
@@ -10,7 +10,8 @@ from pyrogram.handlers import MessageHandler
 async def execute(client, message):
     cmd = message.text.split(maxsplit=1)
     if len(cmd) == 1:
-        return await message.reply_text('No command to execute was given.')
+        await message.reply_text('No command to execute was given.')
+        return
     cmd = cmd[1]
     process = await create_subprocess_shell(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = await process.communicate()

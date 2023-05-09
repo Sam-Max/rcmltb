@@ -4,12 +4,12 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from bot import bot
-from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.filters import CustomFilters
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config, list_remotes
-from bot.helper.ext_utils.message_utils import editMarkup, sendMessage
-from bot.helper.ext_utils.button_build import ButtonMaker
+from bot.helper.telegram_helper.message_utils import editMarkup, sendMessage
+from bot.helper.telegram_helper.button_build import ButtonMaker
 
 
 

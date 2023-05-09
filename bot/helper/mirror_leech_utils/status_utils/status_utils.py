@@ -26,7 +26,8 @@ class MirrorStatus:
     STATUS_ARCHIVING = "Archiving 🔐"
     STATUS_EXTRACTING = "Extracting 📂"
     STATUS_SPLITTING = "Splitting ✂️"
-    STATUS_WAITING = "Queue"
+    STATUS_QUEUEDL = "QueueDl"
+    STATUS_QUEUEUP = "QueueUp"
     STATUS_PAUSED = "Pause"
     STATUS_CHECKING = "CheckUp"
     STATUS_SEEDING = "Seed"
@@ -36,16 +37,13 @@ class TaskType():
     RCLONE_SYNC= "RcloneSync"
     TELEGRAM= "Telegram"
 
-def get_progress_bar_string(status):
-    completed = status.processed_bytes() / 8
-    total = status.size_raw() / 8
-    p = 0 if total == 0 else round(completed * 100 / total)
-    p = min(max(p, 0), 100)
-    cFull = p // 8
+def get_progress_bar_string(pct):
+    pct = float(pct.strip('%'))
+    p = min(max(pct, 0), 100)
+    cFull = int(p // 8)
     p_str = '■' * cFull
     p_str += '□' * (12 - cFull)
-    p_str = f"[{p_str}]"
-    return p_str
+    return f"[{p_str}]"
 
 def get_progress_bar_rclone(percentage):
     return "{0}{1}".format(

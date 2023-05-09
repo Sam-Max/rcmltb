@@ -57,7 +57,7 @@ class SyncStatus:
         return self.__percent
 
     def speed(self):
-        return f'{self.__speed}'
+        return self.__speed
 
     def eta(self):
         return self.__eta

@@ -4,15 +4,15 @@ from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
 from bot import DOWNLOAD_DIR, bot, config_dict
-from bot.helper.ext_utils.bot_commands import BotCommands
-from bot.helper.ext_utils.filters import CustomFilters
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
-from bot.helper.ext_utils.message_utils import deleteMessage, editMessage, sendMarkup, sendMessage
-from bot.helper.ext_utils.button_build import ButtonMaker
+from bot.helper.telegram_helper.message_utils import deleteMessage, editMessage, sendMarkup, sendMessage
+from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_utils import create_next_buttons, is_rclone_config, is_valid_path, list_folder, list_remotes
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.helper.mirror_leech_utils.download_utils.rclone_download import RcloneLeech
-from bot.modules.listener import MirrorLeechListener
+from bot.modules.tasks_listener import MirrorLeechListener
 from bot.modules.mirror_leech import mirror_leech
 
 
@@ -133,7 +133,7 @@ async def next_page_leech(client, callback_query):
 
     next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset)
 
-    rcloneListButtonMaker(result_list= next_list_info,
+    rcloneListButtonMaker(info= next_list_info,
         buttons=buttons,
         menu_type= Menus.LEECH, 
         dir_callback = "remote_dir",
@@ -168,7 +168,8 @@ async def selection_callback(client, callback_query):
     user_id= query.from_user.id
 
     if int(cmd[-1]) != user_id:
-        return await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("This menu is not for you!", show_alert=True)
+        return
     elif cmd[1] == "link":
         await query.answer()     
         question= await sendMessage("Send link to leech, /ignore to cancel", message)

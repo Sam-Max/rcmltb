@@ -1,6 +1,9 @@
 
 An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with rclone support added, and other features and changes from base code.
 
+ **NOTE**: Base repository added recently its own rclone implementation. 
+
+
 ## Features:
 
 ### Rclone
@@ -21,41 +24,43 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Send rclone config file from bot
 - Renaming menu for Telegram files
 - Index support (rclone index for all remotes)
+- Search tmdb titles
 - Mirror and Leech files in batch from Telegram private/restricted channels
 - Mirror and Leech links in batch from txt file
-- Multizip mirror & leech
+- Multizip for mirror & leech
 - Extract and zip link/file from Telegram to cloud
 - Extract and zip folder/file from cloud to Telegram
-- Mirror to local
+- Mirror to local host
 - Queue system for mirror
 - Refactor of the whole code to use only pyrogram with asyncio
-- Docker based image based on Alpine 
+- Docker based image based on ubuntu
 - Compatible with linux `amd64, arm64/v8, arm/v7`
 ## Commands for bot(set through @BotFather)
 
 ```
-mirror - Mirror to selected cloud 
-unzipmirror - Mirror and extract to cloud 
-zipmirror - Mirror and zip to cloud 
-multizipmirror - Mirror and zip multiple files to cloud 
-mirrorbatch - Mirror Telegram files and links in batch to cloud
-cloudselect - Select cloud/folder for mirror 
-leech - Leech from cloud/link to Telegram
-unzipleech - Leech and extract to Telegram 
-zipleech - Leech and zip to Telegram 
-multizipleech - Leech and zip multiple files to Telegram 
-leechbatch - Leech Telegram files/links in batch to Telegram 
-ytdl - Mirror ytdlp supported link
-ytdlzip- Mirror and zip ytdlp supported link
-ytdlleech - Leech yt-dlp supported link
-ytdlzipleech - Leech and zip yt-dlp supported link
-botfiles - Bot configuration files
+mirror - or /m Mirror to selected cloud 
+unzipmirror - or /uzm Mirror and extract to cloud 
+zipmirror - or /zm Mirror and zip to cloud 
+multizipmirror - or /mzm Mirror and zip multiple files to cloud 
+mirrorbatch - or /mb Mirror Telegram files and links in batch to cloud
+mirrorselect - or /ms Select cloud/folder for mirror 
+leech - or /l Leech from cloud/link to Telegram
+unzipleech - or /uzl Leech and extract to Telegram 
+zipleech - or /zl Leech and zip to Telegram 
+multizipleech - or /mzl Leech and zip multiple files to Telegram 
+leechbatch - or /lb Leech Telegram files/links in batch to Telegram 
+ytdl - or /y Mirror ytdlp supported link
+ytdlzip - or /yz Mirror and zip ytdlp supported link
+ytdlleech - or /yl Leech yt-dlp supported link
+ytdlzipleech - or /yzl Leech and zip yt-dlp supported link
+botfiles - or /bf Bot configuration files
 myfiles - Rclone File Manager
 copy - Copy from cloud to cloud
 clone - Clone gdrive link file/folder 
 usetting - User settings
 ownsetting - Owner settings
 rss - Rss feed
+tmdb - Search titles
 cleanup - Clean cloud trash
 cancelall - Cancel all tasks
 storage - Cloud details
@@ -66,6 +71,7 @@ status - Status message of tasks
 stats - Bot stats
 shell - Run cmds in shell
 log - Bot log
+ip - show ip
 ping - Ping bot
 restart - Restart bot
 ```
@@ -115,12 +121,12 @@ pip3 install -r requirements-cli.txt
         - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
         - `GD_INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index. `Str`
         - `VIEW_LINK`: View Link button to open file Google Drive Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`. Compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. Default is `False`. `Bool`
-        - `STATUS_LIMIT`: No. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Int`
-        - `LOCAL_MIRROR`= set to `True` for enabling mirror to host. Default to False.
-        - `LOCAL_MIRROR_URL`: Ip (public/domain) where bot is running for local web server. Format of URL should be http://myip, where myip is the IP/Domain(public).`Str`
-        - `LOCAL_MIRROR_PORT`: Port. Default to `81`. `Int
+        - `STATUS_LIMIT`: No. of tasks shown in status message with buttons.`Int`
+        - `LOCAL_MIRROR`= set to `True` for enabling files to remain on host. Default to False.
         - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
         - `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message. Set to `-1` to disable auto message deletion. `Int`
+        - `TMDB_API_KEY`: your tmdb API key. [Click here](https://www.themoviedb.org/settings/api) 
+        - `TMDB_LANGUAGE`: tmdb search language. Default `en`.
         - `PARALLEL_TASKS`: Number of parallel tasks for queue system. `Int`
 
    - UPDATE
@@ -132,10 +138,10 @@ pip3 install -r requirements-cli.txt
      - `DEFAULT_OWNER_REMOTE`: to set default remote from your rclone config for mirroring. (only for owner). `Str`
      - `DEFAULT_GLOBAL_REMOTE`: to set default remote from global rclone config for mirroring. Use this when `MULTI_RCLONE_CONFIG` is `False`. `Str`
      - `MULTI_RCLONE_CONFIG`: set to `True` for allowing each user to use their own rclone config. Default to False. `Bool` 
-     - `REMOTE_SELECTION`: set to `True` to activate selection of cloud each time using mirror command. Default to `False`. `Bool`
-     - `MULTI_REMOTE_UP`= set to `True` for allowing upload to multiple clouds at the same time. `Bool`. (only for owner)
+     - `REMOTE_SELECTION`: set to `True` to activate selection of cloud server each time using mirror command. Default to `False`. `Bool`
+     - `MULTI_REMOTE_UP`= set to `True` for allowing upload to multiple clouds servers at the same time. `Bool`. (only for owner)
      - `USE_SERVICE_ACCOUNTS`: set to `True` for enabling SA for rclone copy. Default to False. `Bool`.
-     - `SERVICE_ACCOUNTS_REMOTE`= To set shared drive remote name from your rclone config file that is using SA. `Str`. **Note**: teamdrive remote must have team_drive field with id. `Str`
+     - `SERVICE_ACCOUNTS_REMOTE`= name of the shared drive remote from your rclone config file. `Str`. **Note**: remote must have `team_drive` field with `id` in order to work. `Str`
      - `SERVER_SIDE`= set to `True` for enabling rclone server side copy. Default to False. **NOTE**: if you get errors while copy set this to `False`. `Bool`
      - `RCLONE_COPY_FLAGS` = key:value,key. All Flags: [RcloneFlags](https://rclone.org/flags/).`Str`
      - `RCLONE_UPLOAD_FLAGS` = key:value,key. `Str`
@@ -145,7 +151,7 @@ pip3 install -r requirements-cli.txt
      - `RC_INDEX_USER`: Custom user. Default to `admin`. `Str`
      - `RC_INDEX_PASS`: Custom password. Default to `admin`. `Str`
 
-   - CLONE
+   - GDRIVE CLONE
      - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Int`
      - `IS_TEAM_DRIVE`: Set `True` if TeamDrive. Default is `False`. `Bool`
      - `EXTENSION_FILTER`: File extensions that won't clone. Separate them by space. `Str`
@@ -159,16 +165,13 @@ pip3 install -r requirements-cli.txt
       - `BOT_PM`: set to `True` if you want to send leeched files in user's PM. Default to False. `Bool`
 
    - MEGA
-     - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from Mega SDK Page.`Str`
-     - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account.`Str`
+     - `MEGA_EMAIL`: E-Mail used to sign up on mega.nz for using premium account.`Str`
      - `MEGA_PASSWORD`: Password for mega.nz account.`Str`
 
    - RSS
      - `RSS_DELAY`: Time in seconds for rss refresh interval. Default is `900` in sec. `Int`
-     - `RSS_COMMAND`: Choose command for the desired action. `Str`
-     - `RSS_CHAT_ID`: Chat ID where rss links will be sent. Add `-100` before channel id. `Str`
-     - `RSS_USER_SESSION_STRING`: To send rss links from your telegram account. To generate session string use this command `python3 generate_string_session.py`. `Str`. **NOTE**: Don't use same session string as `USER_SESSION_STRING`.
-     - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` are required, otherwise rss commands will not work. You must use bot in group. You can also add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.    
+     - `RSS_CHAT_ID`: Chat ID where rss links will be sent. If you want message to be sent to the channel then add channel id. Add `-100` before channel id. `Int`
+     - **RSS NOTE**: `RSS_CHAT_ID` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` --OR-- *CHANNEL*. If using channel then bot should be added in both channel and group(linked to channel) and `RSS_CHAT_ID` is the channel id, so messages sent by the bot to channel will be forwarded to group. Otherwise with `USER_STRING_SESSION` add group id for `RSS_CHAT_ID`. If `DATABASE_URL` not added you will miss the feeds while bot offline.    
 
    - QBITTORRENT
      - `QB_BASE_URL`: Valid BASE URL where the bot is deployed to use qbittorrent web selection and local mirror. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https).`Str`
@@ -193,7 +196,7 @@ pip3 install -r requirements-cli.txt
 
 - Run the image:
 
-        sudo docker run -p 80:80 -p 81:81 -p 8080:8080 rcmltb
+        sudo docker run -p 80:80 -p 8080:8080 rcmltb
 
 - To stop the image:
 
@@ -210,7 +213,7 @@ pip3 install -r requirements-cli.txt
 
 4. **Deploying using docker-compose**
 
-**NOTE**: If you want to use port other than 80, change it in docker-compose.yml
+**NOTE**: If you want to use port other than 80 or 8080, change it in docker-compose.yml
 
 ```
 sudo apt install docker-compose
@@ -236,11 +239,13 @@ sudo docker-compose start
 ## Generate Database
 
 1. Go to `https://mongodb.com/` and sign-up.
-2. Create Shared Cluster.
-3. Press on `Database` under `Deployment` Header, your created cluster will be there.
-5. Press on connect, choose `Allow Acces From Anywhere` and press on `Add IP Address` without editing the ip, then create user.
-6. After creating user press on `Choose a connection`, then press on `Connect your application`. Choose `Driver` **python** and `version` **3.6 or later**.
-7. Copy your `connection string` and replace `<password>` with the password of your user, then press close.
+2. Create Shared Cluster (Free).
+4. Add `username` and `password` for your db and click on `Add my current IP Address`.
+6. Click on `Connect`, and then press on `Connect your application`.
+7. Choose `Driver` **python** and `version` **3.6 or later**.
+8. Copy your `connection string` and replace `<password>` with the password of your user, then press close.
+9. Go to `Network Access` tab, click on edit button and finally click `Allow access from anywhere` and confirm.
+
 
 ------
 
@@ -277,6 +282,16 @@ pip3 install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 python3 generate_drive_token.py
 ```
 ------
+
+## Bittorrent Seed
+
+- Add `d:ratio:time` perfix along with leech or mirror cmd.
+- Using `d` perfix alone will lead to use global options for qbittorrent.
+
+### Qbittorrent
+
+- Global options: `GlobalMaxRatio` and `GlobalMaxSeedingMinutes` in qbittorrent.conf, `-1` means no limit, but you can cancel manually.
+  - **NOTE**: Don't change `MaxRatioAction`.
 
 ## Using Service Accounts to avoid user rate limit [For Google Drive Remotes]
 

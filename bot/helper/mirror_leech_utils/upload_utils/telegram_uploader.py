@@ -1,12 +1,11 @@
 from asyncio import sleep
 from os import walk, rename, path as ospath, remove as osremove
 from time import time
-from bot import GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, bot, app, user_data, leech_log
+from bot import GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, config_dict, bot, app, user_data, leech_log
 from pyrogram.errors import FloodWait, RPCError
 from PIL import Image
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.misc_utils import get_document_type, get_media_info
-from bot.helper.ext_utils.screenshot import take_ss
+from bot.helper.ext_utils.misc_utils import get_document_type, get_media_info, take_ss
 
 
 
@@ -23,24 +22,31 @@ class TelegramUploader():
         self.__is_cancelled = False
         self.__msgs_dict = {}
         self.__as_doc = config_dict['AS_DOCUMENT']
-        self.__thumb = f"Thumbnails/{listener.message.chat.id}.jpg"
+        self.__thumb = f"Thumbnails/{listener.message.from_user.id}.jpg"
         self.__start_time= time()
-        self.uploaded_bytes = 0
+        self.__processed_bytes = 0
         self._last_uploaded = 0
         self.__user_id = listener.message.from_user.id
         self.client= app if app is not None else bot 
         self.__sent_msg= None
-        self.__set__user_settings()
 
     async def upload(self):
+        self.__set__user_settings()
+        if IS_PREMIUM_USER and not self.__listener.isSuperGroup:
+            await self.__listener.onUploadError('Use SuperGroup to leech with User!')
+            return
         self.__sent_msg = await bot.get_messages(self.__listener.message.chat.id, self.__listener.uid)
         if ospath.isdir(self.__path):
             for dirpath, _, filenames in sorted(walk(self.__path)):
                 for file in sorted(filenames):
+                    upload_path = ospath.join(dirpath, file)
                     if file.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+                        try:
+                            osremove(upload_path)
+                        except:
+                            pass
                         continue
-                    f_path = ospath.join(dirpath, file)
-                    f_size = ospath.getsize(f_path)
+                    f_size = ospath.getsize(upload_path)
                     self.__total_files += 1   
                     if f_size == 0:
                         LOGGER.error(f"{f_size} size is zero, telegram don't upload zero size files")
@@ -49,20 +55,24 @@ class TelegramUploader():
                     if self.__is_cancelled:
                         return
                     self._last_uploaded = 0
-                    await self.__upload_file(f_path, file)
-                    if (not self.__listener.isPrivate or config_dict['LEECH_LOG']) and not self.__is_corrupted:
+                    await self.__upload_file(upload_path, file)
+                    if self.__is_cancelled:
+                        return
+                    if not self.__is_corrupted and (self.__listener.isSuperGroup or config_dict['LEECH_LOG']):
                         self.__msgs_dict[self.__sent_msg.link] = file
                     await sleep(1)
-                    if not self.__is_cancelled and ospath.exists(f_path):
+                    if not self.__is_cancelled and ospath.exists(upload_path) and not self.__listener.seed:
                         try:
-                            osremove(f_path)
+                            osremove(upload_path)
                         except:
                             pass
+        if self.__is_cancelled:
+            return
         if self.__total_files == 0:
             await self.__listener.onUploadError("No files to upload. In case you have filled EXTENSION_FILTER, then check if all files have those extensions or not.")
             return
         if self.__total_files <= self.__corrupted:
-            await self.__listener.onUploadError('Files Corrupted. Check logs')
+            await self.__listener.onUploadError('Files Corrupted or unable to upload. Check logs')
             return 
         LOGGER.info(f"Leech Completed: {self.name}")
         size = get_readable_file_size(self.__size)
@@ -71,20 +81,20 @@ class TelegramUploader():
     async def __upload_file(self, up_path, file):
         thumb_path = self.__thumb
         self.__is_corrupted = False
-        cap= f"<code>{file}</code>"
+        cap_mono= f"<code>{file}</code>"
         try:
             is_video, is_audio, is_image = await get_document_type(up_path)
             if self.__as_doc or (not is_video and not is_audio and not is_image):
                 if is_video and thumb_path is None:
                     thumb_path = await take_ss(up_path, None)
-                    if self.__is_cancelled:
-                        return
+                if self.__is_cancelled:
+                    return
                 if config_dict['LEECH_LOG']:
                     for chat in leech_log:
                         self.__sent_msg = await self.client.send_document(
                             chat_id= int(chat),
                             document=up_path,
-                            caption=cap,
+                            caption=cap_mono,
                             thumb=thumb_path,
                             disable_notification=True,
                             progress=self.__upload_progress)
@@ -99,33 +109,33 @@ class TelegramUploader():
                 else:
                     self.__sent_msg= await self.__sent_msg.reply_document(
                         document= up_path, 
-                        caption= cap,
+                        caption= cap_mono,
                         quote=True,
                         thumb= thumb_path,
                         disable_notification=True,
                         progress= self.__upload_progress)
             if is_video:
-                if not str(up_path).split(".")[-1] in ['mp4', 'mkv']:
-                    new_path = str(up_path).split(".")[0] + ".mp4"
+                if not up_path.upper().endswith(("MKV", "MP4")):
+                    new_path = up_path.split(".")[0] + ".mp4"
                     rename(up_path, new_path) 
                     up_path = new_path
                 duration= (await get_media_info(up_path))[0]
                 if thumb_path is None:
                     thumb_path = await take_ss(up_path, duration)
-                    if self.__is_cancelled:
-                        return
                 if thumb_path is not None:
                     with Image.open(thumb_path) as img:
                         width, height = img.size
                 else:
                     width = 480
                     height = 320
+                if self.__is_cancelled:
+                    return
                 if config_dict['LEECH_LOG']:
                     for chat in leech_log:
                         self.__sent_msg = await self.client.send_video(
                             chat_id= int(chat),
                             video=up_path,
-                            caption=cap,
+                            caption=cap_mono,
                             duration=duration,
                             width=width,
                             height=height,
@@ -146,7 +156,7 @@ class TelegramUploader():
                         video= up_path,
                         width= width,
                         height= height,
-                        caption= cap,
+                        caption= cap_mono,
                         quote=True,
                         disable_notification=True,
                         thumb= thumb_path,
@@ -155,6 +165,8 @@ class TelegramUploader():
                         progress= self.__upload_progress)
             elif is_audio:
                 duration, artist, title = await get_media_info(up_path)
+                if self.__is_cancelled:
+                    return
                 if config_dict['LEECH_LOG']:
                     for chat in leech_log:
                         self.__sent_msg = await self.client.send_audio(
@@ -177,7 +189,7 @@ class TelegramUploader():
                     self.__sent_msg = await self.__sent_msg.reply_audio(
                         audio=up_path,
                         quote=True,
-                        caption=cap,
+                        caption=cap_mono,
                         duration=duration,
                         performer=artist,
                         title=title,
@@ -185,12 +197,14 @@ class TelegramUploader():
                         disable_notification=True,
                         progress=self.__upload_progress)    
             elif is_image:
+                if self.__is_cancelled:
+                    return
                 if config_dict['LEECH_LOG']:
                     for chat in leech_log:
                         self.__sent_msg = await self.client.send_photo(
                             chat_id= int(chat),
-                            photo=up_path,
-                            caption=cap,
+                            photo= up_path,
+                            caption= cap_mono,
                             disable_notification=True,
                             progress=self.__upload_progress)
                         if config_dict['BOT_PM']:
@@ -203,10 +217,10 @@ class TelegramUploader():
                                 LOGGER.error(f"Failed To Send Video in PM:\n {err}")
                 else:
                     self.__sent_msg = await self.__sent_msg.reply_photo(
-                        photo=up_path,
-                        caption=cap,
-                        quote=True,
-                        disable_notification=True,
+                        photo= up_path,
+                        caption= cap_mono,
+                        quote= True,
+                        disable_notification= True,
                         progress= self.__upload_progress)
             if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
                 osremove(thumb_path)
@@ -226,22 +240,25 @@ class TelegramUploader():
             return
         chunk_size = current - self._last_uploaded
         self._last_uploaded = current
-        self.uploaded_bytes += chunk_size
-        
+        self.__processed_bytes += chunk_size
+
     def __set__user_settings(self):
         user_id = self.__listener.message.from_user.id
-        user_dict = user_data.get(user_id, False)
-        if user_dict:
-            self.__as_doc = user_dict.get('as_doc', False)
+        user_dict = user_data.get(user_id, {})
+        self.__as_doc = user_dict.get('as_doc') or config_dict['AS_DOCUMENT']
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 
     @property
     def speed(self):
         try:
-            return self.uploaded_bytes / (time() - self.__start_time)
+            return self.__processed_bytes / (time() - self.__start_time)
         except:
             return 0
+        
+    @property
+    def processed_bytes(self):
+        return self.__processed_bytes
 
     async def cancel_download(self):
         self.__is_cancelled = True

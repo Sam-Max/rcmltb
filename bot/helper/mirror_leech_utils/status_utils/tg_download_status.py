@@ -5,22 +5,20 @@ from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 
 class TelegramStatus:
-    def __init__(self, obj, message, gid):
+    def __init__(self, obj, size, message, gid):
         self.message = message
         self.__obj = obj
+        self.__size = size
         self.__gid = gid
         
     def gid(self):
         return self.__gid
 
     def processed_bytes(self):
-        return self.__obj.downloaded_bytes
-
-    def size_raw(self):
-        return self.__obj.size
+        return get_readable_file_size(self.__obj.downloaded_bytes)
 
     def size(self):
-        return get_readable_file_size(self.size_raw())
+        return get_readable_file_size(self.__obj.size)
 
     def status(self):
         return MirrorStatus.STATUS_DOWNLOADING
@@ -35,9 +33,6 @@ class TelegramStatus:
         return f'{round(self.progress_raw(), 2)}%'
 
     def speed_raw(self):
-        """
-        :return: Download speed in Bytes/Seconds
-        """
         return self.__obj.download_speed
 
     def speed(self):
@@ -45,8 +40,9 @@ class TelegramStatus:
 
     def eta(self):
         try:
-            seconds = (self.size_raw() - self.processed_bytes()) / self.speed_raw()
-            return f'{get_readable_time(seconds)}'
+            seconds = (self.__size - self.__obj.processed_bytes) / \
+                self.__obj.speed
+            return get_readable_time(seconds)
         except:
             return '-'
 

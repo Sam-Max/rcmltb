@@ -3,8 +3,8 @@ from asyncio.subprocess import PIPE
 from os import path as ospath
 from random import SystemRandom
 from string import ascii_letters, digits
-from bot.helper.ext_utils.filters import CustomFilters
-from bot.helper.ext_utils.message_utils import sendStatusMessage
+from bot.helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data
 from bot import LOGGER, status_dict, status_dict_lock, config_dict
 from bot.helper.ext_utils.rclone_utils import get_rclone_path, setRcloneFlags
@@ -35,7 +35,8 @@ class RcloneLeech:
             if DEFAULT_GLOBAL_REMOTE := config_dict['DEFAULT_GLOBAL_REMOTE']:
                 cmd = ['rclone', 'copy', f"--config={conf_path}", f"{DEFAULT_GLOBAL_REMOTE}:{self.__origin_path}", f'{self.__dest_path}', '-P']
             else:
-                return await self.__listener.onDownloadError("DEFAULT_GLOBAL_REMOTE not found")
+                await self.__listener.onDownloadError("DEFAULT_GLOBAL_REMOTE not found")
+                return
         await setRcloneFlags(cmd, 'download')    
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10)) 
         if self.__isFolder:
@@ -47,7 +48,7 @@ class RcloneLeech:
             status_dict[self.__listener.uid] = status
         await sendStatusMessage(self.__listener.message)
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
-        await status.read_stdout()
+        await status._progress()
         return_code = await self.process.wait()
         if self.__is_cancelled:
             return

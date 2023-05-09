@@ -13,9 +13,6 @@ class CloneStatus:
     def processed_bytes(self):
         return self.__obj.transferred_size
 
-    def size_raw(self):
-        return self.__size
-
     def size(self):
         return get_readable_file_size(self.__size)
 

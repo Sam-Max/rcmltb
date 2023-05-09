@@ -1,16 +1,14 @@
-#Source: https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/bot/__main__.py
-
 from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, boot_time
 from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
 from time import time
 from os import path as ospath
-from bot.helper.ext_utils.message_utils import sendMessage
+from bot.helper.telegram_helper.message_utils import sendMessage
 from bot import bot, botUptime
-from bot.helper.ext_utils.bot_commands import BotCommands
+from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import cmd_exec, get_readable_time
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.filters import CustomFilters
+from bot.helper.telegram_helper.filters import CustomFilters
 
 
 

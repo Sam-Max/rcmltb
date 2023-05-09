@@ -1,6 +1,6 @@
 from time import time
 from bot import IS_PREMIUM_USER, bot, app, status_dict, status_dict_lock, LOGGER
-from bot.helper.ext_utils.message_utils import sendStatusMessage, update_all_messages
+from bot.helper.telegram_helper.message_utils import sendStatusMessage, update_all_messages
 from bot.helper.mirror_leech_utils.status_utils.tg_download_status import TelegramStatus
 
 
@@ -30,7 +30,7 @@ class TelegramDownloader:
         self.size = size
         self.gid = file_id
         async with status_dict_lock:
-            status_dict[self.__listener.uid] = TelegramStatus(self, self.__listener.message, self.gid)
+            status_dict[self.__listener.uid] = TelegramStatus(self, size, self.__listener.message, self.gid)
         await sendStatusMessage(self.__listener.message)
 
     async def onDownloadProgress(self, current, total):

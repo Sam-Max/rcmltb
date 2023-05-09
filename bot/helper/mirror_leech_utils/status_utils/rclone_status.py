@@ -17,7 +17,7 @@ class RcloneStatus:
         self.message = listener.message
         self.is_rclone= True
 
-    async def read_stdout(self):
+    async def _progress(self):
         while True:
             data = (await self.__obj.process.stdout.readline()).decode()
             if match:= findall('Transferred:.*ETA.*', data):
@@ -42,11 +42,8 @@ class RcloneStatus:
     def processed_bytes(self):
         return self.__transfered_bytes
 
-    def size_raw(self):
-        return self.__obj.size
-
     def size(self):
-        return get_readable_file_size(self.size_raw())
+        return get_readable_file_size(self.__obj.size)
 
     def status(self):
         if self.__obj.status_type == MirrorStatus.STATUS_UPLOADING:

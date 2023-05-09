@@ -10,7 +10,7 @@ beautifulsoup4
 cfscrape
 dnspython
 feedparser
-flask==2.0.3
+flask
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
@@ -35,4 +35,5 @@ tgCrypto
 uvloop
 xattr
 yt-dlp
+tmdbv3api
 
