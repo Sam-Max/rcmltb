@@ -49,10 +49,7 @@ class ZipStatus:
         return MirrorStatus.STATUS_ARCHIVING
 
     def processed_raw(self):
-        if self.__listener.newDir:
-            return run_async(get_path_size, self.__listener.newDir)
-        else:
-            return run_async(get_path_size, self.__listener.dir) - self.__size
+        return run_async(get_path_size, self.__listener.dir) - self.__size
 
     def processed_bytes(self):
         return get_readable_file_size(self.processed_raw())

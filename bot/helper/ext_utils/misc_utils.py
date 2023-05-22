@@ -107,7 +107,7 @@ async def take_ss(video_file, duration):
 async def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i=1, inLoop=False, noMap=False):
     if listener.suproc is not None and listener.suproc.returncode == -9:
         return False
-    if listener.seed and not listener.newDir:
+    if listener.seed:
         dirpath = f"{dirpath}/splited_files"
         if not await aiopath.exists(dirpath):
             await aiomkdir(dirpath)
