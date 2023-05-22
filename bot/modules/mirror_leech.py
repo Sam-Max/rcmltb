@@ -314,7 +314,7 @@ async def handle_auto_mirror(client, message):
     else:
         tag = message.from_user.mention
     if file is not None:
-        if file.mime_type != "application/x-bittorrent":
+        if file.mime_type != "application/x-bittorrent" and file.file_name not in ["rclone.conf", "config.env", "accounts.zip", "token.pickle"]:
             listener= MirrorLeechListener(message, tag, user_id)
             tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
             if PARALLEL_TASKS:    
@@ -349,4 +349,3 @@ bot.add_handler(multizip_mirror_handler)
 bot.add_handler(unzip_mirror_handler)
 bot.add_handler(mirror_menu_cb)
 bot.add_handler(mirror_select_cb)
-
