@@ -73,6 +73,9 @@ async def load_config():
           for id_ in aid:
                leech_log.append(int(id_.strip()))
 
+     ANON_TASKS_LOGS = environ.get('ANON_TASKS_LOGS', '')
+     ANON_TASKS_LOGS = ANON_TASKS_LOGS.lower() == 'true'   
+
      BOT_PM = environ.get('BOT_PM', '')
      BOT_PM = BOT_PM.lower() == 'true'
 
@@ -95,6 +98,14 @@ async def load_config():
      UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
      if len(UPTOBOX_TOKEN) == 0:
           UPTOBOX_TOKEN = ''
+
+     TMDB_API_KEY = environ.get('TMDB_API_KEY', '')
+     if len(TMDB_API_KEY) == 0:
+          TMDB_API_KEY = ''
+
+     TMDB_LANGUAGE = environ.get('TMDB_LANGUAGE', '') 
+     if len(TMDB_LANGUAGE) == 0:
+          TMDB_LANGUAGE = 'en'
 
      SEARCH_API_LINK = environ.get('SEARCH_API_LINK', '').rstrip("/")
      if len(SEARCH_API_LINK) == 0:
@@ -270,6 +281,7 @@ async def load_config():
                          'ALLOWED_CHATS': ALLOWED_CHATS,
                          'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                          'AUTO_MIRROR': AUTO_MIRROR,
+                         'ANON_TASKS_LOGS': ANON_TASKS_LOGS,
                          'BOT_PM': BOT_PM,
                          'BOT_TOKEN': BOT_TOKEN,
                          'CMD_INDEX': CMD_INDEX,
@@ -312,6 +324,8 @@ async def load_config():
                          'SUDO_USERS': SUDO_USERS,
                          'TELEGRAM_API_ID': TELEGRAM_API_ID,
                          'TELEGRAM_API_HASH': TELEGRAM_API_HASH,
+                         'TMDB_API_KEY': TMDB_API_KEY,
+                         'TMDB_LANGUAGE': TMDB_LANGUAGE,
                          'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
                          'UPSTREAM_REPO': UPSTREAM_REPO,
                          'UPSTREAM_BRANCH': UPSTREAM_BRANCH,

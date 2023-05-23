@@ -1,5 +1,5 @@
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time, run_async
-from bot.helper.ext_utils.zip_utils import get_path_size
+from bot.helper.ext_utils.misc_utils import get_path_size
 
 
 class YtDlpDownloadStatus:

@@ -47,9 +47,9 @@ def get_env_menu():
     for k in list(config_dict.keys())[START: 10 + START]:
         buttons.cb_buildbutton(k, f"ownersetmenu^env^editenv^{k}")
     if STATE == 'view':
-        buttons.cb_buildbutton('Edit', "ownersetmenu^edit^env")
+        buttons.cb_buildbutton('📝Edit', "ownersetmenu^edit^env")
     else:
-        buttons.cb_buildbutton('View', "ownersetmenu^view^env")
+        buttons.cb_buildbutton('🔍View', "ownersetmenu^view^env")
     buttons.cb_buildbutton("Aria2 Settings", "ownersetmenu^aria^aria_menu")
     buttons.cb_buildbutton("Qbit Setttings", "ownersetmenu^qbit^qbit_menu")
     pages= 0
@@ -68,9 +68,9 @@ def get_qbit_menu():
     for k in list(qbit_options.keys())[START: 10 + START]:
         buttons.cb_buildbutton(k, f"ownersetmenu^qbit^editqbit^{k}")
     if STATE == 'view':
-        buttons.cb_buildbutton('Edit', "ownersetmenu^edit^qbit")
+        buttons.cb_buildbutton('📝Edit', "ownersetmenu^edit^qbit")
     else:
-        buttons.cb_buildbutton('View', "ownersetmenu^view^qbit")
+        buttons.cb_buildbutton('🔍View', "ownersetmenu^view^qbit")
     pages= 0
     for x in range(0, len(qbit_options)-1, 10):
         pages = int(x/10)
@@ -88,9 +88,9 @@ def get_aria_menu():
     for k in list(aria2_options.keys())[START: 10 + START]:
         buttons.cb_buildbutton(k, f"ownersetmenu^aria^editaria^{k}")
     if STATE == 'view':
-        buttons.cb_buildbutton('Edit', "ownersetmenu^edit^aria")
+        buttons.cb_buildbutton('📝Edit', "ownersetmenu^edit^aria")
     else:
-        buttons.cb_buildbutton('View', "ownersetmenu^view^aria")
+        buttons.cb_buildbutton('🔍View', "ownersetmenu^view^aria")
     buttons.cb_buildbutton('Add new key', "ownersetmenu^aria^editaria^newkey")
     pages= 0
     for x in range(0, len(aria2_options)-1, 10):

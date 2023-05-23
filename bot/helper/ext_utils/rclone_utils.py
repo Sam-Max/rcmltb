@@ -266,8 +266,8 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, listener_dict
         await sendMarkup(msg, message, reply_markup= buttons.build_menu(1))
 
 
-async def get_drive_link(remote, base, name, conf, type, buttons):
-    if type == "Folder":
+async def get_drive_link(remote, base, name, conf, mime_type, buttons):
+    if mime_type == "Folder":
         s_name = rescape(name.replace(".", ""))
         cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{base}", "--dirs-only", "-f", f"+ {s_name}/", "-f", "- *"]
     else:
@@ -278,18 +278,19 @@ async def get_drive_link(remote, base, name, conf, type, buttons):
     return_code = await process.wait()
     stdout = stdout.decode().strip()
     if return_code != 0:
-        err = stderr.decode().strip()
-        LOGGER.error(f'Error: {err}') 
+        LOGGER.error(f'Error: {stderr.decode().strip()}') 
         return
-    try:
-        data = jsonloads(stdout)
+    data = jsonloads(stdout)
+    if data:
         id = data[0]["ID"]
-        if type == "Folder":
+        if mime_type == "Folder":
             link = f'https://drive.google.com/drive/folders/{id}'
             buttons.url_buildbutton('Cloud Link 🔗', link)
         else:
             link = f'https://drive.google.com/uc?id={id}&export=download'
             buttons.url_buildbutton('Cloud Link 🔗', link)
-    except Exception:
-        link = 'https://drive.google.com/file/d/err/view'
+    else:
         LOGGER.error("Error while getting id")
+        link = 'https://drive.google.com/file/d/err/view'
+        buttons.url_buildbutton("🚫", link)
+        

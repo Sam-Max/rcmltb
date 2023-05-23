@@ -43,8 +43,7 @@ async def get_confirm(client, query):
                                 osremove(f_path)
                             except:
                                 pass
-            if not dl.queued:
-                await run_sync(client.torrents_resume, torrent_hashes=id_)
+            await run_sync(client.torrents_resume, torrent_hashes=id_)
         else:
             res = await run_sync(aria2.client.get_files, id_)
             for f in res:
@@ -53,12 +52,10 @@ async def get_confirm(client, query):
                         osremove(f['path'])
                     except:
                         pass
-            if not dl.queued:
-                try:
-                    await run_sync(aria2.client.unpause, id_)
-                except Exception as e:
-                    LOGGER.error(
-                        f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
+            try:
+                await run_sync(aria2.client.unpause, id_)
+            except Exception as e:
+                LOGGER.error( f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
         await sendStatusMessage(message)
         await message.delete()
 

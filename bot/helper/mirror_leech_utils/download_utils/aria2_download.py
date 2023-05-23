@@ -36,8 +36,10 @@ async def add_aria2c_download(link, path, listener, filename, auth):
     name = download.name
     async with status_dict_lock:
         status_dict[listener.uid] = AriaStatus(gid, listener)
-    
-    LOGGER.info(f"Aria2Download started: {name}. Gid: {gid}")
+
+    if not config_dict['ANON_TASKS_LOGS']:
+        LOGGER.info(f"Aria2Download started: {name}. Gid: {gid}")
+
     await listener.onDownloadStart()
     await sendStatusMessage(listener.message)
 

@@ -147,6 +147,9 @@ async def add_mega_download(mega_link, path: str, listener, name: str):
     
     await sendStatusMessage(listener.message)
 
+    if not config_dict['ANON_TASKS_LOGS']:
+        LOGGER.info(f"Download from Mega: {name}")
+
     makedirs(path, exist_ok=True)
     await executor.do(api.startDownload, (node, path, name, None, False, None))
     await executor.do(api.logout, ())

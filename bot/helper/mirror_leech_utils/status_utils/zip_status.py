@@ -1,7 +1,7 @@
 from time import time
 from bot import LOGGER
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus, get_readable_time, run_async
-from bot.helper.ext_utils.zip_utils import get_path_size
+from bot.helper.ext_utils.misc_utils import get_path_size
 
 
 class ZipStatus:
@@ -49,7 +49,10 @@ class ZipStatus:
         return MirrorStatus.STATUS_ARCHIVING
 
     def processed_raw(self):
-        return run_async(get_path_size, self.__listener.dir) - self.__size
+        if self.__listener.newDir:
+            return run_async(get_path_size, self.__listener.newDir)
+        else:
+            return run_async(get_path_size, self.__listener.dir) - self.__size
 
     def processed_bytes(self):
         return get_readable_file_size(self.processed_raw())

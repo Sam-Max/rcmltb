@@ -41,7 +41,9 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
         async with status_dict_lock:
             status_dict[listener.uid] = QbitTorrentStatus(listener)
         await onDownloadStart(f'{listener.uid}')
-        LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {ext_hash}")
+
+        if not config_dict['ANON_TASKS_LOGS']:
+            LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {ext_hash}")
         
         if config_dict['QB_BASE_URL'] and listener.select:
             if link.startswith('magnet:'):

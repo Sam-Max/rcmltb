@@ -131,11 +131,10 @@ async def mirror_leech(client, message, isZip=False, extract=False, isLeech=Fals
         tag = message.from_user.mention
 
     listener= MirrorLeechListener(message, tag, user_id, isZip, extract, pswd, 
-                                  select, seed, isLeech=isLeech)   
+                                  select, seed, isLeech, multiZip)   
 
     file = None
     if reply_message:= message.reply_to_message:
-        listener= MirrorLeechListener(message, tag, user_id, isZip=isZip, isMultiZip=multiZip, extract=extract, pswd=pswd, isLeech=isLeech)
         file = reply_message.document or reply_message.video or reply_message.audio or reply_message.photo or \
                reply_message.voice or reply_message.video_note or reply_message.sticker or reply_message.animation or None
         if not reply_message.from_user.is_bot:

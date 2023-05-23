@@ -12,21 +12,16 @@ from tmdbv3api import TMDb, Discover, Movie, TV, Trending
 
 
 tmdb = TMDb()
-tmdb.api_key = config_dict['TMDB_API_KEY']
-tmdb.language = config_dict['TMDB_LANGUAGE']
-
 tmdb.debug = False
 tmdb_image_base= "http://image.tmdb.org/t/p/w500"
-
-TMDB_API_KEY = config_dict['TMDB_API_KEY']
-SEARCH_PLUGINS = config_dict['SEARCH_PLUGINS']
 
 tmdb_dict = {}
 
 
-
 async def categories(_, message):
-    if TMDB_API_KEY and SEARCH_PLUGINS:
+    tmdb.api_key = config_dict['TMDB_API_KEY']
+    tmdb.language = config_dict['TMDB_LANGUAGE']
+    if config_dict['TMDB_API_KEY'] and config_dict['SEARCH_PLUGINS']:
         button= ButtonMaker()
         button.cb_buildbutton("📺 Movies", "subcat^movie")
         button.cb_buildbutton("🎬 TV Shows", "subcat^tv")
@@ -217,5 +212,6 @@ bot.add_handler(MessageHandler(categories, filters= filters.command(BotCommands.
 bot.add_handler(CallbackQueryHandler(sub_categories, filters= filters.regex("subcat")))
 bot.add_handler(CallbackQueryHandler(get_category_info, filters= filters.regex("info")))
 bot.add_handler(CallbackQueryHandler(get_details, filters= filters.regex("detail_tmdb")))
-bot.add_handler(CallbackQueryHandler(search, filters= filters.regex("search")))
 bot.add_handler(CallbackQueryHandler(next_tmdb, filters= filters.regex("next_tmdb")))
+bot.add_handler(CallbackQueryHandler(search, filters= filters.regex("search")))
+

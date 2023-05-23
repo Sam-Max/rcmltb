@@ -4,6 +4,8 @@ from sys import exit
 from aiohttp import ClientSession
 from bot.helper.ext_utils.bot_utils import cmd_exec, run_sync
 from bot.helper.telegram_helper.button_build import ButtonMaker
+from re import I, split as re_split
+from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from aioshutil import rmtree as aiormtree
 from aiofiles.os import remove as aioremove, path as aiopath, mkdir as aiomkdir, makedirs
 from re import search as re_search
@@ -12,7 +14,7 @@ from json import loads as jsnloads
 from magic import Magic
 from subprocess import PIPE, check_output
 from asyncio.subprocess import PIPE
-from os import path as ospath
+from os import path as ospath, walk as oswalk
 from time import time
 
 
@@ -84,6 +86,23 @@ def get_readable_size(size):
         i += 1
         size /= 1024.0
     return "%.2f %s" % (size, units[i]) 
+
+def get_base_name(orig_path: str):
+    extension = next((ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)), '')
+    if extension != '':
+        return re_split(f'{extension}$', orig_path, maxsplit=1, flags=I)[0]
+    else:
+        raise NotSupportedExtractionArchive('File format not supported for extraction')
+    
+def get_path_size(path: str):
+    if ospath.isfile(path):
+        return ospath.getsize(path)
+    total_size = 0
+    for root, dirs, files in oswalk(path):
+        for f in files:
+            abs_path = ospath.join(root, f)
+            total_size += ospath.getsize(abs_path)
+    return total_size
 
 async def take_ss(video_file, duration):
     des_dir = 'Thumbnails'

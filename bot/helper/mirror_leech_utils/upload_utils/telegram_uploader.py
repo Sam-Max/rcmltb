@@ -1,11 +1,13 @@
 from asyncio import sleep
-from os import walk, rename, path as ospath, remove as osremove
+from os import walk, rename as osrename, path as ospath, remove as osremove
 from time import time
+from re import match as re_match
+from PIL import Image
 from bot import GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, config_dict, bot, app, user_data, leech_log
 from pyrogram.errors import FloodWait, RPCError
-from PIL import Image
+from bot.helper.ext_utils.bot_utils import clean_unwanted, is_archive
 from bot.helper.ext_utils.human_format import get_readable_file_size
-from bot.helper.ext_utils.misc_utils import get_document_type, get_media_info, take_ss
+from bot.helper.ext_utils.misc_utils import get_base_name, get_document_type, get_media_info, take_ss
 
 
 
@@ -28,6 +30,7 @@ class TelegramUploader():
         self._last_uploaded = 0
         self.__user_id = listener.message.from_user.id
         self.client= app if app is not None else bot 
+        self.__upload_path= ''
         self.__sent_msg= None
 
     async def upload(self):
@@ -39,14 +42,14 @@ class TelegramUploader():
         if ospath.isdir(self.__path):
             for dirpath, _, filenames in sorted(walk(self.__path)):
                 for file in sorted(filenames):
-                    upload_path = ospath.join(dirpath, file)
+                    self.__upload_path = ospath.join(dirpath, file)
                     if file.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
                         try:
-                            osremove(upload_path)
+                            osremove(self.__upload_path)
                         except:
                             pass
                         continue
-                    f_size = ospath.getsize(upload_path)
+                    f_size = ospath.getsize(self.__upload_path)
                     self.__total_files += 1   
                     if f_size == 0:
                         LOGGER.error(f"{f_size} size is zero, telegram don't upload zero size files")
@@ -55,26 +58,30 @@ class TelegramUploader():
                     if self.__is_cancelled:
                         return
                     self._last_uploaded = 0
-                    await self.__upload_file(upload_path, file)
+                    await self.__prepare_file(file, dirpath)
+                    await self.__upload_file(self.__upload_path, file)
                     if self.__is_cancelled:
                         return
                     if not self.__is_corrupted and (self.__listener.isSuperGroup or config_dict['LEECH_LOG']):
                         self.__msgs_dict[self.__sent_msg.link] = file
                     await sleep(1)
-                    if not self.__is_cancelled and ospath.exists(upload_path) and not self.__listener.seed:
+                    if not self.__is_cancelled and ospath.exists(self.__upload_path) and (not self.__listener.seed or self.__listener.newDir):
                         try:
-                            osremove(upload_path)
+                            osremove(self.__upload_path)
                         except:
                             pass
         if self.__is_cancelled:
             return
+        if self.__listener.seed and not self.__listener.newDir:
+            await clean_unwanted(self.__path)
         if self.__total_files == 0:
             await self.__listener.onUploadError("No files to upload. In case you have filled EXTENSION_FILTER, then check if all files have those extensions or not.")
             return
         if self.__total_files <= self.__corrupted:
             await self.__listener.onUploadError('Files Corrupted or unable to upload. Check logs')
             return 
-        LOGGER.info(f"Leech Completed: {self.name}")
+        if not config_dict['ANON_TASKS_LOGS']:
+            LOGGER.info(f"Leech Completed: {self.name}")
         size = get_readable_file_size(self.__size)
         await self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)    
     
@@ -117,7 +124,7 @@ class TelegramUploader():
             if is_video:
                 if not up_path.upper().endswith(("MKV", "MP4")):
                     new_path = up_path.split(".")[0] + ".mp4"
-                    rename(up_path, new_path) 
+                    osrename(up_path, new_path) 
                     up_path = new_path
                 duration= (await get_media_info(up_path))[0]
                 if thumb_path is None:
@@ -249,6 +256,27 @@ class TelegramUploader():
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 
+    async def __prepare_file(self, file_, dirpath):
+        if len(file_) > 60:
+            if is_archive(file_):
+                name = get_base_name(file_)
+                ext = file_.split(name, 1)[1]
+            elif match := re_match(r'.+(?=\..+\.0*\d+$)|.+(?=\.part\d+\..+)', file_):
+                name = match.group(0)
+                ext = file_.split(name, 1)[1]
+            elif len(fsplit := ospath.splitext(file_)) > 1:
+                name = fsplit[0]
+                ext = fsplit[1]
+            else:
+                name = file_
+                ext = ''
+            extn = len(ext)
+            remain = 60 - extn
+            name = name[:remain]
+            new_path = ospath.join(dirpath, f"{name}{ext}")
+            osrename(self.__upload_path, new_path)
+            self.__upload_path = new_path
+
     @property
     def speed(self):
         try:
@@ -262,5 +290,6 @@ class TelegramUploader():
 
     async def cancel_download(self):
         self.__is_cancelled = True
-        LOGGER.info(f"Cancelling Upload: {self.name}")
+        if not config_dict['ANON_TASKS_LOGS']:
+            LOGGER.info(f"Cancelling Upload: {self.name}")
         await self.__listener.onUploadError('Your upload has been stopped!')

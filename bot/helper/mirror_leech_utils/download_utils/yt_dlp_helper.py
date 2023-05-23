@@ -5,7 +5,7 @@ from os import listdir, path as ospath
 from bot.helper.ext_utils.bot_utils import run_async, run_sync
 from yt_dlp import YoutubeDL, DownloadError
 from re import search as re_search
-from bot import status_dict_lock, status_dict
+from bot import status_dict_lock, config_dict, status_dict
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from bot.helper.mirror_leech_utils.status_utils.yt_dlp_status import YtDlpDownloadStatus
 
@@ -231,7 +231,8 @@ class YoutubeDLHelper:
         elif not self.__listener.isLeech:
             self.opts['writethumbnail'] = False
 
-        LOGGER.info(f'Download with YT_DLP: {self.name}')
+        if not config_dict['ANON_TASKS_LOGS']:
+            LOGGER.info(f'Download with YT_DLP: {self.name}')
         await run_sync(self.__download, link, path)
 
     async def cancel_download(self):
