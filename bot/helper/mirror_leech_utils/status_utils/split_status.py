@@ -1,4 +1,4 @@
-from bot import LOGGER
+from bot import config_dict, LOGGER
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus
 
 
@@ -38,7 +38,8 @@ class SplitStatus:
         return self
 
     async def cancel_download(self):
-        LOGGER.info(f'Cancelling Split: {self.__name}')
+        if not config_dict['NO_TASKS_LOGS']:
+            LOGGER.info(f'Cancelling Split: {self.__name}')
         if self.__listener.suproc is not None:
             self.__listener.suproc.kill()
         else:

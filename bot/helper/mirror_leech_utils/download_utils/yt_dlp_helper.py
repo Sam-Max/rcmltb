@@ -231,13 +231,14 @@ class YoutubeDLHelper:
         elif not self.__listener.isLeech:
             self.opts['writethumbnail'] = False
 
-        if not config_dict['ANON_TASKS_LOGS']:
+        if not config_dict['NO_TASKS_LOGS']:
             LOGGER.info(f'Download with YT_DLP: {self.name}')
         await run_sync(self.__download, link, path)
 
     async def cancel_download(self):
         self.__is_cancelled = True
-        LOGGER.info(f"Cancelling Download: {self.name}")
+        if not config_dict['NO_TASKS_LOGS']:
+            LOGGER.info(f"Cancelling Download: {self.name}")
         if not self.__downloading:
             await self.__listener.onDownloadError("Download Cancelled by User!")
 

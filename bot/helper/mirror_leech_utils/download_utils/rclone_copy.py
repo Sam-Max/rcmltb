@@ -42,7 +42,7 @@ class RcloneCopy:
                     else:
                         LOGGER.info("No remote found on your rclone.conf")
                 else:
-                    LOGGER.info("No SERVICE_ACCOUNTS_REMOTE set")
+                    LOGGER.info("No SERVICE_ACCOUNTS_REMOTE found")
         if config_dict['SERVER_SIDE']:
             cmd = ['rclone', 'copy', f'--config={conf_path}', "--ignore-case", f'{origin_remote}:{origin_dir}',
             f'{dest_remote}:{dest_dir}{origin_dir}', '--drive-acknowledge-abuse', '--drive-server-side-across-configs', '-P']

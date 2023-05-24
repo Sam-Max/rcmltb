@@ -1,5 +1,5 @@
 from asyncio import sleep
-from bot import LOGGER, QbTorrents, qb_listener_lock, get_client
+from bot import LOGGER, QbTorrents, qb_listener_lock, config_dict, get_client
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time, run_sync
 
 def get_download(client, tag):
@@ -100,7 +100,8 @@ class QbitTorrentStatus:
         self.__update()
         await run_sync(self.__client.torrents_pause, torrent_hashes=self.__info.hash)
         if self.status() != MirrorStatus.STATUS_SEEDING:
-            LOGGER.info(f"Cancelling Download: {self.__info.name}")
+            if not config_dict['NO_TASKS_LOGS']:
+                LOGGER.info(f"Cancelling Download: {self.__info.name}")
             await sleep(0.3)
             await self.__listener.onDownloadError('Download stopped by user!')
             await run_sync(self.__client.torrents_delete, torrent_hashes=self.__info.hash, delete_files=True)

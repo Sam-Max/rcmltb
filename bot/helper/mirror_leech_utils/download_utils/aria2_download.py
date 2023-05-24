@@ -37,7 +37,7 @@ async def add_aria2c_download(link, path, listener, filename, auth):
     async with status_dict_lock:
         status_dict[listener.uid] = AriaStatus(gid, listener)
 
-    if not config_dict['ANON_TASKS_LOGS']:
+    if not config_dict['NO_TASKS_LOGS']:
         LOGGER.info(f"Aria2Download started: {name}. Gid: {gid}")
 
     await listener.onDownloadStart()
@@ -49,7 +49,8 @@ async def add_aria2c_download(link, path, listener, filename, auth):
 @new_thread
 async def __onDownloadStarted(api, gid):
     download = await run_sync(api.get_download, gid)
-    LOGGER.info(f'onDownloadStarted: {download.name} - Gid: {gid}')
+    if not config_dict['NO_TASKS_LOGS']:
+        LOGGER.info(f'onDownloadStarted: {download.name} - Gid: {gid}')
 
 @new_thread
 async def __onDownloadComplete(api, gid):
@@ -57,7 +58,8 @@ async def __onDownloadComplete(api, gid):
         download = await run_sync(api.get_download, gid)
     except:
         return
-    LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
+    if not config_dict['NO_TASKS_LOGS']:
+        LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
     if dl := await getDownloadByGid(gid):
         listener = dl.listener()
         await listener.onDownloadComplete()
@@ -68,7 +70,8 @@ async def __onBtDownloadComplete(api, gid):
     seed_start_time = time()
     await sleep(1)
     download = await run_sync(api.get_download, gid)
-    LOGGER.info(f"onBtDownloadComplete: {download.name} - Gid: {gid}")
+    if not config_dict['NO_TASKS_LOGS']:
+        LOGGER.info(f"onBtDownloadComplete: {download.name} - Gid: {gid}")
     if dl := await getDownloadByGid(gid):
         listener = dl.listener()
         if listener.select:
@@ -97,7 +100,8 @@ async def __onBtDownloadComplete(api, gid):
         if listener.seed:
             if download.is_complete:
                 if dl := await getDownloadByGid(gid):
-                    LOGGER.info(f"Cancelling Seed: {download.name}")
+                    if not config_dict['NO_TASKS_LOGS']:
+                        LOGGER.info(f"Cancelling Seed: {download.name}")
                     await listener.onUploadError(f"Seeding stopped with Ratio: {dl.ratio()} and Time: {dl.seeding_time()}")
                     await run_sync(api.remove, [download], force=True, files=True)
             else:
@@ -107,7 +111,8 @@ async def __onBtDownloadComplete(api, gid):
                         return
                     status_dict[listener.uid] = AriaStatus(gid, listener, True)
                     status_dict[listener.uid].start_time = seed_start_time
-                LOGGER.info(f"Seeding started: {download.name} - Gid: {gid}")
+                if not config_dict['NO_TASKS_LOGS']:
+                    LOGGER.info(f"Seeding started: {download.name} - Gid: {gid}")
                 await update_all_messages()
         else:
             await run_sync(api.remove, [download], force=True, files=True)

@@ -66,8 +66,7 @@ class GoogleDriveHelper:
             json_files = listdir("accounts")
             self.__sa_number = len(json_files)
             self.__sa_index = randrange(self.__sa_number)
-            LOGGER.info(
-                f"Authorizing with {json_files[self.__sa_index]} service account")
+            LOGGER.info(f"Authorizing with {json_files[self.__sa_index]} service account")
             credentials = service_account.Credentials.from_service_account_file(
                 f'accounts/{json_files[self.__sa_index]}',
                 scopes=self.__OAUTH_SCOPE)
@@ -158,7 +157,8 @@ class GoogleDriveHelper:
         file_id = file.get("id")
         if not config_dict['IS_TEAM_DRIVE']:
             self.__set_permission(file_id)
-        LOGGER.info("Created G-Drive Folder:\nName: {}\nID: {} ".format(file.get("name"), file_id))
+        if not config_dict['NO_TASKS_LOGS']:
+            LOGGER.info("Created G-Drive Folder:\nName: {}\nID: {} ".format(file.get("name"), file_id))
         return file_id
 
     def clone(self, link):
@@ -171,7 +171,6 @@ class GoogleDriveHelper:
         except (KeyError, IndexError):
             return "Google Drive ID could not be found in the provided link"
         msg = ""
-        LOGGER.info(f"File ID: {file_id}")
         try:
             meta = self.__getFileMetadata(file_id)
             mime_type = meta.get("mimeType")
@@ -289,8 +288,7 @@ class GoogleDriveHelper:
                     LOGGER.error(err)
                 elif config_dict['USE_SERVICE_ACCOUNTS']:
                     if self.__sa_count >= self.__sa_number:
-                        LOGGER.info(
-                            f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
+                        LOGGER.info(f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
                         raise err
                     else:
                         if self.__is_cancelled:
@@ -482,8 +480,10 @@ class GoogleDriveHelper:
     async def cancel_download(self):
         self.__is_cancelled = True
         if self.__is_downloading:
-            LOGGER.info(f"Cancelling Download: {self.name}")
+            if not config_dict['NO_TASKS_LOGS']:
+                LOGGER.info(f"Cancelling Download: {self.name}")
             await self.__listener.onDownloadError('Download stopped by user!')
         elif self.__is_cloning:
-            LOGGER.info(f"Cancelling Clone: {self.name}")
+            if not config_dict['NO_TASKS_LOGS']:
+                LOGGER.info(f"Cancelling Clone: {self.name}")
             await self.__listener.onUploadError('your clone has been stopped and cloned data has been deleted!')

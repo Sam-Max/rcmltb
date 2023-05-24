@@ -212,7 +212,6 @@ async def get_bulk_msg(message, msg_link, multi, isLeech, value=0):
                 try:
                     await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value) 
                 except FloodWait as fw:
-                    LOGGER.info("2")
                     await sleep(fw.seconds + 5)
                     await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value)  
         except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):

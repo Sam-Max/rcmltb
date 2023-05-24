@@ -95,7 +95,8 @@ async def clone(client, message):
             link, size, mime_type, files, folders = await run_sync(drive.clone, link) 
         if not link:
             return   
-        LOGGER.info(f'Cloning Done: {name}')
+        if not config_dict['NO_TASKS_LOGS']:
+            LOGGER.info(f'Cloning Done: {name}')
         await listener.onUploadComplete(link, size, files, folders, mime_type, name)
     else:
         await sendMessage(CLONE_HELP_MESSAGE, message)

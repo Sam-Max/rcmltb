@@ -305,8 +305,8 @@ if len(LEECH_LOG) != 0:
     for id_ in aid:
         leech_log.append(int(id_.strip()))
 
-ANON_TASKS_LOGS = environ.get('ANON_TASKS_LOGS', '')
-ANON_TASKS_LOGS = ANON_TASKS_LOGS.lower() == 'true'   
+NO_TASKS_LOGS = environ.get('NO_TASKS_LOGS', '')
+NO_TASKS_LOGS = NO_TASKS_LOGS.lower() == 'true'   
 
 BOT_PM = environ.get('BOT_PM', '')
 BOT_PM = BOT_PM.lower() == 'true'
@@ -331,7 +331,7 @@ config_dict = { 'AS_DOCUMENT': AS_DOCUMENT,
                 'ALLOWED_CHATS': ALLOWED_CHATS,
                 'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                 'AUTO_MIRROR': AUTO_MIRROR,
-                'ANON_TASKS_LOGS': ANON_TASKS_LOGS,
+                'NO_TASKS_LOGS': NO_TASKS_LOGS,
                 'BOT_TOKEN': BOT_TOKEN,
                 'BOT_PM': BOT_PM,
                 'CMD_INDEX': CMD_INDEX,

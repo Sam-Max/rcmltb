@@ -73,8 +73,8 @@ async def load_config():
           for id_ in aid:
                leech_log.append(int(id_.strip()))
 
-     ANON_TASKS_LOGS = environ.get('ANON_TASKS_LOGS', '')
-     ANON_TASKS_LOGS = ANON_TASKS_LOGS.lower() == 'true'   
+     NO_TASKS_LOGS = environ.get('NO_TASKS_LOGS', '')
+     NO_TASKS_LOGS = NO_TASKS_LOGS.lower() == 'true'   
 
      BOT_PM = environ.get('BOT_PM', '')
      BOT_PM = BOT_PM.lower() == 'true'
@@ -281,7 +281,7 @@ async def load_config():
                          'ALLOWED_CHATS': ALLOWED_CHATS,
                          'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                          'AUTO_MIRROR': AUTO_MIRROR,
-                         'ANON_TASKS_LOGS': ANON_TASKS_LOGS,
+                         'NO_TASKS_LOGS': NO_TASKS_LOGS,
                          'BOT_PM': BOT_PM,
                          'BOT_TOKEN': BOT_TOKEN,
                          'CMD_INDEX': CMD_INDEX,

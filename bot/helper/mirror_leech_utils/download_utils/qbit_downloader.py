@@ -42,7 +42,7 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
             status_dict[listener.uid] = QbitTorrentStatus(listener)
         await onDownloadStart(f'{listener.uid}')
 
-        if not config_dict['ANON_TASKS_LOGS']:
+        if not config_dict['NO_TASKS_LOGS']:
             LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {ext_hash}")
         
         if config_dict['QB_BASE_URL'] and listener.select:
@@ -145,7 +145,8 @@ async def __onDownloadComplete(tor):
             else:
                 return
         await update_all_messages()
-        LOGGER.info(f"Seeding started: {tor.name} - Hash: {ext_hash}")
+        if not config_dict['NO_TASKS_LOGS']:
+            LOGGER.info(f"Seeding started: {tor.name} - Hash: {ext_hash}")
         await run_sync(client.auth_log_out)
     else:
         await __remove_torrent(client, ext_hash, tag)

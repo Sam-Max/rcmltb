@@ -1,5 +1,5 @@
 from time import time
-from bot import LOGGER
+from bot import LOGGER, config_dict
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus, get_readable_time, run_async
 from bot.helper.ext_utils.misc_utils import get_path_size
 
@@ -64,7 +64,8 @@ class ExtractStatus:
         return "Extract"
 
     async def cancel_download(self):
-        LOGGER.info(f'Cancelling Extract: {self.__name}')
+        if not config_dict['NO_TASKS_LOGS']:
+            LOGGER.info(f'Cancelling Extract: {self.__name}')
         if self.__listener.suproc is not None:
             self.__listener.suproc.kill()
         else:

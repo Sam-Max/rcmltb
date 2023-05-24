@@ -226,12 +226,9 @@ function s_validate() {
           src="https://telegra.ph/file/43af672249c94053356c7.jpg"
           alt="logo"
         />
-        <a
+        <a>
           <h2 class="name">Bittorrent Selection</h2>
         </a>
-      </div>
-      <div class="social">
-        <a href="https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot"><i class="fab fa-github"></i></a>
       </div>
     </header>
     <div id="sticks">
@@ -602,7 +599,7 @@ section span{
         margin-left: auto;
         margin-right: auto;
     }
-
+as
     section span{
         margin-left: 5%;
     }
@@ -617,12 +614,9 @@ section span{
           src="https://telegra.ph/file/43af672249c94053356c7.jpg"
           alt="logo"
         />
-        <a
+        <a>
           <h2 class="name">Bittorrent Selection</h2>
         </a>
-      </div>
-      <div class="social">
-        <a href="https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot"><i class="fab fa-github"></i></a>
       </div>
     </header>
     <section>
@@ -673,14 +667,14 @@ def re_verfiy(paused, resumed, client, hash_id):
         client = qbClient(host="localhost", port="8090")
         try:
             client.torrents_file_priority(torrent_hash=hash_id, file_ids=paused, priority=0)
-        except NotFound404Error:
-            raise NotFound404Error
+        except NotFound404Error as e:
+            raise NotFound404Error from e
         except Exception as e:
             LOGGER.error(f"{e} Errored in reverification paused!")
         try:
             client.torrents_file_priority(torrent_hash=hash_id, file_ids=resumed, priority=1)
-        except NotFound404Error:
-            raise NotFound404Error
+        except NotFound404Error as e:
+            raise NotFound404Error from e
         except Exception as e:
             LOGGER.error(f"{e} Errored in reverification resumed!")
         k += 1
@@ -719,8 +713,8 @@ def set_priority(id_):
 
     data = dict(request.form)
 
+    resume = ""
     if len(id_) > 20:
-        resume = ""
         pause = ""
 
         for i, value in data.items():
@@ -739,14 +733,14 @@ def set_priority(id_):
 
         try:
             client.torrents_file_priority(torrent_hash=id_, file_ids=pause, priority=0)
-        except NotFound404Error:
-            raise NotFound404Error
+        except NotFound404Error as e:
+            raise NotFound404Error from e
         except Exception as e:
             LOGGER.error(f"{e} Errored in paused")
         try:
             client.torrents_file_priority(torrent_hash=id_, file_ids=resume, priority=1)
-        except NotFound404Error:
-            raise NotFound404Error
+        except NotFound404Error as e:
+            raise NotFound404Error from e
         except Exception as e:
             LOGGER.error(f"{e} Errored in resumed")
         sleep(1)
@@ -754,7 +748,6 @@ def set_priority(id_):
             LOGGER.error(f"Verification Failed! Hash: {id_}")
         client.auth_log_out()
     else:
-        resume = ""
         for i, value in data.items():
             if "filenode" in i and value == "on":
                 node_no = i.split("_")[-1]
@@ -771,7 +764,7 @@ def set_priority(id_):
 
 @app.route('/')
 def homepage():
-    return "<h1>See Rclone-Tg-Bot <a href='https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot'> @GitHub</a> By <a href='https://github.com/Sam-Max'>Sam-Max</a></h1>"
+    return "<h1>Bittorrent Selection</h1>"
 
 @app.errorhandler(Exception)
 def page_not_found(e):

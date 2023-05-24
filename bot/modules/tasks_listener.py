@@ -70,20 +70,17 @@ class MirrorLeechListener:
         if self.__pswd is not None:
             if self.isLeech and int(size) > LEECH_SPLIT_SIZE:
                 cmd = ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, mz_path]
-                self.suproc = await create_subprocess_exec(*cmd)
                 LOGGER.info(f'Zip: orig_path: {mz_path}, zip_path: {path}.0*')
             else:
                 LOGGER.info(f'Zip: orig_path: {mz_path}, zip_path: {path}')
                 cmd =  ["7z", "a", "-mx=0", f"-p{self.__pswd}", path, mz_path]
-                self.suproc = await create_subprocess_exec(*cmd)
         elif self.isLeech and int(size) > LEECH_SPLIT_SIZE:
             LOGGER.info(f'Zip: orig_path: {mz_path}, zip_path: {path}.0*')
             cmd= ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, mz_path]
-            self.suproc = await create_subprocess_exec(*cmd)
         else:
             LOGGER.info(f'Zip: orig_path: {mz_path}, zip_path: {path}')
             cmd= ["7z", "a", "-mx=0", path, mz_path]
-            self.suproc = await create_subprocess_exec(*cmd)
+        self.suproc = await create_subprocess_exec(*cmd)
         await self.suproc.wait()
         if self.suproc.returncode == -9:
             return
@@ -99,14 +96,16 @@ class MirrorLeechListener:
         size = get_path_size(up_dir)
 
         if self.isLeech:
-            LOGGER.info(f"Leech Name: {up_name}")
+            if not config_dict['NO_TASKS_LOGS']:
+                LOGGER.info(f"Leech Name: {up_name}")
             tg_up= TelegramUploader(up_dir, up_name, size, self)
             async with status_dict_lock:
                 status_dict[self.uid] = TgUploadStatus(tg_up, size, gid, self)
             await update_all_messages()
             await tg_up.upload()    
         else:
-            LOGGER.info(f"Upload Name: {up_name}")
+            if not config_dict['NO_TASKS_LOGS']:
+                LOGGER.info(f"Upload Name: {up_name}")
             await RcloneMirror(up_dir, up_name, size, self.user_id, self).mirror()
 
     async def onDownloadComplete(self):
@@ -114,7 +113,8 @@ class MirrorLeechListener:
             download = status_dict[self.uid]
             name = str(download.name()).replace('/', '')
             gid = download.gid()
-        LOGGER.info(f"Download completed: {name}")
+        if not config_dict['NO_TASKS_LOGS']:
+            LOGGER.info(f"Download completed: {name}")
         if name == "None" or not ospath.exists(f"{self.dir}/{name}"):
             name = listdir(f"{self.dir}")[-1]
         path= ""
@@ -153,7 +153,8 @@ class MirrorLeechListener:
             try:
                 if ospath.isfile(m_path):
                     path = get_base_name(m_path)
-                LOGGER.info(f"Extracting: {name}")
+                if not config_dict['NO_TASKS_LOGS']:    
+                    LOGGER.info(f"Extracting: {name}")
                 async with status_dict_lock:
                     status_dict[self.uid] = ExtractStatus(name, size, gid, self)
                 if ospath.isdir(m_path):
@@ -255,7 +256,8 @@ class MirrorLeechListener:
             size = get_path_size(up_dir)
             for s in m_size:
                 size = size - s
-            LOGGER.info(f"Leech Name: {up_name}")
+            if not config_dict['NO_TASKS_LOGS']:
+                LOGGER.info(f"Leech Name: {up_name}")
             tg_up= TelegramUploader(up_dir, up_name, size, self)
             async with status_dict_lock:
                 status_dict[self.uid] = TgUploadStatus(tg_up, size, gid, self)
@@ -278,7 +280,8 @@ class MirrorLeechListener:
                     await update_all_messages()
             else:
                 size = get_path_size(path)
-                LOGGER.info(f"Upload Name: {up_name}")
+                if not config_dict['NO_TASKS_LOGS']:
+                    LOGGER.info(f"Upload Name: {up_name}")
                 await RcloneMirror(up_dir, up_name, size, self.user_id, self).mirror()
 
     async def onRcloneCopyComplete(self, conf, origin_dir, dest_remote, dest_dir):
@@ -387,7 +390,6 @@ class MirrorLeechListener:
             await update_all_messages()
 
     async def onUploadComplete(self, link, size, files, folders, mime_type, name):
-        LOGGER.info(f'Task Done: {name}')
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
         msg += f'\n<b>Total Files: </b>{folders}'
         if mime_type != 0:

@@ -32,7 +32,7 @@ class TelegramDownloader:
         async with status_dict_lock:
             status_dict[self.__listener.uid] = TelegramStatus(self, size, self.__listener.message, self.gid)
         await sendStatusMessage(self.__listener.message)
-        if not config_dict['ANON_TASKS_LOGS']:
+        if not config_dict['NO_TASKS_LOGS']:
             LOGGER.info(f'Download from Telegram: {name}')
 
     async def onDownloadProgress(self, current, total):
