@@ -76,6 +76,6 @@ class TelegraphHelper:
         return
 
 
-telegraph = TelegraphHelper('Rclone-Telegram-Bot', 'https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot/')
+telegraph = TelegraphHelper('Rclone-Telegram-Bot', 'https://github.com/Sam-Max/rcmltb/')
 
 botloop.run_until_complete(telegraph.create_account())

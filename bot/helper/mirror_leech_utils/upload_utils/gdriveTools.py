@@ -361,7 +361,7 @@ class GoogleDriveHelper:
             msg = str(err)
         return msg
 
-    async def download(self, link):
+    def download(self, link):
         self.__is_downloading = True
         file_id = self.__getIdFromUrl(link)
         self.__updater = setInterval(self.__update_interval, self.__progress)

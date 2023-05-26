@@ -82,7 +82,7 @@ restart - Restart bot
 
  - Clone repo:
 
-        git clone https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot rclonetgbot/ && cd rclonetgbot
+        git clone https://github.com/Sam-Max/rcmltb rcmltb/ && cd rcmltb
 
  - For Debian based distros
 ```

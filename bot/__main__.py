@@ -23,7 +23,7 @@ start_aria2_listener()
 
 async def start(client, message):
     buttons = ButtonMaker()
-    buttons.url_buildbutton("Repo", "https://github.com/Sam-Max/rclone-mirror-leech-telegram-bot")
+    buttons.url_buildbutton("Repo", "https://github.com/Sam-Max/rcmltb")
     buttons.url_buildbutton("Owner", "https://github.com/Sam-Max")
     reply_markup = buttons.build_menu(2)
     if CustomFilters.user_filter or CustomFilters.chat_filter:
