@@ -109,11 +109,11 @@ async def _search(key, site, message, method):
         await run_sync(client.search_delete, search_id=search_id)
         await run_sync(client.auth_log_out)
 
-        link = await __getResult(search_results, key, message, method)
-        buttons = ButtonMaker()
-        buttons.url_buildbutton("🔎 VIEW", link)
-        button = buttons.build_menu(1)
-        await editMessage(msg, message, button)
+    link = await __getResult(search_results, key, message, method)
+    buttons = ButtonMaker()
+    buttons.url_buildbutton("🔎 VIEW", link)
+    button = buttons.build_menu(1)
+    await editMessage(msg, message, button)
 
 async def __getResult(search_results, key, message, method):
     telegraph_content = []
@@ -183,23 +183,23 @@ async def __getResult(search_results, key, message, method):
         await telegraph.edit_telegraph(path, telegraph_content)
     return f"https://telegra.ph/{path[0]}"
 
-async def torrentSearchTmdb(message, title):
+async def tmdbSearch(message, title):
     buttons = ButtonMaker()
     user_id = message.from_user.id
     SEARCH_PLUGINS = config_dict['SEARCH_PLUGINS']
     if SITES is None and not SEARCH_PLUGINS:
         await editMessage("No API link or search PLUGINS added for this function", message)
     elif SITES is not None and SEARCH_PLUGINS:
-        buttons.cb_buildbutton('Api', f"torser^{user_id}^apisearch")
-        buttons.cb_buildbutton('Plugins', f"torser^{user_id}^plugin")
+        buttons.cb_buildbutton('Api', f"torser^{user_id}^apisearch^_^{title}")
+        buttons.cb_buildbutton('Plugins', f"torser^{user_id}^plugin^_^{title}")
         buttons.cb_buildbutton("Cancel", f"torser^{user_id}^cancel")
         button = buttons.build_menu(2)
         await editMessage('Choose tool to search:', message, button)
     elif SITES is not None:
-        button = __api_buttons(user_id, "apisearch", title)
+        button = __api_buttons(user_id, "apisearch", title, True)
         await editMessage('Choose site to search | API:', message, button)
     else:
-        button = await _plugin_buttons(user_id, title)
+        button = await _plugin_buttons(user_id, title, True)
         await editMessage('Choose site to search | Plugins:', message, button)
 
 async def torrentSearch(_, message):
@@ -230,14 +230,17 @@ async def torrentSearch(_, message):
         button = await _plugin_buttons(user_id)
         await sendMessage('Choose site to search | Plugins:', message, button)
 
-def __api_buttons(user_id, method, title=''):
+def __api_buttons(user_id, method, title=None, is_tdmb= False):
     buttons = ButtonMaker()
     for data, name in SITES.items():
-        buttons.cb_buildbutton(name, f"torser^{user_id}^{data}^{method}^{title}")
+        if is_tdmb:
+            buttons.cb_buildbutton(name, f"torser^{user_id}^{data}^{method}^{title}")
+        else:
+            buttons.cb_buildbutton(name, f"torser^{user_id}^{data}^{method}")    
     buttons.cb_buildbutton("Cancel", f"torser^{user_id}^cancel")
     return buttons.build_menu(2)
 
-async def _plugin_buttons(user_id, title=''):
+async def _plugin_buttons(user_id, title=None, is_tdmb= False):
     buttons = ButtonMaker()
     if not PLUGINS:
         qbclient = await run_sync(get_client)
@@ -246,29 +249,47 @@ async def _plugin_buttons(user_id, title=''):
             PLUGINS.append(name['name'])
         await run_sync(qbclient.auth_log_out)
     for siteName in PLUGINS:
-        buttons.cb_buildbutton(siteName.capitalize(), f"torser^{user_id}^{siteName}^plugin^{title}")
-    buttons.cb_buildbutton('All', f"torser^{user_id}^all^plugin^{title}")
+        if is_tdmb:
+            buttons.cb_buildbutton(siteName.capitalize(), f"torser^{user_id}^{siteName}^plugin^{title}")
+        else:
+            buttons.cb_buildbutton(siteName.capitalize(), f"torser^{user_id}^{siteName}^plugin")
+    if is_tdmb:
+        buttons.cb_buildbutton('All', f"torser^{user_id}^all^plugin^{title}")
+    else:
+        buttons.cb_buildbutton('All', f"torser^{user_id}^all^plugin")
     buttons.cb_buildbutton("Cancel", f"torser^{user_id}^cancel")
     return buttons.build_menu(2)
 
 async def torrentSearchUpdate(_, query):
-    user_id = query.from_user.id
     message = query.message
+    if message.reply_to_message:
+        user_id= message.reply_to_message.from_user.id
+    else:
+        user_id= message.from_user.id
     data = query.data.split("^")
-    if len(data) > 3:
+    if len(data) > 4:
         key= data[4]
     else:
         key = message.reply_to_message.text.split(maxsplit=1)
-        key = key[1].strip() if len(key) > 1 else None
-    # if user_id != int(data[1]):
-    #     await query.answer("Not Yours!", show_alert=True)
+        if len(key) > 1:
+            key = key[1].strip() 
+        else:
+            key= None
+    if user_id != int(data[1]):
+        await query.answer("Not Yours!", show_alert=True)
     if data[2].startswith('api'):
         await query.answer()
-        button = __api_buttons(user_id, data[2])
+        if len(data) > 4:
+            button = __api_buttons(user_id, data[2], key, True)
+        else:
+            button = __api_buttons(user_id, data[2])
         await editMessage('Choose site:', message, button)
     elif data[2] == 'plugin':
         await query.answer()
-        button = await _plugin_buttons(user_id)
+        if len(data) > 4:
+            button = await _plugin_buttons(user_id, key, True)
+        else:
+            button = await _plugin_buttons(user_id)
         await editMessage('Choose site:', message,  button)
     elif data[2] != "cancel":
         await query.answer()

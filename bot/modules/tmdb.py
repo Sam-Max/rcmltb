@@ -1,4 +1,5 @@
 from bot import LOGGER, config_dict, bot
+from os import remove as osremove
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -6,8 +7,7 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, sendPhoto
 from bot.helper.ext_utils.misc_utils import get_image_from_url
-from bot.modules.search import torrentSearchTmdb
-from os import remove as osremove
+from bot.modules.search import tmdbSearch
 from tmdbv3api import TMDb, Discover, Movie, TV, Trending
 
 
@@ -204,8 +204,9 @@ async def tmdb_next_buttons_maker(offset, next_offset, prev_offset, total, butto
     buttons.cb_buildbutton("✘ Close Menu", f"detail_tmdb^close^{user_id}", 'footer_third')
 
 async def search(_, query):
+    message= query.message
     title= query.data.split("^")[1]
-    await torrentSearchTmdb(query.message, title)
+    await tmdbSearch(message, title)
 
 
 bot.add_handler(MessageHandler(categories, filters= filters.command(BotCommands.TMDB) & (CustomFilters.owner_filter)))
