@@ -1,12 +1,13 @@
 from time import time
 from bot import IS_PREMIUM_USER, bot, app, status_dict, config_dict, status_dict_lock, LOGGER
+from bot.helper.ext_utils.bot_utils import new_task
 from bot.helper.telegram_helper.message_utils import sendStatusMessage, update_all_messages
 from bot.helper.mirror_leech_utils.status_utils.tg_download_status import TelegramStatus
 
 
 
 class TelegramDownloader:
-    def __init__(self, file, client, listener, path, name, multi=0, multi_zip=False):
+    def __init__(self, file, client, listener, path, name, multi=0):
         self.__client= client
         self.__listener = listener
         self.name = name
@@ -18,7 +19,6 @@ class TelegramDownloader:
         self.__path= path
         self.__start_time = time()
         self.__multi= multi
-        self.__multi_zip= multi_zip
         self.__is_cancelled = False
 
     @property
@@ -48,20 +48,15 @@ class TelegramDownloader:
         except:
             pass
 
+    @new_task       
     async def download(self):
         if self.__file == None:
             return
-        if self.__multi_zip:
-            if self.name == "":
-                name = "multizip"
-            else:
-                name = self.name
-            self.__path= self.__path
+        if self.name == "":
+            name = self.__file.file_name if hasattr(self.__file, 'file_name') else 'None'
         else:
-            if self.name == "":
-                name = self.__file.file_name if hasattr(self.__file, 'file_name') else 'None'
-            else:
-                name = self.name
+            name = self.name
+            if not self.__listener.isMultiZip:
                 self.__path = self.__path + name
         size = self.__file.file_size   
         gid = self.__file.file_unique_id
@@ -79,7 +74,7 @@ class TelegramDownloader:
             await self.__onDownloadError(str(e))
             return
         if download is not None:
-            if self.__multi_zip:
+            if self.__listener.isMultiZip:
                 if self.__multi == 1:
                     await self.__listener.onMultiZipComplete()
                 else:

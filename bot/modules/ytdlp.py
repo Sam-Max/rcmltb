@@ -214,7 +214,7 @@ async def _mdisk(link, name):
           
 
 @new_task
-async def _ytdl(client, message, isZip= False, isLeech=False, sameDir={}):
+async def _ytdl(client, message, isZip= False, isLeech=False):
     mssg = message.text
     user_id = message.from_user.id
     qual = ''
@@ -242,13 +242,6 @@ async def _ytdl(client, message, isZip= False, isLeech=False, sameDir={}):
             elif x.strip().isdigit():
                 multi = int(x)
                 mi = index
-            elif x.startswith('m:'):
-                marg = x.split('m:', 1)
-                if len(marg) > 1:
-                    folder_name = f'/{marg[1]}'
-                    if not sameDir:
-                        sameDir = set()
-                    sameDir.add(message.id)
             else:
                 break
         if multi == 0:
@@ -269,11 +262,9 @@ async def _ytdl(client, message, isZip= False, isLeech=False, sameDir={}):
         ymsg[mi] = f'{multi - 1}'
         nextmsg = await sendMessage(' '.join(ymsg), nextmsg)
         nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
-        if len(folder_name) > 0:
-            sameDir.add(nextmsg.id)
         nextmsg.from_user = message.from_user
         await sleep(4)
-        _ytdl(client, nextmsg, isZip, isLeech, sameDir)
+        _ytdl(client, nextmsg, isZip, isLeech)
 
     path = f'{DOWNLOAD_DIR}{message.id}{folder_name}'
     

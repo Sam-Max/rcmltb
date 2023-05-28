@@ -27,7 +27,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Search tmdb titles
 - Mirror and Leech files in batch from Telegram private/restricted channels
 - Mirror and Leech links in batch from txt file
-- Multizip for mirror & leech
+- Create zip file of multiple Telegram files
 - Extract and zip link/file from Telegram to cloud
 - Extract and zip folder/file from cloud to Telegram
 - Mirror to local host
@@ -41,13 +41,13 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 mirror - or /m Mirror to selected cloud 
 unzipmirror - or /uzm Mirror and extract to cloud 
 zipmirror - or /zm Mirror and zip to cloud 
-multizipmirror - or /mzm Mirror and zip multiple files to cloud 
+multizipmirror - or /mzm Zip multiple files and mirror to cloud 
 mirrorbatch - or /mb Mirror Telegram files and links in batch to cloud
 mirrorselect - or /ms Select cloud/folder for mirror 
 leech - or /l Leech from cloud/link to Telegram
 unzipleech - or /uzl Leech and extract to Telegram 
 zipleech - or /zl Leech and zip to Telegram 
-multizipleech - or /mzl Leech and zip multiple files to Telegram 
+multizipleech - or /mzl Zip multiple files and leech to Telegram 
 leechbatch - or /lb Leech Telegram files/links in batch to Telegram 
 ytdl - or /y Mirror ytdlp supported link
 ytdlzip - or /yz Mirror and zip ytdlp supported link
@@ -380,6 +380,12 @@ machine example.workers.dev login index_username password index_password
 **Note**: Using aria2c you can also use without username. Multiple accounts of different hosts can be added each separated by a new line.
 
 **Youtube Note**: For `youtube` authentication use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
+
+-----
+
+## Donations
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sammax09)
 
 -----
 

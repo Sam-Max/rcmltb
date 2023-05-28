@@ -111,7 +111,7 @@ def get_readable_time(seconds):
     result += f'{seconds}s'
     return result
 
-async def get_readable_message():
+def get_readable_message():
     msg = ""
     button= None
     STATUS_LIMIT = config_dict['STATUS_LIMIT']
@@ -240,7 +240,7 @@ def run_async(func, *args, wait=True, **kwargs):
     else:
         return future
 
-def run_async_task(func, *args, **kwargs):
+def create_task(func, *args, **kwargs):
     return botloop.create_task(func(*args, **kwargs))
 
 def new_task(func):

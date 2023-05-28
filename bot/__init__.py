@@ -37,7 +37,7 @@ load_dotenv('config.env', override=True)
 
 Interval = []
 QbInterval = []
-GLOBAL_EXTENSION_FILTER = ['.aria2']
+GLOBAL_EXTENSION_FILTER = ['.aria2', '!qB']
 QbTorrents = {}
 qb_listener_lock = Lock()
 user_data = {}

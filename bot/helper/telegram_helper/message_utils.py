@@ -3,7 +3,7 @@ from time import time
 from bot import LOGGER, bot, Interval, app, config_dict, status_reply_dict_lock, status_reply_dict, status_dict_lock
 from pyrogram.errors.exceptions import FloodWait, MessageNotModified
 from pyrogram.enums.parse_mode import ParseMode
-from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
+from bot.helper.ext_utils.bot_utils import get_readable_message, run_sync, setInterval
 
 
 async def sendMessage(text: str, message, reply_markup=None):
@@ -123,7 +123,7 @@ async def update_all_messages(force=False):
             return
         for chat_id in list(status_reply_dict.keys()):
             status_reply_dict[chat_id][1] = time()
-    msg, buttons = await get_readable_message()
+    msg, buttons = await run_sync(get_readable_message)
     if msg is None:
         return
     async with status_reply_dict_lock:
@@ -137,7 +137,7 @@ async def update_all_messages(force=False):
                 status_reply_dict[chat_id][1] = time()
 
 async def sendStatusMessage(msg):
-    progress, buttons = await get_readable_message()
+    progress, buttons = await run_sync(get_readable_message)
     if progress is None:
         return
     async with status_reply_dict_lock:

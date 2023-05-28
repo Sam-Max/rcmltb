@@ -3,7 +3,7 @@ from bot import DOWNLOAD_DIR, LOGGER, app, bot
 from pyrogram.errors import FloodWait
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 from pyrogram import filters
-from bot.helper.ext_utils.bot_utils import run_async_task
+from bot.helper.ext_utils.bot_utils import create_task
 from bot.helper.telegram_helper.filters import CustomFilters
 from pyrogram.handlers import MessageHandler
 from bot.helper.ext_utils.batch_helper import check_link, get_link
@@ -88,7 +88,7 @@ Send me one of the followings:
                                 msg= await bot.send_message(message.chat.id, cmd, disable_web_page_preview=True)
                             msg = await client.get_messages(message.chat.id, msg.id)
                             msg.from_user.id = message.from_user.id
-                            run_async_task(mirror_leech, client, msg, isLeech=isLeech)
+                            create_task(mirror_leech, client, msg, isLeech=isLeech)
                             await sleep(4)
                     else:
                         _link = get_link(response.text)
@@ -137,7 +137,7 @@ Send me one of the followings:
                                     msg= await bot.send_message(message.chat.id, f"/mirror {link}", disable_web_page_preview=True)
                                 msg = await client.get_messages(message.chat.id, msg.id)
                                 msg.from_user.id = message.from_user.id
-                                run_async_task(mirror_leech, client, msg, isLeech=isLeech)
+                                create_task(mirror_leech, client, msg, isLeech=isLeech)
                                 await sleep(4)
                 else:
                     await sendMessage("Send a txt file", message)
@@ -172,7 +172,7 @@ async def get_bulk_msg(message, msg_link, multi, isLeech, value=0):
             file = msg.document or msg.video or msg.photo or msg.audio or \
                    msg.voice or msg.video_note or msg.animation or None
             tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
-            run_async_task(tg_down.download)
+            tg_down.download()
             if multi > 1:
                 msg = f"{multi - 1}"
                 await sleep(4)
@@ -200,7 +200,7 @@ async def get_bulk_msg(message, msg_link, multi, isLeech, value=0):
             file = msg.document or msg.video or msg.photo or msg.audio or \
                    msg.voice or msg.video_note or msg.animation or None
             tg_down= TelegramDownloader(file, client, listener, f'{DOWNLOAD_DIR}{listener.uid}/', "")
-            run_async_task(tg_down.download)
+            tg_down.download()
             if multi > 1:
                 msg = f"{multi - 1}"
                 await sleep(4)

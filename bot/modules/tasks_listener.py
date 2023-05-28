@@ -22,21 +22,22 @@ from bot.helper.mirror_leech_utils.upload_utils.telegram_uploader import Telegra
 
 
 class MirrorLeechListener:
-    def __init__(self, message, tag, user_id, isZip=False, extract=False, pswd=None, select=False, seed=False, isLeech= False, isMultiZip= False):
+    def __init__(self, message, tag, user_id, isZip=False, extract=False, pswd=None, select=False, seed=False, isLeech= False, isMultiZip= False, zip_name=None):
         self.message = message
         self.tag = tag
-        self.uid = self.message.id
+        self.uid = message.id
         self.user_id = user_id
         self.__isZip = isZip
         self.extract = extract
         self.__pswd = pswd
-        self.__isMultiZip = isMultiZip
+        self.__zip_name= zip_name
+        self.isMultiZip = isMultiZip
         self.isLeech = isLeech
         self.seed = seed
         self.select = select
         self.dir = f"{DOWNLOAD_DIR}{self.uid}"
         self.newDir = ""
-        self.multizip_dir = f"{DOWNLOAD_DIR}{self.user_id}/multizip/"
+        self.multiZipDir = f"{DOWNLOAD_DIR}{self.__zip_name}/"
         self.isSuperGroup = message.chat.type.name in ['SUPERGROUP', 'CHANNEL']
         self.suproc = None
 
@@ -56,35 +57,34 @@ class MirrorLeechListener:
     async def onMultiZipComplete(self):
         async with status_dict_lock:
             download = status_dict[self.uid]
-            name = str(download.name())
             gid = download.gid()
             
-        mz_path= self.multizip_dir
-        path = f"{mz_path}{name}.zip" 
-        size = get_path_size(mz_path)
+        zip_path= self.multiZipDir
+        path = f"{zip_path}{self.__zip_name}.zip" 
+        size = get_path_size(zip_path)
         user_dict = user_data.get(self.message.from_user.id, {})
         async with status_dict_lock:
-            status_dict[self.uid] = ZipStatus(name, size, gid, self)
+            status_dict[self.uid] = ZipStatus(self.__zip_name, size, gid, self)
 
         LEECH_SPLIT_SIZE = user_dict.get('split_size', False) or config_dict['LEECH_SPLIT_SIZE']  
         if self.__pswd is not None:
             if self.isLeech and int(size) > LEECH_SPLIT_SIZE:
-                cmd = ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, mz_path]
-                LOGGER.info(f'Zip: orig_path: {mz_path}, zip_path: {path}.0*')
+                cmd = ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.__pswd}", path, zip_path]
+                LOGGER.info(f'Zip: orig_path: {zip_path}, zip_path: {path}.0*')
             else:
-                LOGGER.info(f'Zip: orig_path: {mz_path}, zip_path: {path}')
-                cmd =  ["7z", "a", "-mx=0", f"-p{self.__pswd}", path, mz_path]
+                LOGGER.info(f'Zip: orig_path: {zip_path}, zip_path: {path}')
+                cmd =  ["7z", "a", "-mx=0", f"-p{self.__pswd}", path, zip_path]
         elif self.isLeech and int(size) > LEECH_SPLIT_SIZE:
-            LOGGER.info(f'Zip: orig_path: {mz_path}, zip_path: {path}.0*')
-            cmd= ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, mz_path]
+            LOGGER.info(f'Zip: orig_path: {zip_path}, zip_path: {path}.0*')
+            cmd= ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, zip_path]
         else:
-            LOGGER.info(f'Zip: orig_path: {mz_path}, zip_path: {path}')
-            cmd= ["7z", "a", "-mx=0", path, mz_path]
+            LOGGER.info(f'Zip: orig_path: {zip_path}, zip_path: {path}')
+            cmd= ["7z", "a", "-mx=0", path, zip_path]
         self.suproc = await create_subprocess_exec(*cmd)
         await self.suproc.wait()
         if self.suproc.returncode == -9:
             return
-        for dirpath, _, files in walk(mz_path, topdown=False):        
+        for dirpath, _, files in walk(zip_path, topdown=False):        
             for file in files:
                 if search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$|\.zip$|\.7z$|^.(?!.*\.part\d+\.rar)(?=.*\.rar$)', file) is None:    
                     del_path = ospath.join(dirpath, file)
@@ -113,6 +113,7 @@ class MirrorLeechListener:
             download = status_dict[self.uid]
             name = str(download.name()).replace('/', '')
             gid = download.gid()
+
         if not config_dict['NO_TASKS_LOGS']:
             LOGGER.info(f"Download completed: {name}")
         if name == "None" or not ospath.exists(f"{self.dir}/{name}"):
@@ -374,8 +375,8 @@ class MirrorLeechListener:
                 await clean_target(self.newDir)
             return 
         
-        if self.__isMultiZip:
-            await clean_download(self.multizip_dir)
+        if self.isMultiZip:
+            await clean_download(self.multiZipDir)
         elif not config_dict['MULTI_REMOTE_UP']:
             await clean_download(self.dir)
 
@@ -416,8 +417,8 @@ class MirrorLeechListener:
                 await clean_target(self.newDir)
             return
         
-        if self.__isMultiZip:
-            await clean_download(self.multizip_dir)
+        if self.isMultiZip:
+            await clean_download(self.multiZipDir)
         else:
             await clean_download(self.dir)
 
@@ -445,8 +446,8 @@ class MirrorLeechListener:
         else:
             await update_all_messages()
 
-        if self.__isMultiZip:
-            await clean_download(self.multizip_dir)
+        if self.isMultiZip:
+            await clean_download(self.multiZipDir)
         else:
             await clean_download(self.dir)
 

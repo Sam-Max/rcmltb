@@ -35,10 +35,11 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
 """
 
 MULTIZIP_HELP_MESSAGE= '''
-<b>Multi zip by replying to first file:</b>
+<b>Multi zip by replying to first file (not links):</b>
 
-<code>/cmd</code> 5(number of files)
-Number should be always before | zipname
+<code>/cmd</code> 5 (number of files) m:zip_name
+
+Number always before m:zip_name
 '''
 
 MIRROR_HELP_MESSAGE = '''         
