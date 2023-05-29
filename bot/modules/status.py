@@ -1,6 +1,3 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
-# Adapted for asyncio framework and pyrogram library
-
 from time import time
 from psutil import cpu_percent, virtual_memory, disk_usage
 from bot import DOWNLOAD_DIR, bot, Interval, status_dict, status_dict_lock, status_reply_dict_lock, config_dict, botUptime
