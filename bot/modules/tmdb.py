@@ -1,4 +1,4 @@
-from bot import config_dict, bot
+from bot import LOGGER, config_dict, bot
 from os import remove as osremove
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
@@ -91,15 +91,19 @@ async def get_details(_, query):
         title= m.title
         msg = f'<b>Title:</b> {title}\n\n'
         msg += f'<b>Plot:</b> {m.overview}\n\n'
-        image_url= tmdb_image_base + m.poster_path
-        path= await get_image_from_url(image_url, title)
         tmdb_titles[m.id] = title
-        if path:
+        if m.poster_path is None:
             button.cb_buildbutton("🔍 Torrent Search", f"stdmb^{m.id}")
-            await sendPhoto(msg, message, path, button.build_menu(2))
-            osremove(path)
+            await sendMessage(msg, message, button.build_menu(2))
         else:
-            await sendMessage("Failed to retrieve the image.", message)
+            image_url= tmdb_image_base + m.poster_path
+            path= await get_image_from_url(image_url, title)
+            if path:
+                button.cb_buildbutton("🔍 Torrent Search", f"stdmb^{m.id}")
+                await sendPhoto(msg, message, path, button.build_menu(2))
+                osremove(path)
+            else:
+                await sendMessage("Failed to retrieve image.", message)
     elif data[1] == "tv":
         await query.answer()
         tv = TV()
@@ -107,15 +111,19 @@ async def get_details(_, query):
         title= m.name
         msg = f'<b>Title:</b> {title}\n\n'
         msg += f'<b>Plot:</b> {m.overview}\n\n'
-        image_url= tmdb_image_base + m.poster_path
-        path= await get_image_from_url(image_url, title)
         tmdb_titles[m.id] = title
-        if path:
+        if m.poster_path is None:
             button.cb_buildbutton("🔍 Torrent Search", f"stdmb^{m.id}")
-            await sendPhoto(msg, message, path, button.build_menu(2))
-            osremove(path)
+            await sendMessage(msg, message, button.build_menu(2))
         else:
-            await sendMessage("Failed to retrieve the image.", message)
+            image_url= tmdb_image_base + m.poster_path
+            path= await get_image_from_url(image_url, title)
+            if path:
+                button.cb_buildbutton("🔍 Torrent Search", f"stdmb^{m.id}")
+                await sendPhoto(msg, message, path, button.build_menu(2))
+                osremove(path)
+            else:
+                await sendMessage("Failed to retrieve image.", message)
     elif data[1] == "pages":
         await query.answer()
     else:
@@ -224,25 +232,23 @@ async def search_api(client, query):
 
     question= await sendMessage("Send a movie or tv name to search, /ignore to cancel", message)
     try:
-        response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout=60)
-        if response:
+        if response := await client.listen.Message(filters.text, id=filters.user(user_id), timeout=60):
             if "/ignore" in response.text:
                 pass
             else:
                 title= response.text
-
+                
                 mv = Movie()
                 movies = mv.search(title)
                 for movie in movies:
                     button.cb_buildbutton(f"[Movie] {movie.title}", f"detail^movie^{movie.id}")
-
+                
                 tv = TV()
                 shows = tv.search(title)
                 for show in shows:
                     button.cb_buildbutton(f"[TV] {show.name}", f"detail^tv^{show.id}")
 
                 button.cb_buildbutton("✘ Close Menu", f"detail^close^{user_id}", 'footer_third')
-
                 await sendMessage("Results found: ", message, button.build_menu(2))
     except TimeoutError:
         await sendMessage("Too late 60s gone, try again!", message)

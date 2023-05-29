@@ -311,9 +311,9 @@ async def start_env_listener(client, query, user_id, key):
     message= query.message
     question= await sendMessage("Send valid value for selected variable, /ignore to cancel. Timeout: 60 sec", message)
     try:
-        response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout= 60)
+        response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout=60)
     except TimeoutError:
-        await client.send_message(message.chat.id, text="Too late 30s gone, try again!")
+        await client.send_message(message.chat.id, text="Too late 60s gone, try again!")
         return
     else:
         if response:
@@ -405,9 +405,9 @@ async def start_aria_listener(client, query, user_id, key):
     else:
         question= await sendMessage("Send valid value for selected variable, /ignore to cancel. Timeout: 60 sec", message)
     try:
-        response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout= 60)
+        response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout=60)
     except TimeoutError:
-        await client.send_message(message.chat.id, text="Too late 30s gone, try again!")
+        await client.send_message(message.chat.id, text="Too late 60s gone, try again!")
         return
     else:
         if response:
@@ -446,9 +446,9 @@ async def start_qbit_listener(client, query, user_id, key):
     message= query.message
     question= await sendMessage("Send valid value for selected variable, /ignore to cancel. Timeout: 60 sec", message)
     try:
-        response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout= 60)
+        response = await client.listen.Message(filters.text, id= filters.user(user_id), timeout=60)
     except TimeoutError:
-        await client.send_message(message.chat.id, text="Too late 30s gone, try again!")
+        await client.send_message(message.chat.id, text="Too late 60s gone, try again!")
         return
     else:
         if response:

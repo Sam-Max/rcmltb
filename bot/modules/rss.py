@@ -135,13 +135,13 @@ async def rssSub(_, message, pre_event):
                 f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf} - opt: {opt}")
         except (IndexError, AttributeError) as e:
             emsg = f"The link: {feed_link} doesn't seem to be a RSS feed or it's region-blocked!"
-            await sendMessage(message, emsg + '\nError: ' + str(e))
+            await sendMessage(emsg + '\nError: ' + str(e), message)
         except Exception as e:
-            await sendMessage(message, str(e))
+            await sendMessage(str(e), message)
     if DATABASE_URL:
         await DbManager().rss_update(user_id)
     if msg:
-        await sendMessage(message, msg)
+        await sendMessage(msg, message)
     await updateRssMenu(pre_event)
 
 async def getUserId(title):
@@ -161,11 +161,11 @@ async def rssUpdate(client, message, pre_event, state):
                 res, user_id = await getUserId(title)
             if not res:
                 user_id = message.from_user.id
-                await sendMessage(message, f'{title} not found!')
+                await sendMessage(f'{title} not found!', message)
                 continue
         istate = rss_dict[user_id][title].get('paused', False)
         if istate and state == 'pause' or not istate and state == 'resume':
-            await sendMessage(message, f'{title} already {state}d!')
+            await sendMessage(f'{title} already {state}d!', message)
             continue
         async with rss_dict_lock:
             updated.append(title)
@@ -191,7 +191,7 @@ async def rssUpdate(client, message, pre_event, state):
                 if not rss_dict:
                     await DbManager().trunc_table('rss')
     LOGGER.info(f"Rss link with Title(s): {updated} has been {state}d!")
-    await sendMessage(message, f"Rss links with Title(s): <code>{updated}</code> has been {state}d!")
+    await sendMessage(f"Rss links with Title(s): <code>{updated}</code> has been {state}d!", message)
     if DATABASE_URL and rss_dict.get(user_id):
         await DbManager().rss_update(user_id)
     await updateRssMenu(pre_event)
@@ -237,7 +237,7 @@ async def rssList(query, start, all_users=False):
     button = buttons.build_menu(2)
     if query.message.text.html == list_feed:
         return
-    await editMessage(query.message, list_feed, button)
+    await editMessage(list_feed, query.message, button)
 
 
 async def rssGet(client, message, pre_event):
@@ -245,7 +245,7 @@ async def rssGet(client, message, pre_event):
     handler_dict[user_id] = False
     args = message.text.split()
     if len(args) < 2:
-        await sendMessage(message, f'{args}. Wrong Input format. You should add number of the items you want to get. Read help message before adding new subcription!')
+        await sendMessage(f'{args}. Wrong Input format. You should add number of the items you want to get. Read help message before adding new subcription!', message)
         await updateRssMenu(pre_event)
         return
     try:
@@ -253,7 +253,7 @@ async def rssGet(client, message, pre_event):
         count = int(args[1])
         data = rss_dict[user_id].get(title, False)
         if data and count > 0:
-            msg = await sendMessage(message, f"Getting the last <b>{count}</b> item(s) from {title}")
+            msg = await sendMessage(f"Getting the last <b>{count}</b> item(s) from {title}", message)
             try:
                 async with ClientSession(trust_env=True) as session:
                     async with session.get(data['link']) as res:
@@ -283,7 +283,7 @@ async def rssGet(client, message, pre_event):
                 await editMessage(str(e), msg)
     except Exception as e:
         LOGGER.error(str(e))
-        await sendMessage(message, f"Enter a valid value!. {e}")
+        await sendMessage(f"Enter a valid value!. {e}", message)
     await updateRssMenu(pre_event)
 
 
@@ -295,10 +295,10 @@ async def rssEdit(client, message, pre_event):
         args = item.split()
         title = args[0].strip()
         if len(args) < 2:
-            await sendMessage(message, f'{item}. Wrong Input format. Read help message before editing!')
+            await sendMessage(f'{item}. Wrong Input format. Read help message before editing!', message)
             continue
         elif not rss_dict[user_id].get(title, False):
-            await sendMessage(message, "Enter a valid title. Title not found!")
+            await sendMessage("Enter a valid title. Title not found!", message)
             continue
         inf_lists = []
         exf_lists = []
@@ -395,7 +395,7 @@ async def rssListener(client, query):
         buttons.cb_buildbutton("Back", f"rss back {user_id}")
         buttons.cb_buildbutton("Close", f"rss close {user_id}")
         button = buttons.build_menu(2)
-        await editMessage(message, RSS_HELP_MESSAGE, button)
+        await editMessage(RSS_HELP_MESSAGE, message, button)
         pfunc = partial(rssSub, pre_event=query)
         await event_handler(client, query, pfunc)
     elif data[1] == 'list':
@@ -416,7 +416,7 @@ async def rssListener(client, query):
             buttons.cb_buildbutton("Back", f"rss back {user_id}")
             buttons.cb_buildbutton("Close", f"rss close {user_id}")
             button = buttons.build_menu(2)
-            await editMessage(message, 'Send one title with vlaue separated by space get last X items.\nTitle Value\nTimeout: 60 sec.', button)
+            await editMessage('Send one title with vlaue separated by space get last X items.\nTitle Value\nTimeout: 60 sec.', message, button)
             pfunc = partial(rssGet, pre_event=query)
             await event_handler(client, query, pfunc)
     elif data[1] in ['unsubscribe', 'pause', 'resume']:
@@ -436,7 +436,7 @@ async def rssListener(client, query):
                 buttons.cb_buildbutton("Unsub AllMyFeeds", f"rss uallunsub {user_id}")
             buttons.cb_buildbutton("Close", f"rss close {user_id}")
             button = buttons.build_menu(2)
-            await editMessage(message, f'Send one or more rss titles separated by space to {data[1]}.\nTimeout: 60 sec.', button)
+            await editMessage(f'Send one or more rss titles separated by space to {data[1]}.\nTimeout: 60 sec.', message, button)
             pfunc = partial(rssUpdate, pre_event=query, state=data[1])
             await event_handler(client, query, pfunc)
     elif data[1] == 'edit':
@@ -456,7 +456,7 @@ Title2 c: none inf: none opt: none
 Note: Only what you provide will be edited, the rest will be the same like example 2: exf will stay same as it is.
 Timeout: 60 sec.
             '''
-            await editMessage(message, msg, button)
+            await editMessage(msg, message, button)
             pfunc = partial(rssEdit, pre_event=query)
             await event_handler(client, query, pfunc)
     elif data[1].startswith('uall'):
@@ -528,7 +528,7 @@ Timeout: 60 sec.
             buttons.cb_buildbutton("Close", f"rss close {user_id}")
             button = buttons.build_menu(2)
             msg = 'Send one or more user_id separated by space to delete their resources.\nTimeout: 60 sec.'
-            await editMessage(message, msg, button)
+            await editMessage(msg, message, button)
             pfunc = partial(rssDelete, pre_event=query)
             await event_handler(client, query, pfunc)
     elif data[1] == 'listall':

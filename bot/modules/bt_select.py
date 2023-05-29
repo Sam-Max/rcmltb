@@ -58,7 +58,11 @@ async def get_confirm(client, query):
                 LOGGER.error( f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
         await sendStatusMessage(message)
         await message.delete()
-
+    elif data[1] == "rm":
+        await query.answer()
+        obj = dl.download()
+        await obj.cancel_download()
+        await message.delete()
 
 
 confirm_handler = CallbackQueryHandler(get_confirm, filters= filters.regex("btsel"))

@@ -251,9 +251,9 @@ async def mirror_menu(client, query):
         await query_message.delete()
         question= await client.send_message(message.chat.id, text= "Send the new name, /ignore to cancel")
         try:
-            response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout = 30)
+            response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout=60)
         except TimeoutError:
-            await sendMessage("Too late 30s gone, try again!", message)
+            await sendMessage("Too late 60s gone, try again!", message)
         else:
             if response:
                 if "/ignore" in response.text:

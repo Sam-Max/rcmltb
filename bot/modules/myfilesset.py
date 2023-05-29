@@ -193,9 +193,9 @@ async def rclone_mkdir(client, message, remote, remote_path, tag):
      conf_path = await get_rclone_path(user_id, message)
      question= await sendMessage("Send name for directory, /ignore to cancel", message)
      try:
-          response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout= 30)
+          response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout=60)
      except TimeoutError:
-          await sendMessage("Too late 30s gone, try again!", message)
+          await sendMessage("Too late 60s gone, try again!", message)
      else:
           if response:
                try:
@@ -247,9 +247,9 @@ async def rclone_rename(client, message, remote, remote_path, tag):
      conf_path = await get_rclone_path(user_id, message)
      question= await sendMessage("Send new name for file, /ignore to cancel", message)
      try:
-          response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout= 30)
+          response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout=60)
      except TimeoutError:
-          await sendMessage("Too late 30s gone, try again!", message)
+          await sendMessage("Too late 60s gone, try again!", message)
      else:
           if response:
                try:

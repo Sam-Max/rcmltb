@@ -172,7 +172,7 @@ async def selection_callback(client, callback_query):
         await query.answer()     
         question= await sendMessage("Send link to leech, /ignore to cancel", message)
         try:
-            response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout= 30)
+            response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout=60)
             if response:
                 if "/ignore" in response.text:
                     await client.listen.Cancel(filters.user(user_id))
@@ -181,7 +181,7 @@ async def selection_callback(client, callback_query):
                     message.text = f"/leech {response.text}"
                     await mirror_leech(client, message, isZip=is_zip, extract=extract, isLeech=True)
         except TimeoutError:
-            await sendMessage("Too late 30s gone, try again!", message)
+            await sendMessage("Too late 60s gone, try again!", message)
         finally:
             await question.delete()
     elif cmd[1] == "remotes":

@@ -97,8 +97,10 @@ Timeout: 60 sec.
 
 CLONE_HELP_MESSAGE = """
 Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link along with command or by replying to the link 
-<b>Multi links only by replying to first gdlink:</b>
-<code>/clone</code> 10(number of links/pathies)
+
+<b>Multi links only by replying to first gdrive link:</b>
+<code>/clone</code> 10(number of links)
+
 <b>Gdrive:</b>
-<code>/clone</code> gdrivelink
+<code>/clone</code> gdrive link
 """

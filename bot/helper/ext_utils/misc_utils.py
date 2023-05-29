@@ -271,6 +271,7 @@ def bt_selection_buttons(id_):
         buttons.cb_buildbutton("Pincode", f"btsel pin {gid} {pincode}")
     else:
         buttons.url_buildbutton("Select Files", f"{QB_BASE_URL}/app/files/{id_}?pin_code={pincode}")
+    buttons.cb_buildbutton("Cancel", f"btsel rm {gid} {id_}")
     buttons.cb_buildbutton("Done Selecting", f"btsel done {gid} {id_}")
     return buttons.build_menu(2)
 
