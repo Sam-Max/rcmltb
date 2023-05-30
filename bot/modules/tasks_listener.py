@@ -405,45 +405,6 @@ class MirrorLeechListener:
             await update_all_messages()
 
 
-        msg = f"<b>Name: </b><code>{escape(name)}</code>\n"
-        msg += f"<b>Size: </b>{size}\n\n"
-        msg += f"<b>cc: </b>{self.tag}"
-        button= ButtonMaker()
-        
-        if is_gdrive:
-            link= await get_drive_link(remote, base, name, config_path, mime_type)
-            if link:
-                LOGGER.info(link)
-                button.url_buildbutton("Cloud Link 🔗", link)
-        else:
-            cmd = ["rclone", "link", f'--config={config_path}', f"{remote}:{base}/{name}"]
-            res, err, code = await cmd_exec(cmd)
-            if code == 0:
-                button.url_buildbutton("Cloud Link 🔗", res)
-            else:
-                LOGGER.error( f'Error while getting link. Error: {err}')
-        if is_gdrive and (GD_INDEX_URL:= config_dict['GD_INDEX_URL']):
-            encoded_path = rutils.quote(f'{base}{name}')
-            share_url = f'{GD_INDEX_URL}/{encoded_path}'
-            if type == "Folder":
-                share_url += '/'
-                button.url_buildbutton("⚡ Index Link", share_url)
-            else:
-                button.url_buildbutton("⚡ Index Link", share_url)
-                if config_dict['VIEW_LINK']:
-                    share_urls = f'{GD_INDEX_URL}/{encoded_path}?a=view'
-                    button.url_buildbutton("🌐 View Link", share_urls) 
-        elif RC_INDEX_URL := config_dict['RC_INDEX_URL']:
-            RC_INDEX_PORT= config_dict['RC_INDEX_PORT']
-            encoded_path = rutils.quote(f'{base}{name}')
-            share_url = f'{RC_INDEX_URL}:{RC_INDEX_PORT}/[{remote}:]/{encoded_path}'
-            if mime_type == "Folder":
-                share_url += '/'
-            button.url_buildbutton("🔗 Rclone Link", share_url)
-
-        await sendMessage(msg, self.message, button.build_menu(2))
-    
-
     async def onUploadComplete(self, link, size, files, folders, mime_type, name):
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n"
         msg += f"<b>Size: </b>{size}"
