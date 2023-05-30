@@ -4,8 +4,9 @@ from re import search
 from os import listdir, path as ospath, remove as osremove, walk
 from asyncio import create_subprocess_exec, sleep
 from asyncio.subprocess import PIPE
+from requests import utils as rutils
 from bot import DOWNLOAD_DIR, LOGGER, TG_MAX_FILE_SIZE, Interval, status_dict, status_dict_lock, user_data, aria2, config_dict
-from bot.helper.ext_utils.bot_utils import add_index_link, is_archive, is_archive_split, is_first_archive_split, run_sync
+from bot.helper.ext_utils.bot_utils import cmd_exec, is_archive, is_archive_split, is_first_archive_split, run_sync
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.human_format import get_readable_file_size, human_readable_bytes
 from bot.helper.telegram_helper.message_utils import delete_all_messages, sendMarkup, sendMessage, update_all_messages
@@ -343,31 +344,44 @@ class MirrorLeechListener:
         else:
             await update_all_messages()
 
-    async def onRcloneUploadComplete(self, name, size, conf, remote, base, mime_type, isGdrive):      
-        msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
-        msg += f'\n<b>cc: </b>{self.tag}\n\n'
-        buttons= ButtonMaker()
+    async def onRcloneUploadComplete(self, name, size, config_path, remote, base, mime_type, is_gdrive):      
+        msg = f"<b>Name: </b><code>{escape(name)}</code>\n"
+        msg += f"<b>Size: </b>{size}\n\n"
+        msg += f"<b>cc: </b>{self.tag}"
+        button= ButtonMaker()
         
-        cmd = ["rclone", "link", f'--config={conf}', f"{remote}:{base}/{name}"]
-        process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
-        out, _ = await process.communicate()
-        url = out.decode().strip()
-        rc = await process.wait()
-        if rc == 0:
-            GD_INDEX_URL = config_dict['GD_INDEX_URL']
-            if isGdrive and GD_INDEX_URL:
-                await add_index_link(name, mime_type, GD_INDEX_URL, buttons)
-            buttons.url_buildbutton("Cloud Link 🔗", url)
-            await sendMarkup(msg, self.message, buttons.build_menu(2))
+        if is_gdrive:
+            link= await get_drive_link(remote, base, name, config_path, mime_type)
+            if link:
+                button.url_buildbutton("Cloud Link 🔗", link)
         else:
-            if isGdrive:
-                await get_drive_link(remote, base, name, conf, mime_type, buttons)
-                if GD_INDEX_URL := config_dict['GD_INDEX_URL']:
-                    await add_index_link(name, mime_type, GD_INDEX_URL, buttons)
-                await sendMarkup(msg, self.message, buttons.build_menu(2))   
+            cmd = ["rclone", "link", f'--config={config_path}', f"{remote}:{base}/{name}"]
+            res, err, code = await cmd_exec(cmd)
+            if code == 0:
+                button.url_buildbutton("Cloud Link 🔗", res)
             else:
-                await sendMessage(msg, self.message)  
+                LOGGER.error( f'Error while getting link. Error: {err}')
+        if is_gdrive and (GD_INDEX_URL:= config_dict['GD_INDEX_URL']):
+            encoded_path = rutils.quote(f'{base}{name}')
+            share_url = f'{GD_INDEX_URL}/{encoded_path}'
+            if type == "Folder":
+                share_url += '/'
+                button.url_buildbutton("⚡ Index Link", share_url)
+            else:
+                button.url_buildbutton("⚡ Index Link", share_url)
+                if config_dict['VIEW_LINK']:
+                    share_urls = f'{GD_INDEX_URL}/{encoded_path}?a=view'
+                    button.url_buildbutton("🌐 View Link", share_urls) 
+        elif RC_INDEX_URL := config_dict['RC_INDEX_URL']:
+            RC_INDEX_PORT= config_dict['RC_INDEX_PORT']
+            encoded_path = rutils.quote(f'{base}{name}')
+            share_url = f'{RC_INDEX_URL}:{RC_INDEX_PORT}/[{remote}:]/{encoded_path}'
+            if mime_type == "Folder":
+                share_url += '/'
+            button.url_buildbutton("🔗 Rclone Link", share_url)
 
+        await sendMessage(msg, self.message, button.build_menu(2))
+        
         if self.seed:
             if self.__isZip:
                 await clean_target(f"{self.dir}/{name}")
@@ -390,8 +404,49 @@ class MirrorLeechListener:
         else:
             await update_all_messages()
 
+
+        msg = f"<b>Name: </b><code>{escape(name)}</code>\n"
+        msg += f"<b>Size: </b>{size}\n\n"
+        msg += f"<b>cc: </b>{self.tag}"
+        button= ButtonMaker()
+        
+        if is_gdrive:
+            link= await get_drive_link(remote, base, name, config_path, mime_type)
+            if link:
+                LOGGER.info(link)
+                button.url_buildbutton("Cloud Link 🔗", link)
+        else:
+            cmd = ["rclone", "link", f'--config={config_path}', f"{remote}:{base}/{name}"]
+            res, err, code = await cmd_exec(cmd)
+            if code == 0:
+                button.url_buildbutton("Cloud Link 🔗", res)
+            else:
+                LOGGER.error( f'Error while getting link. Error: {err}')
+        if is_gdrive and (GD_INDEX_URL:= config_dict['GD_INDEX_URL']):
+            encoded_path = rutils.quote(f'{base}{name}')
+            share_url = f'{GD_INDEX_URL}/{encoded_path}'
+            if type == "Folder":
+                share_url += '/'
+                button.url_buildbutton("⚡ Index Link", share_url)
+            else:
+                button.url_buildbutton("⚡ Index Link", share_url)
+                if config_dict['VIEW_LINK']:
+                    share_urls = f'{GD_INDEX_URL}/{encoded_path}?a=view'
+                    button.url_buildbutton("🌐 View Link", share_urls) 
+        elif RC_INDEX_URL := config_dict['RC_INDEX_URL']:
+            RC_INDEX_PORT= config_dict['RC_INDEX_PORT']
+            encoded_path = rutils.quote(f'{base}{name}')
+            share_url = f'{RC_INDEX_URL}:{RC_INDEX_PORT}/[{remote}:]/{encoded_path}'
+            if mime_type == "Folder":
+                share_url += '/'
+            button.url_buildbutton("🔗 Rclone Link", share_url)
+
+        await sendMessage(msg, self.message, button.build_menu(2))
+    
+
     async def onUploadComplete(self, link, size, files, folders, mime_type, name):
-        msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
+        msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n"
+        msg += f"<b>Size: </b>{size}"
         msg += f'\n<b>Total Files: </b>{folders}'
         if mime_type != 0:
             msg += f'\n<b>Corrupted Files: </b>{mime_type}'

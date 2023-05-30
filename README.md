@@ -57,6 +57,7 @@ botfiles - or /bf Bot configuration files
 myfiles - Rclone File Manager
 copy - Copy from cloud to cloud
 clone - Clone gdrive link file/folder 
+count - count file/folder fom gdrive link
 usetting - User settings
 ownsetting - Owner settings
 rss - Rss feed

@@ -5,6 +5,7 @@ from os import getcwd, path as ospath
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 from bot import GLOBAL_EXTENSION_FILTER, LOGGER, OWNER_ID, config_dict, remotes_multi
+from bot.helper.ext_utils.bot_utils import cmd_exec
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.exceptions import NotRclonePathFound
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -266,31 +267,25 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, listener_dict
         await sendMarkup(msg, message, reply_markup= buttons.build_menu(1))
 
 
-async def get_drive_link(remote, base, name, conf, mime_type, buttons):
+async def get_drive_link(remote, base, name, config_path, mime_type):
+    epath = f"{remote}:{base}/{name}"
     if mime_type == "Folder":
-        s_name = rescape(name.replace(".", ""))
-        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{base}", "--dirs-only", "-f", f"+ {s_name}/", "-f", "- *"]
-    else:
-        s_name = rescape(name)
-        cmd = ["rclone", "lsjson", f'--config={conf}', f"{remote}:{base}", "--files-only", "-f", f"+ {s_name}", "-f", "- *"]
-    process = await create_subprocess_exec(*cmd,stdout= PIPE,stderr= PIPE)
-    stdout, stderr = await process.communicate()
-    return_code = await process.wait()
-    stdout = stdout.decode().strip()
-    if return_code != 0:
-        LOGGER.error(f'Error: {stderr.decode().strip()}') 
-        return
-    data = jsonloads(stdout)
-    if data:
-        id = data[0]["ID"]
+        epath += '/'  
+    cmd = ['rclone', 'lsjson', '--fast-list', '--no-mimetype', '--no-modtime', '--config', config_path, epath]
+    res, err, code = await cmd_exec(cmd)
+    if code == 0:
+        data = jsonloads(res)
+        id = 'err'
+        for d in data:
+            if d['Path'] == name:
+                id = d['ID']
+                break
         if mime_type == "Folder":
             link = f'https://drive.google.com/drive/folders/{id}'
-            buttons.url_buildbutton('Cloud Link 🔗', link)
         else:
             link = f'https://drive.google.com/uc?id={id}&export=download'
-            buttons.url_buildbutton('Cloud Link 🔗', link)
     else:
-        LOGGER.error("Error while getting id")
-        link = 'https://drive.google.com/file/d/err/view'
-        buttons.url_buildbutton("🚫", link)
+        LOGGER.error( f'Error while getting link. Error: {err}')
+        link=''
+    return link
         

@@ -15,7 +15,7 @@ from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.message_utils import editMessage, sendMarkup, sendMessage
 from .helper.ext_utils.misc_utils import clean_all, exit_clean_up, start_cleanup
 from .helper.ext_utils import db_handler
-from .modules import batch, cancel, botfiles, copy, leech, mirror_leech, mirror_select, myfilesset, owner_settings, myfiles, search, stats, status, clone, storage, cleanup, user_settings, ytdlp, shell, exec, bt_select, rss, serve, sync, tmdb
+from .modules import batch, cancel, botfiles, copy, leech, mirror_leech, mirror_select, myfilesset, owner_settings, myfiles, search, stats, status, clone, storage, cleanup, user_settings, ytdlp, shell, exec, bt_select, rss, serve, sync, gd_count,tmdb
 
 
 start_aria2_listener()

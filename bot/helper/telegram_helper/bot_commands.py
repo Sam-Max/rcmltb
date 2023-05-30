@@ -22,6 +22,7 @@ class _BotCommands:
         self.BotFilesCommand = [f'botfiles{CMD_INDEX}', f'bf{CMD_INDEX}']
         self.CopyCommand = f'copy{CMD_INDEX}'
         self.CloneCommand = f'clone{CMD_INDEX}'
+        self.CountCommand = f'count{CMD_INDEX}'
         self.SearchCommand = f'search{CMD_INDEX}'
         self.StatusCommand = f'status{CMD_INDEX}'
         self.StatsCommand = f'stats{CMD_INDEX}'

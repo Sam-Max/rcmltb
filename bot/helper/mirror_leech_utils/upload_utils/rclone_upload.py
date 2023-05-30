@@ -24,7 +24,7 @@ class RcloneMirror:
         self.name= name
         self.size= size
         self.process= None
-        self.__isGdrive= False
+        self.__is_gdrive= False
         self.__is_cancelled = False
         self.status_type = MirrorStatus.STATUS_UPLOADING
 
@@ -90,7 +90,7 @@ class RcloneMirror:
             return
         if return_code == 0:
             size = get_readable_file_size(self.size)
-            await self.__listener.onRcloneUploadComplete(self.name, size, config_file, remote, base, mime_type, self.__isGdrive)
+            await self.__listener.onRcloneUploadComplete(self.name, size, config_file, remote, base, mime_type, self.__is_gdrive)
         else:
             error= await self.process.stderr.read()
             await self.__listener.onUploadError(f"Error: {error}!")
@@ -111,9 +111,9 @@ class RcloneMirror:
         for r in conf.sections():
             if str(r) == remote:
                 if conf[r]['type'] == 'drive':
-                    self.__isGdrive = True
+                    self.__is_gdrive = True
                 else:
-                    self.__isGdrive = False
+                    self.__is_gdrive = False
                 
     async def cancel_download(self):
         self.__is_cancelled = True
