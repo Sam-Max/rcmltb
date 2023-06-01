@@ -62,7 +62,7 @@ class MirrorLeechListener:
             
         zip_path= self.multiZipDir
         path = f"{zip_path}{self.__zip_name}.zip" 
-        size = get_path_size(zip_path)
+        size = await get_path_size(zip_path)
         user_dict = user_data.get(self.message.from_user.id, {})
         async with status_dict_lock:
             status_dict[self.uid] = ZipStatus(self.__zip_name, size, gid, self)
@@ -94,7 +94,7 @@ class MirrorLeechListener:
                     except:
                         return
         up_dir, up_name = path.rsplit('/', 1)
-        size = get_path_size(up_dir)
+        size = await get_path_size(up_dir)
 
         if self.isLeech:
             if not config_dict['NO_TASKS_LOGS']:
@@ -121,7 +121,7 @@ class MirrorLeechListener:
             name = listdir(f"{self.dir}")[-1]
         path= ""
         m_path = f'{self.dir}/{name}'
-        size = get_path_size(m_path)
+        size = await get_path_size(m_path)
         user_dict = user_data.get(self.message.from_user.id, {})
         if self.__isZip:
             if self.seed and self.isLeech:
@@ -219,7 +219,7 @@ class MirrorLeechListener:
         else:
             path = m_path
         up_dir, up_name = path.rsplit('/', 1)
-        size = get_path_size(up_dir)
+        size = await get_path_size(up_dir)
         if self.isLeech:
             m_size = []
             o_files = []
@@ -255,7 +255,7 @@ class MirrorLeechListener:
                             else:
                                 m_size.append(f_size)
                                 o_files.append(file_)
-            size = get_path_size(up_dir)
+            size = await get_path_size(up_dir)
             for s in m_size:
                 size = size - s
             if not config_dict['NO_TASKS_LOGS']:
@@ -281,7 +281,7 @@ class MirrorLeechListener:
                 else:
                     await update_all_messages()
             else:
-                size = get_path_size(path)
+                size = await get_path_size(path)
                 if not config_dict['NO_TASKS_LOGS']:
                     LOGGER.info(f"Upload Name: {up_name}")
                 await RcloneMirror(up_dir, up_name, size, self.user_id, self).mirror()

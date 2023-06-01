@@ -94,14 +94,14 @@ def get_base_name(orig_path: str):
     else:
         raise NotSupportedExtractionArchive('File format not supported for extraction')
     
-def get_path_size(path: str):
-    if ospath.isfile(path):
-        return ospath.getsize(path)
+async def get_path_size(path: str):
+    if await aiopath.isfile(path):
+        return await aiopath.getsize(path)
     total_size = 0
-    for root, dirs, files in oswalk(path):
+    for root, _, files in await run_sync(oswalk, path):
         for f in files:
             abs_path = ospath.join(root, f)
-            total_size += ospath.getsize(abs_path)
+            total_size += await aiopath.getsize(abs_path)
     return total_size
 
 async def take_ss(video_file, duration):

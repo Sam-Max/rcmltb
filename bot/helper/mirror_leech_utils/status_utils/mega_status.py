@@ -14,7 +14,7 @@ class MegaDownloadStatus:
 
     def progress_raw(self):
         try:
-            return round(self.processed_bytes() / self.__obj.size * 100, 2)
+            return round(self.__obj.downloaded_bytes / self.__obj.size * 100, 2)
         except:
             return 0.0
 
@@ -37,9 +37,6 @@ class MegaDownloadStatus:
 
     def size(self):
         return get_readable_file_size(self.__size)
-
-    def downloaded(self) -> str:
-        return get_readable_file_size(self.__obj.downloadedBytes)
 
     def speed(self):
         return f'{get_readable_file_size(self.__obj.speed)}/s'
