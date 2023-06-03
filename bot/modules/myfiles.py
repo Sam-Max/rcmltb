@@ -2,6 +2,7 @@ from pyrogram.filters import regex
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from bot import bot, config_dict
+from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
@@ -17,7 +18,7 @@ async def handle_myfiles(client, message):
     user_id= message.from_user.id
     if await is_rclone_config(user_id, message):
         if config_dict['MULTI_RCLONE_CONFIG'] or CustomFilters._owner_query(user_id):
-            await list_remotes(message, menu_type='myfilesmenu')
+            await list_remotes(message, menu_type=Menus.MYFILES)
         else:
             await sendMessage("Not allowed to use", message)
 
@@ -48,7 +49,7 @@ async def myfiles_callback(client, callback_query):
     # Handle back button
     elif cmd[1] == "back":
         if len(base_dir) == 0: 
-            await list_remotes(message, menu_type='myfilesmenu', edit=True)
+            await list_remotes(message, menu_type=Menus.MYFILES, edit=True)
             return 
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
@@ -58,7 +59,7 @@ async def myfiles_callback(client, callback_query):
         update_rclone_data("MYFILES_BASE_DIR", base_dir, user_id)
         await list_folder(message, rclone_remote, base_dir, menu_type= Menus.MYFILES, edit=True)
     elif cmd[1] == "back_remotes_menu":
-        await list_remotes(message, menu_type='myfilesmenu', edit=True)
+        await list_remotes(message, menu_type=Menus.MYFILES, edit=True)
     #Handle actions
     elif cmd[1] == "file_action":
         path = get_rclone_data(cmd[2], user_id)
@@ -112,8 +113,9 @@ async def next_page_myfiles(client, callback_query):
     await query.answer()
     user_id= message.reply_to_message.from_user.id
     _, next_offset, _, data_back_cb = data.split()
-    list_info = get_rclone_data("list_info", user_id)
-    total = len(list_info)
+    
+    info = get_rclone_data("info", user_id)
+    total = len(info)
     next_offset = int(next_offset)
     prev_offset = next_offset - 10 
 
@@ -121,10 +123,11 @@ async def next_page_myfiles(client, callback_query):
     buttons.cb_buildbutton(f"⚙️ Folder Options", f"myfilesmenu^folder_action^{user_id}")
     buttons.cb_buildbutton("🔍 Search", f"myfilesmenu^search^{user_id}")
 
-    next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset)
+    next_info, _next_offset= await run_sync(rcloneListNextPage, info, next_offset)
 
-    rcloneListButtonMaker(info= next_list_info,
-        buttons=buttons,
+    await run_sync(rcloneListButtonMaker, 
+        info= next_info,
+        button=buttons,
         menu_type= Menus.MYFILES, 
         dir_callback = "remote_dir",
         file_callback= "file_action",
@@ -138,7 +141,7 @@ async def next_page_myfiles(client, callback_query):
         user_id, 
         buttons, 
         filter= 'next_myfiles',
-        menu_type='myfilesmenu')
+        menu_type= Menus.MYFILES)
 
     remote= get_rclone_data("MYFILES_REMOTE", user_id)
     base_dir= get_rclone_data("MYFILES_BASE_DIR", user_id)

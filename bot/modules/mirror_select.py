@@ -1,4 +1,5 @@
 from bot import OWNER_ID, bot, config_dict, remotes_multi
+from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
@@ -81,18 +82,20 @@ async def next_page_mirrorsel(_, callback_query):
     await query.answer()
     user_id= message.reply_to_message.from_user.id
     _, next_offset, _, data_back_cb = data.split()
-    list_info = get_rclone_data("list_info", user_id)
-    total = len(list_info)
+    
+    info = get_rclone_data("info", user_id)
+    total = len(info)
     next_offset = int(next_offset)
     prev_offset = next_offset - 10 
 
     buttons = ButtonMaker()
     buttons.cb_buildbutton("✅ Select this folder", f"{Menus.MIRROR_SELECT}^close^{user_id}")
 
-    next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset) 
+    next_info, _next_offset= await run_sync(rcloneListNextPage, info, next_offset) 
     
-    rcloneListButtonMaker(info= next_list_info, 
-        buttons= buttons,
+    await run_sync(rcloneListButtonMaker,
+        info= next_info, 
+        button= buttons,
         menu_type= Menus.MIRROR_SELECT,
         dir_callback = "remote_dir",
         file_callback= "",

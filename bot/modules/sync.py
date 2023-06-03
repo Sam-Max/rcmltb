@@ -4,6 +4,7 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from bot import bot, config_dict, status_dict_lock, status_dict
+from bot.helper.ext_utils.menu_utils import Menus
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config, list_remotes
@@ -21,7 +22,7 @@ async def handle_sync(client, message):
     user_id= message.from_user.id
     tag = f"@{message.from_user.username}"
     if await is_rclone_config(user_id, message):
-        await list_remotes(message, menu_type="syncmenu", remote_type='source')
+        await list_remotes(message, menu_type=Menus.SYNC, remote_type='source')
         listener= MirrorLeechListener(message, tag, user_id)
         listener_dict[message.id] = listener
 
@@ -38,7 +39,7 @@ async def sync_cb(client, callbackQuery):
     if data[1] == "source":
         await query.answer()
         globals()['SOURCE']= data[2]
-        await list_remotes(message, menu_type="syncmenu", remote_type='destination', edit=True)
+        await list_remotes(message, menu_type=Menus.SYNC, remote_type='destination', edit=True)
     elif data[1] == "destination":  
         await query.answer()
         destination = data[2]

@@ -4,6 +4,7 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from bot import bot
+from bot.helper.ext_utils.menu_utils import Menus
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
@@ -15,7 +16,7 @@ from bot.helper.telegram_helper.button_build import ButtonMaker
 
 async def handle_storage(client, message):
      if await is_rclone_config(message.from_user.id, message):
-          await list_remotes(message, menu_type='storagemenu')
+          await list_remotes(message, menu_type=Menus.STORAGE)
 
 async def storage_menu_cb(client, callback_query):
      query= callback_query
@@ -32,7 +33,7 @@ async def storage_menu_cb(client, callback_query):
           await rclone_about(message, query, cmd[2], user_id)
 
      elif cmd[1] == "back":
-          await list_remotes(message, menu_type='storagemenu', edit=True)
+          await list_remotes(message, menu_type=Menus.STORAGE, edit=True)
           await query.answer()
 
      elif cmd[1] == "close":

@@ -4,6 +4,7 @@ from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
 from bot import DOWNLOAD_DIR, bot, config_dict
+from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.ext_utils.help_messages import MULTIZIP_HELP_MESSAGE
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -100,7 +101,7 @@ async def leech_menu_cb(client, callback_query):
         await RcloneLeech(base_dir, dest_dir, listener, isFolder=True).leech()
     elif cmd[1] == "back":
         if len(base_dir) == 0:
-            await list_remotes(message, menu_type='leechmenu', edit=True)
+            await list_remotes(message, menu_type=Menus.LEECH, edit=True)
             return 
         base_dir_split= base_dir.split("/")[:-2]
         base_dir_string = "" 
@@ -121,18 +122,20 @@ async def next_page_leech(client, callback_query):
     await query.answer()
     user_id= message.reply_to_message.from_user.id
     _, next_offset, _, data_back_cb= data.split()
-    list_info = get_rclone_data("list_info", user_id)
-    total = len(list_info)
+    
+    info = get_rclone_data("info", user_id)
+    total = len(info)
     next_offset = int(next_offset)
     prev_offset = next_offset - 10 
 
     buttons = ButtonMaker()
     buttons.cb_buildbutton(f"✅ Select this folder", f"leechmenu^leech_folder^{user_id}")
 
-    next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset)
+    next_info, _next_offset= await run_sync(rcloneListNextPage, info, next_offset)
 
-    rcloneListButtonMaker(info= next_list_info,
-        buttons=buttons,
+    await run_sync(rcloneListButtonMaker, 
+        info= next_info,
+        button=buttons,
         menu_type= Menus.LEECH, 
         dir_callback = "remote_dir",
         file_callback= 'leech_file',
@@ -186,7 +189,7 @@ async def selection_callback(client, callback_query):
             await question.delete()
     elif cmd[1] == "remotes":
         if await is_rclone_config(user_id, message):
-            await list_remotes(message, menu_type='leechmenu', edit=True)
+            await list_remotes(message, menu_type=Menus.LEECH, edit=True)
             await query.answer()
     else:
         await query.answer()

@@ -1,6 +1,7 @@
 from bot import bot, config_dict
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
+from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
@@ -36,6 +37,7 @@ async def copy_menu_callback(client, callback_query):
     user_id= query.from_user.id
     msg_id= message.reply_to_message.id
     listener= listener_dict[msg_id][0]
+    
     origin_remote = get_rclone_data("COPY_ORIGIN_REMOTE", user_id)
     origin_dir= get_rclone_data("COPY_ORIGIN_DIR", user_id)
     destination_remote= get_rclone_data("COPY_DESTINATION_REMOTE", user_id)
@@ -120,12 +122,12 @@ async def next_page_copy(client, callback_query):
     _, next_offset, is_second_menu, data_back_cb = data.split()
     is_second_menu = is_second_menu.lower() == 'true'
     
-    list_info = get_rclone_data("list_info", user_id)
-    total = len(list_info)
+    info = get_rclone_data("info", user_id)
+    total = len(info)
     next_offset = int(next_offset)
     prev_offset = next_offset - 10 
     buttons = ButtonMaker()
-    next_list_info, _next_offset= rcloneListNextPage(list_info, next_offset) 
+    next_info, _next_offset= await run_sync(rcloneListNextPage, info, next_offset) 
 
     if is_second_menu:
         dir_callback= "dest_dir"
@@ -136,11 +138,12 @@ async def next_page_copy(client, callback_query):
         file_callback= 'second_menu'
         buttons.cb_buildbutton("✅ Select this folder", f"copymenu^second_menu^_^False^{user_id}")
     
-    rcloneListButtonMaker(info= next_list_info, 
-        buttons= buttons,
+    await run_sync(rcloneListButtonMaker, 
+        info= next_info, 
+        button= buttons,
         menu_type= Menus.COPY,
-        dir_callback= dir_callback,
-        file_callback= file_callback,
+        dir_callback= dir_callback, 
+        file_callback= file_callback, 
         user_id= user_id)
     
     await create_next_buttons(next_offset, 

@@ -1,15 +1,14 @@
 from configparser import ConfigParser
 from json import loads as jsonloads
-from re import escape as rescape
 from os import getcwd, path as ospath
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 from bot import GLOBAL_EXTENSION_FILTER, LOGGER, OWNER_ID, config_dict, remotes_multi
-from bot.helper.ext_utils.bot_utils import cmd_exec
+from bot.helper.ext_utils.bot_utils import cmd_exec, run_sync
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.exceptions import NotRclonePathFound
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker
+from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
 from bot.helper.telegram_helper.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
@@ -157,13 +156,17 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, listener_dict
     user_id= message.reply_to_message.from_user.id
     buttons = ButtonMaker()
     path = await get_rclone_path(user_id, message)
+    msg= ""
+    next_type= ""
     dir_callback = "remote_dir"
+    file_callback= ""
     back_callback= "back"
+    
     cmd = ["rclone", "lsjson", f'--config={path}', f"{rclone_remote}:{base_dir}"]
     
     if menu_type == Menus.LEECH:
         next_type= "next_leech" 
-        file_callback= 'leech_file'
+        file_callback= "leech_file"
         try:
             info = listener_dict[message.reply_to_message.id]
             is_zip, extract = info[1], info[2]
@@ -176,11 +179,9 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, listener_dict
             else:
                 msg = f'Select folder or file that you want to leech\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>'
         except KeyError:
-             LOGGER.info("Key not found in listener_dict")
              raise ValueError("Invalid key") 
     elif menu_type == Menus.MIRROR_SELECT:
         next_type= "next_ms"
-        file_callback= ""
         cmd.extend(['--dirs-only', '--fast-list', '--no-modtime'])
         buttons.cb_buildbutton("✅ Select this folder", f"{menu_type}^close^{user_id}")
         msg= f"Select folder where you want to store files\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>"
@@ -194,68 +195,51 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, listener_dict
     elif menu_type == Menus.COPY:
         next_type= 'next_copy'
         if is_second_menu:
-            file_callback = 'copy'
+            file_callback = "copy"
             dir_callback="dest_dir" 
             back_callback= "back_dest"
             buttons.cb_buildbutton(f"✅ Select this folder", f"{menu_type}^copy^{user_id}")
             cmd.extend(['--dirs-only', '--fast-list', '--no-modtime']) 
             msg=f'Select folder where you want to copy\n\n<b>Path: </b><code>{rclone_remote}:{base_dir}</code>'
         else:
-            file_callback = 'second_menu'
+            file_callback = "second_menu"
             dir_callback="origin_dir"
             back_callback= "back_origin"
             buttons.cb_buildbutton(f"✅ Select this folder", f"{menu_type}^second_menu^_^False^{user_id}")
             cmd.extend(['--fast-list', '--no-modtime'])
             msg= f'Select file or folder which you want to copy\n\n<b>Path: </b><code>{rclone_remote}:{base_dir}</code>'
-    else:
-        await sendMessage("Invalid menu type specified!", message)
+
+    res, err, rc = await cmd_exec(cmd)
+    if rc != 0:
+        await sendMessage(f'Error: {err.decode().strip()}', message)
         return
 
-    process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
-    out, err = await process.communicate()
-    out = out.decode().strip()
-    return_code = await process.wait()
-    if return_code != 0:
-        err = err.decode().strip()
-        await sendMessage(f'Error: {err}', message)
-        return
-
-    info = jsonloads(out)
+    info = jsonloads(res)
     if is_second_menu:
-        info_sorted= sorted(info, key=lambda x: x["Name"])
+        sinfo= sorted(info, key=lambda x: x["Name"])
     else:
-        info_sorted= sorted(info, key=lambda x: x["Size"])
+        sinfo= sorted(info, key=lambda x: x["Size"])
+
+    total= len(info)
+    update_rclone_data("info", sinfo, user_id)
     
-    update_rclone_data("list_info", info_sorted, user_id)
-    
-    if len(info_sorted) == 0:
+    if total == 0:
         buttons.cb_buildbutton("❌Nothing to show❌", f"{menu_type}^pages^{user_id}")
     else:
-        total = len(info_sorted)
-        max_results= 10
-        offset= 0
-        start = offset
-        end = max_results + start
-        next_offset = offset + max_results
+        page, next_offset= await run_sync(rcloneListNextPage, info)
 
-        if end > total:
-            info= info_sorted[offset:]    
-        elif offset >= total:
-            info= []    
-        else:
-            info= info_sorted[start:end]       
-        
-        rcloneListButtonMaker(info= info,
-            buttons=buttons,
+        await run_sync(rcloneListButtonMaker, 
+            info=page, 
+            button=buttons, 
             menu_type= menu_type, 
-            dir_callback = dir_callback,
-            file_callback= file_callback,
+            dir_callback = dir_callback, 
+            file_callback= file_callback, 
             user_id= user_id)
 
-        if offset == 0 and total <= 10:
-            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages^{user_id}", 'footer')        
+        if total <= 10:
+            buttons.cb_buildbutton(f"🗓 {round(0 / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages^{user_id}", 'footer')        
         else: 
-            buttons.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages^{user_id}", 'footer')
+            buttons.cb_buildbutton(f"🗓 {round(0 / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages^{user_id}", 'footer')
             buttons.cb_buildbutton("NEXT ⏩", f"{next_type} {next_offset} {is_second_menu} {back_callback}", 'footer')
 
     buttons.cb_buildbutton("⬅️ Back", f"{menu_type}^{back_callback}^{user_id}", 'footer_second')

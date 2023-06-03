@@ -2,6 +2,7 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from bot import bot
+from bot.helper.ext_utils.menu_utils import Menus
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
@@ -11,7 +12,7 @@ from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config,
 
 async def cleanup(client, message):
      if await is_rclone_config(message.from_user.id, message):
-          await list_remotes(message, menu_type='cleanupmenu')
+          await list_remotes(message, menu_type=Menus.CLEANUP)
 
 async def cleanup_callback(client, callback_query):
      query= callback_query

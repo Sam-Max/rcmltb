@@ -2,20 +2,21 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
 from bot import bot, config_dict
+from bot.helper.ext_utils.menu_utils import Menus
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.rclone_utils import get_rclone_path, is_rclone_config, list_remotes
 from bot.helper.telegram_helper.message_utils import editMarkup, sendMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
-sync_dict= {}
 
+sync_dict= {}
 
 
 async def handle_bisync(client, message):
     user_id= message.from_user.id
     if await is_rclone_config(user_id, message):
-        await list_remotes(message, menu_type='bisyncmenu', remote_type='origin')
+        await list_remotes(message, menu_type=Menus.SYNC, remote_type='origin')
         #msg= "Select <b>origin</b> cloud"
         #msg+= "<b>\n\nNote</b>: Bisync check for changes on each side and propagate changes on Origin to Destination, and vice-versa."
 
@@ -30,7 +31,7 @@ async def bysync_cb(client, callbackQuery):
     if data[1] == "origin":
         await query.answer()
         sync_dict['origin']= data[2]
-        await list_remotes(message, menu_type='bisyncmenu', remote_type='destination')
+        await list_remotes(message, menu_type=Menus.SYNC, remote_type='destination')
     elif data[1] == "destination":  
         await query.answer()
         sync_dict["destination"]= data[2]
