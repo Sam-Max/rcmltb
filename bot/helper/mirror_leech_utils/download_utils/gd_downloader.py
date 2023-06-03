@@ -11,7 +11,7 @@ async def add_gd_download(link, path, listener, newname):
     drive = GoogleDriveHelper()
     name, mime_type, size, _, _ = await run_sync(drive.count, link)
     if mime_type is None:
-        await sendMessage(listener.message, name)
+        await sendMessage(name, listener.message)
         return
     
     name = newname or name
