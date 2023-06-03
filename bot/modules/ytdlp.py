@@ -67,6 +67,9 @@ async def select_format(_, query):
 
         del ytdl_dict[user_id]
         await message.delete()
+
+        if qual is None:
+            return
         
         LOGGER.info(f'Downloading with YT-DLP')
         ydl = YoutubeDLHelper(listener)
@@ -79,6 +82,7 @@ async def select_quality(message, result, listener, link, path, name, opt):
     
     buttons = ButtonMaker()
     if 'entries' in result:
+        is_playlist = True
         for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
             video_format = f'bv*[height<=?{i}][ext=mp4]+ba[ext=m4a]/b[height<=?{i}]'
             b_data = f'{i}|mp4'
@@ -140,10 +144,10 @@ async def select_quality(message, result, listener, link, path, name, opt):
         buttons.cb_buildbutton('Best Audio', 'ytq ba/b')
         buttons.cb_buildbutton('Cancel', 'ytq cancel', 'footer')
         main_buttons = buttons.build_menu(2)
-
-        ytdl_dict[message.from_user.id] = [listener, link, path, name, opt, formats, is_playlist]
         msg = f'Choose Video Quality:\n'
-        await sendMessage(msg, message, main_buttons)
+
+    ytdl_dict[message.from_user.id] = [listener, link, path, name, opt, formats, is_playlist]
+    await sendMessage(msg, message, main_buttons)
 
 async def qual_subbuttons(message, formats, b_name):
     buttons = ButtonMaker()
@@ -300,8 +304,7 @@ async def _ytdl(client, message, isZip= False, isLeech=False):
         await sendMessage(YT_HELP_MESSAGE, message)
         return
     
-    listener = MirrorLeechListener(message, tag, user_id, isZip=isZip, pswd=pswd, 
-                                   isLeech=isLeech)
+    listener = MirrorLeechListener(message, tag, user_id, isZip=isZip, pswd=pswd, isLeech=isLeech)
     if 'mdisk.me' in link:
         name, link = await _mdisk(link, name)
 
