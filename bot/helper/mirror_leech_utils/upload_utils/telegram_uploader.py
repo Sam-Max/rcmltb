@@ -28,6 +28,7 @@ class TelegramUploader():
         self.__start_time= time()
         self.__processed_bytes = 0
         self._last_uploaded = 0
+        self._iteration = 0
         self.__user_id = listener.message.from_user.id
         self.client= app if app is not None else bot 
         self.__upload_path= ''
@@ -41,6 +42,10 @@ class TelegramUploader():
         self.__sent_msg = await bot.get_messages(self.__listener.message.chat.id, self.__listener.uid)
         if ospath.isdir(self.__path):
             for dirpath, _, filenames in sorted(walk(self.__path)):
+                if self._iteration != 0:
+                    folder_name = ospath.basename(dirpath)
+                    await self.client.send_message(text= f"<b>📂 Folder: </b> {folder_name}", chat_id= self.__sent_msg.chat.id)
+                self._iteration += 1  
                 for file in sorted(filenames):
                     self.__upload_path = ospath.join(dirpath, file)
                     if file.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
