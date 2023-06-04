@@ -35,16 +35,19 @@ class TelegramUploader():
         self.__sent_msg= None
 
     async def upload(self):
-        self.__set__user_settings()
-        if IS_PREMIUM_USER and not self.__listener.isSuperGroup:
-            await self.__listener.onUploadError('Use SuperGroup to leech with User!')
+        res = await self.__msg_to_reply()
+        if not res:
             return
-        self.__sent_msg = await bot.get_messages(self.__listener.message.chat.id, self.__listener.uid)
+        self.__user_settings()
         if ospath.isdir(self.__path):
             for dirpath, _, filenames in sorted(walk(self.__path)):
                 if self._iteration != 0:
                     folder_name = ospath.basename(dirpath)
-                    await self.client.send_message(text= f"<b>📂 Folder: </b> {folder_name}", chat_id= self.__sent_msg.chat.id)
+                    if config_dict['LEECH_LOG']:
+                         for chat in leech_log:
+                            await self.client.send_message(text= f"<b>📂 Folder: </b> {folder_name}", chat_id=chat)
+                    else:
+                        await self.client.send_message(text= f"<b>📂 Folder: </b> {folder_name}", chat_id= self.__sent_msg.chat.id)
                 self._iteration += 1  
                 for file in sorted(filenames):
                     self.__upload_path = ospath.join(dirpath, file)
@@ -112,7 +115,7 @@ class TelegramUploader():
                             progress=self.__upload_progress)
                         if config_dict['BOT_PM']:
                             try:
-                                await bot.copy_message(
+                                await self.client.copy_message(
                                     chat_id= self.__user_id, 
                                     from_chat_id= self.__sent_msg.chat.id, 
                                     message_id= self.__sent_msg.id)
@@ -157,7 +160,7 @@ class TelegramUploader():
                             progress=self.__upload_progress)
                         if config_dict['BOT_PM']:
                             try:
-                                await bot.copy_message(
+                                await self.client.copy_message(
                                     chat_id= self.__user_id, 
                                     from_chat_id= self.__sent_msg.chat.id, 
                                     message_id= self.__sent_msg.id)
@@ -191,7 +194,7 @@ class TelegramUploader():
                             progress=self.__upload_progress)
                         if config_dict['BOT_PM']:
                             try:
-                                await bot.copy_message(
+                                await self.client.copy_message(
                                     chat_id= self.__user_id, 
                                     from_chat_id= self.__sent_msg.chat.id, 
                                     message_id= self.__sent_msg.id)
@@ -221,7 +224,7 @@ class TelegramUploader():
                             progress=self.__upload_progress)
                         if config_dict['BOT_PM']:
                             try:
-                                await bot.copy_message(
+                                await self.client.copy_message(
                                     chat_id= self.__user_id, 
                                     from_chat_id= self.__sent_msg.chat.id, 
                                     message_id= self.__sent_msg.id)
@@ -254,7 +257,18 @@ class TelegramUploader():
         self._last_uploaded = current
         self.__processed_bytes += chunk_size
 
-    def __set__user_settings(self):
+    async def __msg_to_reply(self):
+        if IS_PREMIUM_USER:
+            if not self.__listener.isSuperGroup:
+                await self.__listener.onUploadError('Use supergroup to leech with user_session_string')
+                return False
+            self.__sent_msg = await app.get_messages(chat_id=self.__listener.message.chat.id,
+                                                      message_ids=self.__listener.uid)
+        else:
+            self.__sent_msg = self.__listener.message
+        return True
+    
+    def __user_settings(self):
         user_id = self.__listener.message.from_user.id
         user_dict = user_data.get(user_id, {})
         self.__as_doc = user_dict.get('as_doc') or config_dict['AS_DOCUMENT']
