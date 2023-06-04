@@ -42,6 +42,7 @@ QbTorrents = {}
 qb_listener_lock = Lock()
 user_data = {}
 leech_log = []
+tmdb_titles= {}
 remotes_multi= []
 aria2_options = {}
 qbit_options = {}

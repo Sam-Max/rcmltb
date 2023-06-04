@@ -66,7 +66,7 @@ async def rssSub(_, message, pre_event):
         tag = message.from_user.mention
     msg = ''
     items = message.text.split('\n')
-    for item in items:
+    for index, item in enumerate(items, start=1):
         args = item.split()
         if len(args) < 2:
             await sendMessage(f'{item}. Wrong Input format. Read help message before adding new subcription!', message)
@@ -76,6 +76,9 @@ async def rssSub(_, message, pre_event):
             await sendMessage(f"This title {title} already subscribed! Choose another title!", message)
             continue
         feed_link = args[1].strip()
+        if feed_link.startswith(('inf:', 'exf:', 'opt:', 'c:')):
+            await sendMessage(message, f'Wrong input in line {index}! Re-add only the mentioned line correctly! Read the example!')
+            continue
         inf_lists = []
         exf_lists = []
         if len(args) > 2:

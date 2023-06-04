@@ -1,4 +1,4 @@
-from bot import LOGGER, config_dict, bot
+from bot import LOGGER, config_dict, tmdb_titles, bot
 from os import remove as osremove
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
@@ -14,8 +14,6 @@ from tmdbv3api import TMDb, Discover, Movie, TV, Trending
 tmdb = TMDb()
 tmdb.debug = False
 tmdb_image_base= "http://image.tmdb.org/t/p/w500"
-
-tmdb_titles= {}
 tmdb_dict = {}
 
 
@@ -221,9 +219,9 @@ async def tmdb_next_buttons_maker(offset, next_offset, prev_offset, total, butto
 async def search(_, query):
     message= query.message
     id= query.data.split("^")[1]
-    title= tmdb_titles.get(id, "")
-    await tmdbSearch(message, title)
-    del tmdb_titles[id]
+    await tmdbSearch(message, id)
+    if id in tmdb_titles.keys():
+        del tmdb_titles[id]
 
 async def search_api(client, query):
     message= query.message
