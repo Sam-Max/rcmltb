@@ -1,13 +1,13 @@
 from time import time
 from bot import IS_PREMIUM_USER, bot, app, status_dict, config_dict, status_dict_lock, LOGGER
 from bot.helper.ext_utils.bot_utils import new_task
-from bot.helper.telegram_helper.message_utils import sendStatusMessage, update_all_messages
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, update_all_messages
 from bot.helper.mirror_leech_utils.status_utils.tg_download_status import TelegramStatus
 
 
 
 class TelegramDownloader:
-    def __init__(self, file, client, listener, path, name, multi=0):
+    def __init__(self, file, client, listener, path, name='', multi=0):
         self.__client= client
         self.__listener = listener
         self.name = name
@@ -50,6 +50,9 @@ class TelegramDownloader:
 
     @new_task       
     async def download(self):
+        if IS_PREMIUM_USER and not self.__listener.isSuperGroup:
+            await sendMessage('Use SuperGroup to download with User!', self.__listener.message)
+            return
         if self.__file == None:
             return
         if self.name == "":
