@@ -1,12 +1,11 @@
 from asyncio import sleep, TimeoutError
 from bot import DOWNLOAD_DIR, LOGGER, app, bot
 from pyrogram.errors import FloodWait
-from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 from pyrogram import filters
 from bot.helper.ext_utils.bot_utils import create_task
 from bot.helper.telegram_helper.filters import CustomFilters
 from pyrogram.handlers import MessageHandler
-from bot.helper.ext_utils.batch_helper import check_link, get_link
+from bot.helper.ext_utils.batch_helper import get_link
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import sendMessage
 from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected
@@ -103,10 +102,6 @@ click /ignore to cancel'''
                         except TimeoutError:
                             await sendMessage("Too late 60s gone, try again!", message)
                             return
-                        suceed, msg = await check_link(_link)
-                        if suceed != True:
-                            await sendMessage(msg, message)
-                            return
                         try:
                             await get_bulk_msg(message, _link, multi, isLeech=isLeech) 
                         except FloodWait as fw:
@@ -142,10 +137,8 @@ click /ignore to cancel'''
     except TimeoutError:
         await sendMessage("Too late 60s gone, try again!", message)
 
-# Source: Github.com/Vasusen-code
-# Adapted to Pyrogram and Conversation-Pyrogram Library
-async def get_bulk_msg(message, msg_link, multi, isLeech, value=0):
-    msg_id = int(msg_link.split("/")[-1]) + int(value)
+async def get_bulk_msg(message, link, multi, isLeech, value=0):
+    msg_id = int(link.split("/")[-1]) + int(value)
     user_id= message.from_user.id
 
     if username := message.from_user.username:
@@ -153,42 +146,40 @@ async def get_bulk_msg(message, msg_link, multi, isLeech, value=0):
     else:
         tag = message.from_user.mention
 
-
     listener= MirrorLeechListener(message, tag, user_id, isLeech=isLeech)
     
     path= f'{DOWNLOAD_DIR}{listener.uid}/'
 
-    if 't.me/c/' in msg_link:
+    if 't.me/c/' in link:
         if not listener.isSuperGroup:
             await sendMessage('Use SuperGroup to download with User!', listener.message)
             return
-        chat = int('-100' + str(msg_link.split("/")[-2]))
         try:
+            client= app
+            chat = int('-100' + str(link.split("/")[-2]))
             msg = await app.get_messages(chat, msg_id)
-            file = msg.document or msg.video or msg.photo or msg.audio or \
-                   msg.voice or msg.video_note or msg.animation or None
-            tg_down= TelegramDownloader(file, app, listener, path)
-            tg_down.download()
-            await _multi(app, message, msg_link, value, multi, isLeech)
-        except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
-            await sendMessage("Have you joined the channel?", message)
-        except Exception as e:
-            await sendMessage(f'Failed to save: `{e}`', message)
+        except Exception:
+            msg= "Make sure you joined the channel and set USER_SESSION_STRING!!"
+            await sendMessage(msg, message)
+            return
     else:
-        chat = msg_link.split("/")[-2]
         try:
+            client= bot
+            chat = link.split("/")[-2]
             msg = await bot.get_messages(chat, msg_id)
-            file = msg.document or msg.video or msg.photo or msg.audio or \
-                   msg.voice or msg.video_note or msg.animation or None
-            tg_down= TelegramDownloader(file, bot, listener, path)
-            tg_down.download()
-            await _multi(bot, message, msg_link, value, multi, isLeech)
-        except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
-            await sendMessage("Have you joined the channel?", message)
-        except Exception as e:
-            await sendMessage(f'Failed to save: `{e}`', message)
+        except Exception:
+            msg= "Bot needs to join chat to download!!"
+            await sendMessage(msg, message)
+            return
+        
+    file = msg.document or msg.video or msg.photo or msg.audio or \
+           msg.voice or msg.video_note or msg.animation or None
+        
+    tg_down= TelegramDownloader(file, client, listener, path)
+    tg_down.download()
+    await _multi(bot, message, link, value, multi, isLeech)
 
-async def _multi(client, message, msg_link, value, multi, isLeech):
+async def _multi(client, message, link, value, multi, isLeech):
     if multi <= 1:
         return
     try:
@@ -199,10 +190,10 @@ async def _multi(client, message, msg_link, value, multi, isLeech):
         nextmsg.from_user = message.from_user
         value += 1
         multi -= 1
-        await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value) 
+        await get_bulk_msg(nextmsg, link, multi, isLeech, value) 
     except FloodWait as fw:
         await sleep(fw.seconds + 5)
-        await get_bulk_msg(nextmsg, msg_link, multi, isLeech, value)  
+        await get_bulk_msg(nextmsg, link, multi, isLeech, value)  
 
 
 mirrorbatch_handler= MessageHandler(mirror_batch, filters=filters.command(BotCommands.MirrorBatchCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
