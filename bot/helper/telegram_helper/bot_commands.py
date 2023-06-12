@@ -5,20 +5,12 @@ class _BotCommands:
     def __init__(self):
         self.StartCommand = f'start{CMD_INDEX}'
         self.MirrorCommand = [f'mirror{CMD_INDEX}', f'm{CMD_INDEX}']
-        self.UnzipMirrorCommand = [f'unzipmirror{CMD_INDEX}', f'uzm{CMD_INDEX}']
-        self.ZipMirrorCommand = [f'zipmirror{CMD_INDEX}', f'zm{CMD_INDEX}']
-        self.MultiZipMirrorCommand = [f'multizipmirror{CMD_INDEX}', f'mzm{CMD_INDEX}']
         self.MirrorBatchCommand = [f'mirrorbatch{CMD_INDEX}', f'mb{CMD_INDEX}']
         self.MirrorSelectCommand = [f'mirrorselect{CMD_INDEX}', f'`ms{CMD_INDEX}']
         self.LeechCommand = [f'leech{CMD_INDEX}', f'l{CMD_INDEX}']
-        self.UnzipLeechCommand = [f'unzipleech{CMD_INDEX}', f'uzl{CMD_INDEX}']
-        self.ZipLeechCommand = [f'zipleech{CMD_INDEX}', f'zl{CMD_INDEX}']
-        self.MultiZipLeechCommand = [f'multizipleech{CMD_INDEX}', f'mzl{CMD_INDEX}']
         self.LeechBatchCommand = [f'leechbatch{CMD_INDEX}', f'lb{CMD_INDEX}']
         self.YtdlMirrorCommand = [f'ytdl{CMD_INDEX}', f'y{CMD_INDEX}']
         self.YtdlLeechCommand = [f'ytdlleech{CMD_INDEX}', f'yl{CMD_INDEX}']
-        self.YtdlZipMirrorCommand = [f'ytdlzip{CMD_INDEX}', f'yz{CMD_INDEX}']
-        self.YtdlZipLeechCommand = [f'ytdlzipleech{CMD_INDEX}', f'yzl{CMD_INDEX}']
         self.BotFilesCommand = [f'botfiles{CMD_INDEX}', f'bf{CMD_INDEX}']
         self.CopyCommand = f'copy{CMD_INDEX}'
         self.CloneCommand = f'clone{CMD_INDEX}'

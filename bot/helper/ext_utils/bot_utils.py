@@ -7,10 +7,9 @@ from time import time
 from os import walk, path as ospath, remove as osremove, rmdir, listdir
 from shutil import rmtree
 from re import IGNORECASE, compile, match as re_match, search
+from aiohttp import ClientSession
 from psutil import cpu_percent, disk_usage, virtual_memory
 from bot import DOWNLOAD_DIR, LOGGER, status_dict_lock, status_dict, botUptime, config_dict, user_data, m_queue, botloop
-from requests import head as rhead, utils as rutils
-from urllib.request import urlopen
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.human_format import get_readable_file_size
@@ -65,18 +64,10 @@ def get_mega_link_type(url):
 def is_magnet(url):
    return bool(re_match(MAGNET_REGEX, url))
 
-def get_content_type(link):
-    try:
-        res = rhead(link, allow_redirects=True, timeout=5, headers = {'user-agent': 'Wget/1.12'})
-        content_type = res.headers.get('content-type')
-    except:
-        try:
-            res = urlopen(link, timeout=5)
-            info = res.info()
-            content_type = info.get_content_type()
-        except:
-            content_type = None
-    return content_type
+async def get_content_type(link):
+    async with ClientSession(trust_env=True) as session:
+            async with session.get(link) as response:
+                return response.headers.get('Content-Type')
 
 def is_share_link(url):
     return bool(re_match(r'https?:\/\/.+\.gdtot\.\S+|https?:\/\/(filepress|filebee|appdrive|gdflix)\.\S+', url))

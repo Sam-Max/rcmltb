@@ -63,13 +63,13 @@ async def setRcloneFlags(cmd, type):
     cmd.extend(('--exclude', ext))
     if type == "copy":
         if flags := config_dict.get('RCLONE_COPY_FLAGS'):
-            append_flags(flags,cmd)
+            append_flags(flags, cmd)
     elif type == "upload":
         if flags := config_dict.get('RCLONE_UPLOAD_FLAGS'):
-            append_flags(flags,cmd)
+            append_flags(flags, cmd)
     elif type == "download":
         if flags := config_dict.get('RCLONE_DOWNLOAD_FLAGS'):
-            append_flags(flags,cmd)
+            append_flags(flags, cmd)
            
 def append_flags(flags, cmd):
     rcflags = flags.split(',')
@@ -152,7 +152,7 @@ async def is_valid_path(remote, path, message):
     else:
         return True
 
-async def list_folder(message, rclone_remote, base_dir, menu_type, listener_dict={}, is_second_menu=False, edit=False):
+async def list_folder(message, rclone_remote, base_dir, menu_type, is_second_menu=False, edit=False):
     user_id= message.reply_to_message.from_user.id
     buttons = ButtonMaker()
     path = await get_rclone_path(user_id, message)
@@ -168,16 +168,9 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, listener_dict
         next_type= "next_leech" 
         file_callback= "leech_file"
         try:
-            info = listener_dict[message.reply_to_message.id]
-            is_zip, extract = info[1], info[2]
             cmd.extend(['--fast-list', '--no-modtime'])
             buttons.cb_buildbutton("✅ Select this folder", f"{menu_type}^leech_folder^{user_id}")
-            if is_zip:
-                msg = f'Select file that you want to zip\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>' 
-            elif extract:
-                msg = f'Select file that you want to extract\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>'
-            else:
-                msg = f'Select folder or file that you want to leech\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>'
+            msg = f'Select folder or file that you want to leech\n\n<b>Path:</b><code>{rclone_remote}:{base_dir}</code>'
         except KeyError:
              raise ValueError("Invalid key") 
     elif menu_type == Menus.MIRROR_SELECT:
@@ -211,7 +204,7 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, listener_dict
 
     res, err, rc = await cmd_exec(cmd)
     if rc != 0:
-        await sendMessage(f'Error: {err.decode().strip()}', message)
+        await sendMessage(f'Error: {err}', message)
         return
 
     info = jsonloads(res)

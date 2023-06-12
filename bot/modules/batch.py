@@ -47,7 +47,7 @@ Send me one of the followings:
 
 3. TXT file with URL links separated each link by new line        
 
-click /ignore to cancel'''       
+/ignore to cancel'''       
     question= await sendMessage(msg, message)
     try:
         response = await client.listen.Message(filters.document | filters.text, id= filters.user(user_id), timeout=60)
@@ -175,8 +175,7 @@ async def get_bulk_msg(message, link, multi, isLeech, value=0):
     file = msg.document or msg.video or msg.photo or msg.audio or \
            msg.voice or msg.video_note or msg.animation or None
         
-    tg_down= TelegramDownloader(file, client, listener, path)
-    tg_down.download()
+    await TelegramDownloader(file, client, listener, path).download()
     await _multi(bot, message, link, value, multi, isLeech)
 
 async def _multi(client, message, link, value, multi, isLeech):

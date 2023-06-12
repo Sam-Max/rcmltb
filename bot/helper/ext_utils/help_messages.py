@@ -1,74 +1,64 @@
 YT_HELP_MESSAGE = """
-<b>Send link along with command line:</b>
-<code>/cmd</code> s link n: newname pswd: xx(zip) opt: x:y|x1:y1
+1. <b>Send link along with command line:</b>
+<code>/cmd</code> link -s -opt x:y|x1:y1
 
-<b>By replying to link:</b>
-<code>/cmd</code> n: newname pswd: xx(zip) opt: x:y|x1:y1
+2. <b>By replying to link:</b>
 
-<b>Quality Buttons:</b>
-Incase default quality added but you need to select quality for specific link or links with multi links feature.
-<code>/cmd</code> s link
-This option should be always before n:, pswd: and opt:
+3. <b>New Name</b>: 
+<code>/cmd</code> link -n newname
+Note: Don't add file extension
 
-<b>Options Example:</b> opt: playliststart:^10|fragment_retries:^inf|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)
+4. <b>Quality Buttons:</b>
+Incase default quality added from yt-dlp options using format option and you need to select quality for specific link or links with multi links feature.
+<code>/cmd</code> link -s
 
-<b>Multi links only by replying to first link:</b>
-<code>/cmd</code> 10(number of links)
-Number should be always before n:, pswd: and opt:
+5. <b>Zip</b>: -z password
+<code>/cmd</code> link -z (zip)
+<code>/cmd</code> link -z password (zip password protected)
 
-<b>Multi links within same upload directory only by replying to first link:</b>
-<code>/cmd</code> 10(number of links) m:folder_name
-Number and m:folder_name should be always before n:, pswd: and opt:
-
-<b>Options Note:</b> Add `^` before integer or float, some values must be numeric and some string.
+6. <b>Options</b>: -opt
+<code>/cmd</code> link -opt playliststart:^10|fragment_retries:^inf|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)
+Note: Add `^` before integer or float, some values must be numeric and some string.
 Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
 You can add tuple and dict also. Use double quotes inside dict.
 
-<b>NOTES:</b>
-1. When use cmd by reply don't add any option in link msg! Always add them after cmd msg!
-2. Options (<b>s, m: and multi</b>) should be added randomly before link and before any other option.
-3. Options (<b>n:, pswd: and opt:</b>) should be added randomly after the link if link along with the cmd or after cmd if by reply.
-4. You can always add video quality from yt-dlp api options.
-5. Don't add file extension while rename using `n:`
+7. <b>Multi links only by replying to first link:</b>
+<code>/cmd</code> -i 5(number of links)
 
-Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official/177'>script</a> to convert cli arguments to api options.
+<b>NOTES:</b>
+Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options.
 """
 
-MULTIZIP_HELP_MESSAGE= '''
-<b>Multi zip by replying to first file (not links):</b>
-
-<code>/cmd</code> 5 (number of files) m:zip_name
-
-Number always before m:zip_name
-'''
 
 MIRROR_HELP_MESSAGE = '''         
-1. <code>/mirror</code> link n: newname pswd: xx(zip/unzip)
+1. <code>/cmd</code> link 
 
-2. <b>Replying to link/file</b>   
-<code>/mirror</code> n: newname pswd: xx(zip/unzip)
+2. <b>Replying to link/file</b>    
 
-3. <b>Direct link authorization:</b>
-<code>/mirror</code> link n: newname pswd: xx(zip/unzip)
-<b>username</b>
-<b>password</b>
+3. <b>New Name</b>: 
+<code>/cmd</code> link -n newname
+Note: No work with torrents.
 
-4. <b>Bittorrent selection</b>    
-<code>/mirror</code> <b>s</b> link or by replying to file/link
+4. <b>Extract & Zip</b>: 
+<code>/cmd</code> link -e password (extract password protected)
+<code>/cmd</code> link -z password (zip password protected)
 
-5. <b>Bittorrent seed</b>:
-<code>/mirror</code> <b>d</b> link or by replying to file/link
-To specify ratio and seed time add d:ratio:time. Ex: d:0.7:10 (ratio and time) or d:0.7 (only ratio) or d::10 (only time) where time in minutes.
+5. <b>Multi by replying to first link/file:</b>
+<code>/cmd</code> -i 5(number of links/files)
 
-5. <b>Multi links by replying to first link/file:</b>
-<code>/mirror</code> 5(number of links/files)
-Number should be always before n: or pswd:
+6. <b>Multi with same directory by replying to first link/file:</b>
+<code>/cmd</code> -i 5(number of links/files) -m foldername
 
-<b>NOTES:</b>
-1. When use cmd by reply don't add any option in link msg! Always add them after cmd msg!
-2. Options (<b>n: and pswd:</b>) should be added randomly after the link if link along with the cmd and after any other option
-3. Options (<b>d, s, m: and multi</b>) should be added randomly before the link and before any other option.
-5. (n:) option doesn't work with torrents.
+7. <b>Direct link authorization:</b>
+<code>/cmd</code> link -au username -ap password
+
+8. <b>Bittorrent selection</b>    
+<code>/cmd</code> link -s or by replying to file/link
+
+9. <b>Bittorrent seed</b>:
+<code>/cmd</code> <b>d</b> link -d ratio:seed_time or by replying to file/link
+To specify ratio and seed time add -d ratio:time. Ex: -d 0.7:10 (ratio and time) or -d 0.7 (only ratio) or -d :10 (only time) where time in minutes.
+
 '''
 
 RSS_HELP_MESSAGE = """
@@ -98,9 +88,9 @@ Timeout: 60 sec.
 CLONE_HELP_MESSAGE = """
 Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link along with command or by replying to the link 
 
-<b>Multi links only by replying to first gdrive link:</b>
-<code>/clone</code> 10(number of links)
+1. <b>Multi links only by replying to first gdlink link:</b>
+<code>/clone</code> -i 5(number of links)
 
-<b>Gdrive:</b>
-<code>/clone</code> gdrive link
+2. <b>Gdrive:</b>
+<code>/clone</code> gdlink
 """

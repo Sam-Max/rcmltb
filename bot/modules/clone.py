@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from asyncio import sleep
 from random import SystemRandom
 from string import ascii_letters, digits
@@ -19,36 +20,37 @@ from bot.modules.tasks_listener import MirrorLeechListener
 
 
 async def clone(client, message):
-    args = message.text.split()
-    link = ''
-    tag= ''
-    multi = 0
+    message_list = message.text.split()
+
+    try:
+        args = parser.parse_args(message_list[1:])
+    except Exception as e:
+        await sendMessage(CLONE_HELP_MESSAGE, message)
+        return
+
+    multi = args.multi
+    link = " ".join(args.link)
 
     if username := message.from_user.username:
         tag = f"@{username}"
     else:
         tag = message.from_user.mention
 
-    if len(args) > 1:
-        link = args[1].strip()
-        if link.isdigit():
-            multi = int(link)
-            link = ''
-
-    if reply_to := message.reply_to_message:
-        if len(link) == 0:
-            link = reply_to.text.split(maxsplit=1)[0].strip()
+    if not link and (reply_to := message.reply_to_message):
+        link = reply_to.text.split('\n', 1)[0].strip()
 
     @new_task
     async def __run_multi():
         if multi > 1:
-            await sleep(4)
+            await sleep(5)
+            msg = [s.strip() for s in message_list]
+            index = msg.index('-i')
+            msg[index+1] = f"{multi - 1}"
             nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
-            args[1] = f"{multi - 1}"
-            nextmsg = await sendMessage(" ".join(args), nextmsg)
+            nextmsg = await sendMessage(" ".join(msg), nextmsg)
             nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
             nextmsg.from_user = message.from_user
-            await sleep(4)
+            await sleep(5)
             await clone(client, nextmsg)
 
     __run_multi()
@@ -100,6 +102,9 @@ async def clone(client, message):
         await sendMessage(CLONE_HELP_MESSAGE, message)
 
 
+parser = ArgumentParser(description='Clone args usage:')
 
+parser.add_argument('link', nargs='*', default='')
+parser.add_argument('-i', nargs='?', default=0, dest='multi', type=int)
 
 bot.add_handler(MessageHandler(clone, filters= filters.command(BotCommands.CloneCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter)))

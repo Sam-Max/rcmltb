@@ -1,4 +1,4 @@
-__version__ = "4.5"
+__version__ = "4.6"
 __author__ = "Sam-Max"
 
 from uvloop import install
@@ -8,6 +8,7 @@ from socket import setdefaulttimeout
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from os import environ, remove as osremove, path as ospath
 from threading import Thread
+from faulthandler import enable as faulthandler_enable
 from time import sleep, time
 from sys import exit
 from dotenv import load_dotenv, dotenv_values
@@ -20,6 +21,7 @@ from bot.conv_pyrogram import Conversation
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from tzlocal import get_localzone
 
+faulthandler_enable()
 
 install()
 

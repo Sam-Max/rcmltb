@@ -3,7 +3,7 @@ from os import walk, rename as osrename, path as ospath, remove as osremove
 from time import time
 from re import match as re_match
 from PIL import Image
-from bot import GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, config_dict, bot, app, user_data, leech_log
+from bot import GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER, LOGGER, PARALLEL_TASKS, config_dict, bot, app, user_data, l_queue, leech_log
 from pyrogram.errors import FloodWait, RPCError
 from bot.helper.ext_utils.bot_utils import clean_unwanted, is_archive
 from bot.helper.ext_utils.human_format import get_readable_file_size

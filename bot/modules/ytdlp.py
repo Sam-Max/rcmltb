@@ -1,10 +1,10 @@
+from argparse import ArgumentParser
 from asyncio import sleep
 from yt_dlp import YoutubeDL
 from aiohttp import ClientSession
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import regex, command
 from bot import DOWNLOAD_DIR, LOGGER, config_dict, user_data, bot
-from re import split as re_split
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import is_url, new_task, run_sync
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -20,7 +20,7 @@ from bot.modules.tasks_listener import MirrorLeechListener
 ytdl_dict = {}
 
 
-#Some refactoring from source
+#Some refactoring from base repository
 async def select_format(_, query):
     data = query.data.split()
     message = query.message
@@ -216,17 +216,19 @@ async def _mdisk(link, name):
                     name = resp_json['filename']
             return name, link      
           
+async def ytdlmirror(client, message):
+    await _ytdl(client, message)
 
+async def ytdlleech(client, message):
+    await _ytdl(client, message, isLeech=True)    
+
+    
 @new_task
-async def _ytdl(client, message, isZip= False, isLeech=False):
-    mssg = message.text
+async def _ytdl(client, message, isLeech=False, sameDir=None):
+    message_list = message.text.split('\n')
+    message_args = message_list[0].split()
     user_id = message.from_user.id
     qual = ''
-    select = False
-    multi = 0
-    link = ''
-    folder_name = ''
-    tag= ''
 
     if not isLeech:
         if await is_rclone_config(user_id, message): pass
@@ -234,56 +236,43 @@ async def _ytdl(client, message, isZip= False, isLeech=False):
         if await is_remote_selected(user_id, message): pass
         else: return
 
-    args = mssg.split(maxsplit=3)
-    args.pop(0)
-    if len(args) > 0:
-        index = 1
-        for x in args:
-            x = x.strip()
-            if x == 's':
-                select = True
-                index += 1
-            elif x.strip().isdigit():
-                multi = int(x)
-                mi = index
-            else:
-                break
-        if multi == 0:
-            args = mssg.split(maxsplit=index)
-            if len(args) > index:
-                x = args[index].strip()
-                if not x.startswith(('n:', 'pswd:', 'up:', 'rcf:', 'opt:')):
-                    link = re_split(r' opt: | pswd: | n: | rcf: | up: ', x)[
-                        0].strip()
-    
+    try:
+        args = parser.parse_args(message_args[1:])
+    except Exception as e:
+        await sendMessage(YT_HELP_MESSAGE, message)
+        return
+
+    select = args.select
+    multi = args.multi
+    link = " ".join(args.link)
+    opt = " ".join(args.options)
+    folder_name = args.folderName
+    name = args.newName
+    compress = args.zipPswd
+
+    if folder_name:
+        folder_name = f'/{folder_name}'
+        if sameDir is None:
+            sameDir = {'total': multi, 'tasks': set(), 'name': folder_name}
+        sameDir['tasks'].add(message.id)
+
     @new_task
     async def __run_multi():
         if multi <= 1:
             return
-        await sleep(4)
+        await sleep(5)
+        msg = [s.strip() for s in message_args]
+        index = msg.index('-i')
+        msg[index+1] = f"{multi - 1}"
         nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
-        ymsg = mssg.split(maxsplit=mi+1)
-        ymsg[mi] = f'{multi - 1}'
-        nextmsg = await sendMessage(' '.join(ymsg), nextmsg)
+        nextmsg = await sendMessage(' '.join(msg), nextmsg)
         nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
         nextmsg.from_user = message.from_user
-        await sleep(4)
-        _ytdl(client, nextmsg, isZip, isLeech)
+        await sleep(5)
+        _ytdl(client, nextmsg, isLeech, sameDir)
 
     path = f'{DOWNLOAD_DIR}{message.id}{folder_name}'
     
-    name = mssg.split(' n: ', 1)
-    name = re_split(' pswd: | opt: | up: | rcf: ', name[1])[
-        0].strip() if len(name) > 1 else ''
-
-    pswd = mssg.split(' pswd: ', 1)
-    pswd = re_split(' n: | opt: | up: | rcf: ', pswd[1])[
-        0] if len(pswd) > 1 else None
-
-    opt = mssg.split(' opt: ', 1)
-    opt = re_split(' n: | pswd: | up: | rcf: ', opt[1])[
-        0].strip() if len(opt) > 1 else ''
-
     opt = opt or config_dict['YT_DLP_OPTIONS']
 
     if username := message.from_user.username:
@@ -291,20 +280,15 @@ async def _ytdl(client, message, isZip= False, isLeech=False):
     else:
         tag = message.from_user.mention
 
-    if reply_to := message.reply_to_message:
-        if len(link) == 0:
-            link = reply_to.text.split('\n', 1)[0].strip()
-        if not reply_to.from_user.is_bot:
-            if username := reply_to.from_user.username:
-                tag = f'@{username}'
-            else:
-                tag = reply_to.from_user.mention
+    if not link and (reply_to := message.reply_to_message):
+        link = reply_to.text.split('\n', 1)[0].strip()
 
     if not is_url(link):
         await sendMessage(YT_HELP_MESSAGE, message)
         return
     
-    listener = MirrorLeechListener(message, tag, user_id, isZip=isZip, pswd=pswd, isLeech=isLeech)
+    listener = MirrorLeechListener(message, tag, user_id, compress, isLeech=isLeech)
+   
     if 'mdisk.me' in link:
         name, link = await _mdisk(link, name)
 
@@ -354,25 +338,18 @@ async def _ytdl(client, message, isZip= False, isLeech=False):
         await select_quality(message, result, listener, link, path, name, opt)
 
 
-async def ytdlmirror(client, message):
-    await _ytdl(client, message)
+parser = ArgumentParser(description='YT-DLP args usage:', argument_default='')
 
-async def ytdlzipmirror(client, message):
-    await _ytdl(client, message, isZip= True)
-
-async def ytdlleech(client, message):
-    await _ytdl(client, message, isLeech=True)    
-
-async def ytdlzipleech(client, message):
-    await _ytdl(client, message, isZip= True, isLeech=True)    
-
-
-
+parser.add_argument('link', nargs='*')
+parser.add_argument('-s', action='store_true', default=False, dest='select')
+parser.add_argument('-o', nargs='+', dest='options')
+parser.add_argument('-m', nargs='?', default="", dest='folderName')
+parser.add_argument('-i', nargs='?', default=0, dest='multi', type=int)
+parser.add_argument('-n', nargs='?', default="", dest='newName')
+parser.add_argument('-z', nargs='?', default=None, const="", dest='zipPswd')
 
 bot.add_handler(MessageHandler(ytdlmirror, filters= command(BotCommands.YtdlMirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter)))
 bot.add_handler(MessageHandler(ytdlleech, filters= command(BotCommands.YtdlLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter)))
-bot.add_handler(MessageHandler(ytdlzipmirror, filters= command(BotCommands.YtdlZipMirrorCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter)))
-bot.add_handler(MessageHandler(ytdlzipleech, filters= command(BotCommands.YtdlZipLeechCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter)))
 bot.add_handler(CallbackQueryHandler(select_format, filters= regex('^ytq')))
 
 

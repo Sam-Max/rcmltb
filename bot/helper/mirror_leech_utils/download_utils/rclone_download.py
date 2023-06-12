@@ -55,8 +55,8 @@ class RcloneLeech:
         if return_code == 0:
             await self.__listener.onDownloadComplete()
         else:
-            error= await self.process.stderr.read()
-            await self.__listener.onDownloadError(f"Error: {error}!")
+            err_message = (await self.process.stderr.read()).decode()
+            await self.__listener.onDownloadError(f"Error: {err_message}!")
     
     async def cancel_download(self):
         self.__is_cancelled = True
