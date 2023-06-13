@@ -5,6 +5,7 @@ from bot import bot, DOWNLOAD_DIR, config_dict, m_queue
 from pyrogram import filters
 from base64 import b64encode
 from os import path as ospath
+from re import match as re_match
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import get_content_type, is_gdrive_link, is_magnet, is_mega_link, is_url, new_task, run_sync
