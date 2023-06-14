@@ -139,14 +139,15 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
     if file is not None:
         if reply_message and not multi:
             buttons= ButtonMaker() 
-            file_name= file.file_name
-            size= get_readable_size(file.file_size)
-            header_msg = f"Which name do you want to use?\n\n<b>Name</b>: <code>{file_name}</code>\n\n<b>Size</b>: <code>{size}</code>"
+            name = file.file_name if hasattr(file, 'file_name') else 'None'
+            msg = f"Which name do you want to use?\n\n"
+            msg += f"<b>Name</b>: <code>{name}</code>\n\n"
+            msg += f"<b>Size</b>: <code>{get_readable_size(file.file_size)}</code>"
             buttons.cb_buildbutton("📄 By default", f"mirrormenu^default")
             buttons.cb_buildbutton("📝 Rename", f"mirrormenu^rename")
             buttons.cb_buildbutton("✘ Close Menu", f"mirrormenu^close", 'footer')
             listener_dict[message_id] = [listener, file, message, isLeech, user_id, ""]
-            await sendMarkup(header_msg, message, reply_markup= buttons.build_menu(2))
+            await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
         else:
             tgdown= TelegramDownloader(file, client, listener, f'{path}/', name)
             if PARALLEL_TASKS:    
