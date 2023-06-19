@@ -81,7 +81,6 @@ async def clone(client, message):
             return
         user_id= message.from_user.id
         listener = MirrorLeechListener(message, tag, user_id)
-        await listener.onDownloadStart()
         drive = GoogleDriveHelper(name, listener=listener)
         if files <= 20:
             msg= await sendMessage(f"Cloning: <code>{link}</code>", message)
@@ -90,7 +89,7 @@ async def clone(client, message):
         else:
             gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
             async with status_dict_lock:
-                status_dict[message.id] = CloneStatus(gd, size, message, gid)
+                status_dict[message.id] = CloneStatus(drive, size, message, gid)
             await sendStatusMessage(message)
             link, size, mime_type, files, folders = await run_sync(drive.clone, link) 
         if not link:

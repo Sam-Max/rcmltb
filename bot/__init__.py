@@ -29,7 +29,7 @@ setdefaulttimeout(600)
 
 botUptime = time()
 
-basicConfig(level= INFO,
+basicConfig(level=INFO,
     format= '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[StreamHandler(), FileHandler("botlog.txt")])
 

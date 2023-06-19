@@ -327,7 +327,6 @@ class MirrorLeechListener:
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n"
         msg += f"<b>Size: </b>{size}\n"
         msg += f'<b>Type: </b>{mime_type}\n\n'
-        msg += f"<b>cc: </b>{self.tag}"
         button= ButtonMaker()
         
         if is_gdrive:
@@ -360,6 +359,7 @@ class MirrorLeechListener:
                 share_url += '/'
             button.url_buildbutton("Rclone Link 🔗", share_url)
 
+        msg += f"<b>cc: </b>{self.tag}"
         await sendMessage(msg, self.message, button.build_menu(2))
         
         if self.seed:
@@ -385,30 +385,42 @@ class MirrorLeechListener:
     async def onUploadComplete(self, link, size, files, folders, mime_type, name):
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n"
         msg += f"<b>Size: </b>{size}"
-        msg += f'\n<b>Total Files: </b>{folders}'
-        if mime_type != 0:
-            msg += f'\n<b>Corrupted Files: </b>{mime_type}'
-        msg += f'\n<b>cc: </b>{self.tag}\n\n'
         
-        if not files:
-            await sendMessage(msg, self.message)
-        else:
-            fmsg = ''
-            for index, (link, name) in enumerate(files.items(), start=1):
-                fmsg += f"{index}. <a href='{link}'>{name}</a>\n"
-                if len(fmsg.encode() + msg.encode()) > 4000:
+        if self.isLeech:
+            msg += f'\n<b>Total Files: </b>{folders}'
+            if mime_type != 0:
+                msg += f'\n<b>Corrupted Files: </b>{mime_type}'
+            msg += f'\n<b>cc: </b>{self.tag}\n\n'
+            if not files:
+                await sendMessage(msg, self.message)
+            else:
+                fmsg = ''
+                for index, (link, name) in enumerate(files.items(), start=1):
+                    fmsg += f"{index}. <a href='{link}'>{name}</a>\n"
+                    if len(fmsg.encode() + msg.encode()) > 4000:
+                        await sendMessage(msg + fmsg, self.message)
+                        await sleep(1)
+                        fmsg = ''
+                if fmsg != '':
                     await sendMessage(msg + fmsg, self.message)
-                    await sleep(1)
-                    fmsg = ''
-            if fmsg != '':
-                await sendMessage(msg + fmsg, self.message)
-        
-        if self.seed:
-            if self.newDir:
-                await clean_target(self.newDir)
-            return
-        
+            if self.seed:
+                if self.newDir:
+                    await clean_target(self.newDir)
+                return
+        else:
+            msg += f'\n\n<b>Type: </b>{mime_type}'
+            if mime_type == "Folder":
+                msg += f'\n<b>SubFolders: </b>{folders}'
+                msg += f'\n<b>Files: </b>{files}'
+
+            buttons = ButtonMaker()
+            buttons.url_buildbutton("Cloud Link", link)
+
+            msg += f'\n\n<b>cc: </b>{self.tag}'
+            await sendMessage(msg, self.message, buttons.build_menu(1))
+
         await clean_download(self.dir)
+
         async with status_dict_lock:
             if self.uid in status_dict.keys():
                 del status_dict[self.uid]

@@ -3,7 +3,7 @@ from json import loads as jsonloads
 from os import getcwd, path as ospath
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
-from bot import GLOBAL_EXTENSION_FILTER, LOGGER, OWNER_ID, config_dict, remotes_multi
+from bot import GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, remotes_multi
 from bot.helper.ext_utils.bot_utils import cmd_exec, run_sync
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.exceptions import NotRclonePathFound
@@ -91,8 +91,9 @@ async def list_remotes(message, menu_type, remote_type='remote', is_second_menu=
     buttons = ButtonMaker()
     for remote in conf.sections():
         prev = ""
-        if config_dict['MULTI_REMOTE_UP'] and user_id== OWNER_ID:
-            if remote in remotes_multi: prev = "✅"
+        if CustomFilters._owner_query(user_id) and config_dict['MULTI_REMOTE_UP']:
+            if remote in remotes_multi: 
+                prev = "✅"
             buttons.cb_buildbutton(f"{prev} 📁 {remote}", f"{menu_type}^{remote_type}^{remote}^{user_id}")
         else:
             buttons.cb_buildbutton(f"📁 {remote}", f"{menu_type}^{remote_type}^{remote}^{user_id}")

@@ -2,26 +2,25 @@ from io import FileIO
 from logging import getLogger, ERROR
 from time import time
 from pickle import load as pload
-from os import makedirs, path as ospath
 from re import search as re_search
 from urllib.parse import parse_qs, urlparse
 from os import makedirs, path as ospath, listdir
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError, Error as GCError
+from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 from bot import GLOBAL_EXTENSION_FILTER, config_dict
 from bot.helper.ext_utils.bot_utils import run_async, setInterval
 from random import randrange
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, RetryError
 
+
 LOGGER = getLogger(__name__)
 getLogger('googleapiclient.discovery').setLevel(ERROR)
 
 
-
 class GoogleDriveHelper:
-    def __init__(self, name=None, path=None, listener= None):
+    def __init__(self, name=None, path=None, listener=None):
         self.__OAUTH_SCOPE = ['https://www.googleapis.com/auth/drive']
         self.__G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
         self.__G_DRIVE_BASE_DOWNLOAD_URL = "https://drive.google.com/uc?id={}&export=download"
@@ -94,7 +93,7 @@ class GoogleDriveHelper:
     def __getIdFromUrl(link: str):
         if "folders" in link or "file" in link:
             regex = r"https:\/\/drive\.google\.com\/(?:drive(.*?)\/folders\/|file(.*?)?\/d\/)([-\w]+)"
-            res = re_search(regex,link)
+            res = re_search(regex, link)
             if res is None:
                 raise IndexError("G-Drive ID not found.")
             return res.group(3)
@@ -102,7 +101,7 @@ class GoogleDriveHelper:
         return parse_qs(parsed.query)['id'][0]
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
-           retry=retry_if_exception_type(GCError))
+           retry=retry_if_exception_type(Exception))
     def __set_permission(self, drive_id):
         permissions = {
             'role': 'reader',
@@ -110,21 +109,21 @@ class GoogleDriveHelper:
             'value': None,
             'withLink': True
         }
-        return self.__service.permissions().create(fileId=drive_id, body=permissions, supportsTeamDrives=True).execute()
+        return self.__service.permissions().create(fileId=drive_id, body=permissions, supportsAllDrives=True).execute()
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
-           retry=retry_if_exception_type(GCError))
+           retry=retry_if_exception_type(Exception))
     def __getFileMetadata(self, file_id):
-        return self.__service.files().get(fileId=file_id, supportsTeamDrives=True,
+        return self.__service.files().get(fileId=file_id, supportsAllDrives=True,
                                           fields='name, id, mimeType, size').execute() 
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
-           retry=retry_if_exception_type(GCError))
+           retry=retry_if_exception_type(Exception))
     def __getFilesByFolderId(self, folder_id):
         page_token = None
         files = []
         while True:
-            response = self.__service.files().list(supportsTeamDrives=True, includeTeamDriveItems=True,
+            response = self.__service.files().list(supportsAllDrives=True, includeTeamDriveItems=True,
                                                    q=f"'{folder_id}' in parents and trashed = false",
                                                    spaces='drive', pageSize=200,
                                                    fields='nextPageToken, files(id, name, mimeType, size, shortcutDetails)',
@@ -144,16 +143,17 @@ class GoogleDriveHelper:
             self.__total_time += self.__update_interval
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
-           retry=retry_if_exception_type(GCError))
+           retry=retry_if_exception_type(Exception))
     def __create_directory(self, directory_name, dest_id):
         file_metadata = {
             "name": directory_name,
-            "description": "Uploaded by Mirror-leech-telegram-bot",
+            "description": "Uploaded by rcmltb",
             "mimeType": self.__G_DRIVE_DIR_MIME_TYPE
         }
         if dest_id is not None:
             file_metadata["parents"] = [dest_id]
-        file = self.__service.files().create(body=file_metadata, supportsTeamDrives=True).execute()
+        file = self.__service.files().create(
+            body=file_metadata, supportsAllDrives=True).execute()
         file_id = file.get("id")
         if not config_dict['IS_TEAM_DRIVE']:
             self.__set_permission(file_id)
@@ -273,7 +273,7 @@ class GoogleDriveHelper:
         return name, mime_type, self.__total_bytes, self.__total_files, self.__total_folders
                 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
-           retry=retry_if_exception_type(GCError))
+           retry=retry_if_exception_type(Exception))
     def __copyFile(self, file_id, dest_id):
         body = {'parents': [dest_id]}
         try:

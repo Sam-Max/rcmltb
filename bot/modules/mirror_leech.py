@@ -140,7 +140,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
         if reply_message and not multi:
             buttons= ButtonMaker() 
             name = file.file_name if hasattr(file, 'file_name') else 'None'
-            msg = f"Which name do you want to use?\n\n"
+            msg = f"<b>Which name do you want to use?</b>\n\n"
             msg += f"<b>Name</b>: <code>{name}</code>\n\n"
             msg += f"<b>Size</b>: <code>{get_readable_size(file.file_size)}</code>"
             buttons.cb_buildbutton("📄 By default", f"mirrormenu^default")
