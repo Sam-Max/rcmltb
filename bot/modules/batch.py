@@ -38,7 +38,7 @@ Send me one of the followings:
 1. Telegram message link from public or private/restricted channel   
 
 2. URL links separated each link by new line 
-   Direct link authorization: link username password
+   <b>Direct link authorization:</b> link username password
 
 3. TXT file with URL links separated each link by new line        
 
@@ -116,7 +116,7 @@ Send me one of the followings:
         await deleteMessage(question)
 
 async def download(message, link, multi, isLeech, value=0):
-    msg_id = int(link.split("/")[-1]) + int(value)
+    msg_id = int(link.split("/")[-1]) + value
     user_id= message.from_user.id
 
     if username := message.from_user.username:
@@ -129,26 +129,33 @@ async def download(message, link, multi, isLeech, value=0):
     path= f'{DOWNLOAD_DIR}{listener.uid}/'
 
     if 't.me/c/' in link:
-        if not listener.isSuperGroup:
-            await sendMessage('Use SuperGroup to download with User!', listener.message)
+        if app is None:
+            await sendMessage("You need to set USER_SESSION_STRING!!", message)
             return
         try:
             client= app
-            chat = int('-100' + str(link.split("/")[-2]))
+            chat = int('-100' + link.split("/")[-2])
             msg = await app.get_messages(chat, msg_id)
         except Exception:
-            await sendMessage("Make sure you joined the channel and set USER_SESSION_STRING!!", message)
+            await sendMessage("Make sure you joined the channel!!", message)
             return
     else:
-        try:
-            client= bot
-            chat = link.split("/")[-2]
-            msg = await bot.get_messages(chat, msg_id)
-        except Exception:
-            await sendMessage("Bot needs to join chat to download!!", message)
-            return
+        client= bot
+        chat = link.split("/")[-2]
+        msg = await bot.get_messages(chat, msg_id)
+        if msg.empty:
+            if app:
+                client= app
+                try:
+                    msg = await app.get_messages(chat, msg_id)
+                except Exception:
+                    await sendMessage("Make sure you joined the channel!!", message)
+                    return
+            else:
+                await sendMessage("Bot needs to join chat to download!!", message)
+                return
     
-    _multi(bot, message, link, value, multi, isLeech)
+    _multi(message, link, value, multi, isLeech)
 
     file = msg.document or msg.video or msg.photo or msg.audio or \
            msg.voice or msg.video_note or msg.sticker or msg.animation or None
@@ -156,14 +163,14 @@ async def download(message, link, multi, isLeech, value=0):
     await TelegramDownloader(file, client, listener, path).download()
     
 @new_task
-async def _multi(client, message, link, value, multi, isLeech):
+async def _multi(message, link, value, multi, isLeech):
     if multi <= 1:
         return
     try:
         await sleep(4)
         msg = f"/leech -i {multi - 1}" if isLeech else f"/mirror -i {multi - 1}"
         nextmsg = await sendMessage(msg, message)
-        nextmsg = await client.get_messages(message.chat.id, nextmsg.id)
+        nextmsg = await bot.get_messages(message.chat.id, nextmsg.id)
         nextmsg.from_user = message.from_user
         value += 1
         multi -= 1
