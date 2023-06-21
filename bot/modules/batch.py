@@ -151,7 +151,7 @@ async def download(message, link, multi, isLeech, value=0):
     _multi(bot, message, link, value, multi, isLeech)
 
     file = msg.document or msg.video or msg.photo or msg.audio or \
-           msg.voice or msg.video_note or msg.animation or None
+           msg.voice or msg.video_note or msg.sticker or msg.animation or None
         
     await TelegramDownloader(file, client, listener, path).download()
     
