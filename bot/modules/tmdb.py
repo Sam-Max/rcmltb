@@ -1,4 +1,4 @@
-from bot import LOGGER, config_dict, tmdb_titles, bot
+from bot import config_dict, tmdb_titles, bot
 from os import remove as osremove
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
@@ -17,35 +17,34 @@ tmdb_image_base= "http://image.tmdb.org/t/p/w500"
 tmdb_dict = {}
 
 
-async def categories(_, message):
+async def tdmb_categories(_, message):
     tmdb.api_key = config_dict['TMDB_API_KEY']
     tmdb.language = config_dict['TMDB_LANGUAGE']
     if config_dict['TMDB_API_KEY'] and config_dict['SEARCH_PLUGINS']:
         button= ButtonMaker()
-        button.cb_buildbutton("📺 Movies", "subcat^movie")
-        button.cb_buildbutton("🎬 TV Shows", "subcat^tv")
-        button.cb_buildbutton("🔍 Search", "sapitdmb")
-        button.cb_buildbutton("✘ Close Menu", f"subcat^close", position='footer')
+        button.cb_buildbutton("📺 Movies", "tmdbsubcat^movie")
+        button.cb_buildbutton("🎬 TV Shows", "tmdbsubcat^tv")
+        button.cb_buildbutton("🔍 Search", "tmdbsearchapi")
+        button.cb_buildbutton("✘ Close Menu", f"tdmbcatinfo^close", position='footer')
         await sendMessage("Choose one category", message, button.build_menu(2))
     else:
         await sendMessage("No Tmdb API key or search plugins provided", message)
 
-
-async def sub_categories(_, query):
+async def tmdb_sub_categories(_, query):
     data= query.data.split("^")
     message= query.message
     button= ButtonMaker()
     if data[1] == "movie":
-        button.cb_buildbutton("Trending", "info^trending_movie")
-        button.cb_buildbutton("Discover", "info^discover_movie")
+        button.cb_buildbutton("Trending", "tdmbcatinfo^trending_movie")
+        button.cb_buildbutton("Discover", "tdmbcatinfo^discover_movie")
     elif data[1] == "tv":
-        button.cb_buildbutton("Trending", "info^trending_tv")
-        button.cb_buildbutton("Discover", "info^discover_tv")
-    button.cb_buildbutton("✘ Close Menu", f"info^close", position='footer')
+        button.cb_buildbutton("Trending", "tdmbcatinfo^trending_tv")
+        button.cb_buildbutton("Discover", "tdmbcatinfo^discover_tv")
+    button.cb_buildbutton("✘ Close Menu", f"tdmbcatinfo^close", position='footer')
     await query.answer()
     await editMessage("Choose one category", message, button.build_menu(2))
 
-async def get_category_info(_, query):
+async def tmdb_get_category_info(_, query):
     data= query.data.split("^")
     message= query.message
     discover = Discover()
@@ -77,7 +76,7 @@ async def get_category_info(_, query):
         await query.answer()
         await message.delete()
 
-async def get_details(_, query):
+async def tmdb_get_details(_, query):
     data= query.data.split("^")
     message= query.message
     button= ButtonMaker()
@@ -91,13 +90,13 @@ async def get_details(_, query):
         msg += f'<b>Plot:</b> {m.overview}\n\n'
         tmdb_titles[m.id] = title
         if m.poster_path is None:
-            button.cb_buildbutton("🔍 Torrent Search", f"stdmb^{m.id}")
+            button.cb_buildbutton("🔍 Torrent Search", f"tdmbsearch^{m.id}")
             await sendMessage(msg, message, button.build_menu(2))
         else:
             image_url= tmdb_image_base + m.poster_path
             path= await get_image_from_url(image_url, title)
             if path:
-                button.cb_buildbutton("🔍 Torrent Search", f"stdmb^{m.id}")
+                button.cb_buildbutton("🔍 Torrent Search", f"tdmbsearch^{m.id}")
                 await sendPhoto(msg, message, path, button.build_menu(2))
                 osremove(path)
             else:
@@ -111,13 +110,13 @@ async def get_details(_, query):
         msg += f'<b>Plot:</b> {m.overview}\n\n'
         tmdb_titles[m.id] = title
         if m.poster_path is None:
-            button.cb_buildbutton("🔍 Torrent Search", f"stdmb^{m.id}")
+            button.cb_buildbutton("🔍 Torrent Search", f"tdmbsearch^{m.id}")
             await sendMessage(msg, message, button.build_menu(2))
         else:
             image_url= tmdb_image_base + m.poster_path
             path= await get_image_from_url(image_url, title)
             if path:
-                button.cb_buildbutton("🔍 Torrent Search", f"stdmb^{m.id}")
+                button.cb_buildbutton("🔍 Torrent Search", f"tdmbsearch^{m.id}")
                 await sendPhoto(msg, message, path, button.build_menu(2))
                 osremove(path)
             else:
@@ -128,7 +127,7 @@ async def get_details(_, query):
         await query.answer()
         await message.delete()
 
-async def next_tmdb(_, query):
+async def tmdb_next(_, query):
     message= query.message
     user_id= message.reply_to_message.from_user.id
 
@@ -154,22 +153,22 @@ async def tmdb_menu_maker(type, info, button):
         for movie in info:
             title= movie['original_title']
             id= movie['id']
-            button.cb_buildbutton(f"{title}", f"detail^movie^{id}")
+            button.cb_buildbutton(f"{title}", f"tmdbdetails^movie^{id}")
     elif type == 'trending_movie':
         for movie in info:
             title= movie.title
             id= movie['id']
-            button.cb_buildbutton(f"{title}", f"detail^movie^{id}")
+            button.cb_buildbutton(f"{title}", f"tmdbdetails^movie^{id}")
     elif type == "discover_tv":
         for show in info:
             title= show['name']
             id= show['id']
-            button.cb_buildbutton(f"{title}", f"detail^tv^{id}")
+            button.cb_buildbutton(f"{title}", f"tmdbdetails^tv^{id}")
     elif type == "trending_tv":
         for show in info:
             title= show.name
             id= show['id']
-            button.cb_buildbutton(f"{title}", f"detail^tv^{id}")
+            button.cb_buildbutton(f"{title}", f"tmdbdetails^tv^{id}")
 
 async def pagination(button, info, type, user_id, offset=0):
     if len(info) == 0:
@@ -185,8 +184,8 @@ async def pagination(button, info, type, user_id, offset=0):
             button.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"detail^pages^{user_id}", 'footer')        
         else: 
             button.cb_buildbutton(f"🗓 {round(int(offset) / 10) + 1} / {round(total / 10)}", f"detail^pages^{user_id}", 'footer')
-            button.cb_buildbutton("NEXT ⏩", f"next_tmdb {next_offset} {type}", 'footer')
-        button.cb_buildbutton("✘ Close Menu", f"detail^close^", 'footer_third')
+            button.cb_buildbutton("NEXT ⏩", f"tmdbnext {next_offset} {type}", 'footer')
+        button.cb_buildbutton("✘ Close Menu", f"tmdbdetails^close^", 'footer_third')
     return button
 
 def tmdbPage(info, offset=0, max_results=10):
@@ -205,29 +204,29 @@ def tmdbPage(info, offset=0, max_results=10):
 
 async def tmdb_next_buttons_maker(offset, next_offset, prev_offset, total, buttons, type, user_id):
     if offset <= 0:
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"detail^pages", 'footer')
-        buttons.cb_buildbutton("NEXT ⏩", f"next_tmdb {next_offset} {type}", 'footer')
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"tmdbdetails^pages", 'footer')
+        buttons.cb_buildbutton("NEXT ⏩", f"tmdbnext {next_offset} {type}", 'footer')
     elif offset >= total :
-        buttons.cb_buildbutton("⏪ BACK", f"next_tmdb {prev_offset} {type}", 'footer') 
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"detail^pages", 'footer')
+        buttons.cb_buildbutton("⏪ BACK", f"tmdbnext {prev_offset} {type}", 'footer') 
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"tmdbdetails^pages", 'footer')
     else:
-        buttons.cb_buildbutton("⏪ BACK", f"next_tmdb {prev_offset} {type}", 'footer_second')
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"detail^pages", 'footer')
-        buttons.cb_buildbutton("NEXT ⏩", f"next_tmdb {next_offset} {type}", 'footer_second')
-    buttons.cb_buildbutton("✘ Close Menu", f"detail^close^{user_id}", 'footer_third')
+        buttons.cb_buildbutton("⏪ BACK", f"tmdbnext {prev_offset} {type}", 'footer_second')
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"tmdbdetails^pages", 'footer')
+        buttons.cb_buildbutton("NEXT ⏩", f"tmdbnext {next_offset} {type}", 'footer_second')
+    buttons.cb_buildbutton("✘ Close Menu", f"tmdbdetails^close^{user_id}", 'footer_third')
 
-async def search(_, query):
+async def tmdb_search(_, query):
     message= query.message
     id= query.data.split("^")[1]
     await tmdbSearch(message, id)
     if id in tmdb_titles.keys():
         del tmdb_titles[id]
 
-async def search_api(client, query):
+async def tmdb_search_api(client, query):
     message= query.message
     user_id= query.from_user.id
     button= ButtonMaker()
-
+    
     question= await sendMessage("Send a movie or tv name to search, /ignore to cancel", message)
     try:
         if response := await client.listen.Message(filters.text, id=filters.user(user_id), timeout=60):
@@ -239,14 +238,14 @@ async def search_api(client, query):
                 mv = Movie()
                 movies = mv.search(title)
                 for movie in movies:
-                    button.cb_buildbutton(f"[Movie] {movie.title}", f"detail^movie^{movie.id}")
+                    button.cb_buildbutton(f"[Movie] {movie.title}", f"tmdbdetails^movie^{movie.id}")
                 
                 tv = TV()
                 shows = tv.search(title)
                 for show in shows:
-                    button.cb_buildbutton(f"[TV] {show.name}", f"detail^tv^{show.id}")
+                    button.cb_buildbutton(f"[TV] {show.name}", f"tmdbdetails^tv^{show.id}")
 
-                button.cb_buildbutton("✘ Close Menu", f"detail^close^{user_id}", 'footer_third')
+                button.cb_buildbutton("✘ Close Menu", f"tmdbdetails^close^{user_id}", 'footer_third')
                 await sendMessage("Results found: ", message, button.build_menu(2))
     except TimeoutError:
         await sendMessage("Too late 60s gone, try again!", message)
@@ -254,11 +253,11 @@ async def search_api(client, query):
         await question.delete()
 
 
-bot.add_handler(MessageHandler(categories, filters= filters.command(BotCommands.TMDB) & (CustomFilters.owner_filter)))
-bot.add_handler(CallbackQueryHandler(sub_categories, filters= filters.regex("subcat")))
-bot.add_handler(CallbackQueryHandler(get_category_info, filters= filters.regex("info")))
-bot.add_handler(CallbackQueryHandler(get_details, filters= filters.regex("detail")))
-bot.add_handler(CallbackQueryHandler(next_tmdb, filters= filters.regex("next_tmdb")))
-bot.add_handler(CallbackQueryHandler(search, filters= filters.regex("^stdmb")))
-bot.add_handler(CallbackQueryHandler(search_api, filters= filters.regex("^sapitdmb")))
+bot.add_handler(MessageHandler(tdmb_categories, filters= filters.command(BotCommands.TMDB) & (CustomFilters.owner_filter)))
+bot.add_handler(CallbackQueryHandler(tmdb_sub_categories, filters= filters.regex("tmdbsubcat")))
+bot.add_handler(CallbackQueryHandler(tmdb_get_category_info, filters= filters.regex("tdmbcatinfo")))
+bot.add_handler(CallbackQueryHandler(tmdb_get_details, filters= filters.regex("tmdbdetails")))
+bot.add_handler(CallbackQueryHandler(tmdb_next, filters= filters.regex("tmdbnext")))
+bot.add_handler(CallbackQueryHandler(tmdb_search, filters= filters.regex("tdmbsearch")))
+bot.add_handler(CallbackQueryHandler(tmdb_search_api, filters= filters.regex("tmdbsearchapi")))
 

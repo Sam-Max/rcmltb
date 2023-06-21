@@ -158,7 +158,7 @@ pip3 install -r requirements-cli.txt
   - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Int`
   - `IS_TEAM_DRIVE`: Set `True` if TeamDrive. Default is `False`. `Bool`
   - `EXTENSION_FILTER`: File extensions that won't clone. Separate them by space. `Str`
-  **Notes**: Must add **token.pickle** file directly to root for cloning to work. You can use /config command to add from bot.
+  **Notes**: Must add **token.pickle** file directly to root for cloning to work. You can use /botfiles command to add from bot.
    
   ### Leech
 
