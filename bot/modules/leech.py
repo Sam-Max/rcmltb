@@ -5,6 +5,7 @@ from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
 from bot import DOWNLOAD_DIR, bot, config_dict
 from bot.helper.ext_utils.bot_utils import run_sync
+from bot.helper.ext_utils.help_messages import LEECH_HELP_MESSAGE
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rcloneListNextPage
@@ -155,8 +156,8 @@ async def selection_callback(client, query):
         await query.answer("This menu is not for you!", show_alert=True)
         return
     elif cmd[1] == "link":
-        await query.answer()     
-        question= await sendMessage("Send link to leech, /ignore to cancel", message)
+        await query.answer()   
+        question= await sendMessage(LEECH_HELP_MESSAGE, message)
         try:
             response = await client.listen.Message(filters.text, id=filters.user(user_id), timeout=60)
             if response:

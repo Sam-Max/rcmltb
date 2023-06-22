@@ -61,6 +61,32 @@ To specify ratio and seed time add -d ratio:time. Ex: -d 0.7:10 (ratio and time)
 
 '''
 
+LEECH_HELP_MESSAGE = '''  
+
+<b>Send link to leech, /ignore to cancel</b>
+
+Options:
+1. <b>New Name</b>: 
+link -n newname
+Note: No work with torrents.
+
+2. <b>Extract & Zip</b>: 
+link -e password (extract password protected)
+link -z password (zip password protected)
+
+3. <b>Direct link authorization:</b>
+link -au username -ap password
+
+4. <b>Bittorrent selection</b>    
+link -s
+
+5. <b>Bittorrent seed</b>:
+link -d ratio:seed_time
+To specify ratio and seed time add -d ratio:time. Ex: -d 0.7:10 (ratio and time) or -d 0.7 (only ratio) or -d :10 (only time) where time in minutes.
+
+Note: You can also reply to link to leech it with options.
+'''
+
 RSS_HELP_MESSAGE = """
 Use this format to add feed url:
 Title1 link (required)
