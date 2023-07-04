@@ -11,6 +11,7 @@ cfscrape
 dnspython
 feedparser
 flask
+gevent
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib

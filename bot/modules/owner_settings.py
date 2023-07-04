@@ -181,11 +181,11 @@ async def ownerset_callback(client, callback_query):
                 if DATABASE_URL:
                     await DbManager().update_aria2('bt-stop-timeout', '0')
             elif data[3] == 'QB_BASE_URL':
-                await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn qbitweb.wserver:app")).wait()
+                await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
             elif data[3] == 'QB_SERVER_PORT':
                 if config_dict['BASE_URL']:
-                    await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app")).wait()
-                    await create_subprocess_shell("gunicorn qbitweb.wserver:app --bind 0.0.0.0:80")
+                    await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
+                    await create_subprocess_shell(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:80 --worker-class gevent")
             await query.answer("Reseted")    
             config_dict[data[3]] = value
             if DATABASE_URL:
@@ -377,8 +377,8 @@ async def start_env_listener(client, query, user_id, key):
                     elif key == 'QB_SERVER_PORT':
                         value = int(value)
                         if config_dict['BASE_URL']:
-                            await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app")).wait()
-                            await create_subprocess_shell(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{value}")
+                            await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
+                            await create_subprocess_shell(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{value} --worker-class gevent")
                     elif key == 'EXTENSION_FILTER':
                         fx = value.split()
                         GLOBAL_EXTENSION_FILTER.clear()

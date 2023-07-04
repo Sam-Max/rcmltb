@@ -6,7 +6,7 @@ from asyncio import Lock
 from asyncio import Queue
 from socket import setdefaulttimeout
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
-from os import environ, remove as osremove, path as ospath
+from os import environ, getcwd, remove as osremove, path as ospath
 from threading import Thread
 from faulthandler import enable as faulthandler_enable
 from time import sleep, time
@@ -16,7 +16,7 @@ from pymongo import MongoClient
 from aria2p import API as ariaAPI, Client as ariaClient
 from qbittorrentapi import Client as qbitClient
 from subprocess import Popen, run as srun
-from pyrogram import Client
+from pyrogram import Client as tgClient
 from bot.conv_pyrogram import Conversation
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from tzlocal import get_localzone
@@ -319,7 +319,7 @@ USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 app= ''
 if len(USER_SESSION_STRING) != 0:
     LOGGER.info("Creating Pyrogram client from USER_SESSION_STRING")
-    app = Client("pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING,
+    app = tgClient("pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING,
                  max_concurrent_transmissions=1000).start()
     IS_PREMIUM_USER = app.me.is_premium
 
@@ -391,9 +391,9 @@ config_dict = { 'AS_DOCUMENT': AS_DOCUMENT,
                 'YT_DLP_OPTIONS': YT_DLP_OPTIONS}
 
 if QB_BASE_URL:
-    Popen(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT}", shell=True)
+    Popen(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT} --worker-class gevent", shell=True)
 
-srun(["qbittorrent-nox", "-d", "--profile=."])
+srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
 
 if not ospath.exists('.netrc'):
      with open('.netrc', 'w'):
@@ -460,7 +460,7 @@ else:
     qb_client.app_set_preferences(qb_opt)
 
 LOGGER.info("Creating Pyrogram client")
-bot = Client("pyrogram", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, bot_token=BOT_TOKEN, 
+bot = tgClient("pyrogram", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, bot_token=BOT_TOKEN, 
              workers=1000, max_concurrent_transmissions=1000)
 Conversation(bot) 
 bot.start()

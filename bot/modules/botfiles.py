@@ -209,10 +209,10 @@ async def load_config():
      QB_BASE_URL = environ.get('QB_BASE_URL', '').rstrip("/")
      if len(QB_BASE_URL) == 0:
           QB_BASE_URL = ''
-          await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app")).wait()
+          await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
      else:
-          await (await create_subprocess_exec("pkill", "-9", "-f", f"gunicorn qbitweb.wserver:app")).wait()
-          await create_subprocess_shell("gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT}")
+          await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
+          await create_subprocess_shell(f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT} --worker-class gevent")
 
      UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
      if len(UPSTREAM_REPO) == 0:
