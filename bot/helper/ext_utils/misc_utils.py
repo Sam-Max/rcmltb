@@ -12,7 +12,7 @@ from re import search as re_search
 from bot import config_dict, DOWNLOAD_DIR, LOGGER, user_data, TG_MAX_FILE_SIZE, aria2, get_client, status_dict, status_dict_lock
 from json import loads as jsnloads
 from magic import Magic
-from subprocess import PIPE, check_output
+from subprocess import run as srun, PIPE, check_output
 from asyncio.subprocess import PIPE
 from os import path as ospath, walk as oswalk
 from time import time
@@ -55,6 +55,15 @@ async def clean_target(path: str):
             except:
                 pass
 
+async def start_cleanup():
+    get_client().torrents_delete(torrent_hashes="all")
+    if not config_dict['LOCAL_MIRROR']:
+        try:
+            await aiormtree(DOWNLOAD_DIR)
+        except:
+            pass
+    await makedirs(DOWNLOAD_DIR, exist_ok=True)
+
 def clean_all():
     aria2.remove_all(True)
     get_client().torrents_delete(torrent_hashes="all")
@@ -64,13 +73,11 @@ def clean_all():
         except:
             pass
 
-async def start_cleanup():
-    get_client().torrents_delete(torrent_hashes="all")
-
 def exit_clean_up(signal, frame):
     try:
-        LOGGER.info("Please wait, while we clean up the downloads and stop running downloads")
+        LOGGER.info("Please wait, while we clean up and stop the running downloads")
         clean_all()
+        srun(['pkill', '-9', '-f', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg'])
         exit(0)
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
