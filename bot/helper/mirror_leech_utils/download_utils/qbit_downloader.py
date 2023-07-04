@@ -35,7 +35,7 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
             tor_info = tor_info[0]
             ext_hash = tor_info.hash
         else:
-            await sendMessage(listener.message, "This Torrent already added or unsupported/invalid link/file.")
+            await sendMessage("This Torrent already added or unsupported/invalid link/file.", listener.message)
             return
         
         async with status_dict_lock:
