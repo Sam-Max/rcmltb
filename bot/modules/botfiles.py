@@ -83,7 +83,7 @@ async def load_config():
      if len(EXTENSION_FILTER) > 0:
           fx = EXTENSION_FILTER.split()
           GLOBAL_EXTENSION_FILTER.clear()
-          GLOBAL_EXTENSION_FILTER.append('.aria2')
+          GLOBAL_EXTENSION_FILTER.extend(['.aria2', '!qB'])
           for x in fx:
                if x.strip().startswith('.'):
                     x = x.lstrip('.')

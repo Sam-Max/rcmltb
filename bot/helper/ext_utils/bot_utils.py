@@ -65,9 +65,12 @@ def is_magnet(url):
    return bool(re_match(MAGNET_REGEX, url))
 
 async def get_content_type(link):
-    async with ClientSession(trust_env=True) as session:
-            async with session.get(link) as response:
+    try:
+        async with ClientSession(trust_env=True) as session:
+            async with session.get(link, verify_ssl=False) as response:
                 return response.headers.get('Content-Type')
+    except:
+        return None
 
 def is_share_link(url):
     return bool(re_match(r'https?:\/\/.+\.gdtot\.\S+|https?:\/\/(filepress|filebee|appdrive|gdflix)\.\S+', url))

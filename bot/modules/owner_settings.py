@@ -168,7 +168,7 @@ async def ownerset_callback(client, callback_query):
                 update_rclone_data("MIRROR_SELECT_BASE_DIR", value, user_id)
             elif data[3] == 'EXTENSION_FILTER':
                 GLOBAL_EXTENSION_FILTER.clear()
-                GLOBAL_EXTENSION_FILTER.append('.aria2')
+                GLOBAL_EXTENSION_FILTER.extend(['.aria2', '!qB'])
             elif data[3] == 'TORRENT_TIMEOUT':
                 downloads = await run_sync(aria2.get_downloads)
                 for download in downloads:
@@ -382,7 +382,7 @@ async def start_env_listener(client, query, user_id, key):
                     elif key == 'EXTENSION_FILTER':
                         fx = value.split()
                         GLOBAL_EXTENSION_FILTER.clear()
-                        GLOBAL_EXTENSION_FILTER.append('.aria2')
+                        GLOBAL_EXTENSION_FILTER.extend(['.aria2', '!qB'])
                         for x in fx:
                             if x.strip().startswith('.'):
                                 x = x.lstrip('.')
