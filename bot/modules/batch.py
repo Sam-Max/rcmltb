@@ -129,7 +129,7 @@ async def download(message, link, multi, isLeech, value=0):
     path= f'{DOWNLOAD_DIR}{listener.uid}/'
 
     if 't.me/c/' in link:
-        if app is None:
+        if not app:
             await sendMessage("You need to set USER_SESSION_STRING!!", message)
             return
         try:

@@ -30,7 +30,7 @@ class TelegramUploader():
         self._last_uploaded = 0
         self._iteration = 0
         self.__user_id = listener.message.from_user.id
-        self.client= app if app is not None else bot 
+        self.client= app if app else bot 
         self.__upload_path= ''
         self.__sent_msg= None
 

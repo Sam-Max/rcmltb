@@ -316,11 +316,11 @@ BOT_PM = BOT_PM.lower() == 'true'
 
 IS_PREMIUM_USER = False
 USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
-app= None
+app= ''
 if len(USER_SESSION_STRING) != 0:
     LOGGER.info("Creating Pyrogram client from USER_SESSION_STRING")
-    app = Client("pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING, 
-                 no_updates=True, max_concurrent_transmissions=1000).start()
+    app = Client("pyrogram_session", api_id=TELEGRAM_API_ID, api_hash=TELEGRAM_API_HASH, session_string=USER_SESSION_STRING,
+                 max_concurrent_transmissions=1000).start()
     IS_PREMIUM_USER = app.me.is_premium
 
 TG_MAX_FILE_SIZE= 4194304000 if IS_PREMIUM_USER else 2097152000
