@@ -39,13 +39,13 @@ async def myfiles_callback(client, callback_query):
     if cmd[1] == "remote":
         update_rclone_data("MYFILES_BASE_DIR", "", user_id)  #Reset Dir
         update_rclone_data("MYFILES_REMOTE", cmd[2]  , user_id)
-        await list_folder(message, cmd[2], "", menu_type= Menus.MYFILES, edit=True)
+        await list_folder(message, cmd[2], "", menu_type=Menus.MYFILES, edit=True)
     elif cmd[1] == "remote_dir":
         path = get_rclone_data(cmd[2], user_id)
         base_dir += path + "/"
         if await is_valid_path(rclone_remote, base_dir, message):
             update_rclone_data("MYFILES_BASE_DIR", base_dir, user_id)
-            await list_folder(message, rclone_remote, base_dir, menu_type= Menus.MYFILES, edit=True)
+            await list_folder(message, rclone_remote, base_dir, menu_type=Menus.MYFILES, edit=True)
     # Handle back button
     elif cmd[1] == "back":
         if len(base_dir) == 0: 
@@ -57,7 +57,7 @@ async def myfiles_callback(client, callback_query):
             base_dir_string += dir + "/"
         base_dir = base_dir_string
         update_rclone_data("MYFILES_BASE_DIR", base_dir, user_id)
-        await list_folder(message, rclone_remote, base_dir, menu_type= Menus.MYFILES, edit=True)
+        await list_folder(message, rclone_remote, base_dir, menu_type=Menus.MYFILES, edit=True)
     elif cmd[1] == "back_remotes_menu":
         await list_remotes(message, menu_type=Menus.MYFILES, edit=True)
     #Handle actions

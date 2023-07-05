@@ -1,4 +1,4 @@
-from bot import OWNER_ID, bot, config_dict, remotes_multi
+from bot import LOGGER, OWNER_ID, bot, config_dict, remotes_multi
 from bot.helper.ext_utils.bot_utils import run_sync
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -26,8 +26,7 @@ async def handle_mirrorselect(_, message):
         else:
             await sendMessage("Not allowed to use", message)        
 
-async def mirrorselect_callback(_, callback_query):
-    query= callback_query
+async def mirrorselect_callback(_, query):
     data = query.data
     cmd = data.split("^")
     message = query.message
@@ -39,6 +38,7 @@ async def mirrorselect_callback(_, callback_query):
         await query.answer("This menu is not for you!", show_alert=True)
         return
     if cmd[1] == "remote":
+        is_crypt= False if cmd[-2] == "False" else True
         if CustomFilters._owner_query(user_id):
             if config_dict['MULTI_REMOTE_UP']:
                 remotes_multi.append(cmd[2])
@@ -47,7 +47,7 @@ async def mirrorselect_callback(_, callback_query):
             config_dict.update({'DEFAULT_OWNER_REMOTE': cmd[2]}) 
         update_rclone_data("MIRROR_SELECT_BASE_DIR", "", user_id) 
         update_rclone_data("MIRROR_SELECT_REMOTE", cmd[2], user_id)
-        await list_folder(message, cmd[2], "", menu_type=Menus.MIRROR_SELECT, edit=True)
+        await list_folder(message, cmd[2], "", menu_type=Menus.MIRROR_SELECT, is_crypt=is_crypt, edit=True)
     elif cmd[1] == "remote_dir":
         path = get_rclone_data(cmd[2], user_id)
         base_dir += path + "/"

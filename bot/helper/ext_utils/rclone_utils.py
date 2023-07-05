@@ -90,13 +90,18 @@ async def list_remotes(message, menu_type, remote_type='remote', is_second_menu=
     conf.read(path)
     buttons = ButtonMaker()
     for remote in conf.sections():
-        prev = ""
+        prev_icon = ""
+        crypt_icon= ""
+        is_crypt= False
+        if conf.get(remote, 'type') == "crypt":
+            is_crypt= True
+            crypt_icon= "🔐"
         if CustomFilters._owner_query(user_id) and config_dict['MULTI_REMOTE_UP']:
             if remote in remotes_multi: 
-                prev = "✅"
-            buttons.cb_buildbutton(f"{prev} 📁 {remote}", f"{menu_type}^{remote_type}^{remote}^{user_id}")
+                prev_icon = "✅"
+            buttons.cb_buildbutton(f"{prev_icon} {crypt_icon} 📁 {remote}", f"{menu_type}^{remote_type}^{remote}^{is_crypt}^{user_id}")
         else:
-            buttons.cb_buildbutton(f"📁 {remote}", f"{menu_type}^{remote_type}^{remote}^{user_id}")
+            buttons.cb_buildbutton(f"{crypt_icon} 📁 {remote}", f"{menu_type}^{remote_type}^{remote}^{is_crypt}^{user_id}")
     if menu_type== Menus.REMOTE_SELECT:
         msg= f"Select cloud where you want to mirror the file"
     if menu_type == Menus.CLEANUP:
@@ -124,23 +129,6 @@ async def list_remotes(message, menu_type, remote_type='remote', is_second_menu=
     else:
         await sendMarkup(msg, message, reply_markup= buttons.build_menu(2))
 
-async def create_next_buttons(next_offset, prev_offset, _next_offset, data_back_cb, total, user_id, buttons, filter, menu_type, is_second_menu=False):
-    if next_offset == 0:
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages", 'footer')
-        buttons.cb_buildbutton("NEXT ⏩", f"{filter} {_next_offset} {is_second_menu} {data_back_cb}", 'footer')
-    elif next_offset >= total:
-        buttons.cb_buildbutton("⏪ BACK", f"{filter} {prev_offset} {is_second_menu} {data_back_cb}", 'footer') 
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages", 'footer')
-    elif next_offset + 10 > total:
-        buttons.cb_buildbutton("⏪ BACK", f"{filter} {prev_offset} {is_second_menu} {data_back_cb}", 'footer')
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages", 'footer')
-    else:
-        buttons.cb_buildbutton("⏪ BACK", f"{filter} {prev_offset} {is_second_menu} {data_back_cb}", 'footer_second')
-        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages", 'footer')
-        buttons.cb_buildbutton("NEXT ⏩", f"{filter} {_next_offset} {is_second_menu} {data_back_cb}", 'footer_second')
-    buttons.cb_buildbutton("⬅️ Back", f"{menu_type}^{data_back_cb}^{user_id}", 'footer_third')
-    buttons.cb_buildbutton("✘ Close Menu", f"{menu_type}^close^{user_id}", 'footer_third')
-
 async def is_valid_path(remote, path, message):
     user_id= message.reply_to_message.from_user.id
     rc_path = await get_rclone_path(user_id, message)
@@ -153,7 +141,7 @@ async def is_valid_path(remote, path, message):
     else:
         return True
 
-async def list_folder(message, rclone_remote, base_dir, menu_type, is_second_menu=False, edit=False):
+async def list_folder(message, rclone_remote, base_dir, menu_type, is_second_menu=False, is_crypt=False, edit=False):
     user_id= message.reply_to_message.from_user.id
     buttons = ButtonMaker()
     path = await get_rclone_path(user_id, message)
@@ -162,7 +150,6 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, is_second_men
     dir_callback = "remote_dir"
     file_callback= ""
     back_callback= "back"
-    is_crypt= False
     
     cmd = ["rclone", "lsjson", f'--config={path}', f"{rclone_remote}:{base_dir}"]
     
@@ -179,22 +166,21 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, is_second_men
         rc_path= f'{rclone_remote}:{base_dir}'
         conf = ConfigParser()
         conf.read(path)
-        for section in conf.sections():
-            if conf.get(section, 'type') == "crypt":
-                rc_path= conf.get(section, 'remote')
-                msg= f"Crypt Remote\n\n<b>Path:</b><code>{rc_path}</code>"
-                buttons.cb_buildbutton("✅ Select", f"{menu_type}^close^{user_id}")
-                buttons.cb_buildbutton("⬅️ Back", f"{menu_type}^{back_callback}^{user_id}", 'footer_second')
-                buttons.cb_buildbutton("✘ Close Menu", f"{menu_type}^close^{user_id}", 'footer_third')
-                if edit:
+        if is_crypt:
+            for section in conf.sections():
+                if conf.get(section, 'type') == "crypt":
+                    rc_path= conf.get(section, 'remote')
+                    msg= f"Crypt Remote\n\n<b>Path:</b><code>{rc_path}</code>"
+                    buttons.cb_buildbutton("✅ Select", f"{menu_type}^close^{user_id}")
+                    buttons.cb_buildbutton("⬅️ Back", f"{menu_type}^{back_callback}^{user_id}", 'footer_second')
+                    buttons.cb_buildbutton("✘ Close Menu", f"{menu_type}^close^{user_id}", 'footer_third')
                     await editMessage(msg, message, reply_markup= buttons.build_menu(1))
-                else:
-                    await sendMarkup(msg, message, reply_markup= buttons.build_menu(1))
-                return
-        next_type= "next_ms"
-        cmd.extend(['--dirs-only', '--fast-list', '--no-modtime'])
-        buttons.cb_buildbutton("✅ Select this folder", f"{menu_type}^close^{user_id}")
-        msg= f"Select folder where you want to store files\n\n<b>Path:</b><code>{rc_path}</code>"
+            return
+        else:
+            next_type= "next_ms"
+            cmd.extend(['--dirs-only', '--fast-list', '--no-modtime'])
+            buttons.cb_buildbutton("✅ Select this folder", f"{menu_type}^close^{user_id}")
+            msg= f"Select folder where you want to store files\n\n<b>Path:</b><code>{rc_path}</code>"
     elif menu_type == Menus.MYFILES:
         next_type= 'next_myfiles'
         file_callback= "file_action"
@@ -260,6 +246,22 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, is_second_men
     else:
         await sendMarkup(msg, message, reply_markup= buttons.build_menu(1))
 
+async def create_next_buttons(next_offset, prev_offset, _next_offset, data_back_cb, total, user_id, buttons, filter, menu_type, is_second_menu=False):
+    if next_offset == 0:
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages", 'footer')
+        buttons.cb_buildbutton("NEXT ⏩", f"{filter} {_next_offset} {is_second_menu} {data_back_cb}", 'footer')
+    elif next_offset >= total:
+        buttons.cb_buildbutton("⏪ BACK", f"{filter} {prev_offset} {is_second_menu} {data_back_cb}", 'footer') 
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages", 'footer')
+    elif next_offset + 10 > total:
+        buttons.cb_buildbutton("⏪ BACK", f"{filter} {prev_offset} {is_second_menu} {data_back_cb}", 'footer')
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages", 'footer')
+    else:
+        buttons.cb_buildbutton("⏪ BACK", f"{filter} {prev_offset} {is_second_menu} {data_back_cb}", 'footer_second')
+        buttons.cb_buildbutton(f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", f"{menu_type}^pages", 'footer')
+        buttons.cb_buildbutton("NEXT ⏩", f"{filter} {_next_offset} {is_second_menu} {data_back_cb}", 'footer_second')
+    buttons.cb_buildbutton("⬅️ Back", f"{menu_type}^{data_back_cb}^{user_id}", 'footer_third')
+    buttons.cb_buildbutton("✘ Close Menu", f"{menu_type}^close^{user_id}", 'footer_third')
 
 async def get_drive_link(remote, base, name, config_path, mime_type):
     epath = f"{remote}:{base}/{name}"
