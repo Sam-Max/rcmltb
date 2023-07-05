@@ -285,9 +285,9 @@ class MirrorLeechListener:
             files = data["count"]
             size = human_readable_bytes(data["bytes"])
             
-        f_out = f"**Total Files** {files}" 
-        f_out += f"\n**Total Size**: {size}"
-        f_out += f"\n<b>cc: </b>{self.tag}"
+        msg = f"<b>Total Files</b>: {files}" 
+        msg += f"\n<b>Total Size</b>: {size}"
+        msg += f"\n\n<b>cc: </b>{self.tag}"
         
         cmd = ["rclone", "link", f'--config={conf}', f"{dest_remote}:{dest_dir}{origin_dir}"]
         process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
@@ -297,10 +297,10 @@ class MirrorLeechListener:
         if rc == 0:
             button= ButtonMaker()
             button.url_buildbutton("Cloud Link 🔗", url)
-            await sendMarkup(f_out, self.message, reply_markup= button.build_menu(1))
+            await sendMarkup(msg, self.message, reply_markup= button.build_menu(1))
         else:
             LOGGER.info(err.decode().strip())
-            await sendMessage(f_out, self.message)
+            await sendMessage(msg, self.message)
        
         await clean_download(self.dir)
         if count == 0:
