@@ -333,6 +333,8 @@ class MirrorLeechListener:
             link= await get_drive_link(remote, base, name, config_path, mime_type)
             if link:
                 button.url_buildbutton("Cloud Link 🔗", link)
+            else:
+                button.url_buildbutton("Cloud Link 🚫", "https://drive.google.com/error?")
         else:
             cmd = ["rclone", "link", f'--config={config_path}', f"{remote}:{base}/{name}"]
             res, err, code = await cmd_exec(cmd)
@@ -340,6 +342,7 @@ class MirrorLeechListener:
                 button.url_buildbutton("Cloud Link 🔗", res)
             else:
                 LOGGER.error( f'Error while getting link. Error: {err}')
+                button.url_buildbutton("Cloud Link 🚫", "https://drive.google.com/error?")
         if is_gdrive and (GD_INDEX_URL:= config_dict['GD_INDEX_URL']):
             encoded_path = rutils.quote(f'{base}{name}')
             share_url = f'{GD_INDEX_URL}/{encoded_path}'
