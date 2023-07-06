@@ -27,11 +27,9 @@ async def serve(client, message):
             button.cb_buildbutton("Stop", "servemenu^stop")
             await sendMarkup(msg, message, button.build_menu(1))
 
-async def serve_cb(client, callbackQuery):
-    query= callbackQuery
-    data= query.data
-    data = data.split("^")
+async def serve_callback(client, query):
     message= query.message
+    data= query.data.split("^")
     path = await get_rclone_path(OWNER_ID)
 
     RC_INDEX_USER= config_dict['RC_INDEX_USER']
@@ -40,7 +38,10 @@ async def serve_cb(client, callbackQuery):
   
     if data[1] == "remote":
         SELECTED_REMOTE.append(data[2]) 
-        await protocol_selection(message)
+        button= ButtonMaker()
+        button.cb_buildbutton("HTTP", "servemenu^http")
+        button.cb_buildbutton("WEBDAV", "servemenu^webdav")
+        await editMarkup("Choose protocol to serve the remote", message, button.build_menu(2))
     elif data[1] == "all":
         cmd = ["rclone", "rcd", "--rc-serve", f"--rc-addr=:{RC_INDEX_PORT}", f"--rc-user={RC_INDEX_USER}", f"--rc-pass={RC_INDEX_PASS}", f'--config={path}'] 
         await rclone_serve(cmd, message)
@@ -62,12 +63,6 @@ async def serve_cb(client, callbackQuery):
     else:
         await query.answer()
         await message.delete()
-
-async def protocol_selection(message):
-    button= ButtonMaker()
-    button.cb_buildbutton("HTTP", "servemenu^http")
-    button.cb_buildbutton("WEBDAV", "servemenu^webdav")
-    await editMarkup("Choose protocol to serve the remote", message, button.build_menu(2))
 
 async def rclone_serve(cmd, message):
     button= ButtonMaker()
@@ -102,7 +97,7 @@ async def list_remotes(message):
 
 
 serve_handler = MessageHandler(serve, filters= filters.command(BotCommands.ServeCommand) & (CustomFilters.owner_filter | CustomFilters.chat_filter))
-serve_cb_handler = CallbackQueryHandler(serve_cb, filters= filters.regex("servemenu"))
+serve_cb_handler = CallbackQueryHandler(serve_callback, filters= filters.regex("servemenu"))
 
 bot.add_handler(serve_handler)
 bot.add_handler(serve_cb_handler)
