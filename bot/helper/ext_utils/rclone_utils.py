@@ -167,15 +167,14 @@ async def list_folder(message, rclone_remote, base_dir, menu_type, is_second_men
         conf = ConfigParser()
         conf.read(path)
         if is_crypt:
-            for section in conf.sections():
-                if conf.get(section, 'type') == "crypt":
-                    rc_path= conf.get(section, 'remote')
-                    msg= f"Crypt Remote\n\n<b>Path:</b><code>{rc_path}</code>"
-                    buttons.cb_buildbutton("✅ Select", f"{menu_type}^close^{user_id}")
-                    buttons.cb_buildbutton("⬅️ Back", f"{menu_type}^{back_callback}^{user_id}", 'footer_second')
-                    buttons.cb_buildbutton("✘ Close Menu", f"{menu_type}^close^{user_id}", 'footer_third')
-                    await editMessage(msg, message, reply_markup= buttons.build_menu(1))
-            return
+            if rclone_remote in conf.sections() and conf.get(rclone_remote, 'type') == "crypt":
+                rc_path= conf.get(rclone_remote, 'remote')
+                msg= f"Crypt Remote\n\n<b>Path:</b><code>{rc_path}</code>"
+                buttons.cb_buildbutton("✅ Select", f"{menu_type}^close^{user_id}")
+                buttons.cb_buildbutton("⬅️ Back", f"{menu_type}^{back_callback}^{user_id}", 'footer_second')
+                buttons.cb_buildbutton("✘ Close Menu", f"{menu_type}^close^{user_id}", 'footer_third')
+                await editMessage(msg, message, reply_markup= buttons.build_menu(1))
+                return
         else:
             next_type= "next_ms"
             cmd.extend(['--dirs-only', '--fast-list', '--no-modtime'])
