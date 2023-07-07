@@ -262,11 +262,11 @@ async def create_next_buttons(next_offset, prev_offset, _next_offset, data_back_
     buttons.cb_buildbutton("⬅️ Back", f"{menu_type}^{data_back_cb}^{user_id}", 'footer_third')
     buttons.cb_buildbutton("✘ Close Menu", f"{menu_type}^close^{user_id}", 'footer_third')
 
-async def get_drive_link(remote, base, name, config_path, mime_type):
-    epath = f"{remote}:{base}/{name}"
+async def get_drive_link(path, config_path, mime_type):
+    name= path.split("/")[-1]
     if mime_type == "Folder":
-        epath += '/'  
-    cmd = ['rclone', 'lsjson', '--fast-list', '--no-mimetype', '--no-modtime', '--config', config_path, epath]
+        path += '/'  
+    cmd = ['rclone', 'lsjson', '--fast-list', '--no-mimetype', '--no-modtime', '--config', config_path, path]
     res, err, code = await cmd_exec(cmd)
     if code == 0:
         data = jsonloads(res)

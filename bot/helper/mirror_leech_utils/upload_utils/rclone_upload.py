@@ -108,12 +108,17 @@ class RcloneMirror:
     async def check_isGdrive(self, remote, config_file):
         conf = ConfigParser()
         conf.read(config_file)
-        for r in conf.sections():
-            if str(r) == remote:
-                if conf[r]['type'] == 'drive':
-                    self.__is_gdrive = True
-                else:
-                    self.__is_gdrive = False
+        if conf.get(remote, 'type') == 'drive':
+            self.__is_gdrive = True
+        elif conf.get(remote, 'type') == "crypt":
+            remote_path = conf.get(remote, 'remote')
+            real_remote= remote_path.split(":")[0]
+            if conf.get(real_remote, 'type') == 'drive':
+                self.__is_gdrive = True
+            else:
+                self.__is_gdrive = False
+        else:
+            self.__is_gdrive = False
                 
     async def cancel_download(self):
         self.__is_cancelled = True

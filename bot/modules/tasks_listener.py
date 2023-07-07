@@ -327,16 +327,18 @@ class MirrorLeechListener:
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n"
         msg += f"<b>Size: </b>{size}\n"
         msg += f'<b>Type: </b>{mime_type}\n\n'
-        button= ButtonMaker()
         
-        if is_gdrive:
-            link= await get_drive_link(remote, base, name, config_path, mime_type)
+        button= ButtonMaker()
+        path = f"{remote}:{base}/{name}"
+
+        if is_gdrive:   
+            link= await get_drive_link(path, config_path, mime_type)
             if link:
                 button.url_buildbutton("Cloud Link 🔗", link)
             else:
                 button.url_buildbutton("Cloud Link 🚫", "https://drive.google.com/error?")
         else:
-            cmd = ["rclone", "link", f'--config={config_path}', f"{remote}:{base}/{name}"]
+            cmd = ["rclone", "link", f'--config={config_path}', path]
             res, err, code = await cmd_exec(cmd)
             if code == 0:
                 button.url_buildbutton("Cloud Link 🔗", res)
