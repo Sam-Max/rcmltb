@@ -1,8 +1,8 @@
-from configparser import ConfigParser
-from json import loads as jsonloads
 from os import getcwd, path as ospath
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
+from json import loads as jsonloads
+from configparser import ConfigParser      
 from bot import GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, remotes_multi
 from bot.helper.ext_utils.bot_utils import cmd_exec, run_sync
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -12,8 +12,7 @@ from bot.helper.ext_utils.menu_utils import Menus, rcloneListButtonMaker, rclone
 from bot.helper.telegram_helper.message_utils import editMessage, sendMarkup, sendMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
-from configparser import ConfigParser            
-            
+      
 
 
 async def is_remote_selected(user_id, message):
@@ -61,6 +60,8 @@ async def get_rclone_path(user_id, message= None):
 async def setRcloneFlags(cmd, type):
     ext = '*.{' + ','.join(GLOBAL_EXTENSION_FILTER) + '}'
     cmd.extend(('--exclude', ext))
+    if config_dict['SERVER_SIDE']:
+        cmd.append('--drive-server-side-across-configs')
     if type == "copy":
         if flags := config_dict.get('RCLONE_COPY_FLAGS'):
             append_flags(flags, cmd)
@@ -79,6 +80,19 @@ def append_flags(flags, cmd):
             cmd.extend((key, value))
         elif len(flag) > 0:
             cmd.append(flag)
+
+async def gdrive_check(remote, config_file):
+    conf = ConfigParser()
+    conf.read(config_file)
+    isGdrive = False
+    if conf.get(remote, 'type') == 'drive':
+        isGdrive = True
+    elif conf.get(remote, 'type') == "crypt":
+        remote_path = conf.get(remote, 'remote')
+        real_remote= remote_path.split(":")[0]
+        if conf.get(real_remote, 'type') == 'drive':
+            isGdrive = True
+    return isGdrive
 
 async def list_remotes(message, menu_type, remote_type='remote', is_second_menu=False, edit=False):
     if message.reply_to_message:
@@ -263,10 +277,11 @@ async def create_next_buttons(next_offset, prev_offset, _next_offset, data_back_
     buttons.cb_buildbutton("✘ Close Menu", f"{menu_type}^close^{user_id}", 'footer_third')
 
 async def get_drive_link(path, config_path, mime_type):
-    name= path.split("/")[-1]
     if mime_type == "Folder":
-        path += '/'  
-    cmd = ['rclone', 'lsjson', '--fast-list', '--no-mimetype', '--no-modtime', '--config', config_path, path]
+        name= path.split("/")[-2]
+    else:
+        name= path.split("/")[-1]
+    cmd = ['rclone', 'lsjson', f'--config={config_path}', '--fast-list', '--no-mimetype', '--no-modtime', path]
     res, err, code = await cmd_exec(cmd)
     if code == 0:
         data = jsonloads(res)

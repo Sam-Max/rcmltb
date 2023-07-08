@@ -17,7 +17,7 @@ class RcloneStatus:
         self.message = listener.message
         self.is_rclone= True
 
-    async def _progress(self):
+    async def start(self):
         while True:
             data = (await self.__obj.process.stdout.readline()).decode()
             if match:= findall('Transferred:.*ETA.*', data):

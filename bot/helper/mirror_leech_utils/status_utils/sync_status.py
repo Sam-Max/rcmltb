@@ -4,7 +4,8 @@ from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 
 class SyncStatus:
-    def __init__(self, process, gid, source, destination):
+    def __init__(self, process, gid, source, destination, listener):
+        self.message= listener.message
         self.__source = source
         self.__destination= destination
         self.__process = process
@@ -15,7 +16,7 @@ class SyncStatus:
         self.__eta= "-"
         self.is_rclone= True
 
-    async def read_stdout(self):
+    async def start(self):
         blank= 0
         while True:
             data = await self.__process.stdout.readline()

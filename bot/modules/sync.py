@@ -23,16 +23,14 @@ async def handle_sync(client, message):
     tag = f"@{message.from_user.username}"
     if await is_rclone_config(user_id, message):
         await list_remotes(message, menu_type=Menus.SYNC, remote_type='source')
-        listener= MirrorLeechListener(message, tag, user_id)
-        listener_dict[message.id] = listener
+        listener_dict[message.id] = MirrorLeechListener(message, tag, user_id)
 
-async def sync_cb(client, callbackQuery):
-    query= callbackQuery
-    data= query.data
-    data = data.split("^")
+async def sync_callback(client, query):
+    data= query.data.split("^")
     message= query.message
     user_id= query.from_user.id
     msg_id= query.message.reply_to_message.id
+
     listener= listener_dict[msg_id] 
     path = await get_rclone_path(user_id, message)
 
@@ -49,33 +47,36 @@ async def sync_cb(client, callbackQuery):
         await message.delete()
 
 async def start_sync(message, path, destination, listener):
+    cmd = ["rclone", "sync", "--delete-during", "-P", f'--config={path}', f"{SOURCE}:", f"{destination}:"] 
     if config_dict["SERVER_SIDE"]:
-        cmd = ["rclone", "sync", "--server-side-across-configs", "--delete-during", "-P", f'--config={path}', f"{SOURCE}:", f"{destination}:"] 
-    else:
-        cmd = ["rclone", "sync", "--delete-during", "-P", f'--config={path}', f"{SOURCE}:", f"{destination}:"] 
+        cmd.append("--server-side-across-configs")
+
     process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
+    
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
     async with status_dict_lock:
-        status = SyncStatus(process, gid, SOURCE, destination)
+        status = SyncStatus(process, gid, SOURCE, destination, listener)
         status_dict[listener.uid] = status
     await sendStatusMessage(listener.message)
-    await status.read_stdout()
+    await status.start()
+   
     return_code = await process.wait()
-    if return_code != 0:
-        err= await process.stderr.read()
-        await listener.onDownloadError(str(err))
-    else:
-        msg= 'Sync completed successfully✅'
-        msg+= '<b>\n\nNote:</b>' 
+    
+    if return_code == 0:
+        msg= 'Sync completed successfully✅\n\n'
+        msg+= '<b>Note:</b>' 
         msg+= '\n1.Use dedupe command to remove duplicate file/directory'
         msg+= '\n2.Use rmdir command to remove empty directories'
         await listener.onRcloneSyncComplete(msg)
+    else:
+        err= await process.stderr.read()
+        await listener.onDownloadError(str(err))
+
     await message.delete()
 
 
 
-sync = MessageHandler(handle_sync, filters=command(BotCommands.SyncCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter))
-sync_callback= CallbackQueryHandler(sync_cb, filters= regex("syncmenu"))
+bot.add_handler(MessageHandler(handle_sync, filters=command(BotCommands.SyncCommand) & (CustomFilters.user_filter | CustomFilters.chat_filter)))
 
-bot.add_handler(sync)
-bot.add_handler(sync_callback)
+bot.add_handler(CallbackQueryHandler(sync_callback, filters= regex("syncmenu")))
+

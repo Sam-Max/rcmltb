@@ -48,7 +48,7 @@ class RcloneLeech:
             status_dict[self.__listener.uid] = status
         await sendStatusMessage(self.__listener.message)
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
-        await status._progress()
+        await status.start()
         return_code = await self.process.wait()
         if self.__is_cancelled:
             return
