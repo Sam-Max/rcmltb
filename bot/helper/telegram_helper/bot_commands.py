@@ -6,7 +6,7 @@ class _BotCommands:
         self.StartCommand = f'start{CMD_INDEX}'
         self.MirrorCommand = [f'mirror{CMD_INDEX}', f'm{CMD_INDEX}']
         self.MirrorBatchCommand = [f'mirrorbatch{CMD_INDEX}', f'mb{CMD_INDEX}']
-        self.MirrorSelectCommand = [f'mirrorselect{CMD_INDEX}', f'`ms{CMD_INDEX}']
+        self.MirrorSelectCommand = [f'mirrorselect{CMD_INDEX}', f'ms{CMD_INDEX}']
         self.LeechCommand = [f'leech{CMD_INDEX}', f'l{CMD_INDEX}']
         self.LeechBatchCommand = [f'leechbatch{CMD_INDEX}', f'lb{CMD_INDEX}']
         self.YtdlMirrorCommand = [f'ytdl{CMD_INDEX}', f'y{CMD_INDEX}']
