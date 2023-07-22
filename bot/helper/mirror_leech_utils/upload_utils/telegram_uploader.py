@@ -96,19 +96,21 @@ class TelegramUploader():
         await self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)    
     
     async def __upload_file(self, up_path, file):
-        thumb_path = self.__thumb
+        thumb = self.__thumb
         self.__is_corrupted = False
         cap_mono= f"<code>{file}</code>"
         try:
             is_video, is_audio, is_image = await get_document_type(up_path)
 
-            if not is_image and thumb_path is None:
+            if not is_image and thumb is None:
                 file_name = ospath.splitext(file)[0]
                 thumb_path = f"{self.__path}/yt-dlp-thumb/{file_name}.jpg"
+                if ospath.isfile(thumb_path):
+                    thumb = thumb_path
 
             if self.__as_doc or (not is_video and not is_audio and not is_image):
-                if is_video and thumb_path is None:
-                    thumb_path = await take_ss(up_path, None)
+                if is_video and thumb is None:
+                    thumb = await take_ss(up_path, None)
                 if self.__is_cancelled:
                     return
                 if config_dict['LEECH_LOG']:
@@ -117,7 +119,7 @@ class TelegramUploader():
                             chat_id= int(chat),
                             document=up_path,
                             caption=cap_mono,
-                            thumb=thumb_path,
+                            thumb=thumb,
                             disable_notification=True,
                             progress=self.__upload_progress)
                         if config_dict['BOT_PM']:
@@ -133,7 +135,7 @@ class TelegramUploader():
                         document= up_path, 
                         caption= cap_mono,
                         quote=True,
-                        thumb= thumb_path,
+                        thumb=thumb,
                         disable_notification=True,
                         progress= self.__upload_progress)
             if is_video:
@@ -142,10 +144,10 @@ class TelegramUploader():
                     osrename(up_path, new_path) 
                     up_path = new_path
                 duration= (await get_media_info(up_path))[0]
-                if thumb_path is None:
-                    thumb_path = await take_ss(up_path, duration)
-                if thumb_path is not None:
-                    with Image.open(thumb_path) as img:
+                if thumb is None:
+                    thumb = await take_ss(up_path, duration)
+                if thumb is not None:
+                    with Image.open(thumb) as img:
                         width, height = img.size
                 else:
                     width = 480
@@ -161,7 +163,7 @@ class TelegramUploader():
                             duration=duration,
                             width=width,
                             height=height,
-                            thumb=thumb_path,
+                            thumb=thumb,
                             supports_streaming=True,
                             disable_notification=True,
                             progress=self.__upload_progress)
@@ -181,7 +183,7 @@ class TelegramUploader():
                         caption= cap_mono,
                         quote=True,
                         disable_notification=True,
-                        thumb= thumb_path,
+                        thumb=thumb,
                         supports_streaming= True,
                         duration= duration,
                         progress= self.__upload_progress)
@@ -197,7 +199,7 @@ class TelegramUploader():
                             duration=duration,
                             performer=artist,
                             title=title,
-                            thumb=thumb_path,
+                            thumb=thumb,
                             progress=self.__upload_progress)
                         if config_dict['BOT_PM']:
                             try:
@@ -215,7 +217,7 @@ class TelegramUploader():
                         duration=duration,
                         performer=artist,
                         title=title,
-                        thumb= thumb_path,
+                        thumb=thumb,
                         disable_notification=True,
                         progress=self.__upload_progress)    
             elif is_image:
@@ -244,14 +246,14 @@ class TelegramUploader():
                         quote= True,
                         disable_notification= True,
                         progress= self.__upload_progress)
-            if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
-                osremove(thumb_path)
+            if self.__thumb is None and thumb is not None and ospath.exists(thumb):
+                osremove(thumb)
         except FloodWait as f:
             LOGGER.warning(str(f))
             await sleep(f.value)
         except Exception as err:
-            if self.__thumb is None and thumb_path is not None and ospath.lexists(thumb_path):
-                osremove(thumb_path)
+            if self.__thumb is None and thumb is not None and ospath.exists(thumb):
+                osremove(thumb)
             err_type = "RPCError: " if isinstance(err, RPCError) else ""
             LOGGER.error(f"{err_type}{err}. Path: {up_path}")
             raise err
@@ -279,7 +281,7 @@ class TelegramUploader():
         user_id = self.__listener.message.from_user.id
         user_dict = user_data.get(user_id, {})
         self.__as_doc = user_dict.get('as_doc') or config_dict['AS_DOCUMENT']
-        if not ospath.lexists(self.__thumb):
+        if not ospath.exists(self.__thumb):
             self.__thumb = None
 
     async def __prepare_file(self, file_, dirpath):
