@@ -39,7 +39,7 @@ Send me one of the followings:
    Public: https://t.me/channel_name/message_id
    Private: https://t.me/c/channel_id/message_id
 
-2. <b>URL links/b>
+2. <b>URL links</b> 
    Each link separated by new line 
    Direct link authorization: link username password
 
