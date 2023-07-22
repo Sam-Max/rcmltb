@@ -91,8 +91,14 @@ class MirrorLeechListener:
             return
         
         if name == "None" or not ospath.exists(f"{self.dir}/{name}"):
-           files = await listdir(self.dir)
-           name = files[-1]
+            try:
+                files = await listdir(self.dir)
+            except Exception as e:
+                await self.onUploadError(str(e))
+                return
+            name = files[-1]
+            if name == "yt-dlp-thumb":
+                name = files[0]
         
         path= ""
         m_path = f'{self.dir}/{name}'

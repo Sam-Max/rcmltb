@@ -41,6 +41,8 @@ class TelegramUploader():
         self.__user_settings()
         if ospath.isdir(self.__path):
             for dirpath, _, filenames in sorted(walk(self.__path)):
+                if dirpath.endswith('/yt-dlp-thumb'):
+                    continue
                 if self._iteration != 0:
                     folder_name = ospath.basename(dirpath)
                     if config_dict['LEECH_LOG']:
@@ -99,6 +101,11 @@ class TelegramUploader():
         cap_mono= f"<code>{file}</code>"
         try:
             is_video, is_audio, is_image = await get_document_type(up_path)
+
+            if not is_image and thumb_path is None:
+                file_name = ospath.splitext(file)[0]
+                thumb_path = f"{self.__path}/yt-dlp-thumb/{file_name}.jpg"
+
             if self.__as_doc or (not is_video and not is_audio and not is_image):
                 if is_video and thumb_path is None:
                     thumb_path = await take_ss(up_path, None)

@@ -166,8 +166,7 @@ class YoutubeDLHelper:
                         self.__onDownloadError(str(e))
                     return
             if self.is_playlist and (not ospath.exists(path) or len(listdir(path)) == 0):
-                self.__onDownloadError(
-                    "No video available to download from this playlist. Check logs for more details")
+                self.__onDownloadError("No video available to download from this playlist. Check logs for more details")
                 return
             if self.__is_cancelled:
                 raise ValueError
