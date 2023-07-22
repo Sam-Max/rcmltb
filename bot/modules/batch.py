@@ -35,12 +35,16 @@ async def _batch(client, message, isLeech=False):
     msg= '''
 Send me one of the followings:               
 
-1. Telegram message link from public or private/restricted channel   
+1. <b>Telegram Link</b> 
+   Public: https://t.me/channel_name/message_id
+   Private: https://t.me/c/channel_id/message_id
 
-2. URL links separated each link by new line 
-   <b>Direct link authorization:</b> link username password
+2. <b>URL links/b>
+   Each link separated by new line 
+   Direct link authorization: link username password
 
-3. TXT file with URL links separated each link by new line        
+3. <b>TXT file</b> 
+   Each link inside txt separated by new line        
 
 /ignore to cancel'''       
     try:
