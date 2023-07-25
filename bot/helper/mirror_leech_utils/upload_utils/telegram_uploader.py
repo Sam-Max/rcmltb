@@ -139,7 +139,7 @@ class TelegramUploader():
                         disable_notification=True,
                         progress= self.__upload_progress)
             if is_video:
-                if not up_path.upper().endswith(("MP4")):
+                if not up_path.upper().endswith(("MKV", "MP4")):
                     new_path = up_path.split(".")[0] + ".mp4"
                     osrename(up_path, new_path) 
                     up_path = new_path
