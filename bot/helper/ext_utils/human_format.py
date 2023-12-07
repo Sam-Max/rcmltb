@@ -1,20 +1,22 @@
 from datetime import timedelta
 
-SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+SIZE_UNITS = ["B", "KB", "MB", "GB", "TB", "PB"]
 
 
 def get_readable_file_size(size_in_bytes) -> str:
     if size_in_bytes is None:
-        return '0B'
+        return "0B"
     index = 0
     while size_in_bytes >= 1024 and index < len(SIZE_UNITS) - 1:
         size_in_bytes /= 1024
         index += 1
-    return f'{size_in_bytes:.2f}{SIZE_UNITS[index]}' if index > 0 else f'{size_in_bytes}B'
+    return (
+        f"{size_in_bytes:.2f}{SIZE_UNITS[index]}" if index > 0 else f"{size_in_bytes}B"
+    )
+
 
 def human_readable_bytes(value, digits=2, delim="", postfix=""):
-    """Return a human-readable file size.
-    """
+    """Return a human-readable file size."""
     if value is None:
         return None
     chosen_unit = "B"
@@ -28,8 +30,7 @@ def human_readable_bytes(value, digits=2, delim="", postfix=""):
 
 
 def human_readable_timedelta(seconds, precision=0):
-    """Return a human-readable time delta as a string.
-    """
+    """Return a human-readable time delta as a string."""
     pieces = []
     value = timedelta(seconds=seconds)
 

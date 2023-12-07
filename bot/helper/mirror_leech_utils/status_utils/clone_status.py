@@ -1,6 +1,10 @@
 # Source: https://github.com/anasty17/mirror-leech-telegram-bot/
 
-from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
+from bot.helper.ext_utils.bot_utils import (
+    MirrorStatus,
+    get_readable_file_size,
+    get_readable_time,
+)
 
 
 class CloneStatus:
@@ -32,7 +36,7 @@ class CloneStatus:
             return 0
 
     def progress(self):
-        return f'{round(self.progress_raw(), 2)}%'
+        return f"{round(self.progress_raw(), 2)}%"
 
     def speed_raw(self):
         """
@@ -41,14 +45,14 @@ class CloneStatus:
         return self.__obj.cspeed()
 
     def speed(self):
-        return f'{get_readable_file_size(self.speed_raw())}/s'
+        return f"{get_readable_file_size(self.speed_raw())}/s"
 
     def eta(self):
         try:
             seconds = (self.__size - self.__obj.transferred_size) / self.speed_raw()
-            return f'{get_readable_time(seconds)}'
+            return f"{get_readable_time(seconds)}"
         except:
-            return '-'
+            return "-"
 
     def download(self):
         return self.__obj

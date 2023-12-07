@@ -1,6 +1,11 @@
 from time import time
 from bot import LOGGER, config_dict
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus, get_readable_time, run_async
+from bot.helper.ext_utils.bot_utils import (
+    get_readable_file_size,
+    MirrorStatus,
+    get_readable_time,
+    run_async,
+)
 from bot.helper.ext_utils.misc_utils import get_path_size
 
 
@@ -27,10 +32,10 @@ class ExtractStatus:
             return 0
 
     def progress(self):
-        return f'{round(self.progress_raw(), 2)}%'
+        return f"{round(self.progress_raw(), 2)}%"
 
     def speed(self):
-        return f'{get_readable_file_size(self.speed_raw())}/s'
+        return f"{get_readable_file_size(self.speed_raw())}/s"
 
     def name(self):
         return self.__name
@@ -43,7 +48,7 @@ class ExtractStatus:
             seconds = (self.__size - self.processed_raw()) / self.speed_raw()
             return get_readable_time(seconds)
         except:
-            return '-'
+            return "-"
 
     def status(self):
         return MirrorStatus.STATUS_EXTRACTING
@@ -59,15 +64,15 @@ class ExtractStatus:
 
     def download(self):
         return self
-    
+
     def type(self):
         return "Extract"
 
     async def cancel_download(self):
-        if not config_dict['NO_TASKS_LOGS']:
-            LOGGER.info(f'Cancelling Extract: {self.__name}')
+        if not config_dict["NO_TASKS_LOGS"]:
+            LOGGER.info(f"Cancelling Extract: {self.__name}")
         if self.__listener.suproc is not None:
             self.__listener.suproc.kill()
         else:
-            self.__listener.suproc = 'cancelled'
-        await self.__listener.onUploadError('extracting stopped by user!')
+            self.__listener.suproc = "cancelled"
+        await self.__listener.onUploadError("extracting stopped by user!")

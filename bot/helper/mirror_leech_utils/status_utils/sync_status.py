@@ -5,32 +5,32 @@ from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
 class SyncStatus:
     def __init__(self, process, gid, source, destination, listener):
-        self.message= listener.message
+        self.message = listener.message
         self.__source = source
-        self.__destination= destination
+        self.__destination = destination
         self.__process = process
         self.__gid = gid
-        self.__percent= 0
-        self.__speed= 0 
-        self.__transfered_bytes = 0 
-        self.__eta= "-"
-        self.is_rclone= True
+        self.__percent = 0
+        self.__speed = 0
+        self.__transfered_bytes = 0
+        self.__eta = "-"
+        self.is_rclone = True
 
     async def start(self):
-        blank= 0
+        blank = 0
         while True:
             data = await self.__process.stdout.readline()
-            match = findall('Transferred:.*ETA.*', data.decode().strip())
+            match = findall("Transferred:.*ETA.*", data.decode().strip())
             if len(match) > 0:
-                nstr = match[0].replace('Transferred:', '')
-                self.info = nstr.strip().split(',')
+                nstr = match[0].replace("Transferred:", "")
+                self.info = nstr.strip().split(",")
                 self.__transfered_bytes = self.info[0]
                 try:
-                    self.__percent = int(self.info[1].strip('% '))
+                    self.__percent = int(self.info[1].strip("% "))
                 except:
                     pass
                 self.__speed = self.info[2]
-                self.__eta = self.info[3].replace('ETA', '') 
+                self.__eta = self.info[3].replace("ETA", "")
             if len(match) == 0:
                 blank += 1
                 if blank == 15:
@@ -38,7 +38,7 @@ class SyncStatus:
             else:
                 blank = 0
             await sleep(0)
-    
+
     def gid(self):
         return self.__gid
 
@@ -49,8 +49,8 @@ class SyncStatus:
         return MirrorStatus.STATUS_SYNCING
 
     def name(self):
-        return f'{self.__source} 🔄 {self.__destination}' 
-    
+        return f"{self.__source} 🔄 {self.__destination}"
+
     def size_raw(self):
         return 0
 
@@ -68,5 +68,3 @@ class SyncStatus:
 
     def type(self):
         return "RcloneSync"
-        
-

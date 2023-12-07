@@ -14,10 +14,10 @@ class SplitStatus:
         return self.__gid
 
     def progress(self):
-        return '0'
+        return "0"
 
     def speed(self):
-        return '0'
+        return "0"
 
     def name(self):
         return self.__name
@@ -26,7 +26,7 @@ class SplitStatus:
         return get_readable_file_size(self.__size)
 
     def eta(self):
-        return '0s'
+        return "0s"
 
     def status(self):
         return MirrorStatus.STATUS_SPLITTING
@@ -38,13 +38,13 @@ class SplitStatus:
         return self
 
     async def cancel_download(self):
-        if not config_dict['NO_TASKS_LOGS']:
-            LOGGER.info(f'Cancelling Split: {self.__name}')
+        if not config_dict["NO_TASKS_LOGS"]:
+            LOGGER.info(f"Cancelling Split: {self.__name}")
         if self.__listener.suproc is not None:
             self.__listener.suproc.kill()
         else:
-            self.__listener.suproc = 'cancelled'
-        await self.__listener.onUploadError('splitting stopped by user!')
+            self.__listener.suproc = "cancelled"
+        await self.__listener.onUploadError("splitting stopped by user!")
 
     def type(self):
         return "Split"

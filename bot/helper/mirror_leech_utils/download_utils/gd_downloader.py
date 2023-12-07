@@ -13,18 +13,17 @@ async def add_gd_download(link, path, listener, newname):
     if mime_type is None:
         await sendMessage(name, listener.message)
         return
-    
+
     name = newname or name
-    gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
+    gid = "".join(SystemRandom().choices(ascii_letters + digits, k=12))
 
     drive = GoogleDriveHelper(name, path, listener)
     async with status_dict_lock:
         status_dict[listener.uid] = GdriveStatus(drive, size, listener.message, gid)
 
-    if not config_dict['NO_TASKS_LOGS']:
+    if not config_dict["NO_TASKS_LOGS"]:
         LOGGER.info(f"Download from GDrive: {name}")
 
     await listener.onDownloadStart()
     await sendStatusMessage(listener.message)
     await run_sync(drive.download, link)
-

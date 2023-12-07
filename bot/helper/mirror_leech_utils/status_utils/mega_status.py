@@ -1,4 +1,8 @@
-from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
+from bot.helper.ext_utils.bot_utils import (
+    MirrorStatus,
+    get_readable_file_size,
+    get_readable_time,
+)
 
 
 class MegaDownloadStatus:
@@ -6,7 +10,7 @@ class MegaDownloadStatus:
         self.__obj = obj
         self.__name = name
         self.__size = size
-        self.__gid= gid
+        self.__gid = gid
         self.message = listener.message
 
     def name(self) -> str:
@@ -29,23 +33,22 @@ class MegaDownloadStatus:
 
     def eta(self):
         try:
-            seconds = (self.__size - self.__obj.downloaded_bytes) / \
-                self.__obj.speed
+            seconds = (self.__size - self.__obj.downloaded_bytes) / self.__obj.speed
             return get_readable_time(seconds)
         except ZeroDivisionError:
-            return '-'
+            return "-"
 
     def size(self):
         return get_readable_file_size(self.__size)
 
     def speed(self):
-        return f'{get_readable_file_size(self.__obj.speed)}/s'
+        return f"{get_readable_file_size(self.__obj.speed)}/s"
 
     def gid(self) -> str:
         return self.__gid
 
     def download(self):
         return self.__obj
-    
+
     def type(self):
         return "Mega.nz"
