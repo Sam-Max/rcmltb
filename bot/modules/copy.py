@@ -24,7 +24,7 @@ from bot.helper.ext_utils.rclone_utils import (
 )
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.helper.mirror_leech_utils.download_utils.rclone_copy import RcloneCopy
-from bot.modules.tasks_listener import MirrorLeechListener
+from bot.modules.tasks_listener import TaskListener
 
 
 listener_dict = {}
@@ -35,7 +35,7 @@ async def handle_copy(client, message):
     message_id = message.id
     tag = f"@{message.from_user.username}"
     if await is_rclone_config(user_id, message):
-        listener = MirrorLeechListener(message, tag, user_id)
+        listener = TaskListener(message, tag, user_id)
         listener_dict[message_id] = [listener]
         if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters._owner_query(user_id):
             await list_remotes(

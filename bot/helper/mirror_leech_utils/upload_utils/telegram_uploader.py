@@ -1,5 +1,8 @@
 from asyncio import sleep
+from aiofiles.os import remove as aioremove, path as aiopath
 from os import walk, rename as osrename, path as ospath, remove as osremove
+from bot.helper.ext_utils.media_utils import create_thumb, take_ss
+from pyrogram.types import InputMediaPhoto
 from time import time
 from re import match as re_match
 from PIL import Image
@@ -20,7 +23,6 @@ from bot.helper.ext_utils.misc_utils import (
     get_base_name,
     get_document_type,
     get_media_info,
-    take_ss,
 )
 
 
@@ -51,7 +53,7 @@ class TelegramUploader:
         if not res:
             return
         self.__user_settings()
-        if ospath.isdir(self.__path):
+        if await aiopath.isdir(self.__path):
             for dirpath, _, filenames in sorted(walk(self.__path)):
                 if dirpath.endswith("/yt-dlp-thumb"):
                     continue
@@ -139,12 +141,15 @@ class TelegramUploader:
             if not is_image and thumb is None:
                 file_name = ospath.splitext(file)[0]
                 thumb_path = f"{self.__path}/yt-dlp-thumb/{file_name}.jpg"
-                if ospath.isfile(thumb_path):
+                if await aiopath.isfile(thumb_path):
                     thumb = thumb_path
 
             if self.__as_doc or (not is_video and not is_audio and not is_image):
-                if is_video and thumb is None:
-                    thumb = await take_ss(up_path, None)
+                if is_video:
+                    if self.__listener.screenshots:
+                        await self._send_screenshots()
+                    if thumb is None:
+                        thumb = await create_thumb(up_path, None)
                 if self.__is_cancelled:
                     return
                 if config_dict["LEECH_LOG"]:
@@ -176,13 +181,15 @@ class TelegramUploader:
                         progress=self.__upload_progress,
                     )
             if is_video:
+                if self.__listener.screenshots:
+                    await self._send_screenshots()
                 if not up_path.upper().endswith(("MKV", "MP4")):
                     new_path = up_path.split(".")[0] + ".mp4"
                     osrename(up_path, new_path)
                     up_path = new_path
                 duration = (await get_media_info(up_path))[0]
                 if thumb is None:
-                    thumb = await take_ss(up_path, duration)
+                    thumb = await create_thumb(up_path, duration)
                 if thumb is not None:
                     with Image.open(thumb) as img:
                         width, height = img.size
@@ -292,13 +299,13 @@ class TelegramUploader:
                         disable_notification=True,
                         progress=self.__upload_progress,
                     )
-            if self.__thumb is None and thumb is not None and ospath.exists(thumb):
+            if self.__thumb is None and thumb is not None and await aiopath.exists(thumb):
                 osremove(thumb)
         except FloodWait as f:
             LOGGER.warning(str(f))
             await sleep(f.value)
         except Exception as err:
-            if self.__thumb is None and thumb is not None and ospath.exists(thumb):
+            if self.__thumb is None and thumb is not None and await aiopath.exists(thumb):
                 osremove(thumb)
             err_type = "RPCError: " if isinstance(err, RPCError) else ""
             LOGGER.error(f"{err_type}{err}. Path: {up_path}")
@@ -332,6 +339,29 @@ class TelegramUploader:
         self.__as_doc = user_dict.get("as_doc") or config_dict["AS_DOCUMENT"]
         if not ospath.exists(self.__thumb):
             self.__thumb = None
+
+    async def _send_screenshots(self):
+        if isinstance(self.__listener.screenshots, str):
+            ss_nb = int(self.__listener.screenshots)
+        else:
+            ss_nb = 10
+        outputs = await take_ss(self.__upload_path, ss_nb)
+        inputs = []
+        if outputs:
+            for m in outputs:
+                if await aiopath.exists(m):
+                    cap = m.rsplit("/", 1)[-1]
+                    inputs.append(InputMediaPhoto(m, cap))
+                else:
+                    outputs.remove(m)
+            if outputs:
+                self.__sent_msg = (await self.__sent_msg.reply_media_group(
+                    media=inputs,
+                    quote=True,
+                    disable_notification=True,
+                ))[-1]
+                for m in outputs:
+                    await aioremove(m)
 
     async def __prepare_file(self, file_, dirpath):
         if len(file_) > 60:

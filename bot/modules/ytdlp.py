@@ -14,7 +14,7 @@ from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected
 from bot.helper.mirror_leech_utils.download_utils.yt_dlp_helper import YoutubeDLHelper
-from bot.modules.tasks_listener import MirrorLeechListener
+from bot.modules.tasks_listener import TaskListener
 
 
 ytdl_dict = {}
@@ -315,7 +315,7 @@ async def _ytdl(client, message, isLeech=False, sameDir=None):
         await sendMessage(YT_HELP_MESSAGE, message)
         return
 
-    listener = MirrorLeechListener(message, tag, user_id, compress, isLeech=isLeech)
+    listener = TaskListener(message, tag, user_id, compress, isLeech=isLeech)
 
     if "mdisk.me" in link:
         name, link = await _mdisk(link, name)

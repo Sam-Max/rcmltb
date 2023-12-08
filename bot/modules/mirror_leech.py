@@ -17,7 +17,9 @@ from bot.helper.ext_utils.bot_utils import (
     new_task,
     run_sync,
 )
-from bot.helper.mirror_leech_utils.download_utils.direct_link_generator import direct_link_generator
+from bot.helper.mirror_leech_utils.download_utils.direct_link_generator import (
+    direct_link_generator,
+)
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.help_messages import MIRROR_HELP_MESSAGE
@@ -44,7 +46,7 @@ from bot.helper.mirror_leech_utils.download_utils.qbit_downloader import add_qb_
 from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import (
     TelegramDownloader,
 )
-from bot.modules.tasks_listener import MirrorLeechListener
+from bot.modules.tasks_listener import TaskListener
 
 
 listener_dict = {}
@@ -74,7 +76,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
 
     try:
         args = parser.parse_args(message_args[1:])
-    except Exception as e:
+    except Exception:
         await sendMessage(MIRROR_HELP_MESSAGE, message)
         return
 
@@ -85,6 +87,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
     compress = args.zipPswd
     extract = args.extractPswd
     name = args.newName
+    screenshots = args.screenshots
     link = " ".join(args.link)
     file = None
     seed_time = None
@@ -181,8 +184,17 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
                     await sendMessage(str(e), message)
                     return
 
-    listener = MirrorLeechListener(
-        message, tag, user_id, compress, extract, select, seed, isLeech, sameDir
+    listener = TaskListener(
+        message,
+        tag,
+        user_id,
+        compress,
+        extract,
+        select,
+        seed,
+        isLeech,
+        screenshots,
+        sameDir,
     )
 
     if file is not None:
@@ -345,7 +357,7 @@ async def handle_auto_mirror(client, message):
         tag = message.from_user.mention
     if file is not None:
         if file.mime_type != "application/x-bittorrent":
-            listener = MirrorLeechListener(message, tag, user_id)
+            listener = TaskListener(message, tag, user_id)
             tgdown = TelegramDownloader(
                 file, client, listener, f"{DOWNLOAD_DIR}{listener.uid}/"
             )
@@ -367,6 +379,7 @@ parser.add_argument("-au", nargs="?", default=None, dest="auth_user")
 parser.add_argument("-ap", nargs="?", default=None, dest="auth_pswd")
 parser.add_argument("-e", nargs="?", default=None, const="", dest="extractPswd")
 parser.add_argument("-z", nargs="?", default=None, const="", dest="zipPswd")
+parser.add_argument("-ss", nargs="?", default=None, dest="screenshots", type=int)
 
 
 bot.add_handler(

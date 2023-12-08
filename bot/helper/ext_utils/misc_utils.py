@@ -167,41 +167,6 @@ async def get_path_size(path: str):
     return total_size
 
 
-async def take_ss(video_file, duration):
-    des_dir = "Thumbnails"
-    if not ospath.exists(des_dir):
-        await aiomkdir(des_dir)
-    des_dir = ospath.join(des_dir, f"{time()}.jpg")
-    if duration is None:
-        duration = (await get_media_info(video_file))[0]
-    if duration == 0:
-        duration = 3
-    duration = duration // 2
-    cmd = [
-        "ffmpeg",
-        "-hide_banner",
-        "-loglevel",
-        "error",
-        "-ss",
-        str(duration),
-        "-i",
-        video_file,
-        "-vf",
-        "thumbnail",
-        "-frames:v",
-        "1",
-        des_dir,
-    ]
-    status = await create_subprocess_exec(*cmd, stderr=PIPE)
-    if await status.wait() != 0 or not ospath.exists(des_dir):
-        err = (await status.stderr.read()).decode().strip()
-        LOGGER.error(
-            f"Error while extracting thumbnail. Name: {video_file} stderr: {err}"
-        )
-        return None
-    return des_dir
-
-
 async def split_file(
     path,
     size,

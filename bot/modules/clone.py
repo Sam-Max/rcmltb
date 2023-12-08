@@ -23,7 +23,7 @@ from bot.helper.telegram_helper.message_utils import (
 )
 from bot.helper.mirror_leech_utils.status_utils.clone_status import CloneStatus
 from bot.helper.mirror_leech_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.modules.tasks_listener import MirrorLeechListener
+from bot.modules.tasks_listener import TaskListener
 
 
 async def clone(client, message):
@@ -91,7 +91,7 @@ async def clone(client, message):
             await sendMessage(name, message)
             return
         user_id = message.from_user.id
-        listener = MirrorLeechListener(message, tag, user_id)
+        listener = TaskListener(message, tag, user_id)
         drive = GoogleDriveHelper(name, listener=listener)
         if files <= 20:
             msg = await sendMessage(f"Cloning: <code>{link}</code>", message)

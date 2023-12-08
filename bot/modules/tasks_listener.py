@@ -53,7 +53,7 @@ from bot.helper.mirror_leech_utils.upload_utils.telegram_uploader import (
 )
 
 
-class MirrorLeechListener:
+class TaskListener:
     def __init__(
         self,
         message,
@@ -64,6 +64,7 @@ class MirrorLeechListener:
         select=False,
         seed=False,
         isLeech=False,
+        screenshots=False,
         sameDir={},
     ):
         self.message = message
@@ -76,6 +77,7 @@ class MirrorLeechListener:
         self.isLeech = isLeech
         self.seed = seed
         self.select = select
+        self.screenshots = screenshots
         self.dir = f"{DOWNLOAD_DIR}{self.uid}"
         self.newDir = ""
         self.isSuperGroup = message.chat.type.name in ["SUPERGROUP", "CHANNEL"]

@@ -29,7 +29,7 @@ from bot.helper.ext_utils.rclone_utils import (
 )
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 from bot.helper.mirror_leech_utils.download_utils.rclone_download import RcloneLeech
-from bot.modules.tasks_listener import MirrorLeechListener
+from bot.modules.tasks_listener import TaskListener
 from bot.modules.mirror_leech import mirror_leech
 
 
@@ -49,7 +49,7 @@ async def leech(client, message):
         tag = message.from_user.mention
 
     if await is_rclone_config(user_id, message, isLeech=True):
-        listener = MirrorLeechListener(message, tag, user_id, isLeech=True)
+        listener = TaskListener(message, tag, user_id, isLeech=True)
         listener_dict[message.id] = [listener]
         button = ButtonMaker()
         button.cb_buildbutton("🔗 From Link", f"leechselect^link^{user_id}")

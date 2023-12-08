@@ -13,7 +13,7 @@ from bot.helper.ext_utils.rclone_utils import (
     list_remotes,
 )
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
-from bot.modules.tasks_listener import MirrorLeechListener
+from bot.modules.tasks_listener import TaskListener
 from bot.helper.mirror_leech_utils.status_utils.sync_status import SyncStatus
 
 
@@ -26,7 +26,7 @@ async def handle_sync(client, message):
     tag = f"@{message.from_user.username}"
     if await is_rclone_config(user_id, message):
         await list_remotes(message, menu_type=Menus.SYNC, remote_type="source")
-        listener_dict[message.id] = MirrorLeechListener(message, tag, user_id)
+        listener_dict[message.id] = TaskListener(message, tag, user_id)
 
 
 async def sync_callback(client, query):

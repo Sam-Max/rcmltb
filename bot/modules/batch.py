@@ -12,7 +12,7 @@ from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_select
 from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import (
     TelegramDownloader,
 )
-from bot.modules.tasks_listener import MirrorLeechListener
+from bot.modules.tasks_listener import TaskListener
 from os import path as ospath
 from subprocess import run as srun
 from bot.modules.mirror_leech import mirror_leech
@@ -153,7 +153,7 @@ async def download(message, link, multi, isLeech, value=0):
     else:
         tag = message.from_user.mention
 
-    listener = MirrorLeechListener(message, tag, user_id, isLeech=isLeech)
+    listener = TaskListener(message, tag, user_id, isLeech=isLeech)
 
     path = f"{DOWNLOAD_DIR}{listener.uid}/"
 
