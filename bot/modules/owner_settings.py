@@ -33,7 +33,7 @@ from bot.helper.telegram_helper.message_utils import (
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_data_holder import update_rclone_data
 from bot.modules.rss import addJob
-from bot.modules.search import initiate_search_tools
+from bot.modules.torr_search import initiate_search_tools
 
 
 START = 0

@@ -7,7 +7,7 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, sendPhoto
 from bot.helper.ext_utils.misc_utils import get_image_from_url
-from bot.modules.search import tmdbSearch
+from bot.modules.torr_search import tmdbSearch
 from tmdbv3api import TMDb, Discover, Movie, TV, Trending
 
 

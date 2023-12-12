@@ -36,13 +36,13 @@ from .modules import (
     mirror_select,
     myfilesset,
     owner_settings,
-    myfiles,
-    search,
+    rcfm,
     stats,
     status,
     clone,
     storage,
     cleanup,
+    torr_search,
     torr_select,
     user_settings,
     ytdlp,
@@ -124,7 +124,7 @@ async def mirror_worker(queue: Queue):
 
 async def main():
     await start_cleanup()
-    await search.initiate_search_tools()
+    await torr_search.initiate_search_tools()
     await run_sync_to_async(start_aria2_listener, wait=False)
 
     if ospath.isfile(".restartmsg"):

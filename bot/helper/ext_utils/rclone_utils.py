@@ -43,7 +43,7 @@ async def is_rclone_config(user_id, message, isLeech=False):
     path = f"{getcwd()}/rclone/"
     if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters._owner_query(user_id):
         path = ospath.join(path, f"{user_id}", "rclone.conf")
-        msg = "Send a rclone config file, use /botfiles command"
+        msg = "Send a rclone config file, use /files command"
     else:
         path = ospath.join(path, "rclone_global", "rclone.conf")
         msg = "Global rclone not found"

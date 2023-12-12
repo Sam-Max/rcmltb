@@ -39,27 +39,27 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 
 ```
 mirror - or /m Mirror to selected cloud 
-mirrorbatch - or /mb Mirror Telegram files/links in batch to cloud
-mirrorselect - or /ms Select a fixed cloud/folder for mirror 
+mirror_batch - or /mb Mirror Telegram files/links in batch to cloud
+mirror_select - or /ms Select a fixed cloud/folder for mirror 
 leech - or /l Leech from cloud/link to Telegram
-leechbatch - or /lb Leech Telegram files/links in batch to Telegram 
+leech_batch - or /lb Leech Telegram files/links in batch to Telegram 
 ytdl - or /y Mirror ytdlp supported link
-ytdlleech - or /yl Leech yt-dlp supported link
-botfiles - or /bf Bot configuration files
-myfiles - Rclone File Manager
+ytdl_leech - or /yl Leech yt-dlp supported link
+files - or /bf Bot configuration files
+rcfm - Rclone File Manager
 copy - Copy from cloud to cloud
 clone - Clone gdrive link file/folder 
 count - count file/folder fom gdrive link
-usetting - User settings
-ownsetting - Owner settings
+user_setting - User settings
+own_setting - Owner settings
 rss - Rss feed
 tmdb - Search titles
 cleanup - Clean cloud trash
-cancelall - Cancel all tasks
+cancel_all - Cancel all tasks
 storage - Cloud details
 serve - Serve cloud as web index 
 sync - Sync two clouds
-search - Search for torrents
+torrsch - Search for torrents
 status - Status message of tasks
 stats - Bot stats
 shell - Run cmds in shell
@@ -158,7 +158,7 @@ pip3 install -r requirements-cli.txt
   - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Int`
   - `IS_TEAM_DRIVE`: Set `True` if TeamDrive. Default is `False`. `Bool`
   - `EXTENSION_FILTER`: File extensions that won't clone. Separate them by space. `Str`
-  **Notes**: Must add **token.pickle** file directly to root for cloning to work. You can use /botfiles command to add from bot.
+  **Notes**: Must add **token.pickle** file directly to root for cloning to work. You can use /files command to add from bot.
    
   ### Leech
 

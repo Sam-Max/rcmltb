@@ -186,7 +186,7 @@ async def next_page_myfiles(client, callback_query):
 
 myfiles_handler = MessageHandler(
     handle_myfiles,
-    filters=filters.command(BotCommands.MyFilesCommand)
+    filters=filters.command(BotCommands.RcfmCommand)
     & (CustomFilters.user_filter | CustomFilters.chat_filter),
 )
 next_page_myfiles_cb = CallbackQueryHandler(

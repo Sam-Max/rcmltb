@@ -34,7 +34,7 @@ from bot.helper.telegram_helper.message_utils import (
 )
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_utils import get_rclone_path
-from bot.modules.search import initiate_search_tools
+from bot.modules.torr_search import initiate_search_tools
 
 
 async def load_config():
