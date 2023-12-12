@@ -4,7 +4,7 @@ from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
 from bot import DOWNLOAD_DIR, bot, config_dict
-from bot.helper.ext_utils.bot_utils import run_sync
+from bot.helper.ext_utils.bot_utils import run_sync_to_async
 from bot.helper.ext_utils.help_messages import LEECH_HELP_MESSAGE
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -141,9 +141,9 @@ async def next_page_leech(_, callback_query):
     buttons = ButtonMaker()
     buttons.cb_buildbutton(f"✅ Select this folder", f"leechmenu^leech_folder^{user_id}")
 
-    next_info, _next_offset = await run_sync(rcloneListNextPage, info, next_offset)
+    next_info, _next_offset = await run_sync_to_async(rcloneListNextPage, info, next_offset)
 
-    await run_sync(
+    await run_sync_to_async(
         rcloneListButtonMaker,
         info=next_info,
         button=buttons,

@@ -23,7 +23,7 @@ from bot import (
     leech_log,
 )
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import run_sync, setInterval
+from bot.helper.ext_utils.bot_utils import run_sync_to_async, setInterval
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (
@@ -113,10 +113,6 @@ async def load_config():
         MEGA_EMAIL = ""
         MEGA_PASSWORD = ""
 
-    UPTOBOX_TOKEN = environ.get("UPTOBOX_TOKEN", "")
-    if len(UPTOBOX_TOKEN) == 0:
-        UPTOBOX_TOKEN = ""
-
     TMDB_API_KEY = environ.get("TMDB_API_KEY", "")
     if len(TMDB_API_KEY) == 0:
         TMDB_API_KEY = ""
@@ -183,12 +179,12 @@ async def load_config():
     USER_SESSION_STRING = environ.get("USER_SESSION_STRING", "")
 
     TORRENT_TIMEOUT = environ.get("TORRENT_TIMEOUT", "")
-    downloads = await run_sync(aria2.get_downloads)
+    downloads = await run_sync_to_async(aria2.get_downloads)
     if len(TORRENT_TIMEOUT) == 0:
         for download in downloads:
             if not download.is_complete:
                 try:
-                    await run_sync(
+                    await run_sync_to_async(
                         aria2.client.change_option(
                             download.gid, {"bt-stop-timeout": "0"}
                         )
@@ -203,7 +199,7 @@ async def load_config():
         for download in downloads:
             if not download.is_complete:
                 try:
-                    await run_sync(
+                    await run_sync_to_async(
                         aria2.client.change_option(
                             download.gid, {"bt-stop-timeout": TORRENT_TIMEOUT}
                         )
@@ -361,7 +357,6 @@ async def load_config():
             "TORRENT_TIMEOUT": TORRENT_TIMEOUT,
             "UPSTREAM_REPO": UPSTREAM_REPO,
             "UPSTREAM_BRANCH": UPSTREAM_BRANCH,
-            "UPTOBOX_TOKEN": UPTOBOX_TOKEN,
             "USER_SESSION_STRING": USER_SESSION_STRING,
             "USE_SERVICE_ACCOUNTS": USE_SERVICE_ACCOUNTS,
             "VIEW_LINK": VIEW_LINK,

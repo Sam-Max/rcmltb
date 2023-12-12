@@ -21,7 +21,7 @@ from bot.helper.ext_utils.bot_utils import (
     is_archive,
     is_archive_split,
     is_first_archive_split,
-    run_sync,
+    run_sync_to_async,
 )
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.human_format import (
@@ -88,7 +88,7 @@ class TaskListener:
             if Interval:
                 Interval[0].cancel()
                 Interval.clear()
-            await run_sync(aria2.purge)
+            await run_sync_to_async(aria2.purge)
             await delete_all_messages()
         except:
             pass
@@ -474,20 +474,20 @@ class TaskListener:
                 LOGGER.error(f"Error while getting link. Error: {err}")
                 button.url_buildbutton("Cloud Link 🚫", "http://www.example.com")
         if isGdrive and (GD_INDEX_URL := config_dict["GD_INDEX_URL"]):
-            encoded_path = rutils.quote(f"{base}{name}")
-            share_url = f"{GD_INDEX_URL}/{encoded_path}"
+            url_path = rutils.quote(f"{base}{name}")
+            share_url = f"{GD_INDEX_URL}/{url_path}"
             if type == "Folder":
                 share_url += "/"
                 button.url_buildbutton("⚡ Index Link", share_url)
             else:
                 button.url_buildbutton("⚡ Index Link", share_url)
                 if config_dict["VIEW_LINK"]:
-                    share_urls = f"{GD_INDEX_URL}/{encoded_path}?a=view"
+                    share_urls = f"{GD_INDEX_URL}/{url_path}?a=view"
                     button.url_buildbutton("🌐 View Link", share_urls)
         elif RC_INDEX_URL := config_dict["RC_INDEX_URL"]:
             RC_INDEX_PORT = config_dict["RC_INDEX_PORT"]
-            encoded_path = rutils.quote(f"{base}{name}")
-            share_url = f"{RC_INDEX_URL}:{RC_INDEX_PORT}/[{remote}:]/{encoded_path}"
+            url_path = rutils.quote(f"{base}{name}")
+            share_url = f"{RC_INDEX_URL}:{RC_INDEX_PORT}/[{remote}:]/{url_path}"
             if mime_type == "Folder":
                 share_url += "/"
             button.url_buildbutton("Rclone Link 🔗", share_url)

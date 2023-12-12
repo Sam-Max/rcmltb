@@ -13,7 +13,7 @@ from bot.helper.ext_utils.bot_utils import (
     is_gdrive_link,
     is_share_link,
     new_task,
-    run_sync,
+    run_sync_to_async,
 )
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (
@@ -31,7 +31,7 @@ async def clone(client, message):
 
     try:
         args = parser.parse_args(message_list[1:])
-    except Exception as e:
+    except Exception:
         await sendMessage(CLONE_HELP_MESSAGE, message)
         return
 
@@ -76,7 +76,7 @@ async def clone(client, message):
 
     if is_share_link(link):
         try:
-            link = await run_sync(direct_link_generator, link)
+            link = await run_sync_to_async(direct_link_generator, link)
             LOGGER.info(f"Generated link: {link}")
         except DirectDownloadLinkException as e:
             LOGGER.error(str(e))
@@ -86,7 +86,7 @@ async def clone(client, message):
 
     if is_gdrive_link(link):
         gd = GoogleDriveHelper()
-        name, mime_type, size, files, _ = await run_sync(gd.count, link)
+        name, mime_type, size, files, _ = await run_sync_to_async(gd.count, link)
         if mime_type is None:
             await sendMessage(name, message)
             return
@@ -95,14 +95,14 @@ async def clone(client, message):
         drive = GoogleDriveHelper(name, listener=listener)
         if files <= 20:
             msg = await sendMessage(f"Cloning: <code>{link}</code>", message)
-            link, size, mime_type, files, folders = await run_sync(drive.clone, link)
+            link, size, mime_type, files, folders = await run_sync_to_async(drive.clone, link)
             await deleteMessage(msg)
         else:
             gid = "".join(SystemRandom().choices(ascii_letters + digits, k=12))
             async with status_dict_lock:
                 status_dict[message.id] = CloneStatus(drive, size, message, gid)
             await sendStatusMessage(message)
-            link, size, mime_type, files, folders = await run_sync(drive.clone, link)
+            link, size, mime_type, files, folders = await run_sync_to_async(drive.clone, link)
         if not link:
             return
         if not config_dict["NO_TASKS_LOGS"]:

@@ -8,7 +8,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.ext_utils.telegraph_helper import telegraph
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, run_sync
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, run_sync_to_async
 
 
 SITES = None
@@ -17,20 +17,20 @@ PLUGINS = []
 
 
 async def initiate_search_tools():
-    qbclient = await run_sync(get_client)
-    qb_plugins = await run_sync(qbclient.search_plugins)
+    qbclient = await run_sync_to_async(get_client)
+    qb_plugins = await run_sync_to_async(qbclient.search_plugins)
     if SEARCH_PLUGINS := config_dict["SEARCH_PLUGINS"]:
         globals()["PLUGINS"] = []
         src_plugins = eval(SEARCH_PLUGINS)
         if qb_plugins:
             names = [plugin["name"] for plugin in qb_plugins]
-            await run_sync(qbclient.search_uninstall_plugin, names=names)
-        await run_sync(qbclient.search_install_plugin, src_plugins)
+            await run_sync_to_async(qbclient.search_uninstall_plugin, names=names)
+        await run_sync_to_async(qbclient.search_install_plugin, src_plugins)
     elif qb_plugins:
         for plugin in qb_plugins:
-            await run_sync(qbclient.search_uninstall_plugin, names=plugin["name"])
+            await run_sync_to_async(qbclient.search_uninstall_plugin, names=plugin["name"])
         globals()["PLUGINS"] = []
-    await run_sync(qbclient.auth_log_out)
+    await run_sync_to_async(qbclient.auth_log_out)
 
     if SEARCH_API_LINK := config_dict["SEARCH_API_LINK"]:
         global SITES
@@ -98,17 +98,17 @@ async def _search(key, site, message, method):
             return
     else:
         LOGGER.info(f"PLUGINS Searching: {key} from {site}")
-        client = await run_sync(get_client)
-        search = await run_sync(
+        client = await run_sync_to_async(get_client)
+        search = await run_sync_to_async(
             client.search_start, pattern=key, plugins=site, category="all"
         )
         search_id = search.id
         while True:
-            result_status = await run_sync(client.search_status, search_id=search_id)
+            result_status = await run_sync_to_async(client.search_status, search_id=search_id)
             status = result_status[0].status
             if status != "Running":
                 break
-        dict_search_results = await run_sync(
+        dict_search_results = await run_sync_to_async(
             client.search_results, search_id=search_id, limit=TELEGRAPH_LIMIT
         )
         search_results = dict_search_results.results
@@ -121,8 +121,8 @@ async def _search(key, site, message, method):
             return
         msg = f"<b>Found {min(total_results, TELEGRAPH_LIMIT)}</b>"
         msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>"
-        await run_sync(client.search_delete, search_id=search_id)
-        await run_sync(client.auth_log_out)
+        await run_sync_to_async(client.search_delete, search_id=search_id)
+        await run_sync_to_async(client.auth_log_out)
 
     link = await __getResult(search_results, key, message, method)
     buttons = ButtonMaker()
@@ -277,11 +277,11 @@ def __api_buttons(user_id, method, id=None, is_tdmb=False):
 async def _plugin_buttons(user_id, id=None, is_tdmb=False):
     buttons = ButtonMaker()
     if not PLUGINS:
-        qbclient = await run_sync(get_client)
-        pl = await run_sync(qbclient.search_plugins)
+        qbclient = await run_sync_to_async(get_client)
+        pl = await run_sync_to_async(qbclient.search_plugins)
         for name in pl:
             PLUGINS.append(name["name"])
-        await run_sync(qbclient.auth_log_out)
+        await run_sync_to_async(qbclient.auth_log_out)
     for siteName in PLUGINS:
         if is_tdmb:
             buttons.cb_buildbutton(

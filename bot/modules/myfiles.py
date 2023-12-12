@@ -2,7 +2,7 @@ from pyrogram.filters import regex
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from bot import bot, config_dict
-from bot.helper.ext_utils.bot_utils import run_sync
+from bot.helper.ext_utils.bot_utils import run_sync_to_async
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import (
@@ -154,9 +154,9 @@ async def next_page_myfiles(client, callback_query):
     buttons.cb_buildbutton(f"⚙️ Folder Options", f"myfilesmenu^folder_action^{user_id}")
     buttons.cb_buildbutton("🔍 Search", f"myfilesmenu^search^{user_id}")
 
-    next_info, _next_offset = await run_sync(rcloneListNextPage, info, next_offset)
+    next_info, _next_offset = await run_sync_to_async(rcloneListNextPage, info, next_offset)
 
-    await run_sync(
+    await run_sync_to_async(
         rcloneListButtonMaker,
         info=next_info,
         button=buttons,

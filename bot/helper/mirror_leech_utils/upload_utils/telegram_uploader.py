@@ -395,7 +395,7 @@ class TelegramUploader:
     def processed_bytes(self):
         return self.__processed_bytes
 
-    async def cancel_download(self):
+    async def cancel_task(self):
         self.__is_cancelled = True
         if not config_dict["NO_TASKS_LOGS"]:
             LOGGER.info(f"Cancelling Upload: {self.name}")

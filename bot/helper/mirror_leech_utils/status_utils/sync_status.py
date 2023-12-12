@@ -63,7 +63,7 @@ class SyncStatus:
     def eta(self):
         return self.__eta
 
-    def download(self):
+    def task(self):
         return self.__process
 
     def type(self):

@@ -2,7 +2,11 @@ from asyncio import create_subprocess_exec
 from shutil import rmtree
 from sys import exit
 from aiohttp import ClientSession
-from bot.helper.ext_utils.bot_utils import cmd_exec, run_sync
+from bot.helper.ext_utils.bot_utils import (
+    cmd_exec,
+    run_async_to_sync,
+    run_sync_to_async,
+)
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from re import I, split as re_split
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
@@ -30,7 +34,6 @@ from magic import Magic
 from subprocess import run as srun, check_output
 from asyncio.subprocess import PIPE
 from os import path as ospath, walk as oswalk
-from time import time
 
 
 ARCH_EXT = [
@@ -77,58 +80,53 @@ ZIP_EXT = (".zip", ".7z", ".gzip2", ".iso", ".wim", ".rar")
 
 
 async def clean_download(path):
-    LOGGER.info("Cleaning Download")
-    if await aiopath.isdir(path):
+    if await aiopath.exists(path):
+        LOGGER.info("Cleaning Download")
         try:
-            await aiormtree(path)
-        except:
-            pass
-    elif await aiopath.isfile(path):
-        try:
-            await aioremove(path)
-        except:
-            pass
+            if await aiopath.isdir(path):
+                await aiormtree(path)
+            else:
+                await aioremove(path)
+        except Exception as e:
+            LOGGER.error(str(e))
 
 
 async def clean_target(path: str):
     if await aiopath.exists(path):
-        LOGGER.info(f"Cleaning Target")
-        if await aiopath.isdir(path):
-            try:
+        LOGGER.info("Cleaning Target")
+        try:
+            if await aiopath.isdir(path):
                 await aiormtree(path)
-            except:
-                pass
-        elif await aiopath.isfile(path):
-            try:
+            else:
                 await aioremove(path)
-            except:
-                pass
+        except Exception as e:
+            LOGGER.error(str(e))
 
 
 async def start_cleanup():
-    get_client().torrents_delete(torrent_hashes="all")
+    await run_sync_to_async(get_client().torrents_delete, torrent_hashes="all")
     if not config_dict["LOCAL_MIRROR"]:
         try:
             await aiormtree(DOWNLOAD_DIR)
-        except:
-            pass
+        except Exception as e:
+            LOGGER.error(str(e))
     await makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 
-def clean_all():
-    aria2.remove_all(True)
-    get_client().torrents_delete(torrent_hashes="all")
+async def clean_all():
+    await run_sync_to_async(aria2.remove_all, True)
+    await run_sync_to_async(get_client().torrents_delete, torrent_hashes="all")
     if not config_dict["LOCAL_MIRROR"]:
         try:
             rmtree(DOWNLOAD_DIR)
-        except:
-            pass
+        except Exception as e:
+            LOGGER.error(str(e))
 
 
 def exit_clean_up(signal, frame):
     try:
         LOGGER.info("Please wait, while we clean up and stop the running downloads")
-        clean_all()
+        run_async_to_sync(clean_all())
         srun(["pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg"])
         exit(0)
     except KeyboardInterrupt:
@@ -160,7 +158,7 @@ async def get_path_size(path: str):
     if await aiopath.isfile(path):
         return await aiopath.getsize(path)
     total_size = 0
-    for root, _, files in await run_sync(oswalk, path):
+    for root, _, files in await run_sync_to_async(oswalk, path):
         for f in files:
             abs_path = ospath.join(root, f)
             total_size += await aiopath.getsize(abs_path)
@@ -237,8 +235,8 @@ async def split_file(
                 err = (await listener.suproc.stderr.read()).decode().strip()
                 try:
                     await aioremove(out_path)
-                except:
-                    pass
+                except Exception as e:
+                    LOGGER.error(str(e))
                 LOGGER.warning(
                     f"{err}. Unable to split this video, if it's size less than {TG_MAX_FILE_SIZE} will be uploaded as it is. Path: {path}"
                 )
@@ -301,7 +299,7 @@ async def get_document_type(path):
         r".+(\.|_)(rar|7z|zip|bin)(\.0*\d+)?$", path
     ):
         return is_video, is_audio, is_image
-    mime_type = await run_sync(get_mime_type, path)
+    mime_type = await run_sync_to_async(get_mime_type, path)
     if mime_type.startswith("audio"):
         return False, True, False
     if mime_type.startswith("image"):
@@ -370,8 +368,8 @@ async def get_media_info(path):
         return 0, None, None
     duration = round(float(fields.get("duration", 0)))
     tags = fields.get("tags", {})
-    artist = tags.get("artist") or tags.get("ARTIST")
-    title = tags.get("title") or tags.get("TITLE")
+    artist = tags.get("artist") or tags.get("ARTIST") or tags.get("Artist")
+    title = tags.get("title") or tags.get("TITLE") or tags.get("Title")
     return duration, artist, title
 
 
@@ -419,7 +417,7 @@ def bt_selection_buttons(id_):
     return buttons.build_menu(2)
 
 
-async def getDownloadByGid(gid):
+async def getTaskByGid(gid):
     async with status_dict_lock:
         for dl in status_dict.values():
             if dl.gid() == gid:
@@ -427,7 +425,7 @@ async def getDownloadByGid(gid):
     return None
 
 
-async def getAllDownload(req_status: str):
+async def getAllTasks(req_status: str):
     async with status_dict_lock:
         if req_status == "all":
             return list(status_dict.values())

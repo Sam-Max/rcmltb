@@ -4,7 +4,7 @@ from bot.helper.ext_utils.bot_utils import (
     MirrorStatus,
     get_readable_file_size,
     get_readable_time,
-    run_sync,
+    run_sync_to_async,
 )
 
 
@@ -84,7 +84,7 @@ class QbitTorrentStatus:
     def seeding_time(self):
         return get_readable_time(self.__info.seeding_time)
 
-    def download(self):
+    def task(self):
         return self
 
     def gid(self):
@@ -103,20 +103,20 @@ class QbitTorrentStatus:
     def type(self):
         return "Qbit"
 
-    async def cancel_download(self):
+    async def cancel_task(self):
         self.__update()
-        await run_sync(self.__client.torrents_pause, torrent_hashes=self.__info.hash)
+        await run_sync_to_async(self.__client.torrents_pause, torrent_hashes=self.__info.hash)
         if self.status() != MirrorStatus.STATUS_SEEDING:
             if not config_dict["NO_TASKS_LOGS"]:
                 LOGGER.info(f"Cancelling Download: {self.__info.name}")
             await sleep(0.3)
             await self.__listener.onDownloadError("Download stopped by user!")
-            await run_sync(
+            await run_sync_to_async(
                 self.__client.torrents_delete,
                 torrent_hashes=self.__info.hash,
                 delete_files=True,
             )
-            await run_sync(self.__client.torrents_delete_tags, tags=self.__info.tags)
+            await run_sync_to_async(self.__client.torrents_delete_tags, tags=self.__info.tags)
             async with qb_listener_lock:
                 if self.__info.tags in QbTorrents:
                     del QbTorrents[self.__info.tags]

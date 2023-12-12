@@ -34,10 +34,10 @@ class SplitStatus:
     def processed_bytes(self):
         return 0
 
-    def download(self):
+    def task(self):
         return self
 
-    async def cancel_download(self):
+    async def cancel_task(self):
         if not config_dict["NO_TASKS_LOGS"]:
             LOGGER.info(f"Cancelling Split: {self.__name}")
         if self.__listener.suproc is not None:

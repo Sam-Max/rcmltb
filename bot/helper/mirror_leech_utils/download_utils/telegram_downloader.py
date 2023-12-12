@@ -63,7 +63,7 @@ class TelegramDownloader:
                 "Use SuperGroup to download with User!", self.__listener.message
             )
             return
-        if self.__file == None:
+        if self.__file is None:
             return
         if self.name == "":
             name = (
@@ -96,6 +96,6 @@ class TelegramDownloader:
     async def __onDownloadError(self, error):
         await self.__listener.onDownloadError(error)
 
-    async def cancel_download(self):
-        LOGGER.info(f"Cancelling download by user request")
+    async def cancel_task(self):
+        LOGGER.info("Cancelling download by user request")
         self.__is_cancelled = True

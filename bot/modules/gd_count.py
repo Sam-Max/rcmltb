@@ -8,7 +8,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import (
     is_gdrive_link,
     get_readable_file_size,
-    run_sync,
+    run_sync_to_async,
 )
 
 
@@ -26,7 +26,7 @@ async def count(_, message):
     if is_gdrive_link(link):
         msg = await sendMessage(f"Counting: <code>{link}</code>", message)
         gd = GoogleDriveHelper()
-        name, mime_type, size, files, folders = await run_sync(gd.count, link)
+        name, mime_type, size, files, folders = await run_sync_to_async(gd.count, link)
         if mime_type is None:
             await sendMessage(name, message)
             return

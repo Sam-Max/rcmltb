@@ -2,7 +2,7 @@ from logging import getLogger
 from random import SystemRandom
 from string import ascii_letters, digits
 from os import listdir, path as ospath
-from bot.helper.ext_utils.bot_utils import run_async, run_sync
+from bot.helper.ext_utils.bot_utils import run_async_to_sync, run_sync_to_async
 from yt_dlp import YoutubeDL, DownloadError
 from re import search as re_search
 from bot import status_dict_lock, config_dict, status_dict
@@ -128,7 +128,7 @@ class YoutubeDLHelper:
 
     def __onDownloadError(self, error):
         self.__is_cancelled = True
-        run_async(self.__listener.onDownloadError, error)
+        run_async_to_sync(self.__listener.onDownloadError, error)
 
     def extractMetaData(self, link, name):
         if link.startswith(("rtmp", "mms", "rstp", "rtmps")):
@@ -183,7 +183,7 @@ class YoutubeDLHelper:
                 return
             if self.__is_cancelled:
                 raise ValueError
-            run_async(self.__listener.onDownloadComplete)
+            run_async_to_sync(self.__listener.onDownloadComplete)
         except ValueError:
             self.__onDownloadError("Download Stopped by User!")
 
@@ -229,7 +229,7 @@ class YoutubeDLHelper:
         if options:
             self.__set_options(options)
 
-        await run_sync(self.extractMetaData, link, name)
+        await run_sync_to_async(self.extractMetaData, link, name)
         if self.__is_cancelled:
             return
 
@@ -300,9 +300,9 @@ class YoutubeDLHelper:
 
         if not config_dict["NO_TASKS_LOGS"]:
             LOGGER.info(f"Download with YT_DLP: {self.name}")
-        await run_sync(self.__download, link, path)
+        await run_sync_to_async(self.__download, link, path)
 
-    async def cancel_download(self):
+    async def cancel_task(self):
         self.__is_cancelled = True
         if not config_dict["NO_TASKS_LOGS"]:
             LOGGER.info(f"Cancelling Download: {self.name}")

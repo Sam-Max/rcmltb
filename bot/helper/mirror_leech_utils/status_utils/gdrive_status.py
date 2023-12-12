@@ -49,5 +49,5 @@ class GdriveStatus:
     def type(self):
         return "Gdrive"
 
-    def download(self):
+    def task(self):
         return self.__obj

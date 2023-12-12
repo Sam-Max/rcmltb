@@ -236,23 +236,11 @@ def get_readable_message():
     for download in status_dict.values():
         tstatus = download.status()
         if tstatus == MirrorStatus.STATUS_DOWNLOADING:
-            spd = download.speed()
-            if "K" in spd:
-                dl_speed += float(spd.split("K")[0]) * 1024
-            elif "M" in spd:
-                dl_speed += float(spd.split("M")[0]) * 1048576
+            dl_speed += text_size_to_bytes(download.speed())
         elif tstatus == MirrorStatus.STATUS_UPLOADING:
-            spd = download.speed()
-            if "K" in spd:
-                up_speed += float(spd.split("K")[0]) * 1024
-            elif "M" in spd:
-                up_speed += float(spd.split("M")[0]) * 1048576
+            up_speed += text_size_to_bytes(download.speed())
         elif tstatus == MirrorStatus.STATUS_SEEDING:
-            spd = download.upload_speed()
-            if "K" in spd:
-                up_speed += float(spd.split("K")[0]) * 1024
-            elif "M" in spd:
-                up_speed += float(spd.split("M")[0]) * 1048576
+            up_speed += text_size_to_bytes(download.upload_speed())
     if tasks > STATUS_LIMIT:
         msg += f"<b>Page:</b> {PAGE_NO}/{PAGES} | <b>Tasks:</b> {tasks}\n"
         buttons = ButtonMaker()
@@ -264,6 +252,20 @@ def get_readable_message():
     msg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botUptime)}"
     msg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
     return msg, button
+
+
+def text_size_to_bytes(size_text):
+    size = 0
+    size_text = size_text.lower()
+    if "k" in size_text:
+        size += float(size_text.split("k")[0]) * 1024
+    elif "m" in size_text:
+        size += float(size_text.split("m")[0]) * 1048576
+    elif "g" in size_text:
+        size += float(size_text.split("g")[0]) * 1073741824
+    elif "t" in size_text:
+        size += float(size_text.split("t")[0]) * 1099511627776
+    return size
 
 
 async def turn(data):
@@ -304,7 +306,7 @@ class setInterval:
         self.is_cancelled = True
 
 
-async def run_sync(func, *args, wait=True, **kwargs):
+async def run_sync_to_async(func, *args, wait=True, **kwargs):
     pfunc = partial(func, *args, **kwargs)
     future = botloop.run_in_executor(THREADPOOL, pfunc)
     if wait:
@@ -313,7 +315,7 @@ async def run_sync(func, *args, wait=True, **kwargs):
         return future
 
 
-def run_async(func, *args, wait=True, **kwargs):
+def run_async_to_sync(func, *args, wait=True, **kwargs):
     future = run_coroutine_threadsafe(func(*args, **kwargs), botloop)
     if wait:
         return future.result()
@@ -376,7 +378,7 @@ def update_user_ldata(id_, key, value):
 
 async def clean_unwanted(path):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
-    for dirpath, _, files in await run_sync(walk, path, topdown=False):
+    for dirpath, _, files in await run_sync_to_async(walk, path, topdown=False):
         for filee in files:
             if (
                 filee.endswith(".!qB")
@@ -386,6 +388,6 @@ async def clean_unwanted(path):
                 osremove(ospath.join(dirpath, filee))
         if dirpath.endswith((".unwanted")):
             rmtree(dirpath)
-    for dirpath, _, files in await run_sync(walk, path, topdown=False):
+    for dirpath, _, files in await run_sync_to_async(walk, path, topdown=False):
         if not listdir(dirpath):
             rmdir(dirpath)

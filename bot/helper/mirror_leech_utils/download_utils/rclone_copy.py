@@ -116,7 +116,7 @@ class RcloneCopy:
         with open(conf_path, "w") as f:
             f.write(rc_content)
 
-    async def cancel_download(self):
+    async def cancel_task(self):
         self.__is_cancelled = True
         if self.process is not None:
             try:

@@ -1,5 +1,5 @@
 from bot import OWNER_ID, bot, config_dict, remotes_multi
-from bot.helper.ext_utils.bot_utils import run_sync
+from bot.helper.ext_utils.bot_utils import run_sync_to_async
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
@@ -119,9 +119,9 @@ async def next_page_mirrorselect(_, callback_query):
         "✅ Select this folder", f"{Menus.MIRROR_SELECT}^close^{user_id}"
     )
 
-    next_info, _next_offset = await run_sync(rcloneListNextPage, info, next_offset)
+    next_info, _next_offset = await run_sync_to_async(rcloneListNextPage, info, next_offset)
 
-    await run_sync(
+    await run_sync_to_async(
         rcloneListButtonMaker,
         info=next_info,
         button=buttons,

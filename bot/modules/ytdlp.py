@@ -6,7 +6,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import regex, command
 from bot import DOWNLOAD_DIR, LOGGER, config_dict, user_data, bot
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import is_url, new_task, run_sync
+from bot.helper.ext_utils.bot_utils import is_url, new_task, run_sync_to_async
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.help_messages import YT_HELP_MESSAGE
 from bot.helper.ext_utils.human_format import get_readable_file_size
@@ -118,16 +118,14 @@ async def select_quality(message, result, listener, link, path, name, opt):
                         if item.get("audio_ext") == "m4a":
                             is_m4a = True
                         b_name = f"{item['acodec']}-{item['ext']}"
-                        v_format = f"ba[format_id={format_id}]"
+                        v_format = format_id
                     elif item.get("height"):
                         height = item["height"]
                         ext = item["ext"]
                         fps = item["fps"] if item.get("fps") else ""
                         b_name = f"{height}p{fps}-{ext}"
                         ba_ext = "[ext=m4a]" if is_m4a and ext == "mp4" else ""
-                        v_format = (
-                            f"bv*[format_id={format_id}]+ba{ba_ext}/b[height=?{height}]"
-                        )
+                        v_format = f"{format_id}+ba{ba_ext}/b[height=?{height}]"
                     else:
                         continue
 
@@ -338,10 +336,10 @@ async def _ytdl(client, message, isLeech=False, sameDir=None):
                 value = eval(value)
             options[key] = value
 
-        options["playlist_items"] = "0"
+    options["playlist_items"] = "0"
 
     try:
-        result = await run_sync(extract_info, link, options)
+        result = await run_sync_to_async(extract_info, link, options)
     except Exception as e:
         msg = str(e).replace("<", " ").replace(">", " ")
         await sendMessage(f"{tag} {msg}", message)

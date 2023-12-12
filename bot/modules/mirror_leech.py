@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
-from bot import DOWNLOAD_DIR, OWNER_ID, PARALLEL_TASKS, bot, config_dict
+from bot import DOWNLOAD_DIR, OWNER_ID, PARALLEL_TASKS, bot, config_dict, m_queue
 from asyncio import TimeoutError, sleep
-from bot import bot, DOWNLOAD_DIR, config_dict, m_queue
 from pyrogram import filters
 from base64 import b64encode
 from os import path as ospath
@@ -15,7 +14,7 @@ from bot.helper.ext_utils.bot_utils import (
     is_mega_link,
     is_url,
     new_task,
-    run_sync,
+    run_sync_to_async,
 )
 from bot.helper.mirror_leech_utils.download_utils.direct_link_generator import (
     direct_link_generator,
@@ -56,19 +55,14 @@ async def handle_mirror(client, message):
     await mirror_leech(client, message)
 
 
-# Added some modifications from base repository
 async def mirror_leech(client, message, isLeech=False, sameDir=None):
-    user_id = message.from_user.id
+    user_id = message.from_user.id or message.sender_chat.id
     message_id = message.id
 
     if not isLeech:
-        if await is_rclone_config(user_id, message):
-            pass
-        else:
+        if not await is_rclone_config(user_id, message):
             return
-        if await is_remote_selected(user_id, message):
-            pass
-        else:
+        if not await is_remote_selected(user_id, message):
             return
 
     message_list = message.text.split("\n")
@@ -178,7 +172,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
         content_type = await get_content_type(link)
         if content_type is None or re_match(r"text/html|text/plain", content_type):
             try:
-                link = await run_sync(direct_link_generator, link)
+                link = await run_sync_to_async(direct_link_generator, link)
             except DirectDownloadLinkException as e:
                 if str(e).startswith("ERROR:"):
                     await sendMessage(str(e), message)
@@ -201,12 +195,12 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
         if reply_message and not multi:
             buttons = ButtonMaker()
             name = file.file_name if hasattr(file, "file_name") else "None"
-            msg = f"<b>Which name do you want to use?</b>\n\n"
+            msg = "<b>Which name do you want to use?</b>\n\n"
             msg += f"<b>Name</b>: <code>{name}</code>\n\n"
             msg += f"<b>Size</b>: <code>{get_readable_size(file.file_size)}</code>"
-            buttons.cb_buildbutton("📄 By default", f"mirrormenu^default")
-            buttons.cb_buildbutton("📝 Rename", f"mirrormenu^rename")
-            buttons.cb_buildbutton("✘ Close Menu", f"mirrormenu^close", "footer")
+            buttons.cb_buildbutton("📄 By default", "mirrormenu^default")
+            buttons.cb_buildbutton("📝 Rename", "mirrormenu^rename")
+            buttons.cb_buildbutton("✘ Close Menu", "mirrormenu^close", "footer")
             listener_dict[message_id] = [listener, file, message, isLeech, user_id, ""]
             await sendMarkup(msg, message, reply_markup=buttons.build_menu(2))
         else:
@@ -336,10 +330,12 @@ async def mirror_select(client, callback_query):
 
 async def handle_auto_mirror(client, message):
     user_id = message.from_user.id
-    if await is_rclone_config(user_id, message) == False:
+
+    if not await is_rclone_config(user_id, message):
         return
-    if await is_remote_selected(user_id, message) == False:
+    if not await is_remote_selected(user_id, message):
         return
+
     file = (
         message.document
         or message.video
@@ -368,7 +364,6 @@ async def handle_auto_mirror(client, message):
 
 
 parser = ArgumentParser(description="rcmltb args usage:", argument_default="")
-
 parser.add_argument("link", nargs="*")
 parser.add_argument("-s", action="store_true", default=False, dest="select")
 parser.add_argument("-d", nargs="?", default=False, const=True, dest="seed")

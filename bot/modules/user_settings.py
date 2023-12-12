@@ -13,7 +13,7 @@ from bot import (
     user_data,
 )
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import run_sync, update_user_ldata
+from bot.helper.ext_utils.bot_utils import run_sync_to_async, update_user_ldata
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (
@@ -165,7 +165,7 @@ async def edit_user_settings(client, query):
                         mkdir(path)
                     photo_dir = await client.download_media(response)
                     des_dir = ospath.join(path, f"{user_id}.jpg")
-                    await run_sync(
+                    await run_sync_to_async(
                         Image.open(photo_dir).convert("RGB").save, des_dir, "JPEG"
                     )
                     osremove(photo_dir)

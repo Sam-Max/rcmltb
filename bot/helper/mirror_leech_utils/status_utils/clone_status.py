@@ -54,7 +54,7 @@ class CloneStatus:
         except:
             return "-"
 
-    def download(self):
+    def task(self):
         return self.__obj
 
     def type(self):

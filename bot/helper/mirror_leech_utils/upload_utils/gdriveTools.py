@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 from bot import GLOBAL_EXTENSION_FILTER, config_dict
-from bot.helper.ext_utils.bot_utils import run_async, setInterval
+from bot.helper.ext_utils.bot_utils import run_async_to_sync, setInterval
 from random import randrange
 from tenacity import (
     retry,
@@ -270,7 +270,7 @@ class GoogleDriveHelper:
                 msg = "File not found."
             else:
                 msg = f"Error.\n{err}"
-            run_async(self.__listener.onUploadError, msg)
+            run_async_to_sync(self.__listener.onUploadError, msg)
             return None, None, None, None, None
 
     def __cloneFolder(self, name, local_path, folder_id, dest_id):
@@ -483,13 +483,13 @@ class GoogleDriveHelper:
                         self.__updater.cancel()
                         return self.download(link)
                 err = "File not found!"
-            run_async(self.__listener.onDownloadError, err)
+            run_async_to_sync(self.__listener.onDownloadError, err)
             self.__is_cancelled = True
         finally:
             self.__updater.cancel()
             if self.__is_cancelled:
                 return
-            run_async(self.__listener.onDownloadComplete)
+            run_async_to_sync(self.__listener.onDownloadComplete)
 
     def __download_folder(self, folder_id, path, folder_name):
         folder_name = folder_name.replace("/", "")
@@ -577,7 +577,7 @@ class GoogleDriveHelper:
                         raise err
         self.__file_processed_bytes = 0
 
-    async def cancel_download(self):
+    async def cancel_task(self):
         self.__is_cancelled = True
         if self.__is_downloading:
             if not config_dict["NO_TASKS_LOGS"]:

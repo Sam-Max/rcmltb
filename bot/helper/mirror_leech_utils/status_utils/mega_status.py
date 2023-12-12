@@ -47,7 +47,7 @@ class MegaDownloadStatus:
     def gid(self) -> str:
         return self.__gid
 
-    def download(self):
+    def task(self):
         return self.__obj
 
     def type(self):

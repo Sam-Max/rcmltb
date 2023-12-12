@@ -21,7 +21,7 @@ from bot.helper.mirror_leech_utils.download_utils.aria2_download import (
     start_aria2_listener,
 )
 from .helper.telegram_helper.bot_commands import BotCommands
-from .helper.ext_utils.bot_utils import cmd_exec, new_task, run_sync
+from .helper.ext_utils.bot_utils import cmd_exec, new_task, run_sync_to_async
 from json import loads
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.message_utils import editMessage, sendMarkup, sendMessage
@@ -43,11 +43,11 @@ from .modules import (
     clone,
     storage,
     cleanup,
+    torr_select,
     user_settings,
     ytdlp,
     shell,
     exec,
-    bt_select,
     rss,
     serve,
     sync,
@@ -79,11 +79,11 @@ async def restart(client, message):
     if scheduler.running:
         scheduler.shutdown(wait=False)
     if Interval:
-        Interval[0].cancel()
-        Interval.clear()
+        for intvl in list(Interval.values()):
+            intvl.cancel()
     if QbInterval:
         QbInterval[0].cancel()
-    await run_sync(clean_all)
+    await clean_all()
     await (
         await create_subprocess_exec(
             "pkill", "-9", "-f", "gunicorn|aria2c|rclone|qbittorrent-nox|ffmpeg"
@@ -125,7 +125,7 @@ async def mirror_worker(queue: Queue):
 async def main():
     await start_cleanup()
     await search.initiate_search_tools()
-    await run_sync(start_aria2_listener, wait=False)
+    await run_sync_to_async(start_aria2_listener, wait=False)
 
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:

@@ -4,7 +4,7 @@ from asyncio.subprocess import PIPE
 from json import loads as jsonloads
 from configparser import ConfigParser
 from bot import GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, remotes_multi
-from bot.helper.ext_utils.bot_utils import cmd_exec, run_sync
+from bot.helper.ext_utils.bot_utils import cmd_exec, run_sync_to_async
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.exceptions import NotRclonePathFound
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -286,9 +286,9 @@ async def list_folder(
     if total == 0:
         buttons.cb_buildbutton("❌Nothing to show❌", f"{menu_type}^pages^{user_id}")
     else:
-        page, next_offset = await run_sync(rcloneListNextPage, info)
+        page, next_offset = await run_sync_to_async(rcloneListNextPage, info)
 
-        await run_sync(
+        await run_sync_to_async(
             rcloneListButtonMaker,
             info=page,
             button=buttons,

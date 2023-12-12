@@ -64,7 +64,7 @@ class RcloneStatus:
     def eta(self):
         return self.__eta
 
-    def download(self):
+    def task(self):
         return self.__obj
 
     def type(self):

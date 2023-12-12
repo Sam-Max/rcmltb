@@ -9,13 +9,13 @@ from bot import (
     aria2c_global,
     aria2_options,
 )
-from bot.helper.ext_utils.bot_utils import clean_unwanted, new_thread, run_sync
+from bot.helper.ext_utils.bot_utils import clean_unwanted, new_thread, run_sync_to_async
 from bot.helper.telegram_helper.message_utils import (
     sendMessage,
     sendStatusMessage,
     update_all_messages,
 )
-from bot.helper.ext_utils.misc_utils import getDownloadByGid
+from bot.helper.ext_utils.misc_utils import getTaskByGid
 from bot.helper.mirror_leech_utils.status_utils.aria_status import AriaStatus
 
 
@@ -30,7 +30,7 @@ async def add_aria2c_download(link, path, listener, filename, auth):
     if TORRENT_TIMEOUT := config_dict["TORRENT_TIMEOUT"]:
         a2c_opt["bt-stop-timeout"] = f"{TORRENT_TIMEOUT}"
     try:
-        download = (await run_sync(aria2.add, link, a2c_opt))[0]
+        download = (await run_sync_to_async(aria2.add, link, a2c_opt))[0]
     except Exception as e:
         LOGGER.info(f"Aria2c Download Error: {e}")
         await sendMessage(f"{e}", listener.message)
@@ -60,7 +60,7 @@ async def add_aria2c_download(link, path, listener, filename, auth):
 
 @new_thread
 async def __onDownloadStarted(api, gid):
-    download = await run_sync(api.get_download, gid)
+    download = await run_sync_to_async(api.get_download, gid)
     if not config_dict["NO_TASKS_LOGS"]:
         LOGGER.info(f"onDownloadStarted: {download.name} - Gid: {gid}")
 
@@ -68,25 +68,25 @@ async def __onDownloadStarted(api, gid):
 @new_thread
 async def __onDownloadComplete(api, gid):
     try:
-        download = await run_sync(api.get_download, gid)
+        download = await run_sync_to_async(api.get_download, gid)
     except:
         return
     if not config_dict["NO_TASKS_LOGS"]:
         LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
-    if dl := await getDownloadByGid(gid):
+    if dl := await getTaskByGid(gid):
         listener = dl.listener()
         await listener.onDownloadComplete()
-        await run_sync(api.remove, [download], force=True, files=True)
+        await run_sync_to_async(api.remove, [download], force=True, files=True)
 
 
 @new_thread
 async def __onBtDownloadComplete(api, gid):
     seed_start_time = time()
     await sleep(1)
-    download = await run_sync(api.get_download, gid)
+    download = await run_sync_to_async(api.get_download, gid)
     if not config_dict["NO_TASKS_LOGS"]:
         LOGGER.info(f"onBtDownloadComplete: {download.name} - Gid: {gid}")
-    if dl := await getDownloadByGid(gid):
+    if dl := await getTaskByGid(gid):
         listener = dl.listener()
         if listener.select:
             res = download.files
@@ -100,31 +100,31 @@ async def __onBtDownloadComplete(api, gid):
             await clean_unwanted(download.dir)
         if listener.seed:
             try:
-                await run_sync(api.set_options, {"max-upload-limit": "0"}, [download])
+                await run_sync_to_async(api.set_options, {"max-upload-limit": "0"}, [download])
             except Exception as e:
                 LOGGER.error(
                     f"{e} You are not able to seed because you added global option seed-time=0 without adding specific seed_time for this torrent GID: {gid}"
                 )
         else:
             try:
-                await run_sync(api.client.force_pause, gid)
+                await run_sync_to_async(api.client.force_pause, gid)
             except Exception as e:
                 LOGGER.error(f"{e} GID: {gid}")
         await listener.onDownloadComplete()
         download = download.live
         if listener.seed:
             if download.is_complete:
-                if dl := await getDownloadByGid(gid):
+                if dl := await getTaskByGid(gid):
                     if not config_dict["NO_TASKS_LOGS"]:
                         LOGGER.info(f"Cancelling Seed: {download.name}")
                     await listener.onUploadError(
                         f"Seeding stopped with Ratio: {dl.ratio()} and Time: {dl.seeding_time()}"
                     )
-                    await run_sync(api.remove, [download], force=True, files=True)
+                    await run_sync_to_async(api.remove, [download], force=True, files=True)
             else:
                 async with status_dict_lock:
                     if listener.uid not in status_dict:
-                        await run_sync(api.remove, [download], force=True, files=True)
+                        await run_sync_to_async(api.remove, [download], force=True, files=True)
                         return
                     status_dict[listener.uid] = AriaStatus(gid, listener, True)
                     status_dict[listener.uid].start_time = seed_start_time
@@ -132,13 +132,13 @@ async def __onBtDownloadComplete(api, gid):
                     LOGGER.info(f"Seeding started: {download.name} - Gid: {gid}")
                 await update_all_messages()
         else:
-            await run_sync(api.remove, [download], force=True, files=True)
+            await run_sync_to_async(api.remove, [download], force=True, files=True)
 
 
 @new_thread
 async def __onDownloadStopped(api, gid):
     await sleep(6)
-    if dl := await getDownloadByGid(gid):
+    if dl := await getTaskByGid(gid):
         listener = dl.listener()
         await listener.onDownloadError("Dead torrent!")
 
@@ -148,12 +148,12 @@ async def __onDownloadError(api, gid):
     LOGGER.info(f"onDownloadError: {gid}")
     error = "None"
     try:
-        download = await run_sync(api.get_download, gid)
+        download = await run_sync_to_async(api.get_download, gid)
         error = download.error_message
         LOGGER.info(f"Download Error: {error}")
     except:
         pass
-    if dl := await getDownloadByGid(gid):
+    if dl := await getTaskByGid(gid):
         listener = dl.listener()
         await listener.onDownloadError(error)
 

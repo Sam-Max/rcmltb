@@ -73,7 +73,7 @@ class RcloneLeech:
             err_message = (await self.process.stderr.read()).decode()
             await self.__listener.onDownloadError(f"Error: {err_message}!")
 
-    async def cancel_download(self):
+    async def cancel_task(self):
         self.__is_cancelled = True
         if self.process is not None:
             try:

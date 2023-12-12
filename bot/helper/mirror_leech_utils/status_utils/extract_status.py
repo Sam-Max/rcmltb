@@ -4,7 +4,7 @@ from bot.helper.ext_utils.bot_utils import (
     get_readable_file_size,
     MirrorStatus,
     get_readable_time,
-    run_async,
+    run_async_to_sync,
 )
 from bot.helper.ext_utils.misc_utils import get_path_size
 
@@ -58,17 +58,17 @@ class ExtractStatus:
 
     def processed_raw(self):
         if self.__listener.newDir:
-            return run_async(get_path_size, self.__listener.newDir)
+            return run_async_to_sync(get_path_size, self.__listener.newDir)
         else:
-            return run_async(get_path_size, self.__listener.dir) - self.__size
+            return run_async_to_sync(get_path_size, self.__listener.dir) - self.__size
 
-    def download(self):
+    def task(self):
         return self
 
     def type(self):
         return "Extract"
 
-    async def cancel_download(self):
+    async def cancel_task(self):
         if not config_dict["NO_TASKS_LOGS"]:
             LOGGER.info(f"Cancelling Extract: {self.__name}")
         if self.__listener.suproc is not None:

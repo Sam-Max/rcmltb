@@ -1,7 +1,7 @@
 from bot import bot, config_dict
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
-from bot.helper.ext_utils.bot_utils import run_sync
+from bot.helper.ext_utils.bot_utils import run_sync_to_async
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import (
@@ -180,7 +180,7 @@ async def next_page_copy(client, callback_query):
     next_offset = int(next_offset)
     prev_offset = next_offset - 10
     buttons = ButtonMaker()
-    next_info, _next_offset = await run_sync(rcloneListNextPage, info, next_offset)
+    next_info, _next_offset = await run_sync_to_async(rcloneListNextPage, info, next_offset)
 
     if is_second_menu:
         dir_callback = "dest_dir"
@@ -193,7 +193,7 @@ async def next_page_copy(client, callback_query):
             "✅ Select this folder", f"copymenu^second_menu^_^False^{user_id}"
         )
 
-    await run_sync(
+    await run_sync_to_async(
         rcloneListButtonMaker,
         info=next_info,
         button=buttons,

@@ -20,7 +20,7 @@ from bot import (
     leech_log,
 )
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import run_sync, setInterval
+from bot.helper.ext_utils.bot_utils import run_sync_to_async, setInterval
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (
@@ -218,11 +218,11 @@ async def ownerset_callback(client, callback_query):
                 GLOBAL_EXTENSION_FILTER.clear()
                 GLOBAL_EXTENSION_FILTER.extend([".aria2", "!qB"])
             elif data[3] == "TORRENT_TIMEOUT":
-                downloads = await run_sync(aria2.get_downloads)
+                downloads = await run_sync_to_async(aria2.get_downloads)
                 for download in downloads:
                     if not download.is_complete:
                         try:
-                            await run_sync(
+                            await run_sync_to_async(
                                 aria2.client.change_option,
                                 download.gid,
                                 {"bt-stop-timeout": "0"},
@@ -270,7 +270,7 @@ async def ownerset_callback(client, callback_query):
                 value = None
             await query.answer(text=f"{value}", show_alert=True)
         elif data[2] == "resetaria":
-            aria2_defaults = await run_sync(aria2.client.get_global_option)
+            aria2_defaults = await run_sync_to_async(aria2.client.get_global_option)
             if aria2_defaults[data[3]] == aria2_options[data[3]]:
                 await query.answer(
                     text="Value already same as you added in aria.sh!", show_alert=True
@@ -280,11 +280,11 @@ async def ownerset_callback(client, callback_query):
             value = aria2_defaults[data[3]]
             aria2_options[data[3]] = value
             await edit_menus(message, "aria")
-            downloads = await run_sync(aria2.get_downloads)
+            downloads = await run_sync_to_async(aria2.get_downloads)
             for download in downloads:
                 if not download.is_complete:
                     try:
-                        await run_sync(
+                        await run_sync_to_async(
                             aria2.client.change_option, download.gid, {data[2]: value}
                         )
                     except Exception as e:
@@ -295,11 +295,11 @@ async def ownerset_callback(client, callback_query):
             await query.answer()
             aria2_options[data[3]] = ""
             await edit_menus(message, "aria")
-            downloads = await run_sync(aria2.get_downloads)
+            downloads = await run_sync_to_async(aria2.get_downloads)
             for download in downloads:
                 if not download.is_complete:
                     try:
-                        await run_sync(
+                        await run_sync_to_async(
                             aria2.client.change_option, download.gid, {data[2]: ""}
                         )
                     except Exception as e:
@@ -326,7 +326,7 @@ async def ownerset_callback(client, callback_query):
             await query.answer(text=f"{value}", show_alert=True)
         elif data[2] == "emptyqbit":
             await query.answer()
-            await run_sync(get_client().app_set_preferences, {data[3]: ""})
+            await run_sync_to_async(get_client().app_set_preferences, {data[3]: ""})
             qbit_options[data[3]] = ""
             await edit_menus(message, "qbit")
             if DATABASE_URL:
@@ -421,11 +421,11 @@ async def start_env_listener(client, query, user_id, key):
                                     )
                     elif key == "TORRENT_TIMEOUT":
                         value = int(value)
-                        downloads = await run_sync(aria2.get_downloads)
+                        downloads = await run_sync_to_async(aria2.get_downloads)
                         for download in downloads:
                             if not download.is_complete:
                                 try:
-                                    await run_sync(
+                                    await run_sync_to_async(
                                         aria2.client.change_option,
                                         download.gid,
                                         {"bt-stop-timeout": f"{value}"},
@@ -515,13 +515,13 @@ async def start_aria_listener(client, query, user_id, key):
                     elif value.lower() == "false":
                         value = "false"
                     if key in aria2c_global:
-                        await run_sync(aria2.set_global_options, {key: value})
+                        await run_sync_to_async(aria2.set_global_options, {key: value})
                     else:
-                        downloads = await run_sync(aria2.get_downloads)
+                        downloads = await run_sync_to_async(aria2.get_downloads)
                         for download in downloads:
                             if not download.is_complete:
                                 try:
-                                    await run_sync(
+                                    await run_sync_to_async(
                                         aria2.client.change_option,
                                         download.gid,
                                         {key: value},
@@ -567,7 +567,7 @@ async def start_qbit_listener(client, query, user_id, key):
                         value = float(value)
                     elif value.isdigit():
                         value = int(value)
-                    await run_sync(get_client().app_set_preferences, {key: value})
+                    await run_sync_to_async(get_client().app_set_preferences, {key: value})
                     qbit_options[key] = value
                     await edit_menus(message, "qbit")
                     if DATABASE_URL:
