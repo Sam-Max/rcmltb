@@ -141,6 +141,7 @@ async def add_mega_download(mega_link, path: str, listener, name: str):
     if get_mega_link_type(mega_link) == "file":
         await run_sync_to_async(executor.do, api.getPublicNode, (mega_link,))
         node = mega_listener.public_node
+        mega_listener.isFile = True
     else:
         folder_api = MegaApi(None, None, None, "rcmltb")
         folder_api.addListener(mega_listener)
