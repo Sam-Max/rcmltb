@@ -5,7 +5,7 @@ from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
 from bot import DOWNLOAD_DIR, bot, config_dict
 from bot.helper.ext_utils.bot_utils import run_sync_to_async
-from bot.helper.ext_utils.help_messages import LEECH_HELP_MESSAGE
+from bot.helper.ext_utils.help_messages import LEECH_HELP_DICT
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.menu_utils import (
@@ -185,7 +185,7 @@ async def selection_callback(client, query):
         return
     elif cmd[1] == "link":
         await query.answer()
-        question = await sendMessage(LEECH_HELP_MESSAGE, message)
+        question = await sendMessage(LEECH_HELP_DICT["Cmd"], message, LEECH_HELP_DICT["Menu"] )
         try:
             response = await client.listen.Message(
                 filters.text, id=filters.user(user_id), timeout=60

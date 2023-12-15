@@ -8,7 +8,7 @@ from bot import DOWNLOAD_DIR, LOGGER, config_dict, user_data, bot
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import is_url, new_task, run_sync_to_async
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.ext_utils.help_messages import YT_HELP_MESSAGE
+from bot.helper.ext_utils.help_messages import YT_HELP_DICT
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -261,7 +261,7 @@ async def _ytdl(client, message, isLeech=False, sameDir=None):
     try:
         args = parser.parse_args(message_args[1:])
     except Exception as e:
-        await sendMessage(YT_HELP_MESSAGE, message)
+        await sendMessage(YT_HELP_DICT["Cmd"], message, YT_HELP_DICT["Menu"])
         return
 
     select = args.select
@@ -310,7 +310,7 @@ async def _ytdl(client, message, isLeech=False, sameDir=None):
         link = reply_to.text.split("\n", 1)[0].strip()
 
     if not is_url(link):
-        await sendMessage(YT_HELP_MESSAGE, message)
+        await sendMessage(YT_HELP_DICT["Cmd"], message, YT_HELP_DICT["Menu"])
         return
 
     listener = TaskListener(message, tag, user_id, compress, isLeech=isLeech)

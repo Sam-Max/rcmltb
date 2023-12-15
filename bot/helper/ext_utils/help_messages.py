@@ -1,93 +1,130 @@
-YT_HELP_MESSAGE = """
+from bot import bot
+from bot.helper.telegram_helper.button_build import ButtonMaker
+from bot.helper.telegram_helper.message_utils import deleteMessage, editMessage
+from pyrogram.filters import regex
+from pyrogram.handlers import CallbackQueryHandler
+
+
+YT_HELP_DICT = {}
+MIRROR_HELP_DICT = {}
+LEECH_HELP_DICT = {}
+
+ytdl = """ 
+***YT-DL MENU COMMANDS***
+
 1. <b>Send link along with command line:</b>
 <code>/cmd</code> link -s -opt x:y|x1:y1
 
-2. <b>By replying to link:</b>
-
-3. <b>New Name</b>: 
-<code>/cmd</code> link -n newname
-Note: Don't add file extension
-
-4. <b>Quality Buttons:</b>
-Incase default quality added from yt-dlp options using format option and you need to select quality for specific link or links with multi links feature.
-<code>/cmd</code> link -s
-
-5. <b>Zip</b>: -z password
-<code>/cmd</code> link -z (zip)
-<code>/cmd</code> link -z password (zip password protected)
-
-6. <b>Options</b>: -opt
-<code>/cmd</code> link -opt playliststart:^10|fragment_retries:^inf|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)
-Note: Add `^` before integer or float, some values must be numeric and some string.
-Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
-You can add tuple and dict also. Use double quotes inside dict.
-
-7. <b>Multi links only by replying to first link:</b>
-<code>/cmd</code> -i 5(number of links)
+2. <b>By replying to link</b>
 
 <b>NOTES:</b>
 Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options.
 """
 
+quality = """
+4. <b>Quality Buttons:</b>
 
-MIRROR_HELP_MESSAGE = """         
-1. <code>/cmd</code> link 
+<code>/cmd</code> link -s
 
-2. <b>Replying to link/file</b>    
+Incase default quality added from yt-dlp options using format option and you need to select quality for specific link or links with multi links feature.
+"""
 
-3. <b>New Name: </b>
-<code>/cmd</code> link -n newname
-Note: No work with torrents.
+options = """ <b>Options</b>: -opt
 
-4. <b>Extract & Zip: </b>
-<code>/cmd</code> link -e password (extract password protected)
-<code>/cmd</code> link -z password (zip password protected)
+<code>/cmd</code> link -opt playliststart:^10|fragment_retries:^inf|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)
 
-5. <b>Multi by replying to first link/file:</b>
-<code>/cmd</code> -i 5(number of links/files)
+<b>Note:</b> Add `^` before integer or float, some values must be numeric and some string.
+Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
+You can add tuple and dict also. Use double quotes inside dict.
+"""
 
-6. <b>Multi with same directory by replying to first link/file:</b>
-<code>/cmd</code> -i 5(number of links/files) -m foldername
+mirror = """
 
-7. <b>Direct link authorization:</b>
+***MIRROR COMMANDS MENU***
+
+<b>NOTE:</b>
+1. Commands that start with <b>qb</b> are ONLY for torrents.
+"""
+
+new_name = """ 
+<b>New Name: </b>
+
+1. <code>/cmd</code> link -n newname
+
+2. <b>By replying to link/file</b>  
+
+Note: It does not work with torrents.
+"""
+
+extract = """ 
+<b>Extract: </b>
+
+1. <code>/cmd</code> link -e 
+
+2. <code>/cmd</code> link -e password (extract password protected)
+"""
+
+zip = """
+<b>Zip: </b>
+
+1.<code>/cmd</code> link -z
+
+2.<code>/cmd</code> link -z password (zip password protected)
+"""
+
+multi = """
+<b>Multi by replying to first link/file:</b>
+
+<code>/cmd</code> link -i 5 (number of links/files)
+"""
+
+same_multi = """
+<b>Multi (with same directory) by replying to first link/file:</b>
+
+<code>/cmd</code> link -i 5(number of links/files) -m foldername
+"""
+
+direct_link = """
+
+1.<code>/cmd</code> link 
+
+2.<b>Direct link authorization:</b>
+
 <code>/cmd</code> link -au username -ap password
 
-8. <b>Bittorrent selection:</b>    
-<code>/cmd</code> link -s or by replying to file/link
+3. <b>By replying to link</b> 
+"""
 
-9. <b>Bittorrent seed:</b>
-<code>/cmd</code> <b>d</b> link -d ratio:seed_time or by replying to file/link
+torr_select = """
+<b>Bittorrent selection:</b>  
+
+1. <code>/cmd</code> link -s
+
+2. <b>By replying to file/link</b> 
+"""
+
+torr_seed = """
+<b>Bittorrent seed:</b>
+
+1. <code>/cmd</code> link -d ratio:seed_time 
+
+2. <b>By replying to file/link</b> 
+
 To specify ratio and seed time add -d ratio:time. Ex: -d 0.7:10 (ratio and time) or -d 0.7 (only ratio) or -d :10 (only time) where time in minutes.
+"""
 
-10. <b>Screenshots:</b>
+screenshots = """
+<b>Screenshots:</b>
+
 <code>/cmd</code> -ss (default values which is 10 photos).
+
 You can control this value. Example: /cmd -ss 6.
 """
 
-LEECH_HELP_MESSAGE = """  
+leech = """
+***LEECH MENU COMMANDS***
 
 <b>Send link to leech, /ignore to cancel</b>
-
-Options:
-1. <b>New Name</b>: 
-link -n newname
-Note: No work with torrents.
-
-2. <b>Extract & Zip</b>: 
-link -e password (extract password protected)
-link -z password (zip password protected)
-
-3. <b>Direct link authorization:</b>
-link -au username -ap password
-
-4. <b>Bittorrent selection</b>    
-link -s
-
-5. <b>Bittorrent seed</b>:
-link -d ratio:seed_time
-To specify ratio and seed time add -d ratio:time. Ex: -d 0.7:10 (ratio and time) or -d 0.7 (only ratio) or -d :10 (only time) where time in minutes.
-
-Note: You can also reply to link to leech it with options.
 """
 
 RSS_HELP_MESSAGE = """
@@ -130,3 +167,92 @@ PASSWORD_ERROR_MESSAGE = """
 
 <b>Example:</b> link::my password
 """
+
+MIRROR_HELP_DICT = {
+    "Cmd": mirror,
+    "Menu": None,
+    "New_Name": new_name,
+    "Zip": zip,
+    "Extract": extract,
+    "Multi": multi,
+    "Link": direct_link,
+    "Seed": torr_seed,
+    "Select": torr_select,
+    "Screenshot": screenshots,
+}
+
+LEECH_HELP_DICT = {
+    "Cmd": leech,
+    "Menu": None,
+    "New_Name": new_name.replace('<code>/cmd</code>', ''),
+    "Zip": zip.replace('<code>/cmd</code>', ''),
+    "Extract": extract.replace('<code>/cmd</code>', ''),
+    "Multi": multi.replace('<code>/cmd</code>', ''),
+    "Link": direct_link.replace('<code>/cmd</code>', ''),
+    "Seed": torr_seed.replace('<code>/cmd</code>', ''),
+    "Select": torr_select.replace('<code>/cmd</code>', ''),
+    "Screenshot": screenshots.replace('<code>/cmd</code>', ''),
+}
+
+YT_HELP_DICT = {
+    "Cmd": ytdl,
+    "Menu": None,
+    "New_Name": f"{new_name}\nNote: Don't add file extension",
+    "Zip": zip,
+    "Quality": quality,
+    "Options": options,
+    "Multi": multi,
+}
+
+async def create_mirror_help_buttons():
+    buttons = ButtonMaker()
+    for name in list(MIRROR_HELP_DICT.keys())[2:]:
+        buttons.cb_buildbutton(name, f"help m {name}")
+    buttons.cb_buildbutton("Close", f"help close", "footer")
+    MIRROR_HELP_DICT["Menu"] = buttons.build_menu(3)
+
+
+async def create_ytdl_help_buttons():
+    buttons = ButtonMaker()
+    for name in list(YT_HELP_DICT.keys())[2:]:
+        buttons.cb_buildbutton(name, f"help y {name}")
+    buttons.cb_buildbutton("Close", f"help close", "footer")
+    YT_HELP_DICT["Menu"] = buttons.build_menu(3)
+
+
+async def create_leech_help_buttons():
+    buttons = ButtonMaker()
+    for name in list(LEECH_HELP_DICT.keys())[2:]:
+        buttons.cb_buildbutton(name, f"help l {name}")
+    buttons.cb_buildbutton("Close", f"help close", "footer")
+    LEECH_HELP_DICT["Menu"] = buttons.build_menu(3)
+
+
+async def help_callback(_, query):
+    data = query.data.split()
+    message = query.message
+    if data[1] == "close":
+        await deleteMessage(message)
+    elif data[1] == "back":
+        if data[2] == "m":
+            await editMessage(
+                MIRROR_HELP_DICT["Cmd"], message, MIRROR_HELP_DICT["Menu"]
+            )
+        elif data[2] == "l":
+            await editMessage(LEECH_HELP_DICT["Cmd"], message, LEECH_HELP_DICT["Menu"])
+        else:
+            await editMessage(YT_HELP_DICT["Cmd"], message, YT_HELP_DICT["Menu"])
+    elif data[1] == "m":
+        buttons = ButtonMaker()
+        buttons.cb_buildbutton("Back", f"help back m")
+        await editMessage(MIRROR_HELP_DICT[data[2]], message, buttons.build_menu())
+    elif data[1] == "y":
+        buttons = ButtonMaker()
+        buttons.cb_buildbutton("Back", f"help back y")
+        await editMessage(YT_HELP_DICT[data[2]], message, buttons.build_menu())
+    elif data[1] == "l":
+        buttons = ButtonMaker()
+        buttons.cb_buildbutton("Back", f"help back l")
+        await editMessage(LEECH_HELP_DICT[data[2]], message, buttons.build_menu())
+
+bot.add_handler(CallbackQueryHandler(help_callback, filters=regex("^help")))

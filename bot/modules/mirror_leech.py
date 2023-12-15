@@ -21,7 +21,7 @@ from bot.helper.mirror_leech_utils.download_utils.direct_link_generator import (
 )
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.ext_utils.help_messages import MIRROR_HELP_MESSAGE
+from bot.helper.ext_utils.help_messages import MIRROR_HELP_DICT
 from bot.helper.ext_utils.menu_utils import Menus
 from bot.helper.telegram_helper.message_utils import (
     deleteMessage,
@@ -71,7 +71,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
     try:
         args = parser.parse_args(message_args[1:])
     except Exception:
-        await sendMessage(MIRROR_HELP_MESSAGE, message)
+        await sendMessage(MIRROR_HELP_DICT["Cmd"], message, MIRROR_HELP_DICT["Menu"])
         return
 
     select = args.select
@@ -159,7 +159,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
         and not ospath.exists(link)
         and file is None
     ):
-        await sendMessage(MIRROR_HELP_MESSAGE, message)
+        await sendMessage(MIRROR_HELP_DICT["Cmd"], message, MIRROR_HELP_DICT["Menu"])
         return
 
     if (

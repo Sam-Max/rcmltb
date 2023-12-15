@@ -32,7 +32,7 @@ class ButtonMaker:
                 InlineKeyboardButton(text=key, callback_data=data)
             )
 
-    def build_menu(self, n_cols):
+    def build_menu(self, n_cols=1):
         menu = [
             self.first_button[i : i + n_cols]
             for i in range(0, len(self.first_button), n_cols)
