@@ -168,10 +168,39 @@ PASSWORD_ERROR_MESSAGE = """
 <b>Example:</b> link::my password
 """
 
+batch = """
+Send me one of the followings:      
+
+/ignore to cancel
+"""
+
+tg_link = """
+<b>Telegram Link</b> 
+
+Public: https://t.me/channel_name/message_id
+Private: https://t.me/c/channel_id/message_id
+"""
+
+url_link = """
+<b>URL links</b> 
+
+Each link separated by new line 
+
+<b>Direct link authorization:</b>  
+link username password
+"""
+
+txt_file = """
+<b>Txt File</b> 
+
+Each link inside .txt file separated by new line        
+"""
+
+
 MIRROR_HELP_DICT = {
     "Cmd": mirror,
     "Menu": None,
-    "New_Name": new_name,
+    "Rename": new_name,
     "Zip": zip,
     "Extract": extract,
     "Multi": multi,
@@ -184,31 +213,40 @@ MIRROR_HELP_DICT = {
 LEECH_HELP_DICT = {
     "Cmd": leech,
     "Menu": None,
-    "New_Name": new_name.replace('<code>/cmd</code>', ''),
-    "Zip": zip.replace('<code>/cmd</code>', ''),
-    "Extract": extract.replace('<code>/cmd</code>', ''),
-    "Multi": multi.replace('<code>/cmd</code>', ''),
-    "Link": direct_link.replace('<code>/cmd</code>', ''),
-    "Seed": torr_seed.replace('<code>/cmd</code>', ''),
-    "Select": torr_select.replace('<code>/cmd</code>', ''),
-    "Screenshot": screenshots.replace('<code>/cmd</code>', ''),
+    "Rename": new_name.replace("<code>/cmd</code>", ""),
+    "Zip": zip.replace("<code>/cmd</code>", ""),
+    "Extract": extract.replace("<code>/cmd</code>", ""),
+    "Multi": multi.replace("<code>/cmd</code>", ""),
+    "Link": direct_link.replace("<code>/cmd</code>", ""),
+    "Seed": torr_seed.replace("<code>/cmd</code>", ""),
+    "Select": torr_select.replace("<code>/cmd</code>", ""),
+    "Screenshot": screenshots.replace("<code>/cmd</code>", ""),
 }
 
 YT_HELP_DICT = {
     "Cmd": ytdl,
     "Menu": None,
-    "New_Name": f"{new_name}\nNote: Don't add file extension",
+    "Rename": f"{new_name}\nNote: Don't add file extension",
     "Zip": zip,
     "Quality": quality,
     "Options": options,
     "Multi": multi,
 }
 
+BATCH_HELP_DICT = {
+    "Cmd": batch,
+    "Menu": None,
+    "TG-Link": tg_link,
+    "Txt-File": txt_file,
+    "Url-Link": url_link,
+}
+
+
 async def create_mirror_help_buttons():
     buttons = ButtonMaker()
     for name in list(MIRROR_HELP_DICT.keys())[2:]:
         buttons.cb_buildbutton(name, f"help m {name}")
-    buttons.cb_buildbutton("Close", f"help close", "footer")
+    buttons.cb_buildbutton("✘ Close Menu", f"help close", "footer")
     MIRROR_HELP_DICT["Menu"] = buttons.build_menu(3)
 
 
@@ -216,7 +254,7 @@ async def create_ytdl_help_buttons():
     buttons = ButtonMaker()
     for name in list(YT_HELP_DICT.keys())[2:]:
         buttons.cb_buildbutton(name, f"help y {name}")
-    buttons.cb_buildbutton("Close", f"help close", "footer")
+    buttons.cb_buildbutton("✘ Close Menu", f"help close", "footer")
     YT_HELP_DICT["Menu"] = buttons.build_menu(3)
 
 
@@ -224,8 +262,16 @@ async def create_leech_help_buttons():
     buttons = ButtonMaker()
     for name in list(LEECH_HELP_DICT.keys())[2:]:
         buttons.cb_buildbutton(name, f"help l {name}")
-    buttons.cb_buildbutton("Close", f"help close", "footer")
+    buttons.cb_buildbutton("✘ Close Menu", f"help close", "footer")
     LEECH_HELP_DICT["Menu"] = buttons.build_menu(3)
+
+
+async def create_batch_help_buttons():
+    buttons = ButtonMaker()
+    for name in list(BATCH_HELP_DICT.keys())[2:]:
+        buttons.cb_buildbutton(name, f"help b {name}")
+    buttons.cb_buildbutton("✘ Close Menu", f"help close", "footer")
+    BATCH_HELP_DICT["Menu"] = buttons.build_menu(3)
 
 
 async def help_callback(_, query):
@@ -240,19 +286,26 @@ async def help_callback(_, query):
             )
         elif data[2] == "l":
             await editMessage(LEECH_HELP_DICT["Cmd"], message, LEECH_HELP_DICT["Menu"])
+        elif data[2] == "b":
+            await editMessage(BATCH_HELP_DICT["Cmd"], message, BATCH_HELP_DICT["Menu"])
         else:
             await editMessage(YT_HELP_DICT["Cmd"], message, YT_HELP_DICT["Menu"])
     elif data[1] == "m":
         buttons = ButtonMaker()
-        buttons.cb_buildbutton("Back", f"help back m")
+        buttons.cb_buildbutton("⬅️ Back", f"help back m")
         await editMessage(MIRROR_HELP_DICT[data[2]], message, buttons.build_menu())
     elif data[1] == "y":
         buttons = ButtonMaker()
-        buttons.cb_buildbutton("Back", f"help back y")
+        buttons.cb_buildbutton("⬅️ Back", f"help back y")
         await editMessage(YT_HELP_DICT[data[2]], message, buttons.build_menu())
     elif data[1] == "l":
         buttons = ButtonMaker()
-        buttons.cb_buildbutton("Back", f"help back l")
+        buttons.cb_buildbutton("⬅️ Back", f"help back l")
         await editMessage(LEECH_HELP_DICT[data[2]], message, buttons.build_menu())
+    elif data[1] == "b":
+        buttons = ButtonMaker()
+        buttons.cb_buildbutton("⬅️ Back", f"help back b")
+        await editMessage(BATCH_HELP_DICT[data[2]], message, buttons.build_menu())
+
 
 bot.add_handler(CallbackQueryHandler(help_callback, filters=regex("^help")))

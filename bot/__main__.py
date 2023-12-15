@@ -13,7 +13,7 @@ from bot import (
     scheduler,
 )
 from os import path as ospath, remove as osremove, execl as osexecl
-from bot.helper.ext_utils.help_messages import create_leech_help_buttons, create_mirror_help_buttons, create_ytdl_help_buttons
+from bot.helper.ext_utils.help_messages import create_batch_help_buttons, create_leech_help_buttons, create_mirror_help_buttons, create_ytdl_help_buttons
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
 from sys import executable
@@ -125,9 +125,12 @@ async def mirror_worker(queue: Queue):
 
 async def main():
     await start_cleanup()
+    
     await create_mirror_help_buttons()
     await create_ytdl_help_buttons()
     await create_leech_help_buttons()
+    await create_batch_help_buttons()
+
     await torr_search.initiate_search_tools()
     await run_sync_to_async(start_aria2_listener, wait=False)
 
