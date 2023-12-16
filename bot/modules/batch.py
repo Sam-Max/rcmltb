@@ -207,16 +207,17 @@ async def _multi(message, link, value, multi, isLeech):
         await download(nextmsg, link, multi, isLeech, value)
 
 
-mirrorbatch_handler = MessageHandler(
-    mirror_batch,
-    filters=filters.command(BotCommands.MirrorBatchCommand)
-    & (CustomFilters.user_filter | CustomFilters.chat_filter),
+bot.add_handler(
+    MessageHandler(
+        mirror_batch,
+        filters=filters.command(BotCommands.MirrorBatchCommand)
+        & (CustomFilters.user_filter | CustomFilters.chat_filter),
+    )
 )
-leechbatch__handler = MessageHandler(
-    leech_batch,
-    filters=filters.command(BotCommands.LeechBatchCommand)
-    & (CustomFilters.user_filter | CustomFilters.chat_filter),
+bot.add_handler(
+    MessageHandler(
+        leech_batch,
+        filters=filters.command(BotCommands.LeechBatchCommand)
+        & (CustomFilters.user_filter | CustomFilters.chat_filter),
+    )
 )
-
-bot.add_handler(leechbatch__handler)
-bot.add_handler(mirrorbatch_handler)

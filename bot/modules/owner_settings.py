@@ -567,7 +567,9 @@ async def start_qbit_listener(client, query, user_id, key):
                         value = float(value)
                     elif value.isdigit():
                         value = int(value)
-                    await run_sync_to_async(get_client().app_set_preferences, {key: value})
+                    await run_sync_to_async(
+                        get_client().app_set_preferences, {key: value}
+                    )
                     qbit_options[key] = value
                     await edit_menus(message, "qbit")
                     if DATABASE_URL:
@@ -578,14 +580,10 @@ async def start_qbit_listener(client, query, user_id, key):
         await question.delete()
 
 
-owner_settings_handler = MessageHandler(
-    handle_ownerset,
-    filters=command(BotCommands.OwnerSetCommand) & (CustomFilters.owner_filter),
+bot.add_handler(
+    MessageHandler(
+        handle_ownerset,
+        filters=command(BotCommands.OwnerSetCommand) & (CustomFilters.owner_filter),
+    )
 )
-owner_settings_cb = CallbackQueryHandler(
-    ownerset_callback, filters=regex(r"ownersetmenu")
-)
-
-
-bot.add_handler(owner_settings_handler)
-bot.add_handler(owner_settings_cb)
+bot.add_handler(CallbackQueryHandler(ownerset_callback, filters=regex(r"ownersetmenu")))

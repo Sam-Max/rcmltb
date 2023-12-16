@@ -64,14 +64,11 @@ async def status_pages(client, callback_query):
         await turn(data)
 
 
-status_handlers = MessageHandler(
-    status_handler,
-    filters=filters.command(BotCommands.StatusCommand)
-    & (CustomFilters.user_filter | CustomFilters.chat_filter),
+bot.add_handler(
+    MessageHandler(
+        status_handler,
+        filters=filters.command(BotCommands.StatusCommand)
+        & (CustomFilters.user_filter | CustomFilters.chat_filter),
+    )
 )
-status_pages_handler = CallbackQueryHandler(
-    status_pages, filters=filters.regex("status")
-)
-
-bot.add_handler(status_handlers)
-bot.add_handler(status_pages_handler)
+bot.add_handler(CallbackQueryHandler(status_pages, filters=filters.regex("status")))

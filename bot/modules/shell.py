@@ -40,7 +40,6 @@ async def shell(client, message):
         await message.reply_text("No Reply")
 
 
-shell_handler = MessageHandler(
+bot.add_handler(MessageHandler(
     shell, filters=command(BotCommands.ShellCommand) & (CustomFilters.owner_filter)
-)
-bot.add_handler(shell_handler)
+))

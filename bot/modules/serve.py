@@ -131,14 +131,13 @@ async def list_remotes(message):
     )
 
 
-serve_handler = MessageHandler(
-    serve,
-    filters=filters.command(BotCommands.ServeCommand)
-    & (CustomFilters.owner_filter | CustomFilters.chat_filter),
+bot.add_handler(
+    MessageHandler(
+        serve,
+        filters=filters.command(BotCommands.ServeCommand)
+        & (CustomFilters.owner_filter | CustomFilters.chat_filter),
+    )
 )
-serve_cb_handler = CallbackQueryHandler(
-    serve_callback, filters=filters.regex("servemenu")
+bot.add_handler(
+    CallbackQueryHandler(serve_callback, filters=filters.regex("servemenu"))
 )
-
-bot.add_handler(serve_handler)
-bot.add_handler(serve_cb_handler)

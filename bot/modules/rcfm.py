@@ -154,7 +154,9 @@ async def next_page_myfiles(client, callback_query):
     buttons.cb_buildbutton(f"⚙️ Folder Options", f"myfilesmenu^folder_action^{user_id}")
     buttons.cb_buildbutton("🔍 Search", f"myfilesmenu^search^{user_id}")
 
-    next_info, _next_offset = await run_sync_to_async(rcloneListNextPage, info, next_offset)
+    next_info, _next_offset = await run_sync_to_async(
+        rcloneListNextPage, info, next_offset
+    )
 
     await run_sync_to_async(
         rcloneListButtonMaker,
@@ -184,17 +186,12 @@ async def next_page_myfiles(client, callback_query):
     await editMessage(msg, message, reply_markup=buttons.build_menu(1))
 
 
-myfiles_handler = MessageHandler(
-    handle_myfiles,
-    filters=filters.command(BotCommands.RcfmCommand)
-    & (CustomFilters.user_filter | CustomFilters.chat_filter),
+bot.add_handler(CallbackQueryHandler(myfiles_callback, filters=regex("myfilesmenu")))
+bot.add_handler(CallbackQueryHandler(next_page_myfiles, filters=regex("next_myfiles")))
+bot.add_handler(
+    MessageHandler(
+        handle_myfiles,
+        filters=filters.command(BotCommands.RcfmCommand)
+        & (CustomFilters.user_filter | CustomFilters.chat_filter),
+    )
 )
-next_page_myfiles_cb = CallbackQueryHandler(
-    next_page_myfiles, filters=regex("next_myfiles")
-)
-myfiles_cb = CallbackQueryHandler(myfiles_callback, filters=regex("myfilesmenu"))
-
-
-bot.add_handler(myfiles_cb)
-bot.add_handler(next_page_myfiles_cb)
-bot.add_handler(myfiles_handler)

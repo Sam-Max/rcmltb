@@ -32,14 +32,11 @@ async def storage_menu_cb(client, callback_query):
     if int(cmd[-1]) != user_id:
         await query.answer("This menu is not for you!", show_alert=True)
         return
-
     if cmd[1] == "remote":
         await rclone_about(message, query, cmd[2], user_id)
-
     elif cmd[1] == "back":
         await list_remotes(message, menu_type=Menus.STORAGE, edit=True)
         await query.answer()
-
     elif cmd[1] == "close":
         await query.answer()
         await message.delete()
@@ -93,12 +90,11 @@ def get_used_bar(percentage):
     )
 
 
-storage = MessageHandler(
-    handle_storage,
-    filters=command(BotCommands.StorageCommand)
-    & (CustomFilters.user_filter | CustomFilters.chat_filter),
+bot.add_handler(
+    MessageHandler(
+        handle_storage,
+        filters=command(BotCommands.StorageCommand)
+        & (CustomFilters.user_filter | CustomFilters.chat_filter),
+    )
 )
-storage_callback = CallbackQueryHandler(storage_menu_cb, filters=regex("storagemenu"))
-
-bot.add_handler(storage)
-bot.add_handler(storage_callback)
+bot.add_handler(CallbackQueryHandler(storage_menu_cb, filters=regex("storagemenu")))

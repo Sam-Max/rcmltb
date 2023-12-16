@@ -23,12 +23,12 @@ async def myfiles_settings(message, remote, remote_path, edit=False, is_folder=F
     buttons = ButtonMaker()
 
     if len(remote_path) == 0:
-        buttons.cb_buildbutton("📁 Calculate folder size", f"myfilesmenu^size^{user_id}")
+        buttons.cb_buildbutton("📁 Folder size", f"myfilesmenu^size^{user_id}")
         buttons.cb_buildbutton(
-            "📁 Create empty directory", f"myfilesmenu^mkdir^{user_id}"
+            "📁 Create empty dir", f"myfilesmenu^mkdir^{user_id}"
         )
         buttons.cb_buildbutton(
-            "🗑 Delete empty directories", f"myfilesmenu^rmdir^{user_id}"
+            "🗑 Delete empty dir", f"myfilesmenu^rmdir^{user_id}"
         )
         buttons.cb_buildbutton(
             "🗑 Delete duplicate files", f"myfilesmenu^dedupe^{user_id}"
@@ -36,7 +36,7 @@ async def myfiles_settings(message, remote, remote_path, edit=False, is_folder=F
     else:
         if is_folder:
             buttons.cb_buildbutton(
-                "📁 Calculate folder size", f"myfilesmenu^size^{user_id}"
+                "📁 Folder size", f"myfilesmenu^size^{user_id}"
             )
             buttons.cb_buildbutton(
                 "🗑 Delete duplicate files", f"myfilesmenu^dedupe^{user_id}"
@@ -45,10 +45,10 @@ async def myfiles_settings(message, remote, remote_path, edit=False, is_folder=F
                 "🗑 Delete folder", f"myfilesmenu^delete^folder^{user_id}"
             )
             buttons.cb_buildbutton(
-                "📁 Create empty directory", f"myfilesmenu^mkdir^{user_id}"
+                "📁 Create empty dir", f"myfilesmenu^mkdir^{user_id}"
             )
             buttons.cb_buildbutton(
-                "🗑 Delete empty directories", f"myfilesmenu^rmdir^{user_id}"
+                "🗑 Delete empty dir", f"myfilesmenu^rmdir^{user_id}"
             )
         else:
             buttons.cb_buildbutton("📝 Rename", f"myfilesmenu^rename^file^{user_id}")
@@ -360,11 +360,11 @@ async def rclone_rename(client, message, remote, remote_path, tag):
                         dest = list_base[:-1]
                         dest = "/".join(dest)
                         file = list_base[-1]
-                        pathname, ext = splitext(file)
+                        _, ext = splitext(file)
                         path = f"{dest}/{new_name}{ext}"
                     else:
                         file = list_base[0]
-                        pathname, ext = splitext(file)
+                        _, ext = splitext(file)
                         path = f"{new_name}{ext}"
                     cmd = [
                         "rclone",

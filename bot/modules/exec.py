@@ -42,7 +42,8 @@ async def execute(client, message):
         await message.reply_text("No Reply")
 
 
-exec_handler = MessageHandler(
-    execute, filters=command(BotCommands.ExecCommand) & (CustomFilters.owner_filter)
+bot.add_handler(
+    MessageHandler(
+        execute, filters=command(BotCommands.ExecCommand) & (CustomFilters.owner_filter)
+    )
 )
-bot.add_handler(exec_handler)

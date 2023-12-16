@@ -83,12 +83,9 @@ async def start_bisync(message, path):
     await message.delete()
 
 
-bisync = MessageHandler(
+bot.add_handler(MessageHandler(
     handle_bisync,
     filters=command(BotCommands.BiSyncCommand)
     & (CustomFilters.user_filter | CustomFilters.chat_filter),
-)
-bysync_callback = CallbackQueryHandler(bysync_cb, filters=regex("bisyncmenu"))
-
-bot.add_handler(bisync)
-bot.add_handler(bysync_callback)
+))
+bot.add_handler(CallbackQueryHandler(bysync_cb, filters=regex("bisyncmenu")))

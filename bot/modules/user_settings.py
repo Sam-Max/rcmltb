@@ -261,14 +261,13 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await query.message.reply_to_message.delete()
 
 
-user_set_handler = MessageHandler(
-    user_settings,
-    filters=filters.command(BotCommands.UserSetCommand)
-    & (CustomFilters.user_filter | CustomFilters.chat_filter),
+bot.add_handler(
+    MessageHandler(
+        user_settings,
+        filters=filters.command(BotCommands.UserSetCommand)
+        & (CustomFilters.user_filter | CustomFilters.chat_filter),
+    )
 )
-but_set_handler = CallbackQueryHandler(
-    edit_user_settings, filters=filters.regex("userset")
+bot.add_handler(
+    CallbackQueryHandler(edit_user_settings, filters=filters.regex("userset"))
 )
-
-bot.add_handler(user_set_handler)
-bot.add_handler(but_set_handler)

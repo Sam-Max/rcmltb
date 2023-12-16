@@ -32,11 +32,10 @@ listener_dict = {}
 
 async def handle_copy(client, message):
     user_id = message.from_user.id
-    message_id = message.id
     tag = f"@{message.from_user.username}"
     if await is_rclone_config(user_id, message):
         listener = TaskListener(message, tag, user_id)
-        listener_dict[message_id] = [listener]
+        listener_dict[ message.id] = [listener]
         if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters._owner_query(user_id):
             await list_remotes(
                 message, remote_type="remote_origin", menu_type=Menus.COPY
@@ -180,7 +179,9 @@ async def next_page_copy(client, callback_query):
     next_offset = int(next_offset)
     prev_offset = next_offset - 10
     buttons = ButtonMaker()
-    next_info, _next_offset = await run_sync_to_async(rcloneListNextPage, info, next_offset)
+    next_info, _next_offset = await run_sync_to_async(
+        rcloneListNextPage, info, next_offset
+    )
 
     if is_second_menu:
         dir_callback = "dest_dir"
@@ -228,14 +229,12 @@ async def next_page_copy(client, callback_query):
         await editMessage(msg, message, reply_markup=buttons.build_menu(1))
 
 
-copy_handler = MessageHandler(
-    handle_copy,
-    filters=command(BotCommands.CopyCommand)
-    & (CustomFilters.user_filter | CustomFilters.chat_filter),
+bot.add_handler(
+    MessageHandler(
+        handle_copy,
+        filters=command(BotCommands.CopyCommand)
+        & (CustomFilters.user_filter | CustomFilters.chat_filter),
+    )
 )
-next_page_cb = CallbackQueryHandler(next_page_copy, filters=regex("next_copy"))
-copy_menu_cb = CallbackQueryHandler(copy_menu_callback, filters=regex("copymenu"))
-
-bot.add_handler(copy_handler)
-bot.add_handler(next_page_cb)
-bot.add_handler(copy_menu_cb)
+bot.add_handler(CallbackQueryHandler(next_page_copy, filters=regex("next_copy")))
+bot.add_handler(CallbackQueryHandler(copy_menu_callback, filters=regex("copymenu")))

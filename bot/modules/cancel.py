@@ -116,21 +116,24 @@ async def cancel_all_(status):
     return True
 
 
-cancel_task_handler = MessageHandler(
-    cancel_task,
-    filters.command(BotCommands.CancelCommand)
-    & (CustomFilters.user_filter | CustomFilters.chat_filter),
+bot.add_handler(
+    MessageHandler(
+        cancel_task,
+        filters.command(BotCommands.CancelCommand)
+        & (CustomFilters.user_filter | CustomFilters.chat_filter),
+    )
 )
-cancel_all_handler = MessageHandler(
-    cancell_all_buttons,
-    filters=filters.command(BotCommands.CancelAllCommand)
-    & (CustomFilters.owner_filter | CustomFilters.sudo_filter),
+bot.add_handler(
+    MessageHandler(
+        cancell_all_buttons,
+        filters=filters.command(BotCommands.CancelAllCommand)
+        & (CustomFilters.owner_filter | CustomFilters.sudo_filter),
+    )
 )
-cancel_all_cb = CallbackQueryHandler(
-    cancel_all_update,
-    filters=regex("canall") & (CustomFilters.owner_filter | CustomFilters.sudo_filter),
+bot.add_handler(
+    CallbackQueryHandler(
+        cancel_all_update,
+        filters=regex("canall")
+        & (CustomFilters.owner_filter | CustomFilters.sudo_filter),
+    )
 )
-
-bot.add_handler(cancel_task_handler)
-bot.add_handler(cancel_all_handler)
-bot.add_handler(cancel_all_cb)

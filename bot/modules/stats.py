@@ -51,10 +51,10 @@ async def stats(client, message):
     await sendMessage(stats, message)
 
 
-stats_handler = MessageHandler(
-    stats,
-    filters=command(BotCommands.StatsCommand)
-    & (CustomFilters.user_filter | CustomFilters.chat_filter),
+bot.add_handler(
+    MessageHandler(
+        stats,
+        filters=command(BotCommands.StatsCommand)
+        & (CustomFilters.user_filter | CustomFilters.chat_filter),
+    )
 )
-
-bot.add_handler(stats_handler)
