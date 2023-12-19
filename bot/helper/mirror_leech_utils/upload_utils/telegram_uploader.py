@@ -66,7 +66,8 @@ class TelegramUploader:
                     else:
                         await self.client.send_message(
                             text=f"<b>📂 Folder: </b> {folder_name}",
-                            chat_id=self.__sent_msg.chat.id)
+                            chat_id=self.__sent_msg.chat.id,
+                        )
                 self._iteration += 1
                 for file in sorted(filenames):
                     self.__upload_path = ospath.join(dirpath, file)
@@ -180,7 +181,7 @@ class TelegramUploader:
                         disable_notification=True,
                         progress=self.__upload_progress,
                     )
-            if is_video:
+            elif is_video:
                 if self.__listener.screenshots:
                     await self._send_screenshots()
                 if not up_path.upper().endswith(("MKV", "MP4")):
@@ -299,13 +300,21 @@ class TelegramUploader:
                         disable_notification=True,
                         progress=self.__upload_progress,
                     )
-            if self.__thumb is None and thumb is not None and await aiopath.exists(thumb):
+            if (
+                self.__thumb is None
+                and thumb is not None
+                and await aiopath.exists(thumb)
+            ):
                 osremove(thumb)
         except FloodWait as f:
             LOGGER.warning(str(f))
             await sleep(f.value)
         except Exception as err:
-            if self.__thumb is None and thumb is not None and await aiopath.exists(thumb):
+            if (
+                self.__thumb is None
+                and thumb is not None
+                and await aiopath.exists(thumb)
+            ):
                 osremove(thumb)
             err_type = "RPCError: " if isinstance(err, RPCError) else ""
             LOGGER.error(f"{err_type}{err}. Path: {up_path}")
@@ -355,11 +364,13 @@ class TelegramUploader:
                 else:
                     outputs.remove(m)
             if outputs:
-                self.__sent_msg = (await self.__sent_msg.reply_media_group(
-                    media=inputs,
-                    quote=True,
-                    disable_notification=True,
-                ))[-1]
+                self.__sent_msg = (
+                    await self.__sent_msg.reply_media_group(
+                        media=inputs,
+                        quote=True,
+                        disable_notification=True,
+                    )
+                )[-1]
                 for m in outputs:
                     await aioremove(m)
 
