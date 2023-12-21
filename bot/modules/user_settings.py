@@ -7,7 +7,7 @@ from pyrogram import filters
 from bot import (
     DATABASE_URL,
     IS_PREMIUM_USER,
-    TG_MAX_FILE_SIZE,
+    TG_MAX_SPLIT_SIZE,
     bot,
     config_dict,
     user_data,
@@ -30,7 +30,10 @@ def get_user_settings(from_user):
     name = from_user.first_name
     buttons = ButtonMaker()
     thumbpath = f"Thumbnails/{user_id}.jpg"
+    rclone_conf = f"rclone/{user_id}/rclone.conf"
+    token_pickle = f"tokens/{user_id}.pickle"
     user_dict = user_data.get(user_id, {})
+
     if (
         user_dict.get("as_doc", False)
         or "as_doc" not in user_dict
@@ -57,6 +60,19 @@ def get_user_settings(from_user):
     else:
         equal_splits = "Disabled"
 
+    rccmsg = "Exists" if ospath.exists(rclone_conf) else "Not Exists"
+
+    tokenmsg = "Exists" if ospath.exists(token_pickle) else "Not Exists"
+
+    index = user_dict["index_url"] if user_dict.get("index_url", False) else "None"
+
+    if user_dict.get("gdrive_id", False):
+        gdrive_id = user_dict["gdrive_id"]
+    elif GI := config_dict["GDRIVE_FOLDER_ID"]:
+        gdrive_id = GI
+    else:
+        gdrive_id = "None"
+
     buttons.cb_buildbutton("YT-DLP Options", f"userset {user_id} yto")
     if user_dict.get("yt_opt", False):
         ytopt = user_dict["yt_opt"]
@@ -73,12 +89,20 @@ def get_user_settings(from_user):
 
     buttons.cb_buildbutton("✘ Close Menu", f"userset {user_id} close")
 
-    text = f"""<b>Settings for {name}</b>
+    text = f"""
+<b>Settings for {name}</b>
+
 Leech Type: <b>{ltype}</b>
 Custom Thumbnail: <b>{thumbmsg}</b>
 Leech Split Size: <b>{split_size}</b>
 Equal Splits: <b>{equal_splits}</b>
-Yy-dlp options: <b><code>{escape(ytopt)}</code></b>"""
+Yy-dlp options: <b><code>{escape(ytopt)}</code></b>
+Equal Splits: <b>{equal_splits}</b>
+Rclone Config <b>{rccmsg}</b>
+Gdrive Token <b>{tokenmsg}</b>
+Gdrive ID is <code>{gdrive_id}</code>
+Index Link is <code>{index}</code>
+"""
 
     return text, buttons.build_menu(1)
 
@@ -105,7 +129,7 @@ async def set_yt_options(_, message, query):
 
 async def leech_split_size(_, message, query):
     user_id = message.from_user.id
-    value = min(int(message.text), TG_MAX_FILE_SIZE)
+    value = min(int(message.text), TG_MAX_SPLIT_SIZE)
     update_user_ldata(user_id, "split_size", value)
     await message.delete()
     await update_user_settings(query)

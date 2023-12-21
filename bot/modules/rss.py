@@ -217,7 +217,7 @@ async def rssUpdate(client, message, pre_event, state):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     titles = message.text.split()
-    is_sudo = await CustomFilters.sudo_filter(client, message)
+    is_sudo = await CustomFilters.sudo_filter("", message)
     updated = []
     for title in titles:
         title = title.strip()
@@ -467,7 +467,7 @@ async def rssListener(client, query):
     user_id = query.from_user.id
     message = query.message
     data = query.data.split()
-    if int(data[2]) != user_id and not await CustomFilters.sudo_filter(client, query):
+    if int(data[2]) != user_id and not await CustomFilters.sudo_filter("", query):
         await query.answer(
             text="You don't have permission to use these buttons!", show_alert=True
         )

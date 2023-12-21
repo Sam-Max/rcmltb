@@ -108,6 +108,9 @@ def is_url(url):
 def is_gdrive_link(url):
     return "drive.google.com" in url
 
+def is_gdrive_id(id_):
+    return bool(re_match(r'^(mtp:)?(?:[a-zA-Z0-9-_]{33}|[a-zA-Z0-9_-]{19})$|^gdl$|^root$', id_))
+
 
 def is_mega_link(url):
     return "mega.nz" in url or "mega.co.nz" in url

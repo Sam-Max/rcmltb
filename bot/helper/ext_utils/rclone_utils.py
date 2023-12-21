@@ -1,4 +1,4 @@
-from os import getcwd, path as ospath
+from os import path as ospath
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 from json import loads as jsonloads
@@ -23,11 +23,14 @@ from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclo
 
 
 async def is_remote_selected(user_id, message):
-    if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters._owner_query(user_id):
-        if DEFAULT_OWNER_REMOTE := config_dict["DEFAULT_OWNER_REMOTE"]:
+    if CustomFilters.sudo_filter("", message):
+        if DEFAULT_OWNER_REMOTE:= config_dict['DEFAULT_OWNER_REMOTE']:
             update_rclone_data("MIRROR_SELECT_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
             return True
-        elif get_rclone_data("MIRROR_SELECT_REMOTE", user_id) or len(remotes_multi) > 0:
+    if config_dict["MULTI_RCLONE_CONFIG"]:
+        if get_rclone_data("MIRROR_SELECT_REMOTE", user_id):
+            return True
+        elif len(remotes_multi) > 0:
             return True
         else:
             await sendMessage(
@@ -40,31 +43,38 @@ async def is_remote_selected(user_id, message):
 
 
 async def is_rclone_config(user_id, message, isLeech=False):
-    path = f"{getcwd()}/rclone/"
-    if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters._owner_query(user_id):
-        path = ospath.join(path, f"{user_id}", "rclone.conf")
-        msg = "Send a rclone config file, use /files command"
+    if config_dict['MULTI_RCLONE_CONFIG']:
+        path = f"rclone/{user_id}/rclone.conf"
+        no_path_msg= "Send a rclone config file, use /files command"
     else:
-        path = ospath.join(path, "rclone_global", "rclone.conf")
-        msg = "Global rclone not found"
+        if CustomFilters.sudo(user_id):
+            path = f"rclone/{user_id}/rclone.conf"
+            no_path_msg= "Send a rclone config file, use /files command"
+        else:
+            path = f"rclone/rclone_global/rclone.conf"
+            no_path_msg= "Rclone config file not found"
+
     if ospath.exists(path):
         return True
     else:
-        if isLeech:
+        if isLeech: 
             return True
         else:
-            await sendMessage(msg, message)
-            return False
+            await sendMessage(no_path_msg, message)
+            return False 
 
 
 async def get_rclone_path(user_id, message=None):
-    path = f"{getcwd()}/rclone/"
-    if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters._owner_query(user_id):
-        rc_path = ospath.join(path, f"{user_id}", "rclone.conf")
+    if config_dict['MULTI_RCLONE_CONFIG']:
+        path = f"rclone/{user_id}/rclone.conf"
     else:
-        rc_path = ospath.join(path, "rclone_global", "rclone.conf")
-    if ospath.exists(rc_path):
-        return rc_path
+        if CustomFilters.sudo(user_id):
+            path = f"rclone/{user_id}/rclone.conf"
+        else:
+            path = f"rclone/rclone_global/rclone.conf"
+    
+    if ospath.exists(path): 
+        return path 
     else:
         await sendMessage("Rclone path not found", message)
         raise NotRclonePathFound(f"ERROR: Rclone path not found")
@@ -128,7 +138,7 @@ async def list_remotes(
         if conf.get(remote, "type") == "crypt":
             is_crypt = True
             crypt_icon = "🔐"
-        if CustomFilters._owner_query(user_id) and config_dict["MULTI_REMOTE_UP"]:
+        if CustomFilters.sudo_filter("", message) and config_dict["MULTI_REMOTE_UP"]:
             if remote in remotes_multi:
                 prev_icon = "✅"
             buttons.cb_buildbutton(
@@ -393,11 +403,11 @@ async def create_next_buttons(
     )
 
 
-async def get_drive_link(path, config_path, mime_type):
+async def get_drive_link(rclone_path, config_path, mime_type):
     if mime_type == "Folder":
-        name = path.split("/")[-2]
+        name = rclone_path.split("/")[-2]
     else:
-        name = path.split("/")[-1]
+        name = rclone_path.split("/")[-1]
     cmd = [
         "rclone",
         "lsjson",
@@ -405,7 +415,7 @@ async def get_drive_link(path, config_path, mime_type):
         "--fast-list",
         "--no-mimetype",
         "--no-modtime",
-        path,
+        rclone_path,
     ]
     res, err, code = await cmd_exec(cmd)
     if code == 0:

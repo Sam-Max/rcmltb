@@ -6,7 +6,7 @@ from bot import (
     DATABASE_URL,
     GLOBAL_EXTENSION_FILTER,
     LOGGER,
-    TG_MAX_FILE_SIZE,
+    TG_MAX_SPLIT_SIZE,
     bot,
     Interval,
     aria2,
@@ -43,7 +43,7 @@ default_values = {
     "DOWNLOAD_DIR": "/usr/src/app/downloads/",
     "UPSTREAM_BRANCH": "master",
     "STATUS_UPDATE_INTERVAL": 10,
-    "LEECH_SPLIT_SIZE": TG_MAX_FILE_SIZE,
+    "LEECH_SPLIT_SIZE": TG_MAX_SPLIT_SIZE,
     "SEARCH_LIMIT": 0,
     "RSS_DELAY": 900,
 }
@@ -444,7 +444,7 @@ async def start_env_listener(client, query, user_id, key):
                         if not value.endswith("/"):
                             value = f"{value}/"
                     elif key == "LEECH_SPLIT_SIZE":
-                        value = min(int(value), TG_MAX_FILE_SIZE)
+                        value = min(int(value), TG_MAX_SPLIT_SIZE)
                     elif key == "LEECH_LOG":
                         leech_log.clear()
                         aid = value.split()

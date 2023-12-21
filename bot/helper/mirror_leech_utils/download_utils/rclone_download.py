@@ -27,8 +27,8 @@ class RcloneLeech:
 
     async def leech(self):
         conf_path = await get_rclone_path(self.__user_id, self.__listener.message)
-        if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters._owner_query(
-            self.__user_id
+        if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters.sudo_filter(
+            "", self.__listener.message
         ):
             leech_drive = get_rclone_data("LEECH_REMOTE", self.__user_id)
             cmd = [

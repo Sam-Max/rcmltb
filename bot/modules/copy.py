@@ -36,7 +36,7 @@ async def handle_copy(client, message):
     if await is_rclone_config(user_id, message):
         listener = TaskListener(message, tag, user_id)
         listener_dict[ message.id] = [listener]
-        if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters._owner_query(user_id):
+        if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters.sudo_filter("", message):
             await list_remotes(
                 message, remote_type="remote_origin", menu_type=Menus.COPY
             )

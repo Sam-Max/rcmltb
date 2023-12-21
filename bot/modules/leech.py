@@ -58,7 +58,7 @@ async def leech(client, message):
         if message.reply_to_message:
             await mirror_leech(client, message, isLeech=True)
             return
-        elif config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters._owner_query(user_id):
+        elif config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters.sudo_filter("", message):
             await sendMarkup(
                 "Select from where you want to leech", message, button.build_menu(2)
             )

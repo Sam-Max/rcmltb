@@ -158,7 +158,10 @@ Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link along with command or by
 <code>/clone</code> -i 5(number of links)
 
 2. <b>Gdrive:</b>
-<code>/clone</code> gdlink
+<code>/clone</code> gdlink/gdrive_id 
+
+If you want to clone from your token.pickle (uploaded from /user_setting) add mtp: before the path/gdrive_id without space.
+Incase you want to specify whether using token or service accounts you can add tp:link or tp:gdrive_id or sa:link or sa:gdrive_id.
 """
 
 PASSWORD_ERROR_MESSAGE = """

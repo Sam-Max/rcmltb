@@ -1,5 +1,3 @@
-# Source: https://github.com/anasty17/mirror-leech-telegram-bot/
-
 from bot.helper.ext_utils.bot_utils import (
     MirrorStatus,
     get_readable_file_size,

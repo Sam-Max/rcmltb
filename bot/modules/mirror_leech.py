@@ -210,7 +210,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
                 return
             await tgdown.download()
     elif is_gdrive_link(link):
-        await add_gd_download(link, path, listener, name)
+        await add_gd_download(link, name, path, listener)
     elif is_mega_link(link):
         await add_mega_download(link, f"{path}/", listener, name)
     elif is_magnet(link) or ospath.exists(link):

@@ -19,11 +19,12 @@ from aiofiles.os import (
 )
 from re import search as re_search
 from bot import (
+    GLOBAL_EXTENSION_FILTER,
     config_dict,
     DOWNLOAD_DIR,
     LOGGER,
     user_data,
-    TG_MAX_FILE_SIZE,
+    TG_MAX_SPLIT_SIZE,
     aria2,
     get_client,
     status_dict,
@@ -238,12 +239,12 @@ async def split_file(
                 except Exception as e:
                     LOGGER.error(str(e))
                 LOGGER.warning(
-                    f"{err}. Unable to split this video, if it's size less than {TG_MAX_FILE_SIZE} will be uploaded as it is. Path: {path}"
+                    f"{err}. Unable to split this video, if it's size less than {TG_MAX_SPLIT_SIZE} will be uploaded as it is. Path: {path}"
                 )
                 return "errored"
             out_size = await aiopath.getsize(out_path)
-            if out_size > TG_MAX_FILE_SIZE:
-                dif = out_size - TG_MAX_FILE_SIZE
+            if out_size > TG_MAX_SPLIT_SIZE:
+                dif = out_size - TG_MAX_SPLIT_SIZE
                 split_size -= dif + 5000000
                 await aioremove(out_path)
                 return await split_file(
@@ -334,6 +335,18 @@ async def get_document_type(path):
         elif stream.get("codec_type") == "audio":
             is_audio = True
     return is_video, is_audio, is_image
+
+
+async def count_files_and_folders(path):
+    total_files = 0
+    total_folders = 0
+    for _, dirs, files in await run_sync_to_async(oswalk, path):
+        total_files += len(files)
+        for f in files:
+            if f.endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+                total_files -= 1
+        total_folders += len(dirs)
+    return total_folders, total_files
 
 
 def get_mime_type(file_path):

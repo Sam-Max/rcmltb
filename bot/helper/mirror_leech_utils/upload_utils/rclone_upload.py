@@ -13,7 +13,7 @@ from bot import (
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
-from bot.helper.ext_utils.misc_utils import clean_download
+from bot.helper.ext_utils.misc_utils import clean_download, count_files_and_folders
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data
 from bot.helper.ext_utils.rclone_utils import (
     gdrive_check,
@@ -33,27 +33,27 @@ class RcloneMirror:
         self.name = name
         self.size = size
         self.process = None
-        self.__isGdrive = False
+        self.__is_gdrive = False
         self.__is_cancelled = False
         self.status_type = MirrorStatus.STATUS_UPLOADING
 
     async def mirror(self):
         await self.delete_files_with_extensions()
 
-        if self.__listener.extract:
+        if ospath.isdir(self.__path):
             mime_type = "Folder"
         else:
             mime_type = "File"
 
         conf_path = await get_rclone_path(self.__user_id, self.message)
         is_multi_remote_up = config_dict["MULTI_REMOTE_UP"]
-        is_owner_query = CustomFilters._owner_query(self.__user_id)
+        is_sudo_filter = CustomFilters.sudo_filter("", self.message)
         foldername = self.name.replace(".", "")
 
-        if config_dict["MULTI_RCLONE_CONFIG"] or is_owner_query:
+        if config_dict["MULTI_RCLONE_CONFIG"] or is_sudo_filter:
             if is_multi_remote_up and len(remotes_multi) > 0:
                 for remote in remotes_multi:
-                    self.__isGdrive = await gdrive_check(remote, conf_path)
+                    self.__is_gdrive = await gdrive_check(remote, conf_path)
                     if mime_type == "Folder":
                         cmd = [
                             "rclone",
@@ -73,12 +73,12 @@ class RcloneMirror:
                             "-P",
                         ]
                     await setRcloneFlags(cmd, "upload")
-                    await self.upload(cmd, conf_path, mime_type, remote)
+                    await self.upload(self.__path, cmd, conf_path, mime_type, remote)
                 await clean_download(self.__path)
             else:
                 remote = get_rclone_data("MIRROR_SELECT_REMOTE", self.__user_id)
-                base = get_rclone_data("MIRROR_SELECT_BASE_DIR", self.__user_id)
-                self.__isGdrive = await gdrive_check(remote, conf_path)
+                base_dir = get_rclone_data("MIRROR_SELECT_BASE_DIR", self.__user_id)
+                self.__is_gdrive = await gdrive_check(remote, conf_path)
 
                 if mime_type == "Folder":
                     cmd = [
@@ -86,7 +86,7 @@ class RcloneMirror:
                         "copy",
                         f"--config={conf_path}",
                         str(self.__path),
-                        f"{remote}:{base}{foldername}",
+                        f"{remote}:{base_dir}{foldername}",
                         "-P",
                     ]
                 else:
@@ -95,14 +95,16 @@ class RcloneMirror:
                         "copy",
                         f"--config={conf_path}",
                         str(self.__path),
-                        f"{remote}:{base}",
+                        f"{remote}:{base_dir}",
                         "-P",
                     ]
                 await setRcloneFlags(cmd, "upload")
-                await self.upload(cmd, conf_path, mime_type, remote, base)
+                await self.upload(
+                    self.__path, cmd, conf_path, mime_type, remote, base_dir
+                )
         else:
             if DEFAULT_GLOBAL_REMOTE := config_dict["DEFAULT_GLOBAL_REMOTE"]:
-                self.__isGdrive = await gdrive_check(DEFAULT_GLOBAL_REMOTE, conf_path)
+                self.__is_gdrive = await gdrive_check(DEFAULT_GLOBAL_REMOTE, conf_path)
 
                 if mime_type == "Folder":
                     cmd = [
@@ -123,17 +125,31 @@ class RcloneMirror:
                         "-P",
                     ]
                 await setRcloneFlags(cmd, "upload")
-                await self.upload(cmd, conf_path, mime_type, DEFAULT_GLOBAL_REMOTE)
+                await self.upload(
+                    self.__path, cmd, conf_path, mime_type, DEFAULT_GLOBAL_REMOTE
+                )
             else:
                 await self.__listener.onUploadError("DEFAULT_GLOBAL_REMOTE not found")
                 return
 
-    async def upload(self, cmd, config_file, mime_type, remote, base="/"):
+    async def upload(self, path, cmd, conf_path, mime_type, remote, base_dir="/"):
+        if ospath.isdir(path):
+            folders, files = await count_files_and_folders(path)
+        else:
+            if self.__path.lower().endswith(tuple(self.extension_filter)):
+                await self.__listener.onUploadError(
+                    "This file extension is excluded by extension filter!"
+                )
+                return
+            folders = 0
+            files = 1
+
         gid = "".join(SystemRandom().choices(ascii_letters + digits, k=10))
         async with status_dict_lock:
             status = RcloneStatus(self, self.__listener, gid)
             status_dict[self.__listener.uid] = status
         await sendStatusMessage(self.message)
+
         self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         await status.start()
         return_code = await self.process.wait()
@@ -141,8 +157,17 @@ class RcloneMirror:
             return
         if return_code == 0:
             size = get_readable_file_size(self.size)
-            await self.__listener.onRcloneUploadComplete(
-                self.name, size, config_file, remote, base, mime_type, self.__isGdrive
+            rclone_path= f'{remote}:{base_dir}/{self.name}'
+            await self.__listener.onUploadComplete(
+                None,
+                size,
+                files,
+                folders,
+                mime_type,
+                self.name,
+                rclone_config= conf_path,
+                rclone_path= rclone_path,
+                is_gdrive= self.__is_gdrive,
             )
         else:
             error = (await self.process.stderr.read()).decode().strip()

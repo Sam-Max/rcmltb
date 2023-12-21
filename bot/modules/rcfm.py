@@ -36,7 +36,7 @@ from bot.modules.myfilesset import (
 async def handle_myfiles(client, message):
     user_id = message.from_user.id
     if await is_rclone_config(user_id, message):
-        if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters._owner_query(user_id):
+        if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters.sudo_filter("", message):
             await list_remotes(message, menu_type=Menus.MYFILES)
         else:
             await sendMessage("Not allowed to use", message)

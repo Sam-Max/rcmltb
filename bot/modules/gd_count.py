@@ -1,7 +1,7 @@
+from bot.helper.mirror_leech_utils.gd_utils.count import gdCount
 from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
 from bot import bot
-from bot.helper.mirror_leech_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import deleteMessage, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -14,7 +14,8 @@ from bot.helper.ext_utils.bot_utils import (
 
 async def count(_, message):
     args = message.text.split()
-    if username := message.from_user.username:
+    user = message.from_user or message.sender_chat
+    if username := user.username:
         tag = f"@{username}"
     else:
         tag = message.from_user.mention
@@ -25,8 +26,9 @@ async def count(_, message):
 
     if is_gdrive_link(link):
         msg = await sendMessage(f"Counting: <code>{link}</code>", message)
-        gd = GoogleDriveHelper()
-        name, mime_type, size, files, folders = await run_sync_to_async(gd.count, link)
+        name, mime_type, size, files, folders = await run_sync_to_async(
+            gdCount().count, link, user.id
+        )
         if mime_type is None:
             await sendMessage(name, message)
             return

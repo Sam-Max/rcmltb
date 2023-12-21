@@ -8,7 +8,7 @@ from requests import utils as rutils
 from bot import (
     DOWNLOAD_DIR,
     LOGGER,
-    TG_MAX_FILE_SIZE,
+    TG_MAX_SPLIT_SIZE,
     Interval,
     status_dict,
     status_dict_lock,
@@ -82,6 +82,7 @@ class TaskListener:
         self.newDir = ""
         self.isSuperGroup = message.chat.type.name in ["SUPERGROUP", "CHANNEL"]
         self.suproc = None
+        self.user_dict = user_data.get(self.user_id, {})
 
     async def clean(self):
         try:
@@ -323,7 +324,7 @@ class TaskListener:
                             if not res:
                                 return
                             if res == "errored":
-                                if f_size <= TG_MAX_FILE_SIZE:
+                                if f_size <= TG_MAX_SPLIT_SIZE:
                                     continue
                                 else:
                                     try:
@@ -447,74 +448,20 @@ class TaskListener:
         else:
             await update_all_messages()
 
-    async def onRcloneUploadComplete(
-        self, name, size, config_path, remote, base, mime_type, isGdrive
+    async def onUploadComplete(
+        self,
+        link,
+        size,
+        files,
+        folders,
+        mime_type,
+        name,
+        rclone_config="",
+        rclone_path="",
+        is_gdrive=False,
+        dir_id="",
+        private=False,
     ):
-        msg = f"<b>Name: </b><code>{escape(name)}</code>\n"
-        msg += f"<b>Size: </b>{size}\n"
-        msg += f"<b>Type: </b>{mime_type}\n\n"
-
-        button = ButtonMaker()
-        path = f"{remote}:{base}/{name}"
-
-        if isGdrive:
-            link = await get_drive_link(path, config_path, mime_type)
-            if link:
-                button.url_buildbutton("Cloud Link 🔗", link)
-            else:
-                button.url_buildbutton(
-                    "Cloud Link 🚫", "https://drive.google.com/uc?id=err"
-                )
-        else:
-            cmd = ["rclone", "link", f"--config={config_path}", path]
-            res, err, code = await cmd_exec(cmd)
-            if code == 0:
-                button.url_buildbutton("Cloud Link 🔗", res)
-            else:
-                LOGGER.error(f"Error while getting link. Error: {err}")
-                button.url_buildbutton("Cloud Link 🚫", "http://www.example.com")
-        if isGdrive and (GD_INDEX_URL := config_dict["GD_INDEX_URL"]):
-            url_path = rutils.quote(f"{base}{name}")
-            share_url = f"{GD_INDEX_URL}/{url_path}"
-            if type == "Folder":
-                share_url += "/"
-                button.url_buildbutton("⚡ Index Link", share_url)
-            else:
-                button.url_buildbutton("⚡ Index Link", share_url)
-                if config_dict["VIEW_LINK"]:
-                    share_urls = f"{GD_INDEX_URL}/{url_path}?a=view"
-                    button.url_buildbutton("🌐 View Link", share_urls)
-        elif RC_INDEX_URL := config_dict["RC_INDEX_URL"]:
-            RC_INDEX_PORT = config_dict["RC_INDEX_PORT"]
-            url_path = rutils.quote(f"{base}{name}")
-            share_url = f"{RC_INDEX_URL}:{RC_INDEX_PORT}/[{remote}:]/{url_path}"
-            if mime_type == "Folder":
-                share_url += "/"
-            button.url_buildbutton("Rclone Link 🔗", share_url)
-
-        msg += f"<b>cc: </b>{self.tag}"
-        await sendMessage(msg, self.message, button.build_menu(2))
-
-        if self.seed:
-            if self.newDir:
-                await clean_target(self.newDir)
-            elif self.compress is not None:
-                await clean_target(f"{self.dir}/{name}")
-            return
-
-        if not config_dict["MULTI_REMOTE_UP"]:
-            await clean_download(self.dir)
-
-        async with status_dict_lock:
-            if self.uid in status_dict.keys():
-                del status_dict[self.uid]
-            count = len(status_dict)
-        if count == 0:
-            await self.clean()
-        else:
-            await update_all_messages()
-
-    async def onUploadComplete(self, link, size, files, folders, mime_type, name):
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n"
         msg += f"<b>Size: </b>{size}"
 
@@ -546,12 +493,69 @@ class TaskListener:
                 msg += f"\n<b>Files: </b>{files}"
 
             buttons = ButtonMaker()
-            buttons.url_buildbutton("Cloud Link", link)
+
+            if is_gdrive:
+                if rclone_path:
+                    link = await get_drive_link(rclone_path, rclone_config, mime_type)     
+                else:
+                    link = link
+                if link:
+                    buttons.url_buildbutton("Cloud Link 🔗", link)
+                else:
+                    buttons.url_buildbutton(
+                        "Cloud Link 🚫", "https://drive.google.com/uc?id=err"
+                    )
+            else:
+                cmd = ["rclone", "link", f"--config={rclone_config}", rclone_path]
+                res, code = await cmd_exec(cmd)
+                if code == 0:
+                    buttons.url_buildbutton("Cloud Link 🔗", res)
+                else:
+                    buttons.url_buildbutton(
+                        "Cloud Link 🚫", "http://www.example.com/uc?id=err"
+                    )
+
+            if is_gdrive or not rclone_path and dir_id:
+                GD_INDEX_URL = ""
+                if private:
+                    GD_INDEX_URL = (
+                        self.user_dict["index_url"]
+                        if self.user_dict.get("index_url")
+                        else ""
+                    )
+                elif config_dict["GD_INDEX_URL"]:
+                    GD_INDEX_URL = config_dict["GD_INDEX_URL"]
+                if GD_INDEX_URL:
+                    share_url = f"{GD_INDEX_URL}findpath?id={dir_id}"
+                    buttons.url_buildbutton("⚡ Index Link", share_url)
+                    if mime_type.startswith(("image", "video", "audio")):
+                        share_urls = f"{GD_INDEX_URL}findpath?id={dir_id}&?a=view"
+                        buttons.url_buildbutton("🌐 View Link", share_urls)
+            elif (
+                rclone_path
+                and (RC_INDEX_URL := config_dict["RC_INDEX_URL"])
+                and not private
+            ):
+                RC_INDEX_PORT = config_dict["RC_INDEX_PORT"]
+                remote, path = rclone_path.split(":", 1)
+                url_path = rutils.quote(f"{path}")
+                share_url = f"{RC_INDEX_URL}:{RC_INDEX_PORT}/[{remote}:]/{url_path}"
+                if mime_type == "Folder":
+                    share_url += "/"
+                buttons.url_buildbutton("Rclone Link 🔗", share_url)
 
             msg += f"\n\n<b>cc: </b>{self.tag}"
             await sendMessage(msg, self.message, buttons.build_menu(1))
 
-        await clean_download(self.dir)
+            if self.seed:
+                if self.newDir:
+                    await clean_target(self.newDir)
+                elif self.compress:
+                    await clean_target(f"{self.dir}/{name}")
+                return
+
+        if not config_dict["MULTI_REMOTE_UP"]:
+            await clean_download(self.dir)
 
         async with status_dict_lock:
             if self.uid in status_dict.keys():

@@ -30,7 +30,7 @@ async def handle_mirrorselect(_, message):
                 update_rclone_data(
                     "MIRROR_SELECT_REMOTE", DEFAULT_OWNER_REMOTE, user_id
                 )
-        if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters._owner_query(user_id):
+        if config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters.sudo_filter("", message):
             await list_remotes(message, menu_type=Menus.MIRROR_SELECT)
         else:
             await sendMessage("Not allowed to use", message)
@@ -49,7 +49,7 @@ async def mirrorselect_callback(_, query):
         return
     if cmd[1] == "remote":
         is_crypt = False if cmd[-2] == "False" else True
-        if CustomFilters._owner_query(user_id):
+        if CustomFilters.sudo_filter("", message):
             if config_dict["MULTI_REMOTE_UP"]:
                 remotes_multi.append(cmd[2])
                 await list_remotes(message, menu_type=Menus.MIRROR_SELECT, edit=True)

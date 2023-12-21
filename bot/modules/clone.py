@@ -2,6 +2,9 @@ from argparse import ArgumentParser
 from asyncio import sleep
 from random import SystemRandom
 from string import ascii_letters, digits
+from bot.helper.ext_utils.human_format import get_readable_file_size
+from bot.helper.mirror_leech_utils.gd_utils.clone import gdClone
+from bot.helper.mirror_leech_utils.gd_utils.count import gdCount
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler
 from bot import bot, LOGGER, status_dict, status_dict_lock, config_dict
@@ -10,6 +13,7 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.help_messages import CLONE_HELP_MESSAGE
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import (
+    is_gdrive_id,
     is_gdrive_link,
     is_share_link,
     new_task,
@@ -22,12 +26,12 @@ from bot.helper.telegram_helper.message_utils import (
     sendStatusMessage,
 )
 from bot.helper.mirror_leech_utils.status_utils.clone_status import CloneStatus
-from bot.helper.mirror_leech_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.modules.tasks_listener import TaskListener
 
 
 async def clone(client, message):
     message_list = message.text.split()
+    user = message.from_user or message.sender_chat
 
     try:
         args = parser.parse_args(message_list[1:])
@@ -38,7 +42,7 @@ async def clone(client, message):
     multi = args.multi
     link = " ".join(args.link)
 
-    if username := message.from_user.username:
+    if username := user.username:
         tag = f"@{username}"
     else:
         tag = message.from_user.mention
@@ -70,10 +74,6 @@ async def clone(client, message):
         await sendMessage(CLONE_HELP_MESSAGE, message)
         return
 
-    if not config_dict["GDRIVE_FOLDER_ID"]:
-        await sendMessage("GDRIVE_FOLDER_ID not Provided!", message)
-        return
-
     if is_share_link(link):
         try:
             link = await run_sync_to_async(direct_link_generator, link)
@@ -84,30 +84,37 @@ async def clone(client, message):
                 await sendMessage(str(e), message)
                 return
 
-    if is_gdrive_link(link):
-        gd = GoogleDriveHelper()
-        name, mime_type, size, files, _ = await run_sync_to_async(gd.count, link)
+    if is_gdrive_link(link) or is_gdrive_id(link):
+        name, mime_type, size, files, _ = await run_sync_to_async(
+            gdCount().count, link, user.id
+        )
         if mime_type is None:
             await sendMessage(name, message)
             return
         user_id = message.from_user.id
         listener = TaskListener(message, tag, user_id)
-        drive = GoogleDriveHelper(name, listener=listener)
+        drive = gdClone(link, listener)
         if files <= 20:
             msg = await sendMessage(f"Cloning: <code>{link}</code>", message)
-            link, size, mime_type, files, folders = await run_sync_to_async(drive.clone, link)
-            await deleteMessage(msg)
         else:
+            msg = ""
             gid = "".join(SystemRandom().choices(ascii_letters + digits, k=12))
             async with status_dict_lock:
                 status_dict[message.id] = CloneStatus(drive, size, message, gid)
             await sendStatusMessage(message)
-            link, size, mime_type, files, folders = await run_sync_to_async(drive.clone, link)
+        link, size, mime_type, files, folders, dir_id = await run_sync_to_async(
+            drive.clone
+        )
+        if msg:
+            await deleteMessage(msg)
         if not link:
             return
         if not config_dict["NO_TASKS_LOGS"]:
             LOGGER.info(f"Cloning Done: {name}")
-        await listener.onUploadComplete(link, size, files, folders, mime_type, name)
+        size = get_readable_file_size(size)
+        await listener.onUploadComplete(
+            link, size, files, folders, mime_type, name, is_gdrive=True, dir_id=dir_id
+        )
     else:
         await sendMessage(CLONE_HELP_MESSAGE, message)
 
