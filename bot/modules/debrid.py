@@ -19,8 +19,6 @@ if os.path.exists("debrid/debrid_token.txt"):
     with open("debrid/debrid_token.txt", "r") as f:
         debrid_data["token"] = f.read().strip()
 
-rd_client = RealDebrid(debrid_data.get("token", None))
-
 
 async def authorize(_, query):
     message = query.message
@@ -52,6 +50,7 @@ Timeout: 120s
 
 async def get_user_torrents(_, query):
     message = query.message
+    rd_client = RealDebrid(debrid_data.get("token", None))
     response = await run_sync_to_async(rd_client.get_user_torrent_list, 1, 50)
     if response:
         result = ""
@@ -74,6 +73,7 @@ async def get_user_torrents(_, query):
 
 async def get_user_downloads(_, query):
     message = query.message
+    rd_client = RealDebrid(debrid_data.get("token", None))
     response = await run_sync_to_async(rd_client.get_user_downloads_list, 1, 50)
     if response:
         result = ""
@@ -89,6 +89,7 @@ async def get_user_downloads(_, query):
 
 async def add_magnet(client, query):
     message = query.message
+    rd_client = RealDebrid(debrid_data.get("token", None))
     question = await sendMessage(
         "Send a magnet link to add to debrid, /ignore to cancel",
         message,
@@ -119,6 +120,7 @@ async def add_magnet(client, query):
 
 async def add_torrent(client, query):
     message = query.message
+    rd_client = RealDebrid(debrid_data.get("token", None))
     question = await sendMessage(
         "Send a torrent file to add to debrid, /ignore to cancel",
         message,
@@ -157,6 +159,7 @@ async def add_torrent(client, query):
 
 async def delete_torrent(client, query):
     message = query.message
+    rd_client = RealDebrid(debrid_data.get("token", None))
     question = await sendMessage(
         "Send a torrent id to delete from debrid, /ignore to cancel", message
     )
@@ -174,6 +177,7 @@ async def delete_torrent(client, query):
 
 async def get_user(_, query):
     message = query.message
+    rd_client = RealDebrid(debrid_data.get("token", None))
     response = await run_sync_to_async(rd_client.get_user)
     if response:
         user_info = f"<b>User:</b> {response['username']}\n"
@@ -186,8 +190,9 @@ async def get_user(_, query):
 
 async def get_availabilty(client, query):
     message = query.message
+    rd_client = RealDebrid(debrid_data.get("token", None))
     question = await sendMessage(
-"""Send a magnet link to check if it is cached,
+        """Send a magnet link to check if it is cached,
 and to extract download link, /ignore to cancel""",
         message,
     )
@@ -236,6 +241,7 @@ and to extract download link, /ignore to cancel""",
 
 async def real_debrid_info(_, message):
     _, id = message.text.split()
+    rd_client = RealDebrid(debrid_data.get("token", None))
     response = await run_sync_to_async(rd_client.get_torrent_info, id)
     if response:
         msg = f"<b>Name: </b>{response['filename']}\n"
@@ -246,6 +252,7 @@ async def real_debrid_info(_, message):
 
 async def generate_link(client, query):
     message = query.message
+    rd_client = RealDebrid(debrid_data.get("token", None))
     hosts = ""
     response = await run_sync_to_async(rd_client.get_hosts)
     for host in response:
