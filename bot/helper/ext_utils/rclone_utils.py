@@ -24,7 +24,7 @@ from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclo
 
 async def is_remote_selected(user_id, message):
     if CustomFilters.sudo_filter("", message):
-        if DEFAULT_OWNER_REMOTE:= config_dict['DEFAULT_OWNER_REMOTE']:
+        if DEFAULT_OWNER_REMOTE := config_dict["DEFAULT_OWNER_REMOTE"]:
             update_rclone_data("MIRROR_SELECT_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
             return True
     if config_dict["MULTI_RCLONE_CONFIG"]:
@@ -43,46 +43,45 @@ async def is_remote_selected(user_id, message):
 
 
 async def is_rclone_config(user_id, message, isLeech=False):
-    if config_dict['MULTI_RCLONE_CONFIG']:
+    if config_dict["MULTI_RCLONE_CONFIG"]:
         path = f"rclone/{user_id}/rclone.conf"
-        no_path_msg= "Send a rclone config file, use /files command"
+        no_path_msg = "Send a rclone config file, use /files command"
     else:
         if CustomFilters.sudo(user_id):
             path = f"rclone/{user_id}/rclone.conf"
-            no_path_msg= "Send a rclone config file, use /files command"
+            no_path_msg = "Send a rclone config file, use /files command"
         else:
             path = f"rclone/rclone_global/rclone.conf"
-            no_path_msg= "Rclone config file not found"
+            no_path_msg = "Rclone config file not found"
 
     if ospath.exists(path):
         return True
     else:
-        if isLeech: 
+        if isLeech:
             return True
         else:
             await sendMessage(no_path_msg, message)
-            return False 
+            return False
 
 
 async def get_rclone_path(user_id, message=None):
-    if config_dict['MULTI_RCLONE_CONFIG']:
+    if config_dict["MULTI_RCLONE_CONFIG"]:
         path = f"rclone/{user_id}/rclone.conf"
     else:
         if CustomFilters.sudo(user_id):
             path = f"rclone/{user_id}/rclone.conf"
         else:
             path = f"rclone/rclone_global/rclone.conf"
-    
-    if ospath.exists(path): 
-        return path 
+
+    if ospath.exists(path):
+        return path
     else:
         await sendMessage("Rclone path not found", message)
         raise NotRclonePathFound(f"ERROR: Rclone path not found")
 
 
 async def setRcloneFlags(cmd, type):
-    ext = "*.{" + ",".join(GLOBAL_EXTENSION_FILTER) + "}"
-    cmd.extend(("--exclude", ext))
+    cmd.extend(("--exclude", "*.{" + ",".join(GLOBAL_EXTENSION_FILTER) + "}"))
     if config_dict["SERVER_SIDE"]:
         cmd.append("--drive-server-side-across-configs")
     if type == "copy":
@@ -106,18 +105,18 @@ def append_flags(flags, cmd):
             cmd.append(flag)
 
 
-async def gdrive_check(remote, config_file):
+async def is_gdrive_remote(remote, config_file):
     conf = ConfigParser()
     conf.read(config_file)
-    isGdrive = False
+    is_gdrive = False
     if conf.get(remote, "type") == "drive":
-        isGdrive = True
+        is_gdrive = True
     elif conf.get(remote, "type") == "crypt":
         remote_path = conf.get(remote, "remote")
         real_remote = remote_path.split(":")[0]
         if conf.get(real_remote, "type") == "drive":
-            isGdrive = True
-    return isGdrive
+            is_gdrive = True
+    return is_gdrive
 
 
 async def list_remotes(
@@ -351,8 +350,9 @@ async def create_next_buttons(
 ):
     if next_offset == 0:
         buttons.cb_buildbutton(
-            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}" 
-            f"{menu_type}^pages" "footer",
+            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}", 
+            f"{menu_type}^pages",
+            "footer",
         )
         buttons.cb_buildbutton(
             "NEXT ⏩",
@@ -366,8 +366,9 @@ async def create_next_buttons(
             "footer",
         )
         buttons.cb_buildbutton(
-            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}" 
-            f"{menu_type}^pages" "footer",
+            f"🗓 {round(int(next_offset) / 10) + 1} / {round(total / 10)}",
+            f"{menu_type}^pages",
+            "footer",
         )
     elif next_offset + 10 > total:
         buttons.cb_buildbutton(
@@ -403,11 +404,9 @@ async def create_next_buttons(
     )
 
 
-async def get_drive_link(rclone_path, config_path, mime_type):
+async def get_id(rclone_path, config_path, name, mime_type):
     if mime_type == "Folder":
-        name = rclone_path.split("/")[-2]
-    else:
-        name = rclone_path.split("/")[-1]
+        rclone_path = rclone_path.rsplit("/", 1)[0]
     cmd = [
         "rclone",
         "lsjson",
@@ -417,19 +416,12 @@ async def get_drive_link(rclone_path, config_path, mime_type):
         "--no-modtime",
         rclone_path,
     ]
+
     res, err, code = await cmd_exec(cmd)
+    id = ""
     if code == 0:
-        data = jsonloads(res)
-        id = "err"
-        for d in data:
-            if d["Path"] == name:
-                id = d["ID"]
-                break
-        if mime_type == "Folder":
-            link = f"https://drive.google.com/drive/folders/{id}"
-        else:
-            link = f"https://drive.google.com/uc?id={id}&export=download"
+        id = next((d["ID"] for d in jsonloads(res) if d["Path"] == name), "err")
     else:
         LOGGER.error(f"Error while getting link. Error: {err}")
-        link = ""
-    return link
+        id = "err"
+    return id

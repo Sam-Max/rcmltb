@@ -21,6 +21,9 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Clean cloud trash
 - View cloud storage info 
 
+### Debrid
+- Debrid Manager (only real debrid support for now)
+
 ### Others
 - Send rclone config file from bot
 - Renaming menu for Telegram files
@@ -35,6 +38,7 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Refactor of the whole code to use only pyrogram with asyncio
 - Docker based image based on ubuntu
 - Compatible with linux `amd64, arm64/v8, arm/v7`
+
 ## Commands for bot(set through @BotFather)
 
 ```
@@ -46,6 +50,7 @@ leech_batch - or /lb Leech Telegram files/links in batch to Telegram
 ytdl - or /y Mirror ytdlp supported link
 ytdl_leech - or /yl Leech yt-dlp supported link
 files - or /bf Bot configuration files
+debrid - Debrid Manager (paid option)
 rcfm - Rclone File Manager
 copy - Copy from cloud to cloud
 clone - Clone gdrive link file/folder 

@@ -32,6 +32,7 @@ from .modules import (
     cancel,
     botfiles,
     copy,
+    debrid,
     leech,
     mirror_leech,
     mirror_select,

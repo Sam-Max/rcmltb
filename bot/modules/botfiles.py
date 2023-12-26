@@ -374,7 +374,8 @@ async def config_menu(user_id, message, edit=False):
     msg = "❇️ **Rclone configuration**"
     rclone_conf = f"rclone/{user_id}/rclone.conf"
     token_pickle = f"tokens/{user_id}.pickle"
-    fstr = ""
+    debrid_token= "debrid/debrid_token.txt"
+    remotes = ""
     buttons = ButtonMaker()
 
     if ospath.exists(rclone_conf):
@@ -389,25 +390,25 @@ async def config_menu(user_id, message, edit=False):
         stdout = stdout.decode().strip()
         info = stdout.split("\n")
         for i in info:
-            rstr = i.replace(":", "")
-            fstr += f"- {rstr}\n"
+            remote = i.replace(":", "")
+            remotes += f"- {remote}\n"
         msg += "\n\n**Here is list of drives in config file:**"
-        msg += f"\n{fstr}"
+        msg += f"\n{remotes}"
     
     if ospath.exists(rclone_conf):
         buttons.cb_buildbutton("🗂 rclone.conf", f"configmenu^get_rclone_conf^{user_id}")
-        buttons.cb_buildbutton("🗑 rclone.conf", f"configmenu^delete_config^{user_id}")
+        buttons.cb_buildbutton("🗑 rclone.conf", f"configmenu^delete_clone_conf^{user_id}")
     else:
-        buttons.cb_buildbutton("📃rclone.conf", f"configmenu^change_rclone_conf^{user_id}", "footer")
+        buttons.cb_buildbutton("📃rclone.conf", f"configmenu^add_rclone_conf^{user_id}", "footer")
 
     if ospath.exists(token_pickle):
-        buttons.cb_buildbutton("🗂 token.pickle", f"configmenu^get_pickle^{user_id}")
+        buttons.cb_buildbutton("🗂 token.pickle", f"configmenu^get_token_pickle^{user_id}")
         buttons.cb_buildbutton(
-            "🗑 token.pickle", f"configmenu^delete_pickle^{user_id}"
+            "🗑 token.pickle", f"configmenu^delete_token_pickle^{user_id}"
         )
     else:
         buttons.cb_buildbutton(
-            "📃 token.pickle", f"configmenu^change_pickle^{user_id}", "footer_second"
+            "📃 token.pickle", f"configmenu^add_token_pickle^{user_id}", "footer_second"
             )
 
     if CustomFilters.sudo_filter("", message):
@@ -417,22 +418,27 @@ async def config_menu(user_id, message, edit=False):
                 "🗂 rclone.conf (🌐)", f"configmenu^get_global_rclone_conf^{user_id}"
             )
             buttons.cb_buildbutton(
-                "🗑 rclone.conf (🌐)", f"configmenu^delete_grclone_conf^{user_id}"
+                "🗑 rclone.conf (🌐)", f"configmenu^delete_global_rclone_conf^{user_id}"
             )
         else:
             buttons.cb_buildbutton(
                 "📃 rclone.conf (🌐)",
-                f"configmenu^change_grclone_conf^{user_id}",
+                f"configmenu^add_global_rclone_conf^{user_id}",
                 "footer",
             )
         if ospath.exists("accounts"):
             buttons.cb_buildbutton(
-                "🗑 accounts folder", f"configmenu^delete_acc^{user_id}"
+                "🗑 accounts folder", f"configmenu^delete_accounts^{user_id}"
             )
         else:
             buttons.cb_buildbutton(
-                "📃 accounts.zip", f"configmenu^change_acc^{user_id}" ,"footer_second"
+                "📃 accounts.zip", f"configmenu^add_accounts^{user_id}" ,"footer_second"
             )
+        if ospath.exists(debrid_token):
+            buttons.cb_buildbutton("🗂 debrid.token", f"configmenu^get_debrid_token^{user_id}")
+            buttons.cb_buildbutton("🗑 debrid.token", f"configmenu^delete_debrid_token^{user_id}")
+        else:
+            buttons.cb_buildbutton("📃debrid.token", f"configmenu^add_debrid_token^{user_id}", "footer")
         if ospath.exists("config.env"):
             buttons.cb_buildbutton(
                 "🗂 config.env", f"configmenu^get_config_env^{user_id}"
@@ -442,7 +448,7 @@ async def config_menu(user_id, message, edit=False):
             )
         else:
             buttons.cb_buildbutton(
-                "📃config.env", f"configmenu^change_config_env^{user_id}", "footer"
+                "📃config.env", f"configmenu^add_config_env^{user_id}", "footer"
             )
     buttons.cb_buildbutton(
         "✘ Close Menu", f"configmenu^close^{user_id}", "footer_third"
@@ -486,36 +492,41 @@ async def botfiles_callback(client, callback_query):
                     document=path, chat_id=message.chat.id
                 )
             await query.answer()
-        elif cmd[1] == "get_pickle":
-            path = f"tokens/{user_id}.pickle"
-            await client.send_document(document=path, chat_id=message.chat.id)
-            await query.answer()
         elif cmd[1] == "get_config_env":
             await client.send_document(document="config.env", chat_id=message.chat.id)
             await query.answer()
-        if cmd[1] == "change_rclone_conf":
+        elif cmd[1] == "get_token_pickle":
+            path = f"tokens/{user_id}.pickle"
+            await client.send_document(document=path, chat_id=message.chat.id)
+            await query.answer()
+        elif cmd[1] == "get_debrid_token":
+            path= "debrid/debrid_token.txt"
+            await client.send_document(document=path, chat_id=message.chat.id)
+            await query.answer()
+        if cmd[1] == "add_rclone_conf":
             await set_config_listener(client, query, message)
             await query.answer()
             await config_menu(user_id, message, True)
-        elif cmd[1] == "change_grclone_conf" and user_id == OWNER_ID:
+        elif cmd[1] == "add_global_rclone_conf" and user_id == OWNER_ID:
             await set_config_listener(client, query, message, True)
             await query.answer()
             await config_menu(user_id, message, True)
         elif (
-            cmd[1] == "change_pickle"
-            or cmd[1] == "change_acc"
-            or cmd[1] == "change_config_env"
+            cmd[1] == "add_token_pickle"
+            or cmd[1] == "add_accounts"
+            or cmd[1] == "add_config_env"
+            or cmd[1] == "add_debrid_token"
             and user_id == OWNER_ID
         ):
             await set_config_listener(client, query, message)
             await query.answer()
             await config_menu(user_id, message, True)
-        elif cmd[1] == "delete_config":
+        elif cmd[1] == "delete_clone_conf":
             path = await get_rclone_path(user_id, message)
             osremove(path)
             await query.answer()
             await config_menu(user_id, message, True)
-        elif cmd[1] == "delete_grclone_conf":
+        elif cmd[1] == "delete_global_rclone_conf":
             osremove(f"rclone/rclone_global/rclone.conf")
             await query.answer()
             await config_menu(user_id, message, True)
@@ -523,12 +534,12 @@ async def botfiles_callback(client, callback_query):
             osremove("config.env")
             await query.answer()
             await config_menu(user_id, message, True)
-        elif cmd[1] == "delete_pickle":
+        elif cmd[1] == "delete_token_pickle":
             path = f"tokens/{user_id}.pickle"
             osremove(path)
             await query.answer()
             await config_menu(user_id, message, True)
-        elif cmd[1] == "delete_acc":
+        elif cmd[1] == "delete_accounts":
             if ospath.exists("accounts"):
                 srun(["rm", "-rf", "accounts"])
             config_dict["USE_SERVICE_ACCOUNTS"] = False
@@ -580,6 +591,11 @@ async def set_config_listener(client, query, message, rclone_global=False):
                 await client.download_media(response, file_name=des_dir)
                 if DATABASE_URL:
                     await DbManager().update_user_doc(user_id, "token_pickle", des_dir)
+            elif file_name == "debrid_token.txt":
+                path = f"{getcwd()}/debrid/"
+                makedirs(path, exist_ok=True)
+                des_dir = f"{path}{file_name}"
+                await client.download_media(response, file_name=des_dir)
             else:
                 await client.download_media(response, file_name="./")
                 if file_name == "accounts.zip":

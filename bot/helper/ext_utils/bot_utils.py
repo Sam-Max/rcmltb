@@ -37,6 +37,7 @@ from bot.helper.mirror_leech_utils.status_utils.status_utils import (
 
 THREADPOOL = ThreadPoolExecutor(max_workers=1000)
 MAGNET_REGEX = r"magnet:\?xt=urn:(btih|btmh):[a-zA-Z0-9]*\s*"
+HASH_REGEX = r"urn:btih:([A-Fa-f0-9]{40})"
 URL_REGEX = r"^(?!\/)(rtmps?:\/\/|mms:\/\/|rtsp:\/\/|https?:\/\/|ftp:\/\/)?([^\/:]+:[^\/@]+@)?(www\.)?(?=[^\/:\s]+\.[^\/:\s]+)([^\/:\s]+\.[^\/:\s]+)(:\d+)?(\/[^#\s]*[\s\S]*)?(\?[^#\s]*)?(#.*)?$"
 SIZE_UNITS = ["B", "KB", "MB", "GB", "TB", "PB"]
 
@@ -295,18 +296,15 @@ class setInterval:
     def __init__(self, interval, action):
         self.interval = interval
         self.action = action
-        self.is_cancelled = False
-        botloop.create_task(self.setInterval())
+        self.task = botloop.create_task(self.setInterval())
 
     async def setInterval(self):
         while True:
             await sleep(self.interval)
             await self.action()
-            if self.is_cancelled:
-                break
 
     def cancel(self):
-        self.is_cancelled = True
+        self.task.cancel()
 
 
 async def run_sync_to_async(func, *args, wait=True, **kwargs):

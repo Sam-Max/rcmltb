@@ -7,8 +7,8 @@ from string import ascii_letters, digits
 from bot import LOGGER, status_dict, status_dict_lock, config_dict
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from bot.helper.ext_utils.rclone_utils import (
-    gdrive_check,
     get_rclone_path,
+    is_gdrive_remote,
     setRcloneFlags,
 )
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
@@ -27,24 +27,24 @@ class RcloneCopy:
         self.__sa_number = 0
         self.__service_account_index = 0
         self.process = None
-        self.__isGdrive = False
+        self.__is_gdrive = False
         self.__is_cancelled = False
         self.status_type = MirrorStatus.STATUS_COPYING
 
     async def copy(self, origin_remote, origin_dir, dest_remote, dest_dir):
-        conf_path = await get_rclone_path(self._user_id, self.message)
-        self.__isGdrive = await gdrive_check(dest_remote, conf_path)
+        rc_config = await get_rclone_path(self._user_id, self.message)
+        self.__is_gdrive = await is_gdrive_remote(dest_remote, rc_config)
 
         if config_dict["USE_SERVICE_ACCOUNTS"] and ospath.exists("accounts"):
             self.__sa_number = len(listdir("accounts"))
             if self.__sa_count == 0:
                 self.__service_account_index = randrange(self.__sa_number)
             config = ConfigParser()
-            config.read(conf_path)
+            config.read(rc_config)
             if SERVICE_ACCOUNTS_REMOTE := config_dict["SERVICE_ACCOUNTS_REMOTE"]:
                 if SERVICE_ACCOUNTS_REMOTE in config.sections():
                     if id := config[SERVICE_ACCOUNTS_REMOTE]["team_drive"]:
-                        self.__create_teamdrive_sa_config(conf_path, id)
+                        self.__create_teamdrive_sa_config(rc_config, id)
                         LOGGER.info(
                             f"Using service account remote {SERVICE_ACCOUNTS_REMOTE}"
                         )
@@ -53,24 +53,31 @@ class RcloneCopy:
             else:
                 LOGGER.info("No SERVICE_ACCOUNTS_REMOTE found")
 
+        source = f"{origin_remote}:{origin_dir}"
+
+        if ospath.splitext(origin_dir)[1]:
+            folder_name = ospath.splitext(origin_dir)[0]
+        else:
+            folder_name = origin_dir
+            
+        destination = f"{dest_remote}:{dest_dir}{folder_name}"
+
         cmd = [
             "rclone",
             "copy",
-            f"--config={conf_path}",
+            f"--config={rc_config}",
             "--ignore-case",
-            f"{origin_remote}:{origin_dir}",
-            f"{dest_remote}:{dest_dir}{origin_dir}",
+            source,
+            destination,
             "--drive-acknowledge-abuse",
             "-P",
         ]
 
         await setRcloneFlags(cmd, "copy")
-
-        self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
-
-        self.name = f"{origin_remote}:{origin_dir}"
+        self.name = source
         gid = "".join(SystemRandom().choices(ascii_letters + digits, k=10))
 
+        self.process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         async with status_dict_lock:
             status = RcloneStatus(self, self.__listener, gid)
             status_dict[self.__listener.uid] = status
@@ -84,7 +91,7 @@ class RcloneCopy:
 
         if return_code == 0:
             await self.__listener.onRcloneCopyComplete(
-                conf_path, origin_dir, dest_remote, dest_dir, self.__isGdrive
+                rc_config, destination, folder_name, self.__is_gdrive
             )
         else:
             err = (await self.process.stderr.read()).decode().strip()

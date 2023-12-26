@@ -1,5 +1,5 @@
 from html import escape
-from json import loads as jsloads
+from json import loads as jsonloads
 from aioshutil import move
 from os import path as ospath, remove as osremove, walk
 from aiofiles.os import listdir, makedirs
@@ -42,7 +42,7 @@ from bot.helper.ext_utils.misc_utils import (
     get_path_size,
     split_file,
 )
-from bot.helper.ext_utils.rclone_utils import get_drive_link
+from bot.helper.ext_utils.rclone_utils import get_id
 from bot.helper.mirror_leech_utils.status_utils.tg_upload_status import TgUploadStatus
 from bot.helper.mirror_leech_utils.upload_utils.rclone_upload import RcloneMirror
 from bot.helper.mirror_leech_utils.status_utils.extract_status import ExtractStatus
@@ -294,9 +294,12 @@ class TaskListener:
 
         if self.compress is None and self.extract is None:
             path = m_path
+        
+        LOGGER.info(f"OnDownloadComplete: {path}")
 
         up_dir, up_name = path.rsplit("/", 1)
         size = await get_path_size(up_dir)
+
         if self.isLeech:
             m_size = []
             o_files = []
@@ -339,11 +342,14 @@ class TaskListener:
                             else:
                                 m_size.append(f_size)
                                 o_files.append(file_)
+
             size = await get_path_size(up_dir)
             for s in m_size:
                 size = size - s
+            
             if not config_dict["NO_TASKS_LOGS"]:
                 LOGGER.info(f"Leech Name: {up_name}")
+
             tg_up = TelegramUploader(up_dir, up_name, size, self)
             async with status_dict_lock:
                 status_dict[self.uid] = TgUploadStatus(tg_up, size, gid, self)
@@ -356,54 +362,57 @@ class TaskListener:
                 msg += f"<b>Size: </b>{size}\n"
                 msg += f"<b>cc: </b>{self.tag}\n\n"
                 await sendMessage(msg, self.message)
+
                 async with status_dict_lock:
                     if self.uid in status_dict.keys():
                         del status_dict[self.uid]
                     count = len(status_dict)
+
                 if count == 0:
                     await self.clean()
                 else:
                     await update_all_messages()
             else:
                 size = await get_path_size(path)
+
                 if not config_dict["NO_TASKS_LOGS"]:
                     LOGGER.info(f"Upload Name: {up_name}")
-                await RcloneMirror(up_dir, up_name, size, self.user_id, self).mirror()
 
-    async def onRcloneCopyComplete(
-        self, config_path, name, dest_remote, dest_dir, isGdrive
-    ):
+                rcm = RcloneMirror(path, up_name, size, self.user_id, self)
+                await rcm.mirror()
+
+    async def onRcloneCopyComplete(self, rc_config, rclone_path, folder_name, is_gdrive):
         async with status_dict_lock:
             if self.uid in status_dict.keys():
                 del status_dict[self.uid]
             count = len(status_dict)
 
         button = ButtonMaker()
-        path = f"{dest_remote}:{dest_dir}/{name}"
-
-        if name.endswith("/"):
-            mime_type = "Folder"
-        else:
-            mime_type = "File"
 
         cmd = [
             "rclone",
             "size",
-            f"--config={config_path}",
+            f"--config={rc_config}",
             "--json",
-            f"{dest_remote}:{dest_dir}{name}",
+            rclone_path,
         ]
         out, err, rc = await cmd_exec(cmd)
-        if rc != 0:
+        if rc == 0:
+            data = jsonloads(out)
+        else:
             await sendMessage(f"Error: {err}", self.message)
             return
-        data = jsloads(out)
-        msg = f"<b>Total Files</b>: {data['count']}"
-        msg += f"\n<b>Total Size</b>: {human_readable_bytes(data['bytes'])}"
-        msg += f"\n\n<b>cc: </b>{self.tag}"
+        
+        msg = f"<b>Total Files</b>: {data['count']}\n"
+        size = human_readable_bytes(data['bytes'])
+        msg += f"<b>Total Size</b>: {size}\n\n"
+        msg += f"<b>cc: </b>{self.tag}"
 
-        if isGdrive:
-            link = await get_drive_link(path, config_path, mime_type)
+        if is_gdrive:
+            link= ""
+            id = await get_id(rclone_path, rc_config, folder_name, mime_type="Folder")
+            if id:
+                link = f"https://drive.google.com/drive/folders/{id}"
             if link:
                 button.url_buildbutton("Cloud Link 🔗", link)
             else:
@@ -414,8 +423,8 @@ class TaskListener:
             cmd = [
                 "rclone",
                 "link",
-                f"--config={config_path}",
-                f"{dest_remote}:{dest_dir}{name}",
+                f"--config={rc_config}",
+                rclone_path,
             ]
             out, err, rc = await cmd_exec(cmd)
             url = out.strip()
@@ -496,15 +505,21 @@ class TaskListener:
 
             if is_gdrive:
                 if rclone_path:
-                    link = await get_drive_link(rclone_path, rclone_config, mime_type)     
+                    id = await get_id(rclone_path, rclone_config, name, mime_type)
+                    if id:
+                        if mime_type == "Folder":
+                            link = f"https://drive.google.com/drive/folders/{id}"
+                        else:
+                            link = f"https://drive.google.com/uc?id={id}&export=download"
                 else:
                     link = link
+
                 if link:
                     buttons.url_buildbutton("Cloud Link 🔗", link)
                 else:
                     buttons.url_buildbutton(
                         "Cloud Link 🚫", "https://drive.google.com/uc?id=err"
-                    )
+                )
             else:
                 cmd = ["rclone", "link", f"--config={rclone_config}", rclone_path]
                 res, code = await cmd_exec(cmd)
@@ -539,7 +554,7 @@ class TaskListener:
                 RC_INDEX_PORT = config_dict["RC_INDEX_PORT"]
                 remote, path = rclone_path.split(":", 1)
                 url_path = rutils.quote(f"{path}")
-                share_url = f"{RC_INDEX_URL}:{RC_INDEX_PORT}/[{remote}:]/{url_path}"
+                share_url = f"{RC_INDEX_URL}:{RC_INDEX_PORT}/[{remote}:]{url_path}"
                 if mime_type == "Folder":
                     share_url += "/"
                 buttons.url_buildbutton("Rclone Link 🔗", share_url)

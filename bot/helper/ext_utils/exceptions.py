@@ -20,3 +20,10 @@ class RssShutdownException(Exception):
     """This exception should be raised when shutdown is called to stop the montior"""
 
     pass
+
+
+class ProviderException(Exception):
+    def __init__(self, message, video_file_name):
+        self.message = message
+        self.video_file_name = video_file_name
+        super().__init__(self.message)
