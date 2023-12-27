@@ -17,9 +17,11 @@ from pyrogram import filters
 
 debrid_data = {}
 
-if os.path.exists("debrid/debrid_token.txt"):
-    with open("debrid/debrid_token.txt", "r") as f:
-        debrid_data["token"] = f.read().strip()
+
+async def load_debrid_token():
+    if os.path.exists("debrid/debrid_token.txt"):
+        with open("debrid/debrid_token.txt", "r") as f:
+            debrid_data["token"] = f.read().strip()
 
 
 async def authorize(_, query):
@@ -28,9 +30,9 @@ async def authorize(_, query):
     try:
         response = rd_client.get_device_code()
         text = f"""
-    Go to the next url: {response["verification_url"]},
-    and enter the folowing code: <code>{response["user_code"]}.</code>. 
-    Timeout: 120s
+Go to the next url: {response["verification_url"]},
+and enter the folowing code: <code>{response["user_code"]}</code> 
+Timeout: 120s
     """
         await sendMessage(text, message)
         device_code = response["device_code"]
@@ -176,9 +178,7 @@ async def delete_torrent(client, query):
         "Send a torrent id to delete from debrid, /ignore to cancel", message
     )
     try:
-        if response := await client.listen.Message(
-            filters.text, timeout=60
-        ):
+        if response := await client.listen.Message(filters.text, timeout=60):
             if "/ignore" in response.text:
                 pass
             else:
@@ -217,9 +217,7 @@ and to extract download link, /ignore to cancel""",
         message,
     )
     try:
-        if response := await client.listen.Message(
-            filters.text, timeout=60
-        ):
+        if response := await client.listen.Message(filters.text, timeout=60):
             if "/ignore" in response.text:
                 pass
             else:
@@ -293,9 +291,7 @@ async def generate_link(client, query):
             f"Send a link from the following hosters to unlock. \n/ignore to cancel\n\nSupported Hosts: {hosts}",
             message,
         )
-        if response := await client.listen.Message(
-            filters.text, timeout=60
-        ):
+        if response := await client.listen.Message(filters.text, timeout=60):
             if "/ignore" in response.text:
                 pass
             else:

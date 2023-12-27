@@ -133,6 +133,7 @@ async def main():
     await create_batch_help_buttons()
 
     await torr_search.initiate_search_tools()
+    await debrid.load_debrid_token()
     await run_sync_to_async(start_aria2_listener, wait=False)
 
     if ospath.isfile(".restartmsg"):

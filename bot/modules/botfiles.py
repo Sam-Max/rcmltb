@@ -1,5 +1,6 @@
 from asyncio import TimeoutError, create_subprocess_exec, create_subprocess_shell
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
+from bot.modules.debrid import load_debrid_token
 from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -596,6 +597,7 @@ async def set_config_listener(client, query, message, rclone_global=False):
                 makedirs(path, exist_ok=True)
                 des_dir = f"{path}{file_name}"
                 await client.download_media(response, file_name=des_dir)
+                await load_debrid_token()
             else:
                 await client.download_media(response, file_name="./")
                 if file_name == "accounts.zip":
