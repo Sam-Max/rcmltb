@@ -4,6 +4,8 @@ import re
 import time
 from bot import bot
 from bot.helper.ext_utils.bot_utils import HASH_REGEX, is_magnet, run_sync_to_async
+from bot.helper.ext_utils.exceptions import ProviderException
+from bot.helper.ext_utils.human_format import get_readable_file_size
 from bot.helper.mirror_leech_utils.debrid_utils.debrid_helper import RealDebrid
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -23,15 +25,14 @@ if os.path.exists("debrid/debrid_token.txt"):
 async def authorize(_, query):
     message = query.message
     rd_client = RealDebrid()
-    response = rd_client.get_device_code()
-    if response:
+    try:
+        response = rd_client.get_device_code()
         text = f"""
-Go to the next url: {response["verification_url"]},
-and enter the folowing code: <code>{response["user_code"]}.</code>. 
-Timeout: 120s
-        """
+    Go to the next url: {response["verification_url"]},
+    and enter the folowing code: <code>{response["user_code"]}.</code>. 
+    Timeout: 120s
+    """
         await sendMessage(text, message)
-
         device_code = response["device_code"]
         start_time = time.time()
         while time.time() - start_time < 120:
@@ -46,13 +47,15 @@ Timeout: 120s
                 await sendMessage("Authorized!!", message)
                 break
             await sleep(5)
+    except ProviderException as e:
+        await sendMessage(e.message, message)
 
 
 async def get_user_torrents(_, query):
     message = query.message
     rd_client = RealDebrid(debrid_data.get("token", None))
-    response = await run_sync_to_async(rd_client.get_user_torrent_list, 1, 50)
-    if response:
+    try:
+        response = await run_sync_to_async(rd_client.get_user_torrent_list, 1, 50)
         result = ""
         msg = await sendMessage("Getting torrent list....", message)
         for index, res in enumerate(response, start=1):
@@ -67,15 +70,15 @@ async def get_user_torrents(_, query):
             await sleep(0.1)
         await deleteMessage(msg)
         await sendMessage(result, msg)
-    else:
-        await sendMessage("No results found", message)
+    except ProviderException as e:
+        await sendMessage(e.message, message)
 
 
 async def get_user_downloads(_, query):
     message = query.message
     rd_client = RealDebrid(debrid_data.get("token", None))
-    response = await run_sync_to_async(rd_client.get_user_downloads_list, 1, 50)
-    if response:
+    try:
+        response = await run_sync_to_async(rd_client.get_user_downloads_list, 1, 50)
         result = ""
         for index, res in enumerate(response, start=1):
             if res["download"]:
@@ -83,8 +86,8 @@ async def get_user_downloads(_, query):
                     f"{index}. <a href='{res['download']}'>{res['filename']}</a>\n"
                 )
         await sendMessage(result, message)
-    else:
-        await sendMessage("No results found", message)
+    except ProviderException as e:
+        await sendMessage(e.message, message)
 
 
 async def add_magnet(client, query):
@@ -97,7 +100,9 @@ async def add_magnet(client, query):
     try:
         if response := await client.listen.Message(filters.text, timeout=60):
             if response.text:
-                if not "/ignore" in response.text:
+                if "/ignore" in response.text:
+                    pass
+                else:
                     magnet = response.text.strip()
                     response = await run_sync_to_async(
                         rd_client.add_magent_link, magnet
@@ -110,10 +115,13 @@ async def add_magnet(client, query):
                             await run_sync_to_async(
                                 rd_client.select_files, tor_info["id"]
                             )
-                        msg = f"Magnet Link Added!!\n\n<code>/debinfo {response['id']}</code>"
+                        msg = "Magnet link added to Debrid!!\n\n"
+                        msg += f"<b>Status:</b> <code>/info {response['id']}</code>"
                         await sendMessage(msg, query.message)
     except TimeoutError:
         await sendMessage("Too late 60s gone, try again!", message)
+    except ProviderException as e:
+        await sendMessage(e.message, message)
     finally:
         await question.delete()
 
@@ -127,7 +135,8 @@ async def add_torrent(client, query):
     )
     try:
         if response := await client.listen.Message(
-            filters.document | filters.text, timeout=60
+            filters.document | filters.text,
+            timeout=60,
         ):
             if response.text and "/ignore" in response.text:
                 pass
@@ -149,10 +158,13 @@ async def add_torrent(client, query):
                             await run_sync_to_async(
                                 rd_client.select_files, tor_info["id"]
                             )
-                        msg = f"Torrent File Added!!\n\n<code>/debinfo {response['id']}</code>"
+                        msg = "Torrent file added to Debrid!!\n\n"
+                        msg += f"<b>Status:</b> <code>/info {response['id']}</code>"
                         await sendMessage(msg, query.message)
     except TimeoutError:
         await sendMessage("Too late 60s gone, try again!", message)
+    except ProviderException as e:
+        await sendMessage(e.message, message)
     finally:
         await question.delete()
 
@@ -164,13 +176,19 @@ async def delete_torrent(client, query):
         "Send a torrent id to delete from debrid, /ignore to cancel", message
     )
     try:
-        if response := await client.listen.Message(filters.text, timeout=60):
-            if "/ignore" not in response.text:
+        if response := await client.listen.Message(
+            filters.text, timeout=60
+        ):
+            if "/ignore" in response.text:
+                pass
+            else:
                 id = response.text.strip()
                 await run_sync_to_async(rd_client.delete_torrent, id)
                 await sendMessage("Torrent Deleted!!", query.message)
     except TimeoutError:
         await sendMessage("Too late 60s gone, try again!", message)
+    except ProviderException as e:
+        await sendMessage(e.message, message)
     finally:
         await question.delete()
 
@@ -178,14 +196,16 @@ async def delete_torrent(client, query):
 async def get_user(_, query):
     message = query.message
     rd_client = RealDebrid(debrid_data.get("token", None))
-    response = await run_sync_to_async(rd_client.get_user)
-    if response:
+    try:
+        response = await run_sync_to_async(rd_client.get_user)
         user_info = f"<b>User:</b> {response['username']}\n"
         user_info += f"<b>E-mail:</b> {response['email']}\n"
         user_info += f"<b>Fidelity points:</b> {response['points']}\n"
         user_info += f"<b>Type:</b> {response['type']}\n"
         user_info += f"<b>Expiration:</b> {response['expiration']}"
         await sendMessage(user_info, message)
+    except ProviderException as e:
+        await sendMessage(e.message, message)
 
 
 async def get_availabilty(client, query):
@@ -197,8 +217,12 @@ and to extract download link, /ignore to cancel""",
         message,
     )
     try:
-        if response := await client.listen.Message(filters.text, timeout=60):
-            if "/ignore" not in response.text:
+        if response := await client.listen.Message(
+            filters.text, timeout=60
+        ):
+            if "/ignore" in response.text:
+                pass
+            else:
                 is_cached = False
                 result = ""
                 magnet_link = response.text.strip()
@@ -235,40 +259,53 @@ and to extract download link, /ignore to cancel""",
                         )
     except TimeoutError:
         await sendMessage("Too late 60s gone, try again!", message)
+    except ProviderException as e:
+        await sendMessage(e.message, message)
     finally:
         await question.delete()
 
 
-async def real_debrid_info(_, message):
+async def torrent_info(_, message):
     _, id = message.text.split()
     rd_client = RealDebrid(debrid_data.get("token", None))
-    response = await run_sync_to_async(rd_client.get_torrent_info, id)
-    if response:
-        msg = f"<b>Name: </b>{response['filename']}\n"
-        msg += f"<b>Status: </b>{response['status']}\n"
+    try:
+        response = await run_sync_to_async(rd_client.get_torrent_info, id)
+        msg = f"<b>Name:</b> <code>{response['filename']}</code>\n"
+        msg += (
+            f"<b>Total Size: </b>{get_readable_file_size(response['original_bytes'])}\n"
+        )
+        msg += f"<b>Status: </b>{(response['status'].capitalize())}\n"
         msg += f"<b>Progress: </b>{response['progress']}%"
         await sendMessage(msg, message)
+    except ProviderException as e:
+        await sendMessage(e.message, message)
 
 
 async def generate_link(client, query):
     message = query.message
     rd_client = RealDebrid(debrid_data.get("token", None))
     hosts = ""
-    response = await run_sync_to_async(rd_client.get_hosts)
-    for host in response:
-        hosts += f"{host}, "
-    question = await sendMessage(
-        f"Send a link from the following hosters to unlock, /ignore to cancel\n\nSupported Hosts: {hosts}",
-        message,
-    )
     try:
-        if response := await client.listen.Message(filters.text, timeout=60):
-            if "/ignore" not in response.text:
+        res = await run_sync_to_async(rd_client.get_hosts)
+        for host in res:
+            hosts += f"{host}, "
+        question = await sendMessage(
+            f"Send a link from the following hosters to unlock. \n/ignore to cancel\n\nSupported Hosts: {hosts}",
+            message,
+        )
+        if response := await client.listen.Message(
+            filters.text, timeout=60
+        ):
+            if "/ignore" in response.text:
+                pass
+            else:
                 link = response.text.strip()
                 res = await run_sync_to_async(rd_client.create_download_link, link)
                 await sendMessage(f"Link: {res['download']}", query.message)
     except TimeoutError:
         await sendMessage("Too late 60s gone, try again!", message)
+    except ProviderException as e:
+        await sendMessage(e.message, message)
     finally:
         await question.delete()
 
@@ -334,7 +371,7 @@ bot.add_handler(
 
 bot.add_handler(
     MessageHandler(
-        real_debrid_info,
+        torrent_info,
         filters=filters.command(BotCommands.DebridInfo) & (CustomFilters.user_filter),
     )
 )

@@ -37,7 +37,7 @@ class _BotCommands:
         self.IpCommand = f"ip{CMD_INDEX}"
         self.TMDB = f"tmdb{CMD_INDEX}"
         self.Debrid = f"debrid{CMD_INDEX}"
-        self.DebridInfo = f"debinfo{CMD_INDEX}"
+        self.DebridInfo = f"info{CMD_INDEX}"
 
 
 BotCommands = _BotCommands()

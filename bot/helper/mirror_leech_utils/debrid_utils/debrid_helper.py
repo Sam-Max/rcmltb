@@ -50,19 +50,18 @@ class RealDebrid:
             if is_expected_to_fail:
                 pass
             elif error.response.status_code == 401:
-                raise ProviderException("Invalid token", "invalid_token.mp4")
+                raise ProviderException("Invalid token")
             elif (
                 error.response.status_code == 403
                 and response.json().get("error_code") == 9
             ):
                 raise ProviderException(
-                    "Real-Debrid Permission denied for free account", "need_premium.mp4"
+                    "Real-Debrid Permission denied for free account"
                 )
             else:
                 formatted_traceback = "".join(traceback.format_exception(error))
                 raise ProviderException(
-                    f"status code: {error.response.status_code}, data: {error.response.content}, trace log:\n {formatted_traceback}",
-                    "api_error.mp4",
+                    f"status code: {error.response.status_code}, data: {error.response.content}, trace log:\n {formatted_traceback}"
                 )
 
         if is_return_none:
@@ -72,8 +71,7 @@ class RealDebrid:
         except JSONDecodeError as error:
             formatted_traceback = "".join(traceback.format_exception(error))
             raise ProviderException(
-                f"Failed to parse response. content: {response.text}, trace log:\n {formatted_traceback}",
-                "api_error.mp4",
+                f"Failed to parse response. content: {response.text}, trace log:\n {formatted_traceback}"
             )
 
     def initialize_headers(self):
@@ -96,7 +94,7 @@ class RealDebrid:
         try:
             client_id, client_secret, code = b64decode(token).decode().split(":")
         except ValueError:
-            raise ProviderException("Invalid token", "invalid_token.mp4")
+            raise ProviderException("Invalid token")
         return {"client_id": client_id, "client_secret": client_secret, "code": code}
 
     def get_device_code(self):
@@ -142,11 +140,9 @@ class RealDebrid:
             return {"token": token}
         else:
             return token_data
-        
+
     def get_hosts(self):
-        return self._make_request(
-            "GET", f"{self.BASE_URL}/hosts"
-        )
+        return self._make_request("GET", f"{self.BASE_URL}/hosts")
 
     def add_magent_link(self, magnet_link):
         return self._make_request(
@@ -162,7 +158,7 @@ class RealDebrid:
         return self._make_request(
             "GET", f"{self.BASE_URL}/torrents", params={"page": page, "limit": limit}
         )
-    
+
     def get_user_downloads_list(self, page, limit):
         return self._make_request(
             "GET", f"{self.BASE_URL}/downloads", params={"page": page, "limit": limit}
@@ -211,10 +207,10 @@ class RealDebrid:
         if "error_code" in response:
             if response["error_code"] == 23:
                 raise ProviderException(
-                    "Exceed remote traffic limit", "exceed_remote_traffic_limit.mp4"
+                    "Exceed remote traffic limit"
                 )
         raise ProviderException(
-            f"Failed to create download link. response: {response}", "api_error.mp4"
+            f"Failed to create download link. response: {response}"
         )
 
     def delete_torrent(self, torrent_id):
