@@ -418,12 +418,13 @@ def bt_selection_buttons(id_):
     pincode = "".join([n for n in id_ if n.isdigit()][:4])
     buttons = ButtonMaker()
     QB_BASE_URL = config_dict["QB_BASE_URL"]
+    QB_BASE_PORT = config_dict["QB_BASE_PORT"]
     if config_dict["WEB_PINCODE"]:
-        buttons.url_buildbutton("Select Files", f"{QB_BASE_URL}/app/files/{id_}")
+        buttons.url_buildbutton("Select Files", f"{QB_BASE_URL}:{QB_BASE_PORT}/app/files/{id_}")
         buttons.cb_buildbutton("Pincode", f"btsel pin {gid} {pincode}")
     else:
         buttons.url_buildbutton(
-            "Select Files", f"{QB_BASE_URL}/app/files/{id_}?pin_code={pincode}"
+            "Select Files", f"{QB_BASE_URL}:{QB_BASE_PORT}/app/files/{id_}?pin_code={pincode}"
         )
     buttons.cb_buildbutton("Cancel", f"btsel rm {gid} {id_}")
     buttons.cb_buildbutton("Done Selecting", f"btsel done {gid} {id_}")

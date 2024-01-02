@@ -109,17 +109,14 @@ async def add_magnet(client, query):
                     response = await run_sync_to_async(
                         rd_client.add_magent_link, magnet
                     )
-                    if response:
-                        tor_info = await run_sync_to_async(
-                            rd_client.get_torrent_info, response["id"]
-                        )
-                        if tor_info["status"] == "waiting_files_selection":
-                            await run_sync_to_async(
-                                rd_client.select_files, tor_info["id"]
-                            )
-                        msg = "Magnet link added to Debrid!!\n\n"
-                        msg += f"<b>Status:</b> <code>/info {response['id']}</code>"
-                        await sendMessage(msg, query.message)
+                    tor_info = await run_sync_to_async(
+                        rd_client.get_torrent_info, response["id"]
+                    )
+                    if tor_info["status"] == "waiting_files_selection":
+                        await run_sync_to_async(rd_client.select_files, tor_info["id"])
+                    msg = "Magnet link added to Debrid!!\n\n"
+                    msg += f"<b>Status:</b> <code>/info {response['id']}</code>"
+                    await sendMessage(msg, query.message)
     except TimeoutError:
         await sendMessage("Too late 60s gone, try again!", message)
     except ProviderException as e:
@@ -221,7 +218,6 @@ and to extract download link, /ignore to cancel""",
             if "/ignore" in response.text:
                 pass
             else:
-                is_cached = False
                 result = ""
                 magnet_link = response.text.strip()
                 if is_magnet(magnet_link):
@@ -231,8 +227,6 @@ and to extract download link, /ignore to cancel""",
                             rd_client.get_torrent_instant_availability, hash
                         )
                         if hash in response:
-                            is_cached = True
-                        if is_cached:
                             response = await run_sync_to_async(
                                 rd_client.add_magent_link, magnet_link
                             )

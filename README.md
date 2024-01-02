@@ -50,7 +50,7 @@ leech_batch - or /lb Leech Telegram files/links in batch to Telegram
 ytdl - or /y Mirror ytdlp supported link
 ytdl_leech - or /yl Leech yt-dlp supported link
 files - or /bf Bot configuration files
-debrid - Debrid Manager (paid option)
+debrid - Debrid Manager
 rcfm - Rclone File Manager
 copy - Copy from cloud to cloud
 clone - Clone gdrive link file/folder 
@@ -153,7 +153,7 @@ pip3 install -r requirements-cli.txt
   - `RCLONE_COPY_FLAGS` = key:value,key. All Flags: [RcloneFlags](https://rclone.org/flags/).`Str`
   - `RCLONE_UPLOAD_FLAGS` = key:value,key. `Str`
   - `RCLONE_DOWNLOAD_FLAGS` = key:value,key.`Str`
-  - `RC_INDEX_URL`: Ip (public/domain) where bot is running for rclone index. Format of URL should be http://myip, where myip is the IP/Domain(public). `Str`
+  - `RC_INDEX_URL`: Public IP/domain where bot is running. Format of URL must be: http://myip, where myip is the Public IP/Domain. `Str`
   - `RC_INDEX_PORT`: Port to use. Default to `8080`. `Str`
   - `RC_INDEX_USER`: Custom user. Default to `admin`. `Str`
   - `RC_INDEX_PASS`: Custom password. Default to `admin`. `Str`
@@ -186,7 +186,7 @@ pip3 install -r requirements-cli.txt
 
   ### qBittorrent/Aria2c
 
-  - `QB_BASE_URL`: Valid BASE URL where the bot is deployed to use qbittorrent web selection and local mirror. Format of URL should be http://myip, where myip is the IP/Domain(public). If you have chosen port other than 80 so write it in this format http://myip:port (http and not https).`Str`
+  - `QB_BASE_URL`: Valid BASE URL where the bot is deployed to use qbittorrent web selection and local mirror. Format of URL should be http://myip, where myip is the Public IP/Domain. If you have chosen port other than 80, write it in this format http://myip:port (http and not https).`Str`
   - `QB_SERVER_PORT`: Port. Default to `80`. `Int`
   - `WEB_PINCODE`: If empty or False means no pincode required while torrent file web selection. Bool
   Qbittorrent NOTE: If your facing ram exceeded issue then set limit for MaxConnecs, decrease AsyncIOThreadsCount in qbittorrent config and set limit of DiskWriteCacheSize to 32.`Int`
