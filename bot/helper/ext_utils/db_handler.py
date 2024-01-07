@@ -11,7 +11,7 @@ from bot import (
     config_dict,
     aria2_options,
     qbit_options,
-    botloop,
+    bot_loop,
 )
 
 
@@ -202,4 +202,4 @@ class DbManager:
 
 
 if DATABASE_URL:
-    botloop.run_until_complete(DbManager().db_load())
+    bot_loop.run_until_complete(DbManager().db_load())

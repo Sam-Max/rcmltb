@@ -10,7 +10,9 @@ from bot.helper.mirror_leech_utils.status_utils.gdrive_status import GdriveStatu
 
 async def add_gd_download(link, new_name, path, listener):
     drive = gdCount()
-    name, mime_type, size, _, _ = await run_sync_to_async(drive.count, link, listener.user_id)
+    name, mime_type, size, _, _ = await run_sync_to_async(
+        drive.count, link, listener.user_id
+    )
     if mime_type is None:
         await sendMessage(name, listener.message)
         return

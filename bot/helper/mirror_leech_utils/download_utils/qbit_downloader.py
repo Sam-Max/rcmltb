@@ -9,10 +9,14 @@ from bot import (
     qb_listener_lock,
     get_client,
     config_dict,
-    botloop,
+    bot_loop,
     LOGGER,
 )
-from bot.helper.ext_utils.bot_utils import get_readable_time, new_task, run_sync_to_async
+from bot.helper.ext_utils.bot_utils import (
+    get_readable_time,
+    new_task,
+    run_sync_to_async,
+)
 from bot.helper.telegram_helper.message_utils import (
     deleteMessage,
     sendMarkup,
@@ -45,7 +49,9 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
             headers={"user-agent": "Wget/1.12"},
         )
         if op.lower() == "ok.":
-            tor_info = await run_sync_to_async(client.torrents_info, tag=f"{listener.uid}")
+            tor_info = await run_sync_to_async(
+                client.torrents_info, tag=f"{listener.uid}"
+            )
             if len(tor_info) == 0:
                 while True:
                     tor_info = await run_sync_to_async(
@@ -115,7 +121,9 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
 
 
 async def __remove_torrent(client, hash_, tag):
-    await run_sync_to_async(client.torrents_delete, torrent_hashes=hash_, delete_files=True)
+    await run_sync_to_async(
+        client.torrents_delete, torrent_hashes=hash_, delete_files=True
+    )
     async with qb_listener_lock:
         if tag in QbTorrents:
             del QbTorrents[tag]
@@ -279,5 +287,5 @@ async def onDownloadStart(tag):
             "seeding": False,
         }
         if not QbInterval:
-            periodic = botloop.create_task(__qb_listener())
+            periodic = bot_loop.create_task(__qb_listener())
             QbInterval.append(periodic)

@@ -439,11 +439,11 @@ async def getTaskByGid(gid):
     return None
 
 
-async def getAllTasks(req_status: str):
+async def getAllTasks(status: str):
     async with status_dict_lock:
-        if req_status == "all":
+        if status == "all":
             return list(status_dict.values())
-        return [dl for dl in status_dict.values() if dl.status() == req_status]
+        return [dl for dl in status_dict.values() if dl.status() == status]
 
 
 async def get_image_from_url(url, filename):

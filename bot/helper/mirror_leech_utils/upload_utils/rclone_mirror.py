@@ -5,7 +5,6 @@ from os import path as ospath, remove as osremove, walk
 from string import ascii_letters, digits
 from bot import (
     GLOBAL_EXTENSION_FILTER,
-    LOGGER,
     status_dict,
     status_dict_lock,
     remotes_multi,

@@ -117,14 +117,13 @@ class YoutubeDLHelper:
             except:
                 pass
 
-    async def __onDownloadStart(self, from_queue=False):
+    async def __onDownloadStart(self):
         async with status_dict_lock:
             status_dict[self.__listener.uid] = YtDlpDownloadStatus(
                 self, self.__listener, self.__gid
             )
-        if not from_queue:
-            await self.__listener.onDownloadStart()
-            await sendStatusMessage(self.__listener.message)
+        await self.__listener.onDownloadStart()
+        await sendStatusMessage(self.__listener.message)
 
     def __onDownloadError(self, error):
         self.__is_cancelled = True

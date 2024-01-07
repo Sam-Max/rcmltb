@@ -100,7 +100,9 @@ async def __onBtDownloadComplete(api, gid):
             await clean_unwanted(download.dir)
         if listener.seed:
             try:
-                await run_sync_to_async(api.set_options, {"max-upload-limit": "0"}, [download])
+                await run_sync_to_async(
+                    api.set_options, {"max-upload-limit": "0"}, [download]
+                )
             except Exception as e:
                 LOGGER.error(
                     f"{e} You are not able to seed because you added global option seed-time=0 without adding specific seed_time for this torrent GID: {gid}"
@@ -120,11 +122,15 @@ async def __onBtDownloadComplete(api, gid):
                     await listener.onUploadError(
                         f"Seeding stopped with Ratio: {dl.ratio()} and Time: {dl.seeding_time()}"
                     )
-                    await run_sync_to_async(api.remove, [download], force=True, files=True)
+                    await run_sync_to_async(
+                        api.remove, [download], force=True, files=True
+                    )
             else:
                 async with status_dict_lock:
                     if listener.uid not in status_dict:
-                        await run_sync_to_async(api.remove, [download], force=True, files=True)
+                        await run_sync_to_async(
+                            api.remove, [download], force=True, files=True
+                        )
                         return
                     status_dict[listener.uid] = AriaStatus(gid, listener, True)
                     status_dict[listener.uid].start_time = seed_start_time

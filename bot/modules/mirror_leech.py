@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
-from bot import DOWNLOAD_DIR, OWNER_ID, PARALLEL_TASKS, bot, config_dict, m_queue
+from bot import DOWNLOAD_DIR, OWNER_ID, bot, config_dict
 from asyncio import TimeoutError, sleep
+from bot.modules.queue import conditional_queue_add
 from pyrogram import filters
 from base64 import b64encode
 from os import path as ospath
@@ -205,16 +206,19 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
             await sendMarkup(msg, message, reply_markup=buttons.build_menu(2))
         else:
             tgdown = TelegramDownloader(file, client, listener, f"{path}/", name)
-            if PARALLEL_TASKS:
-                await m_queue.put(tgdown)
-                return
-            await tgdown.download()
+            await conditional_queue_add(message, tgdown.download)
     elif is_gdrive_link(link):
-        await add_gd_download(link, name, path, listener)
+        await conditional_queue_add(
+            message, add_gd_download, link, name, path, listener
+        )
     elif is_mega_link(link):
-        await add_mega_download(link, f"{path}/", listener, name)
+        await conditional_queue_add(
+            message, add_mega_download, link, f"{path}/", listener, name
+        )
     elif is_magnet(link) or ospath.exists(link):
-        await add_qb_torrent(link, path, listener, ratio, seed_time)
+        await conditional_queue_add(
+            message, add_qb_torrent, link, path, listener, ratio, seed_time
+        )
     else:
         ussr = args.auth_user
         pssw = args.auth_pswd
@@ -223,7 +227,9 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
             auth = "Basic " + b64encode(auth.encode()).decode("ascii")
         else:
             auth = ""
-        await add_aria2c_download(link, path, listener, name, auth)
+        await conditional_queue_add(
+            message, add_aria2c_download, link, path, listener, name, auth
+        )
 
 
 async def mirror_menu(client, query):
@@ -250,10 +256,7 @@ async def mirror_menu(client, query):
             tgdown = TelegramDownloader(
                 file, client, listener, f"{DOWNLOAD_DIR}{listener.uid}/"
             )
-            if PARALLEL_TASKS:
-                await m_queue.put(tgdown)
-                return
-            await tgdown.download()
+            await conditional_queue_add(message, tgdown.download)
     elif cmd[1] == "rename":
         await query_message.delete()
         question = await client.send_message(
@@ -279,10 +282,7 @@ async def mirror_menu(client, query):
                             f"{DOWNLOAD_DIR}{listener.uid}/",
                             new_name,
                         )
-                        if PARALLEL_TASKS:
-                            await m_queue.put(tgdown)
-                            return
-                        await tgdown.download()
+                        await conditional_queue_add(message, tgdown.download)
         except TimeoutError:
             await sendMessage("Too late 60s gone, try again!", message)
         finally:
@@ -318,10 +318,7 @@ async def mirror_select(client, callback_query):
         tgdown = TelegramDownloader(
             file, client, listener, f"{DOWNLOAD_DIR}{listener.uid}/", new_name
         )
-        if PARALLEL_TASKS:
-            await m_queue.put(tgdown)
-            return
-        await tgdown.download()
+        await conditional_queue_add(message, tgdown.download)
     elif cmd[1] == "close":
         await query.answer()
         await deleteMessage(message)
@@ -357,10 +354,7 @@ async def handle_auto_mirror(client, message):
             tgdown = TelegramDownloader(
                 file, client, listener, f"{DOWNLOAD_DIR}{listener.uid}/"
             )
-            if PARALLEL_TASKS:
-                await m_queue.put(tgdown)
-                return
-            await tgdown.download()
+            await conditional_queue_add(message, tgdown.download)
 
 
 parser = ArgumentParser(description="rcmltb args usage:", argument_default="")

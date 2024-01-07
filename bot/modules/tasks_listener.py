@@ -44,7 +44,7 @@ from bot.helper.ext_utils.misc_utils import (
 )
 from bot.helper.ext_utils.rclone_utils import get_id
 from bot.helper.mirror_leech_utils.status_utils.tg_upload_status import TgUploadStatus
-from bot.helper.mirror_leech_utils.upload_utils.rclone_upload import RcloneMirror
+from bot.helper.mirror_leech_utils.upload_utils.rclone_mirror import RcloneMirror
 from bot.helper.mirror_leech_utils.status_utils.extract_status import ExtractStatus
 from bot.helper.mirror_leech_utils.status_utils.split_status import SplitStatus
 from bot.helper.mirror_leech_utils.status_utils.zip_status import ZipStatus

@@ -3,7 +3,6 @@ __author__ = "Sam-Max"
 
 from uvloop import install
 from asyncio import Lock
-from asyncio import Queue
 from socket import setdefaulttimeout
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from os import environ, getcwd, remove as osremove, path as ospath
@@ -56,9 +55,6 @@ status_dict_lock = Lock()
 status_dict = {}
 status_reply_dict_lock = Lock()
 status_reply_dict = {}
-
-m_queue = Queue()
-l_queue = Queue()
 
 BOT_TOKEN = environ.get("BOT_TOKEN", "")
 if len(BOT_TOKEN) == 0:
@@ -503,6 +499,6 @@ bot = tgClient(
 )
 Conversation(bot)
 bot.start()
-botloop = bot.loop
+bot_loop = bot.loop
 
-scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=botloop)
+scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)

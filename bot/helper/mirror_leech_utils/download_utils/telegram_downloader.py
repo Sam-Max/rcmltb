@@ -56,7 +56,7 @@ class TelegramDownloader:
             self.progress = current / self.size * 100
         except:
             pass
-
+    
     async def download(self):
         if IS_PREMIUM_USER and not self.__listener.isSuperGroup:
             await sendMessage(

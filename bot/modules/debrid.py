@@ -35,20 +35,23 @@ and enter the folowing code: <code>{response["user_code"]}</code>
 Timeout: 120s
     """
         await sendMessage(text, message)
+
         device_code = response["device_code"]
+        interval = int(response["interval"])
+        expires_in = int(response["expires_in"])
         start_time = time.time()
-        while time.time() - start_time < 120:
+
+        while time.time() - start_time < expires_in:
             res = rd_client.authorize(device_code)
             if "token" in res:
                 debrid_data["token"] = res["token"]
-                path = f"{os.getcwd()}/debrid/"
-                file_name = "debrid_token.txt"
+                path = f"{os.getcwd()}/debrid/debrid_token.txt"
                 os.makedirs(path, exist_ok=True)
-                with open(f"{path}{file_name}", "w") as f:
+                with open(f"{path}", "w") as f:
                     f.write(res["token"])
                 await sendMessage("Authorized!!", message)
                 break
-            await sleep(5)
+            await sleep(1000 * interval)
     except ProviderException as e:
         await sendMessage(e.message, message)
 
@@ -218,7 +221,6 @@ and to extract download link, /ignore to cancel""",
             if "/ignore" in response.text:
                 pass
             else:
-                result = ""
                 magnet_link = response.text.strip()
                 if is_magnet(magnet_link):
                     hash = re.search(HASH_REGEX, magnet_link).group(1)
@@ -236,6 +238,7 @@ and to extract download link, /ignore to cancel""",
                             torr_info = await run_sync_to_async(
                                 rd_client.get_torrent_info, response["id"]
                             )
+                            result = ""
                             for index, link in enumerate(torr_info["links"], start=1):
                                 res = await run_sync_to_async(
                                     rd_client.create_download_link, link
@@ -276,9 +279,9 @@ async def torrent_info(_, message):
 async def generate_link(client, query):
     message = query.message
     rd_client = RealDebrid(debrid_data.get("token", None))
-    hosts = ""
     try:
         res = await run_sync_to_async(rd_client.get_hosts)
+        hosts = ""
         for host in res:
             hosts += f"{host}, "
         question = await sendMessage(

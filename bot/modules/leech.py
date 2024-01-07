@@ -28,7 +28,7 @@ from bot.helper.ext_utils.rclone_utils import (
     list_remotes,
 )
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
-from bot.helper.mirror_leech_utils.download_utils.rclone_download import RcloneLeech
+from bot.helper.mirror_leech_utils.download_utils.rclone_leech import RcloneLeech
 from bot.modules.tasks_listener import TaskListener
 from bot.modules.mirror_leech import mirror_leech
 
@@ -100,12 +100,14 @@ async def leech_menu_cb(_, callback_query):
         name, _ = ospath.splitext(base_dir)
         dest_dir = f"{DOWNLOAD_DIR}{msg_id}/{name}"
         await deleteMessage(message)
-        await RcloneLeech(base_dir, dest_dir, listener).leech()
+        rc_leech= RcloneLeech(base_dir, dest_dir, listener)
+        await rc_leech.leech()
     elif cmd[1] == "leech_folder":
         await query.answer()
         dest_dir = f"{DOWNLOAD_DIR}{msg_id}/{base_dir}"
         await deleteMessage(message)
-        await RcloneLeech(base_dir, dest_dir, listener, isFolder=True).leech()
+        rc_leech = RcloneLeech(base_dir, dest_dir, listener, isFolder=True)
+        await rc_leech.leech()
     elif cmd[1] == "back":
         if len(base_dir) == 0:
             await list_remotes(message, menu_type=Menus.LEECH, edit=True)

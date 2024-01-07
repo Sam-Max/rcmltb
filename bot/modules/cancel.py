@@ -1,4 +1,5 @@
-from asyncio import sleep, QueueEmpty
+from asyncio import sleep
+from bot.modules.queue import queue
 from pyrogram.filters import regex
 from bot import (
     status_dict_lock,
@@ -6,8 +7,6 @@ from bot import (
     bot,
     status_dict,
     user_data,
-    m_queue,
-    l_queue,
 )
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -68,9 +67,12 @@ async def cancell_all_buttons(client, message):
     buttons.cb_buildbutton("Uploading", f"canall {MirrorStatus.STATUS_UPLOADING}")
     buttons.cb_buildbutton("Seeding", f"canall {MirrorStatus.STATUS_SEEDING}")
     buttons.cb_buildbutton("Cloning", f"canall {MirrorStatus.STATUS_CLONING}")
+    buttons.cb_buildbutton("Splitting", f"canall {MirrorStatus.STATUS_SPLITTING}")
+    buttons.cb_buildbutton("Extracting", f"canall {MirrorStatus.STATUS_EXTRACTING}")
+    buttons.cb_buildbutton("Archiving", f"canall {MirrorStatus.STATUS_ARCHIVING}")
+    buttons.cb_buildbutton("QueuedDl", f"canall {MirrorStatus.STATUS_QUEUEDL}")
+    buttons.cb_buildbutton("QueuedUp", f"canall {MirrorStatus.STATUS_QUEUEUP}")
     buttons.cb_buildbutton("Paused", f"canall {MirrorStatus.STATUS_PAUSED}")
-    buttons.cb_buildbutton("Mirror Queue", f"canall mqueue")
-    buttons.cb_buildbutton("Leech Queue", f"canall lqueue")
     buttons.cb_buildbutton("All", "canall all")
     buttons.cb_buildbutton("Close", "canall close")
     await sendMarkup("Choose tasks to cancel.", message, buttons.build_menu(2))
@@ -78,26 +80,9 @@ async def cancell_all_buttons(client, message):
 
 async def cancel_all_update(client, query):
     message = query.message
-    tag = f"@{message.from_user.username}"
     data = query.data.split()
     await query.answer()
-    if data[1] == "mqueue":
-        try:
-            while True:
-                m_queue.get_nowait()
-                m_queue.task_done()
-        except QueueEmpty:
-            await sendMessage(f"{tag} your mirror queue has been cancelled", message)
-        return
-    elif data[1] == "lqueue":
-        try:
-            while True:
-                l_queue.get_nowait()
-                l_queue.task_done()
-        except QueueEmpty:
-            await sendMessage(f"{tag} your mirror queue has been cancelled", message)
-        return
-    elif data[1] == "close":
+    if data[1] == "close":
         await query.message.delete()
     else:
         res = await cancel_all_(data[1])
@@ -106,13 +91,13 @@ async def cancel_all_update(client, query):
 
 
 async def cancel_all_(status):
-    matches = await getAllTasks(status)
-    if not matches:
+    tasks = await getAllTasks(status)
+    if not tasks:
         return False
-    for task in matches:
+    for task in tasks:
         obj = task.task()
         await obj.cancel_task()
-        await sleep(1)
+        await sleep(2)
     return True
 
 

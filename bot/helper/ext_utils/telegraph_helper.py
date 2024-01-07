@@ -3,7 +3,7 @@ from string import ascii_letters
 from random import SystemRandom
 from telegraph.aio import Telegraph
 from telegraph.exceptions import RetryAfterError
-from bot import LOGGER, botloop
+from bot import LOGGER, bot_loop
 
 
 class TelegraphHelper:
@@ -80,4 +80,4 @@ class TelegraphHelper:
 
 
 telegraph = TelegraphHelper("Rclone-Telegram-Bot", "https://github.com/Sam-Max/rcmltb/")
-botloop.run_until_complete(telegraph.create_account())
+bot_loop.run_until_complete(telegraph.create_account())

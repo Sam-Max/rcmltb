@@ -21,8 +21,7 @@ from bot import (
     botUptime,
     config_dict,
     user_data,
-    m_queue,
-    botloop,
+    bot_loop,
 )
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -33,6 +32,7 @@ from bot.helper.mirror_leech_utils.status_utils.status_utils import (
     get_progress_bar_rclone,
     get_progress_bar_string,
 )
+from bot.modules.queue import queue
 
 
 THREADPOOL = ThreadPoolExecutor(max_workers=1000)
@@ -215,9 +215,9 @@ def get_readable_message():
                 msg += f"\n<b>Processed:</b> {download.processed_bytes()}"
             else:
                 msg += f"\n{get_progress_bar_string(download.progress())} {download.progress()}"
-                if m_queue.qsize() > 0:
-                    msg += f"\n<b>Enqueue:</b> {m_queue.qsize()}"
                 msg += f"\n<b>Processed:</b> {download.processed_bytes()} of {download.size()}"
+            if queue:
+                msg += f"\n<b>Enqueue:</b> {queue.queue.qsize()}/{queue.queue.maxsize}"
             msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
             if hasattr(download, "seeders_num"):
                 try:
@@ -296,7 +296,7 @@ class setInterval:
     def __init__(self, interval, action):
         self.interval = interval
         self.action = action
-        self.task = botloop.create_task(self.setInterval())
+        self.task = bot_loop.create_task(self.setInterval())
 
     async def setInterval(self):
         while True:
@@ -309,7 +309,7 @@ class setInterval:
 
 async def run_sync_to_async(func, *args, wait=True, **kwargs):
     pfunc = partial(func, *args, **kwargs)
-    future = botloop.run_in_executor(THREADPOOL, pfunc)
+    future = bot_loop.run_in_executor(THREADPOOL, pfunc)
     if wait:
         return await future
     else:
@@ -317,7 +317,7 @@ async def run_sync_to_async(func, *args, wait=True, **kwargs):
 
 
 def run_async_to_sync(func, *args, wait=True, **kwargs):
-    future = run_coroutine_threadsafe(func(*args, **kwargs), botloop)
+    future = run_coroutine_threadsafe(func(*args, **kwargs), bot_loop)
     if wait:
         return future.result()
     else:
@@ -325,13 +325,13 @@ def run_async_to_sync(func, *args, wait=True, **kwargs):
 
 
 def create_task(func, *args, **kwargs):
-    return botloop.create_task(func(*args, **kwargs))
+    return bot_loop.create_task(func(*args, **kwargs))
 
 
 def new_task(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        return botloop.create_task(func(*args, **kwargs))
+        return bot_loop.create_task(func(*args, **kwargs))
 
     return wrapper
 
@@ -339,7 +339,7 @@ def new_task(func):
 def new_thread(func):
     @wraps(func)
     def wrapper(*args, wait=False, **kwargs):
-        future = run_coroutine_threadsafe(func(*args, **kwargs), botloop)
+        future = run_coroutine_threadsafe(func(*args, **kwargs), bot_loop)
         return future.result() if wait else future
 
     return wrapper
@@ -359,7 +359,7 @@ async def cmd_exec(cmd, shell=False):
 def run_thread_dec(func):
     @wraps(func)
     def wrapper(*args, wait=False, **kwargs):
-        future = run_coroutine_threadsafe(func(*args, **kwargs), botloop)
+        future = run_coroutine_threadsafe(func(*args, **kwargs), bot_loop)
         if wait:
             return future.result()
         else:
