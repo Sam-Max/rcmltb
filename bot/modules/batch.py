@@ -80,24 +80,25 @@ async def _batch(client, message, isLeech=False):
                         await sleep(7)
                 else:
                     _link = get_link(response.text)
-                    await sendMessage(
-                        "Send me the number of files to save from given link, /ignore to cancel",
-                        message,
-                    )
-                    try:
-                        response = await client.listen.Message(
-                            filters.text, id=filters.user(user_id), timeout=60
+                    if _link:
+                        await sendMessage(
+                            "Send me the number of files to save from given link, /ignore to cancel",
+                            message,
                         )
-                        if "/ignore" in response.text:
-                            return
-                        else:
-                            multi = int(response.text)
-                        await download(message, _link, multi, isLeech=isLeech)
-                    except ValueError:
-                        await sendMessage("Range must be an integer!", message)
-                    except FloodWait as fw:
-                        await sleep(fw.seconds + 5)
-                        await download(message, _link, multi, isLeech=isLeech)
+                        try:
+                            response = await client.listen.Message(
+                                filters.text, id=filters.user(user_id), timeout=60
+                            )
+                            if "/ignore" in response.text:
+                                return
+                            else:
+                                multi = int(response.text)
+                            await download(message, _link, multi, isLeech=isLeech)
+                        except ValueError:
+                            await sendMessage("Range must be an integer!", message)
+                        except FloodWait as fw:
+                            await sleep(fw.seconds + 5)
+                            await download(message, _link, multi, isLeech=isLeech)
         else:
             file_name = response.document.file_name
             if file_name.split(".")[1] in ["txt", ".txt"]:
@@ -125,7 +126,7 @@ async def _batch(client, message, isLeech=False):
                         create_task(mirror_leech, client, msg, isLeech=isLeech)
                         await sleep(7)
             else:
-                await sendMessage("Send a txt file", message)
+                await sendMessage("Send a .txt file", message)
     except TimeoutError:
         await sendMessage("Too late 60s gone, try again!", message)
     finally:

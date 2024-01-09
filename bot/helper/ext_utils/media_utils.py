@@ -7,15 +7,14 @@ from bot.helper.ext_utils.misc_utils import get_media_info
 
 
 async def take_ss(video_file, ss_nb) -> list:
-    if ss_nb > 10:
-        ss_nb = 10
+    ss_nb = min(ss_nb, 10)
     duration = (await get_media_info(video_file))[0]
     if duration != 0:
         dirpath, name = video_file.rsplit("/", 1)
         name, _ = ospath.splitext(name)
         dirpath = f"{dirpath}/screenshots/"
         await makedirs(dirpath, exist_ok=True)
-        interval = duration // ss_nb + 1
+        interval = duration // (ss_nb + 1)
         cap_time = interval
         outputs = []
         cmd = ""

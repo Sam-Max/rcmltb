@@ -62,7 +62,7 @@ from .modules import (
 )
 
 
-async def start(client, message):
+async def start(_, message):
     buttons = ButtonMaker()
     buttons.url_buildbutton("Repo", "https://github.com/Sam-Max/rcmltb")
     buttons.url_buildbutton("Owner", "https://github.com/Sam-Max")
@@ -80,7 +80,7 @@ I can also can mirror-leech files and links to Telegram or cloud**\n\n
         )
 
 
-async def restart(client, message):
+async def restart(_, message):
     restart_msg = await sendMessage("Restarting...", message)
     if scheduler.running:
         scheduler.shutdown(wait=False)
@@ -101,20 +101,26 @@ async def restart(client, message):
     osexecl(executable, executable, "-m", "bot")
 
 
-async def ping(client, message):
+async def ping(_, message):
     start_time = int(round(time() * 1000))
     reply = await sendMessage("Starting Ping", message)
     end_time = int(round(time() * 1000))
     await editMessage(f"{end_time - start_time} ms", reply)
 
 
-async def get_ip(client, message):
-    stdout, stderr, rc = await cmd_exec("curl https://ifconfig.me/all.json", shell=True)
-    if rc == 0:
+async def get_ip(_, message):
+    stdout, stderr, code = await cmd_exec(
+        "curl https://ifconfig.me/all.json", shell=True
+    )
+    if code == 0:
         res = loads(stdout)
         await message.reply_text(f"Your IP is {res['ip_addr']}")
     else:
-        LOGGER.info(f"Error: {stderr}")
+        stdout, stderr, code = await cmd_exec("curl https://api.ipify.org/", shell=True)
+        if code == 0:
+            await message.reply_text(f"Your IP is {stdout.strip()}")
+        else:
+            LOGGER.info(f"Error: {stderr}")
 
 
 async def get_log(client, message):
@@ -167,6 +173,7 @@ async def main():
     bot.add_handler(MessageHandler(get_ip, filters=command(BotCommands.IpCommand)))
     LOGGER.info("Bot Started!")
     signal(SIGINT, exit_clean_up)
+
 
 bot_loop.run_until_complete(main())
 bot_loop.run_forever()

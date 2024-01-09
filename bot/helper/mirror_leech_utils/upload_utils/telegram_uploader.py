@@ -375,7 +375,7 @@ class TelegramUploader:
                     await aioremove(m)
 
     async def __prepare_file(self, file_, dirpath):
-        if len(file_) > 60:
+        if len(file_) > 54:
             if is_archive(file_):
                 name = get_base_name(file_)
                 ext = file_.split(name, 1)[1]
@@ -389,7 +389,7 @@ class TelegramUploader:
                 name = file_
                 ext = ""
             extn = len(ext)
-            remain = 60 - extn
+            remain = 54 - extn
             name = name[:remain]
             new_path = ospath.join(dirpath, f"{name}{ext}")
             osrename(self.__upload_path, new_path)
