@@ -1,5 +1,6 @@
 from asyncio import TimeoutError
 from os import path as ospath
+from bot.modules.queue import conditional_queue_add
 from pyrogram.filters import regex, command
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram import filters
@@ -58,7 +59,9 @@ async def leech(client, message):
         if message.reply_to_message:
             await mirror_leech(client, message, isLeech=True)
             return
-        elif config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters.sudo_filter("", message):
+        elif config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters.sudo_filter(
+            "", message
+        ):
             await sendMarkup(
                 "Select from where you want to leech", message, button.build_menu(2)
             )
@@ -100,14 +103,14 @@ async def leech_menu_cb(_, callback_query):
         name, _ = ospath.splitext(base_dir)
         dest_dir = f"{DOWNLOAD_DIR}{msg_id}/{name}"
         await deleteMessage(message)
-        rc_leech= RcloneLeech(base_dir, dest_dir, listener)
-        await rc_leech.leech()
+        rc_leech = RcloneLeech(base_dir, dest_dir, listener)
+        await conditional_queue_add(message, rc_leech.leech)
     elif cmd[1] == "leech_folder":
         await query.answer()
         dest_dir = f"{DOWNLOAD_DIR}{msg_id}/{base_dir}"
         await deleteMessage(message)
         rc_leech = RcloneLeech(base_dir, dest_dir, listener, isFolder=True)
-        await rc_leech.leech()
+        await conditional_queue_add(message, rc_leech.leech)
     elif cmd[1] == "back":
         if len(base_dir) == 0:
             await list_remotes(message, menu_type=Menus.LEECH, edit=True)
@@ -143,7 +146,9 @@ async def next_page_leech(_, callback_query):
     buttons = ButtonMaker()
     buttons.cb_buildbutton(f"✅ Select this folder", f"leechmenu^leech_folder^{user_id}")
 
-    next_info, _next_offset = await run_sync_to_async(rcloneListNextPage, info, next_offset)
+    next_info, _next_offset = await run_sync_to_async(
+        rcloneListNextPage, info, next_offset
+    )
 
     await run_sync_to_async(
         rcloneListButtonMaker,
@@ -187,7 +192,9 @@ async def selection_callback(client, query):
         return
     elif cmd[1] == "link":
         await query.answer()
-        question = await sendMessage(LEECH_HELP_DICT["Cmd"], message, LEECH_HELP_DICT["Menu"] )
+        question = await sendMessage(
+            LEECH_HELP_DICT["Cmd"], message, LEECH_HELP_DICT["Menu"]
+        )
         try:
             response = await client.listen.Message(
                 filters.text, id=filters.user(user_id), timeout=60
