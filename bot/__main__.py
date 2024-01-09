@@ -109,18 +109,11 @@ async def ping(_, message):
 
 
 async def get_ip(_, message):
-    stdout, stderr, code = await cmd_exec(
-        "curl https://ifconfig.me/all.json", shell=True
-    )
+    stdout, stderr, code = await cmd_exec("curl https://api.ipify.org/", shell=True)
     if code == 0:
-        res = loads(stdout)
-        await message.reply_text(f"Your IP is {res['ip_addr']}")
+        await message.reply_text(f"Your IP is {stdout.strip()}")
     else:
-        stdout, stderr, code = await cmd_exec("curl https://api.ipify.org/", shell=True)
-        if code == 0:
-            await message.reply_text(f"Your IP is {stdout.strip()}")
-        else:
-            LOGGER.info(f"Error: {stderr}")
+        await message.reply_text(f"Error: {stderr}")
 
 
 async def get_log(client, message):
