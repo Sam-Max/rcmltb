@@ -2,6 +2,7 @@ __version__ = "4.6"
 __author__ = "Sam-Max"
 
 from uvloop import install
+import asyncio
 from asyncio import Lock
 from socket import setdefaulttimeout
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
@@ -23,6 +24,7 @@ from tzlocal import get_localzone
 faulthandler_enable()
 
 install()
+asyncio.set_event_loop(asyncio.new_event_loop())
 
 setdefaulttimeout(600)
 

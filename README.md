@@ -1,9 +1,98 @@
 
 An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with rclone support added, and other features and changes from base code.
 
+This is a fork of [Sam-Max/rcmltb](https://github.com/Sam-Max/rcmltb) with additional improvements and bug fixes.
 
-**NOTE**: Base repository added recently its own rclone implementation. 
+**NOTE**: Base repository added recently its own rclone implementation.
 
+---
+
+## 🍎 ARM64 Support (Apple Silicon / Raspberry Pi / ARM Servers)
+
+**Running on ARM64?** Use the [`arm64` branch](https://github.com/cybercyberz/rcmltb/tree/arm64) for native support:
+
+```bash
+git clone -b arm64 https://github.com/cybercyberz/rcmltb.git
+```
+
+The ARM64 branch includes:
+- Native ARM64 Dockerfile (Apple M1/M2/M3, Raspberry Pi 4/5, ARM cloud servers)
+- All features work except MEGA downloads (SDK not available for ARM64)
+- Bug fixes backported from master
+
+---
+
+## 🆕 Fork Improvements & Changelog
+
+This fork includes the following enhancements over the original repository:
+
+### v1.1.0 - Private Channel Batch Fix (2024-12-24)
+
+#### 🐛 Bug Fixes
+- **Fixed "Peer id invalid" error for private channel batch operations**: The original bot would fail with `BAD_REQUEST: Peer id invalid` error when using `/mb` (mirror batch) or `/lb` (leech batch) commands with private/restricted channel links.
+  - **Root Cause**: Pyrogram requires the peer (channel) to be in its internal cache before it can fetch messages. For private channels, this cache wasn't being populated.
+  - **Solution**: The fix now iterates through user dialogs to find and cache the channel peer before attempting to fetch messages from private channels.
+
+#### 🔧 Enhanced Error Handling
+- **Improved error messages for batch commands**: When batch operations fail on private channels, the bot now provides more descriptive error messages including the actual exception, making it easier to diagnose issues.
+- **Added channel validation**: The bot now checks if the channel exists in user's dialogs and provides a clear message if the channel is not found.
+
+#### 📝 Documentation
+- Added comprehensive guide for generating User Session String
+- Added step-by-step instructions for private channel batch operations
+- Updated README with fork improvements and changelog
+
+---
+
+## 📱 How to Use Private Channel Batch Operations
+
+To download/mirror files from **private or restricted Telegram channels**, you need to set up a User Session String. This allows the bot to access channels that your Telegram account has joined.
+
+### Step 1: Generate User Session String
+
+1. **Install requirements** (if not already installed):
+   ```bash
+   pip3 install pyrogram
+   ```
+
+2. **Run the session generator script**:
+   ```bash
+   python3 session_generator.py
+   ```
+
+3. **Enter your credentials when prompted**:
+   - `API_ID`: Get from https://my.telegram.org
+   - `API_HASH`: Get from https://my.telegram.org
+   - You will receive a verification code on your Telegram app - enter it when prompted
+
+4. **Copy the generated session string**: The script will output a long string starting with `BQ...` - this is your session string.
+
+### Step 2: Configure the Bot
+
+Add your session string to `config.env`:
+```env
+USER_SESSION_STRING = "your_session_string_here"
+```
+
+### Step 3: Join the Private Channel
+
+Make sure the Telegram account (whose session string you generated) has **joined the private channel** you want to download from.
+
+### Step 4: Use Batch Commands
+
+Now you can use batch commands with private channel links:
+
+```
+/mb https://t.me/c/1234567890/100 https://t.me/c/1234567890/150
+```
+
+This will mirror all files from message 100 to 150 from the private channel.
+
+**Commands:**
+- `/mb` or `/mirror_batch` - Mirror files from private channel to cloud
+- `/lb` or `/leech_batch` - Leech files from private channel to Telegram
+
+---
 
 ## Features:
 

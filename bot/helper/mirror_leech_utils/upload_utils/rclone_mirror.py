@@ -100,7 +100,7 @@ class RcloneMirror:
             "-P",
         ]
 
-        is_gdrive = is_gdrive_remote(remote, conf_path)
+        is_gdrive = await is_gdrive_remote(remote, conf_path)
         await setRcloneFlags(cmd, "upload")
 
         if ospath.isdir(path):

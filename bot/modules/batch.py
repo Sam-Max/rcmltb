@@ -153,9 +153,20 @@ async def download(message, link, multi, isLeech, value=0):
         try:
             client = app
             chat = int("-100" + link.split("/")[-2])
+            # Search for the channel in dialogs to populate peer cache
+            found = False
+            async for dialog in app.get_dialogs():
+                if dialog.chat.id == chat:
+                    found = True
+                    break
+            if not found:
+                await sendMessage("Could not find the channel in your chats. Make sure you joined it!", message)
+                return
             msg = await app.get_messages(chat, msg_id)
-        except Exception:
-            await sendMessage("Make sure you joined the channel!!", message)
+        except Exception as e:
+            from bot import LOGGER
+            LOGGER.error(f"Error accessing private channel: {e}")
+            await sendMessage(f"Make sure you joined the channel!! Error: {e}", message)
             return
     else:
         client = bot

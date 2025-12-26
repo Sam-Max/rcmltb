@@ -23,7 +23,8 @@ from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclo
 
 
 async def is_remote_selected(user_id, message):
-    if CustomFilters.sudo_filter("", message):
+    # Use sync CustomFilters.sudo() instead of async sudo_filter to avoid coroutine warning
+    if CustomFilters.sudo(user_id):
         if DEFAULT_OWNER_REMOTE := config_dict["DEFAULT_OWNER_REMOTE"]:
             update_rclone_data("MIRROR_SELECT_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
             return True

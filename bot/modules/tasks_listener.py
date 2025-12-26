@@ -522,7 +522,7 @@ class TaskListener:
                 )
             else:
                 cmd = ["rclone", "link", f"--config={rclone_config}", rclone_path]
-                res, code = await cmd_exec(cmd)
+                res, err, code = await cmd_exec(cmd)
                 if code == 0:
                     buttons.url_buildbutton("Cloud Link 🔗", res)
                 else:

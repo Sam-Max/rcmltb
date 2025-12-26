@@ -34,3 +34,8 @@ class CustomFilters:
 
     sudo_filter = create(custom_sudo_filter)
 
+    @staticmethod
+    def sudo(user_id):
+        """Check if user_id is owner or sudo user"""
+        return user_id == OWNER_ID or (user_id in user_data and user_data[user_id].get("is_sudo", False))
+
