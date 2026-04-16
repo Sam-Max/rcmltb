@@ -178,6 +178,39 @@ def speed_string_to_bytes(size_text: str):
     return size
 
 
+def get_size_bytes(size_text):
+    """Convert size string like '2.5 GB', '1.2 GiB' to bytes."""
+    if not size_text:
+        return 0
+    size_text = size_text.strip().lower()
+    if not size_text:
+        return 0
+    try:
+        # Extract number and unit
+        import re
+        match = re.match(r"(\d+(?:\.\d+)?)\s*(b|kb|mb|gb|tb|pb|kib|mib|gib|tib|pib)?", size_text)
+        if not match:
+            return 0
+        number = float(match.group(1))
+        unit = match.group(2) or "b"
+        units = {
+            "b": 1,
+            "kb": 1024,
+            "mb": 1024 ** 2,
+            "gb": 1024 ** 3,
+            "tb": 1024 ** 4,
+            "pb": 1024 ** 5,
+            "kib": 1024,
+            "mib": 1024 ** 2,
+            "gib": 1024 ** 3,
+            "tib": 1024 ** 4,
+            "pib": 1024 ** 5,
+        }
+        return int(number * units.get(unit, 1))
+    except Exception:
+        return 0
+
+
 def get_readable_message(chat_id=None, status_filter="all"):
     msg = ""
     button = None

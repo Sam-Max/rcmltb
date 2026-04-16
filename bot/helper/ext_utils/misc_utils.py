@@ -465,25 +465,99 @@ async def get_image_from_url(url, filename):
 
 def apply_name_substitute(name: str, substitutes: str) -> str:
     """Apply pattern replacements to filename.
-    
+
     Format: old::new|old2::new2
-    Use \| for literal | in filenames
-    Use \:: for literal :: in filenames
-    
+    Use \\| for literal | in filenames
+    Use \\:: for literal :: in filenames
+
     Examples:
         script::code          # "script" → "code"
         mltb::                # Remove "mltb"
         [test]::test          # "[test]" → "test"
-        
+
     Args:
         name: Original filename
         substitutes: Substitution pattern string
-        
+
     Returns:
         Substituted filename
     """
     if not substitutes or not name:
         return name
+
+    try:
+        # Split by | but handle escaped \|
+        import re
+        # Replace escaped | with a placeholder
+        placeholder = "\x00PIPE\x00"
+        temp_subs = substitutes.replace(r"\|", placeholder)
+
+        pairs = temp_subs.split("|")
+        result = name
+
+        for pair in pairs:
+            if not pair.strip():
+                continue
+
+            # Restore escaped | in the pair
+            pair = pair.replace(placeholder, "|")
+
+            # Split by :: but handle escaped \::
+            colon_placeholder = "\x00COLON\x00"
+            temp_pair = pair.replace(r"\::", colon_placeholder)
+
+            if "::" not in temp_pair:
+                continue
+
+            parts = temp_pair.split("::", 1)
+            if len(parts) != 2:
+                continue
+
+            old_pattern = parts[0].replace(colon_placeholder, "::")
+            new_pattern = parts[1].replace(colon_placeholder, "::")
+
+            # Escape regex special characters in old_pattern
+            old_pattern_escaped = re.escape(old_pattern)
+
+            # Perform substitution
+            result = re.sub(old_pattern_escaped, new_pattern, result)
+
+        return result
+    except Exception as e:
+        LOGGER.error(f"Error applying name substitution: {e}")
+        return name
+
+
+def arg_parser(args, arg_base):
+    """Parse command line arguments into a dictionary.
+
+    Args:
+        args: List of arguments (e.g., from message.text.split()[2:])
+        arg_base: Dictionary with argument flags as keys and default values
+
+    Example:
+        arg_base = {"-c": None, "-inf": None, "-exf": None, "-stv": None}
+        arg_parser(["-c", "mirror", "-inf", "1080p"], arg_base)
+        # arg_base becomes: {"-c": "mirror", "-inf": "1080p", "-exf": None, "-stv": None}
+
+        Supports flags with no values (boolean flags):
+        arg_parser(["-stv"], arg_base)
+        # arg_base["-stv"] becomes True
+    """
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in arg_base:
+            # Check if next item exists and is not a flag
+            if i + 1 < len(args) and not args[i + 1].startswith("-"):
+                arg_base[arg] = args[i + 1]
+                i += 2
+            else:
+                # Boolean flag (no value)
+                arg_base[arg] = True
+                i += 1
+        else:
+            i += 1
     
     try:
         # Split by | but handle escaped \|

@@ -128,26 +128,39 @@ leech = """
 """
 
 RSS_HELP_MESSAGE = """
-Use this format to add feed url:
-Title1 link (required)
-Title2 link c: cmd inf: xx exf: xx opt: options like(up, rcf, pswd) (optional)
-Title3 link c: cmd d:ratio:time opt: up: gd
+📰 <b>RSS Subscription Help</b>
 
-c: command + any mirror option before link like seed option.
-opt: any option after link like up, rcf and pswd(zip).
-inf: For included words filter.
-exf: For excluded words filter.
+<b>Basic Format:</b>
+<code>Title link</code>
 
-Example: Title https://www.rss-url.com inf: 1080 or 720 or 144p|mkv or mp4|hevc exf: flv or web|xxx opt: up: mrcc:remote:path/subdir rcf: --buffer-size:8M|key|key:value
-This filter will parse links that it's titles contains `(1080 or 720 or 144p) and (mkv or mp4) and hevc` and doesn't conyain (flv or web) and xxx` words. You can add whatever you want.
+<b>With Filters & Options:</b>
+<code>Title link c: cmd inf: xx exf: xx opt: options stv</code>
 
-Another example: inf:  1080  or 720p|.web. or .webrip.|hvec or x264. This will parse titles that contains ( 1080  or 720p) and (.web. or .webrip.) and (hvec or x264). I have added space before and after 1080 to avoid wrong matching. If this `10805695` number in title it will match 1080 if added 1080 without spaces after it.
+<b>Arguments:</b>
+• <code>c:</code> - Command to execute (mirror, leech, etc.)
+• <code>inf:</code> - Include words filter
+• <code>exf:</code> - Exclude words filter
+• <code>opt:</code> - Options like up, rcf, pswd
+• <code>stv</code> - Case-sensitive filter (add this flag for case-sensitive matching)
 
-Filter Notes:
-1. | means and.
-2. Add `or` between similar keys, you can add it between qualities or between extensions, so don't add filter like this f: 1080|mp4 or 720|web because this will parse 1080 and (mp4 or 720) and web ... not (1080 and mp4) or (720 and web)."
-3. You can add `or` and `|` as much as you want."
-4. Take look on title if it has static special character after or before the qualities or extensions or whatever and use them in filter to avoid wrong match.
+<b>Examples:</b>
+<code>MyFeed https://rss.example.com c: mirror inf: 1080 or 720 exf: cam opt: up: gd</code>
+
+<code>MyFeed2 https://rss2.example.com c: leech inf: HDR stv</code>
+
+<b>Filter Notes:</b>
+1. | means AND
+2. Use <code>or</code> between similar keys (qualities, extensions)
+3. Add <code>stv</code> for case-sensitive filtering
+4. Check title format to avoid wrong matches
+
+<b>Size Detection:</b>
+• Size is automatically detected from feed summaries
+• Set <code>RSS_SIZE_LIMIT</code> in config to skip large torrents
+
+<b>Forum Topics:</b>
+• Use <code>chat_id|topic_id</code> format in RSS_CHAT_ID
+
 Timeout: 60 sec.
 """
 
