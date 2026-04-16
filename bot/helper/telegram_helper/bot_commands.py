@@ -40,6 +40,8 @@ class _BotCommands:
         self.DebridInfo = f"info{CMD_INDEX}"
         self.ForceStartCommand = [f"force_start{CMD_INDEX}", f"fs{CMD_INDEX}"]
         self.SelectCommand = f"sel{CMD_INDEX}"
+        self.JdMirrorCommand = [f"jdmirror{CMD_INDEX}", f"jm{CMD_INDEX}"]
+        self.JdLeechCommand = [f"jdleech{CMD_INDEX}", f"jl{CMD_INDEX}"]
 
 
 BotCommands = _BotCommands()

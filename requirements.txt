@@ -37,4 +37,5 @@ uvloop
 xattr
 yt-dlp
 tmdbv3api
+myjd
 
