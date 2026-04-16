@@ -181,6 +181,9 @@ async def next_page_leech(_, callback_query):
 async def selection_callback(client, query):
     cmd = query.data.split("^")
     message = query.message
+    if message.reply_to_message is None:
+        await query.answer("Original message not found!", show_alert=True)
+        return
     msg_id = message.reply_to_message.id
 
     info = listener_dict[msg_id]
