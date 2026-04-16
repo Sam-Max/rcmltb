@@ -1,5 +1,5 @@
 from pyrogram.filters import command
-from pyrogram.handlers import MessageHandler
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from time import time
 
 from bot import LOGGER
@@ -111,9 +111,6 @@ def add_handlers():
 
     # Import all modules to trigger their bot.add_handler() calls
     # This maintains backward compatibility with existing module structure
-    from pyrogram.filters import command, regex
-    from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-
     from bot.modules import (
         batch,
         cancel,
