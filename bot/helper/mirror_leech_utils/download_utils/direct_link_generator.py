@@ -168,6 +168,28 @@ def direct_link_generator(link):
         ]
     ):
         raise DirectDownloadLinkException(f"ERROR: R.I.P {domain}")
+    elif "zowflk.com" in domain or "zowflk.co" in domain:
+        return zowflk(link)
+    elif "dropbox.com" in domain or "dropboxusercontent.com" in domain:
+        return dropbox(link)
+    elif "workupload.com" in domain:
+        return workupload(link)
+    elif "uploadhaven.com" in domain:
+        return uploadhaven(link)
+    elif "mexa.sh" in domain:
+        return mexa_sh(link)
+    elif "katfile.com" in domain:
+        return katfile(link)
+    elif "rockfile.co" in domain:
+        return rockfile(link)
+    elif "daofile.com" in domain:
+        return daofile(link)
+    elif "suprafiles.me" in domain or "suprafiles.org" in domain:
+        return suprafiles(link)
+    elif "shortflix.net" in domain or "shortflix.com" in domain:
+        return shortflix(link)
+    elif "kickbox.com" in domain or "kickbox.io" in domain:
+        return kickbox(link)
     else:
         raise DirectDownloadLinkException(f"No Direct link function found for {link}")
 
@@ -1470,3 +1492,214 @@ def pcloud(url):
     if link := findall(r".downloadlink.:..(https:.*)..", res.text):
         return link[0].replace("\/", "/")
     raise DirectDownloadLinkException("ERROR: Direct link not found")
+
+
+def zowflk(url):
+    """Zowflk direct link generator"""
+    with create_scraper() as session:
+        try:
+            html = HTML(session.get(url).text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if script := html.xpath("//script[contains(text(),'sources')]/text()"):
+        if link := findall(r'"file":"([^"]+)"', script[0]):
+            return link[0].replace("\\", "")
+    raise DirectDownloadLinkException("ERROR: Video link not found")
+
+
+def dropbox(url):
+    """Dropbox direct link generator"""
+    try:
+        if "?dl=0" in url:
+            return url.replace("?dl=0", "?dl=1")
+        elif "?dl=1" not in url:
+            return f"{url}?dl=1"
+        return url
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+
+
+def workupload(url):
+    """Workupload direct link generator"""
+    with create_scraper() as session:
+        try:
+            file_id = url.split("/")[-1]
+            html = HTML(session.get(f"https://workupload.com/file/{file_id}").text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if script := html.xpath("//script[contains(text(),'fileUrl')]/text()"):
+        if link := findall(r'"fileUrl":"([^"]+)"', script[0]):
+            return link[0].replace("\\", "")
+    raise DirectDownloadLinkException("ERROR: Download link not found")
+
+
+def uploadhaven(url):
+    """Uploadhaven direct link generator"""
+    with create_scraper() as session:
+        try:
+            html = HTML(session.get(url).text)
+            if form := html.xpath("//form[@id='downloadForm']"):
+                inputs = html.xpath("//form[@id='downloadForm']//input")
+                data = {}
+                for i in inputs:
+                    if key := i.get("name"):
+                        data[key] = i.get("value", "")
+                sleep(5)
+                res = session.post(url, data=data)
+                html = HTML(res.text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if link := html.xpath("//a[@class='btn btn-primary btn-lg']/@href"):
+        return link[0]
+    raise DirectDownloadLinkException("ERROR: Download link not found")
+
+
+def mexa_sh(url):
+    """Mexa.sh direct link generator"""
+    with create_scraper() as session:
+        try:
+            file_code = url.split("/")[-1]
+            html = HTML(session.get(f"https://mexa.sh/{file_code}").text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if form := html.xpath("//form[@name='F1']"):
+        inputs = html.xpath("//form[@name='F1']//input")
+        data = {}
+        for i in inputs:
+            if key := i.get("name"):
+                data[key] = i.get("value", "")
+        try:
+            sleep(3)
+            res = session.post(url, data=data)
+            html = HTML(res.text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if link := html.xpath("//a[contains(@class,'btn-download')]/@href"):
+        return link[0]
+    raise DirectDownloadLinkException("ERROR: Download link not found")
+
+
+def katfile(url):
+    """Katfile direct link generator"""
+    with create_scraper() as session:
+        try:
+            file_id = url.split("/")[-1]
+            html = HTML(session.get(f"https://katfile.com/{file_id}").text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if form := html.xpath("//form[@name='F1']"):
+        inputs = html.xpath("//form[@name='F1']//input")
+        data = {}
+        for i in inputs:
+            if key := i.get("name"):
+                data[key] = i.get("value", "")
+        try:
+            sleep(3)
+            res = session.post(url, data=data)
+            html = HTML(res.text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if link := html.xpath("//a[contains(@class,'btn-download')]/@href"):
+        return link[0]
+    raise DirectDownloadLinkException("ERROR: Download link not found")
+
+
+def rockfile(url):
+    """Rockfile direct link generator"""
+    with create_scraper() as session:
+        try:
+            file_id = url.split("/")[-1]
+            html = HTML(session.get(f"https://rockfile.co/{file_id}").text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if form := html.xpath("//form[@name='F1']"):
+        inputs = html.xpath("//form[@name='F1']//input")
+        data = {}
+        for i in inputs:
+            if key := i.get("name"):
+                data[key] = i.get("value", "")
+        try:
+            sleep(3)
+            res = session.post(url, data=data)
+            html = HTML(res.text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if link := html.xpath("//a[contains(@class,'btn-download')]/@href"):
+        return link[0]
+    raise DirectDownloadLinkException("ERROR: Download link not found")
+
+
+def daofile(url):
+    """Daofile direct link generator"""
+    with create_scraper() as session:
+        try:
+            file_id = url.split("/")[-1]
+            html = HTML(session.get(f"https://daofile.com/{file_id}").text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if form := html.xpath("//form[@name='F1']"):
+        inputs = html.xpath("//form[@name='F1']//input")
+        data = {}
+        for i in inputs:
+            if key := i.get("name"):
+                data[key] = i.get("value", "")
+        try:
+            sleep(3)
+            res = session.post(url, data=data)
+            html = HTML(res.text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if link := html.xpath("//a[contains(@class,'btn-download')]/@href"):
+        return link[0]
+    raise DirectDownloadLinkException("ERROR: Download link not found")
+
+
+def suprafiles(url):
+    """Suprafiles direct link generator"""
+    with create_scraper() as session:
+        try:
+            file_id = url.split("/")[-1]
+            html = HTML(session.get(f"https://suprafiles.me/{file_id}").text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if form := html.xpath("//form[@name='F1']"):
+        inputs = html.xpath("//form[@name='F1']//input")
+        data = {}
+        for i in inputs:
+            if key := i.get("name"):
+                data[key] = i.get("value", "")
+        try:
+            sleep(3)
+            res = session.post(url, data=data)
+            html = HTML(res.text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if link := html.xpath("//a[contains(@class,'btn-download')]/@href"):
+        return link[0]
+    raise DirectDownloadLinkException("ERROR: Download link not found")
+
+
+def shortflix(url):
+    """Shortflix direct link generator"""
+    with create_scraper() as session:
+        try:
+            html = HTML(session.get(url).text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if script := html.xpath("//script[contains(text(),'sources')]/text()"):
+        if link := findall(r'"file":"([^"]+)"', script[0]):
+            return link[0].replace("\\", "")
+    raise DirectDownloadLinkException("ERROR: Video link not found")
+
+
+def kickbox(url):
+    """Kickbox direct link generator"""
+    with create_scraper() as session:
+        try:
+            file_id = url.split("/")[-1]
+            html = HTML(session.get(f"https://kickbox.com/{file_id}").text)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if link := html.xpath("//a[contains(@class,'download-btn')]/@href"):
+        return link[0]
+    raise DirectDownloadLinkException("ERROR: Download link not found")
