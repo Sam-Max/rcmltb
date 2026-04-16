@@ -94,7 +94,13 @@ async def main():
     from bot.core.handlers import add_handlers
     add_handlers()
 
-    # 13. Handle restart message
+    # 13. Boot JDownloader if configured
+    if getattr(config_dict, "JD_EMAIL", "") and getattr(config_dict, "JD_PASSWORD", ""):
+        from bot.core.jdownloader_booter import jdownloader_boot
+        jdownloader_boot()
+        LOGGER.info("JDownloader boot initiated")
+
+    # 14. Handle restart message
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
