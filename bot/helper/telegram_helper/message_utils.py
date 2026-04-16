@@ -9,7 +9,7 @@ from bot import (
     status_reply_dict_lock,
     status_reply_dict,
 )
-from pyrogram.errors.exceptions import FloodWait, MessageNotModified
+from pyrogram.errors import FloodWait, FloodPremiumWait, MessageNotModified
 from pyrogram.enums.parse_mode import ParseMode
 from bot.helper.ext_utils.bot_utils import get_readable_message, run_sync_to_async, setInterval
 
@@ -23,7 +23,7 @@ async def sendMessage(text: str, message, reply_markup=None):
             reply_markup=reply_markup,
             disable_web_page_preview=True,
         )
-    except FloodWait as fw:
+    except (FloodWait, FloodPremiumWait) as fw:
         await sleep(fw.value * 1.2)
         return await sendMessage(text, message, reply_markup)
     except Exception as e:
@@ -39,7 +39,7 @@ async def sendPhoto(text, message, path, reply_markup):
             caption=text,
             reply_markup=reply_markup,
         )
-    except FloodWait as fw:
+    except (FloodWait, FloodPremiumWait) as fw:
         await sleep(fw.value * 1.2)
         return await sendPhoto(text, message, path, reply_markup)
     except Exception as e:
@@ -54,7 +54,7 @@ async def sendMarkup(text: str, message, reply_markup):
             text=text,
             reply_markup=reply_markup,
         )
-    except FloodWait as fw:
+    except (FloodWait, FloodPremiumWait) as fw:
         await sleep(fw.value * 1.2)
         return await sendMarkup(text, message, reply_markup)
     except Exception as e:
@@ -66,7 +66,7 @@ async def editMarkup(text: str, message, reply_markup):
         return await bot.edit_message_text(
             message.chat.id, message.id, text=text, reply_markup=reply_markup
         )
-    except FloodWait as fw:
+    except (FloodWait, FloodPremiumWait) as fw:
         await sleep(fw.value * 1.2)
         return await editMarkup(text, message, reply_markup)
     except MessageNotModified:
@@ -84,7 +84,7 @@ async def editMessage(text: str, message, reply_markup=None):
             chat_id=message.chat.id,
             reply_markup=reply_markup,
         )
-    except FloodWait as fw:
+    except (FloodWait, FloodPremiumWait) as fw:
         await sleep(fw.value * 1.2)
         return await editMessage(text, message, reply_markup)
     except MessageNotModified:
@@ -94,26 +94,29 @@ async def editMessage(text: str, message, reply_markup=None):
         return str(e)
 
 
-async def sendRss(text):
+async def sendRss(text, chat_id=None, thread_id=None):
     try:
+        target_chat = chat_id or config_dict["RSS_CHAT_ID"]
         if app:
             return await app.send_message(
-                chat_id=config_dict["RSS_CHAT_ID"],
+                chat_id=target_chat,
                 text=text,
+                message_thread_id=thread_id,
                 disable_web_page_preview=True,
                 disable_notification=True,
             )
         else:
             return await bot.send_message(
-                chat_id=config_dict["RSS_CHAT_ID"],
+                chat_id=target_chat,
                 text=text,
+                message_thread_id=thread_id,
                 disable_web_page_preview=True,
                 disable_notification=True,
             )
-    except FloodWait as f:
+    except (FloodWait, FloodPremiumWait) as f:
         LOGGER.warning(str(f))
         await sleep(f.value * 1.2)
-        return await sendRss(text)
+        return await sendRss(text, chat_id, thread_id)
     except Exception as e:
         LOGGER.error(str(e))
         return str(e)
@@ -135,7 +138,7 @@ async def sendFile(message, file, caption=""):
             parse_mode=ParseMode.HTML,
             chat_id=message.chat.id,
         )
-    except FloodWait as fw:
+    except (FloodWait, FloodPremiumWait) as fw:
         await sleep(fw.value * 1.2)
         return await sendFile(message, file, caption)
     except Exception as e:

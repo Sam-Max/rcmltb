@@ -11,18 +11,38 @@ class CustomFilters:
 
     async def custom_chat_filter(self, client, update):
         chat_id = update.chat.id
-        return chat_id in user_data and user_data[chat_id].get("is_auth", False)
+        thread_id = update.message_thread_id if update.topic_message else None
+        return bool(
+            chat_id in user_data
+            and user_data[chat_id].get("is_auth", False)
+            and (
+                thread_id is None
+                or thread_id in user_data[chat_id].get("thread_ids", [])
+            )
+        )
 
     chat_filter = create(custom_chat_filter)
 
     async def custom_user_filter(self, client, update):
         uid = update.from_user.id or update.sender_chat.id
-        return (
+        chat_id = update.chat.id
+        thread_id = update.message_thread_id if update.topic_message else None
+        return bool(
             uid == OWNER_ID
-            or uid in user_data
-            and (
-                user_data[uid].get("is_auth", False)
-                or user_data[uid].get("is_sudo", False)
+            or (
+                uid in user_data
+                and (
+                    user_data[uid].get("is_auth", False)
+                    or user_data[uid].get("is_sudo", False)
+                )
+            )
+            or (
+                chat_id in user_data
+                and user_data[chat_id].get("is_auth", False)
+                and (
+                    thread_id is None
+                    or thread_id in user_data[chat_id].get("thread_ids", [])
+                )
             )
         )
 

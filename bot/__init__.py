@@ -15,7 +15,8 @@ from pymongo import MongoClient
 from aria2p import API as ariaAPI, Client as ariaClient
 from qbittorrentapi import Client as qbitClient
 from subprocess import Popen, run as srun
-from pyrogram import Client as tgClient
+from pyrogram import Client as tgClient, enums
+from pyrogram.types import LinkPreviewOptions
 from bot.conv_pyrogram import Conversation
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from tzlocal import get_localzone
@@ -324,6 +325,11 @@ if len(USER_SESSION_STRING) != 0:
         api_hash=TELEGRAM_API_HASH,
         session_string=USER_SESSION_STRING,
         max_concurrent_transmissions=10,
+        parse_mode=enums.ParseMode.HTML,
+        max_message_cache_size=15000,
+        max_topic_cache_size=15000,
+        sleep_threshold=60,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     ).start()
     IS_PREMIUM_USER = app.me.is_premium
 
@@ -496,6 +502,11 @@ bot = tgClient(
     bot_token=BOT_TOKEN,
     workers=1000,
     max_concurrent_transmissions=10,
+    parse_mode=enums.ParseMode.HTML,
+    max_message_cache_size=15000,
+    max_topic_cache_size=15000,
+    sleep_threshold=0,
+    link_preview_options=LinkPreviewOptions(is_disabled=True),
 )
 Conversation(bot)
 bot.start()
