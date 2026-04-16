@@ -105,8 +105,12 @@ class Config:
     def set(cls, key: str, value) -> None:
         if not hasattr(cls, key):
             raise KeyError(f"{key} is not a valid configuration key.")
-        converted_value = cls._convert(key, value)
-        setattr(cls, key, converted_value)
+        processed_value = cls._process_config_value(key, value)
+        if processed_value is not None:
+            setattr(cls, key, processed_value)
+        else:
+            converted_value = cls._convert(key, value)
+            setattr(cls, key, converted_value)
 
     @classmethod
     def get_all(cls):
