@@ -30,10 +30,10 @@ async def status_handler(client, message):
     if count == 0:
         currentTime = get_readable_time(time() - botUptime)
         free = get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)
-        msg = "No Active Downloads !\n___________________________"
+        msg = "📭 <b>No Active Tasks</b>\n━━━━━━━━━━━━━━━━━━━━━━━━━"
         msg += (
-            f"\n<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}"
-            f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {currentTime}"
+            f"\n🖥 <b>CPU:</b> {cpu_percent()}% | <b>Free Disk:</b> {free}"
+            f"\n💾 <b>RAM:</b> {virtual_memory().percent}% | <b>Uptime:</b> {currentTime}"
         )
         reply_message = await sendMessage(msg, message)
         await auto_delete_message(message, reply_message)

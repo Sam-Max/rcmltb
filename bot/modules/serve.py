@@ -23,8 +23,8 @@ async def serve(client, message):
         else:
             button = ButtonMaker()
             url = f"{config_dict['RC_INDEX_URL']}:{config_dict['RC_INDEX_PORT']}"
-            msg = f"Serving on <a href={url}>{url}</a>"
-            button.cb_buildbutton("Stop", "servemenu^stop")
+            msg = f"🖥️ <b>Server Status:</b>\nServing on <a href='{url}'>{url}</a>"
+            button.cb_buildbutton("🛑 Stop", "servemenu^stop")
             await sendMarkup(msg, message, button.build_menu(1))
 
 
@@ -39,11 +39,11 @@ async def serve_callback(client, query):
 
     if data[1] == "remote":
         SELECTED_REMOTE.append(data[2])
-        button = ButtonMaker()
-        button.cb_buildbutton("HTTP", "servemenu^http")
-        button.cb_buildbutton("WEBDAV", "servemenu^webdav")
+    button = ButtonMaker()
+    button.cb_buildbutton("🌐 HTTP", "servemenu^http")
+    button.cb_buildbutton("📡 WEBDAV", "servemenu^webdav")
         await editMarkup(
-            "Choose protocol to serve the remote", message, button.build_menu(2)
+            "📡 <b>Select Protocol</b>\nChoose a protocol to serve the remote:", message, button.build_menu(2)
         )
     elif data[1] == "all":
         cmd = [
@@ -99,10 +99,10 @@ async def serve_callback(client, query):
 async def rclone_serve(cmd, message):
     button = ButtonMaker()
     url = f"{config_dict['RC_INDEX_URL']}:{config_dict['RC_INDEX_PORT']}"
-    msg = f"Serving on <a href={url}>{url}</a>"
-    msg += f"\n<b>User</b>: <code>{config_dict['RC_INDEX_USER']}</code>"
+    msg = f"🟢 <b>Server Started</b>\nServing on <a href='{url}'>{url}</a>"
+    msg += f"\n\n<b>User</b>: <code>{config_dict['RC_INDEX_USER']}</code>"
     msg += f"\n<b>Pass</b>: <code>{config_dict['RC_INDEX_PASS']}</code>"
-    button.cb_buildbutton("Stop", "servemenu^stop")
+    button.cb_buildbutton("🛑 Stop", "servemenu^stop")
     await editMarkup(msg, message, button.build_menu(1))
 
     process = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
@@ -127,7 +127,7 @@ async def list_remotes(message):
     button.cb_buildbutton("🌐 All", "servemenu^all")
     button.cb_buildbutton("✘ Close Menu", "servemenu^close")
     await sendMarkup(
-        "Select cloud to serve as index", message, reply_markup=button.build_menu(2)
+        "📁 <b>Select Remote</b>\nSelect a cloud to serve as index:", message, reply_markup=button.build_menu(2)
     )
 
 

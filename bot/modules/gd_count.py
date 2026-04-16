@@ -25,7 +25,7 @@ async def count(_, message):
         link = reply_to.text.split(maxsplit=1)[0].strip()
 
     if is_gdrive_link(link):
-        msg = await sendMessage(f"Counting: <code>{link}</code>", message)
+        msg = await sendMessage(f"🔢 <b>Counting Items</b>\n\nLink: <code>{link}</code>", message)
         name, mime_type, size, files, folders = await run_sync_to_async(
             gdCount().count, link, user.id
         )
@@ -33,7 +33,8 @@ async def count(_, message):
             await sendMessage(name, message)
             return
         await deleteMessage(msg)
-        msg = f"<b>Name: </b><code>{name}</code>"
+        msg = "✅ <b>Count Complete</b>\n\n"
+        msg += f"<b>Name: </b><code>{name}</code>"
         msg += f"\n\n<b>Size: </b>{get_readable_file_size(size)}"
         msg += f"\n\n<b>Type: </b>{mime_type}"
         if mime_type == "Folder":
@@ -42,7 +43,8 @@ async def count(_, message):
         msg += f"\n\n<b>cc: </b>{tag}"
     else:
         msg = (
-            "Send Gdrive link along with command or by replying to the link by command"
+            "❌ <b>Invalid Link</b>\n\n"
+            "Send a Google Drive link along with the command or reply to a message containing the link."
         )
 
     await sendMessage(msg, message)

@@ -72,8 +72,8 @@ async def start_bisync(message, path):
         ]
     process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
     button = ButtonMaker()
-    msg = f"Syncing: {origin} 🔄 {destination}"
-    button.cb_buildbutton("Stop", "bisync^stop")
+    msg = f"🔄 <b>Syncing:</b> {origin} 🔄 {destination}"
+    button.cb_buildbutton("🛑 Stop", "bisync^stop")
     await editMarkup(msg, message, button.build_menu(1))
     return_code = await process.wait()
     if return_code != 0:

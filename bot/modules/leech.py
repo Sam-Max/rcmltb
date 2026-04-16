@@ -63,10 +63,10 @@ async def leech(client, message):
             "", message
         ):
             await sendMarkup(
-                "Select from where you want to leech", message, button.build_menu(2)
+                "📥 <b>Select from where you want to leech</b>", message, button.build_menu(2)
             )
         else:
-            await sendMessage("Reply to a link/file", message)
+            await sendMessage("📎 Reply to a link/file", message)
 
 
 async def leech_menu_cb(_, callback_query):
@@ -174,7 +174,7 @@ async def next_page_leech(_, callback_query):
 
     leech_remote = get_rclone_data("LEECH_REMOTE", user_id)
     base_dir = get_rclone_data("LEECH_BASE_DIR", user_id)
-    msg = f"Select folder or file that you want to leech\n\n<b>Path:</b><code>{leech_remote}:{base_dir}</code>"
+    msg = f"📂 <b>Select folder or file that you want to leech</b>\n\n<b>Path:</b><code>{leech_remote}:{base_dir}</code>"
     await editMessage(msg, message, reply_markup=buttons.build_menu(1))
 
 
@@ -182,7 +182,7 @@ async def selection_callback(client, query):
     cmd = query.data.split("^")
     message = query.message
     if message.reply_to_message is None:
-        await query.answer("Original message not found!", show_alert=True)
+        await query.answer("📭 Original message not found!", show_alert=True)
         return
     msg_id = message.reply_to_message.id
 
@@ -191,7 +191,7 @@ async def selection_callback(client, query):
     user_id = query.from_user.id
 
     if int(cmd[-1]) != user_id:
-        await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("⛔ This menu is not for you!", show_alert=True)
         return
     elif cmd[1] == "link":
         await query.answer()
@@ -210,7 +210,7 @@ async def selection_callback(client, query):
                     message.text = f"/leech {response.text}"
                     await mirror_leech(client, message, isLeech=True)
         except TimeoutError:
-            await sendMessage("Too late 60s gone, try again!", message)
+            await sendMessage("⏰ Too late 60s gone, try again!", message)
         finally:
             await question.delete()
     elif cmd[1] == "remotes":

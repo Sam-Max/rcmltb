@@ -39,7 +39,7 @@ async def handle_myfiles(client, message):
         if config_dict["MULTI_RCLONE_CONFIG"] or await CustomFilters.sudo_filter("", message):
             await list_remotes(message, menu_type=Menus.MYFILES)
         else:
-            await sendMessage("Not allowed to use", message)
+            await sendMessage("🚫 <b>Not allowed to use</b>", message)
 
 
 async def myfiles_callback(client, callback_query):
@@ -54,7 +54,7 @@ async def myfiles_callback(client, callback_query):
     is_folder = False
 
     if int(cmd[-1]) != user_id:
-        await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("⛔ This menu is not for you!", show_alert=True)
         return
     if cmd[1] == "remote":
         update_rclone_data("MYFILES_BASE_DIR", "", user_id)  # Reset Dir
@@ -182,7 +182,7 @@ async def next_page_myfiles(client, callback_query):
 
     remote = get_rclone_data("MYFILES_REMOTE", user_id)
     base_dir = get_rclone_data("MYFILES_BASE_DIR", user_id)
-    msg = f"Your cloud files are listed below\n\n<b>Path:</b><code>{remote}:{base_dir}</code>"
+    msg = f"📁 <b>Your cloud files are listed below</b>\n\n<b>Path:</b><code>{remote}:{base_dir}</code>"
     await editMessage(msg, message, reply_markup=buttons.build_menu(1))
 
 

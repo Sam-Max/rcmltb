@@ -10,7 +10,7 @@ MIRROR_HELP_DICT = {}
 LEECH_HELP_DICT = {}
 
 ytdl = """ 
-***YT-DL MENU COMMANDS***
+🎬 ***YT-DL MENU COMMANDS***
 
 1. <b>Send link along with command line:</b>
 <code>/cmd</code> link -s -opt x:y|x1:y1
@@ -40,7 +40,7 @@ You can add tuple and dict also. Use double quotes inside dict.
 
 mirror = """
 
-***MIRROR COMMANDS MENU***
+📥 ***MIRROR COMMANDS MENU***
 
 <b>NOTE:</b>
 1. Commands that start with <b>qb</b> are ONLY for torrents.
@@ -122,7 +122,7 @@ You can control this value. Example: /cmd -ss 6.
 """
 
 leech = """
-***LEECH MENU COMMANDS***
+📥 ***LEECH MENU COMMANDS***
 
 <b>Send link to leech, /ignore to cancel</b>
 """

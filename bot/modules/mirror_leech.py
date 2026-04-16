@@ -193,11 +193,11 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
         if reply_message and not multi:
             buttons = ButtonMaker()
             name = file.file_name if hasattr(file, "file_name") else "None"
-            msg = "<b>Which name do you want to use?</b>\n\n"
+            msg = "📝 <b>Which name do you want to use?</b>\n\n"
             msg += f"<b>Name</b>: <code>{name}</code>\n\n"
             msg += f"<b>Size</b>: <code>{get_readable_size(file.file_size)}</code>"
             buttons.cb_buildbutton("📄 By default", "mirrormenu^default")
-            buttons.cb_buildbutton("📝 Rename", "mirrormenu^rename")
+            buttons.cb_buildbutton("✏️ Rename", "mirrormenu^rename")
             buttons.cb_buildbutton("✘ Close Menu", "mirrormenu^close", "footer")
             listener_dict[message_id] = [listener, file, message, isLeech, user_id, ""]
             await sendMarkup(msg, message, reply_markup=buttons.build_menu(2))
@@ -239,7 +239,7 @@ async def mirror_menu(client, query):
     is_Leech = info[3]
 
     if int(info[-2]) != user_id:
-        await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("⛔ This menu is not for you!", show_alert=True)
         return
     elif cmd[1] == "default":
         await query_message.delete()
@@ -277,7 +277,7 @@ async def mirror_menu(client, query):
                         )
                         await conditional_queue_add(message, tgdown.download)
         except TimeoutError:
-            await sendMessage("Too late 60s gone, try again!", message)
+            await sendMessage("⏰ Too late 60s gone, try again!", message)
         finally:
             await question.delete()
     else:
@@ -299,7 +299,7 @@ async def mirror_select(client, callback_query):
     new_name = info[5]
 
     if int(info[-2]) != user_id:
-        await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("⛔ This menu is not for you!", show_alert=True)
         return
     elif cmd[1] == "remote":
         await query.answer()

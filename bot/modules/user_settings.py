@@ -40,12 +40,12 @@ def get_user_settings(from_user):
         and config_dict["AS_DOCUMENT"]
     ):
         ltype = "DOCUMENT"
-        buttons.cb_buildbutton("Send As Media", f"userset {user_id} doc")
+        buttons.cb_buildbutton("📷 Send As Media", f"userset {user_id} doc")
     else:
         ltype = "MEDIA"
-        buttons.cb_buildbutton("Send As Document", f"userset {user_id} doc")
+        buttons.cb_buildbutton("📄 Send As Document", f"userset {user_id} doc")
 
-    buttons.cb_buildbutton("Leech Splits", f"userset {user_id} lss")
+    buttons.cb_buildbutton("🔪 Leech Splits", f"userset {user_id} lss")
     if user_dict.get("split_size", False):
         split_size = user_dict["split_size"]
     else:
@@ -73,7 +73,7 @@ def get_user_settings(from_user):
     else:
         gdrive_id = "None"
 
-    buttons.cb_buildbutton("YT-DLP Options", f"userset {user_id} yto")
+    buttons.cb_buildbutton("🎥 YT-DLP Options", f"userset {user_id} yto")
     if user_dict.get("yt_opt", False):
         ytopt = user_dict["yt_opt"]
     elif "yt_opt" not in user_dict and (YTO := config_dict["YT_DLP_OPTIONS"]):
@@ -81,7 +81,7 @@ def get_user_settings(from_user):
     else:
         ytopt = "None"
 
-    buttons.cb_buildbutton("Thumbnail", f"userset {user_id} sthumb")
+    buttons.cb_buildbutton("🖼️ Thumbnail", f"userset {user_id} sthumb")
     if ospath.exists(thumbpath):
         thumbmsg = "Exists"
     else:
@@ -90,13 +90,13 @@ def get_user_settings(from_user):
     buttons.cb_buildbutton("✘ Close Menu", f"userset {user_id} close")
 
     text = f"""
-<b>Settings for {name}</b>
+⚙️ <b>Settings for {name}</b>
 
 Leech Type: <b>{ltype}</b>
 Custom Thumbnail: <b>{thumbmsg}</b>
 Leech Split Size: <b>{split_size}</b>
 Equal Splits: <b>{equal_splits}</b>
-Yy-dlp options: <b><code>{escape(ytopt)}</code></b>
+YT-DLP Options: <b><code>{escape(ytopt)}</code></b>
 Equal Splits: <b>{equal_splits}</b>
 Rclone Config <b>{rccmsg}</b>
 Gdrive Token <b>{tokenmsg}</b>
@@ -172,12 +172,12 @@ async def edit_user_settings(client, query):
         await query.answer()
         buttons = ButtonMaker()
         if ospath.exists(thumb_path):
-            buttons.cb_buildbutton("View Thumbnail", f"userset {user_id} vthumb")
-            buttons.cb_buildbutton("Delete Thumbnail", f"userset {user_id} dthumb")
+        buttons.cb_buildbutton("👁 View Thumbnail", f"userset {user_id} vthumb")
+        buttons.cb_buildbutton("🗑️ Delete Thumbnail", f"userset {user_id} dthumb")
         buttons.cb_buildbutton("Back", f"userset {user_id} back")
         buttons.cb_buildbutton("Close", f"userset {user_id} close")
         question = await editMessage(
-            "Send a photo to save as custom thumbnail", message, buttons.build_menu(1)
+            "🖼️ <b>Send a photo to save as custom thumbnail</b>", message, buttons.build_menu(1)
         )
         try:
             if response := await client.listen.Message(

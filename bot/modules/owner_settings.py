@@ -67,7 +67,7 @@ async def edit_menus(message, edit_type="env"):
 
 
 def get_env_menu():
-    msg = f"❇️<b>Config Variables Settings</b>"
+    msg = f"⚙️ <b>Config Variables Settings</b>"
     msg += f"\n\n<b>State: {STATE.upper()} </b>"
     buttons = ButtonMaker()
     for k in list(config_dict.keys())[START : 10 + START]:
@@ -76,8 +76,8 @@ def get_env_menu():
         buttons.cb_buildbutton("📝Edit", "ownersetmenu^edit^env")
     else:
         buttons.cb_buildbutton("🔍View", "ownersetmenu^view^env")
-    buttons.cb_buildbutton("Aria2 Settings", "ownersetmenu^aria^aria_menu")
-    buttons.cb_buildbutton("Qbit Setttings", "ownersetmenu^qbit^qbit_menu")
+    buttons.cb_buildbutton("⚙️ Aria2 Settings", "ownersetmenu^aria^aria_menu")
+    buttons.cb_buildbutton("⚙️ Qbit Settings", "ownersetmenu^qbit^qbit_menu")
     pages = 0
     for x in range(0, len(config_dict) - 1, 10):
         pages = int(x / 10)
@@ -89,7 +89,7 @@ def get_env_menu():
 
 
 def get_qbit_menu():
-    msg = "❇️<b>Qbit Settings</b>"
+    msg = "⚙️ <b>Qbit Settings</b>"
     msg += f"\n\n<b>State: {STATE.upper()} </b>"
     buttons = ButtonMaker()
     for k in list(qbit_options.keys())[START : 10 + START]:
@@ -110,7 +110,7 @@ def get_qbit_menu():
 
 
 def get_aria_menu():
-    msg = "❇️<b>Aria2 Settings</b>"
+    msg = "⚙️ <b>Aria2 Settings</b>"
     msg += f"\n\n<b>State: {STATE.upper()} </b>"
     buttons = ButtonMaker()
     for k in list(aria2_options.keys())[START : 10 + START]:
@@ -119,7 +119,7 @@ def get_aria_menu():
         buttons.cb_buildbutton("📝Edit", "ownersetmenu^edit^aria")
     else:
         buttons.cb_buildbutton("🔍View", "ownersetmenu^view^aria")
-    buttons.cb_buildbutton("Add new key", "ownersetmenu^aria^editaria^newkey")
+    buttons.cb_buildbutton("➕ Add new key", "ownersetmenu^aria^editaria^newkey")
     pages = 0
     for x in range(0, len(aria2_options) - 1, 10):
         pages = int(x / 10)
@@ -183,9 +183,9 @@ async def ownerset_callback(client, callback_query):
                 "DOWNLOAD_DIR",
                 "DATABASE_URL",
             ]:
-                await query.answer(
-                    text="Restart required for this to apply!", show_alert=True
-                )
+            await query.answer(
+                text="🔄 Restart required for this to apply!", show_alert=True
+            )
             else:
                 await query.answer()
             await update_buttons(message, data[3], data[2])
@@ -359,7 +359,7 @@ async def ownerset_callback(client, callback_query):
 async def start_env_listener(client, query, user_id, key):
     message = query.message
     question = await sendMessage(
-        "Send valid value for selected variable, /ignore to cancel. Timeout: 60 sec",
+        "⏱️ <b>Send valid value for selected variable</b>, /ignore to cancel. Timeout: 60 sec",
         message,
     )
     try:
@@ -367,7 +367,7 @@ async def start_env_listener(client, query, user_id, key):
             filters.text, id=filters.user(user_id), timeout=60
         )
     except TimeoutError:
-        await client.send_message(message.chat.id, text="Too late 60s gone, try again!")
+        await client.send_message(message.chat.id, text="⏰ Too late 60s gone, try again!")
         return
     else:
         if response:
@@ -463,12 +463,12 @@ async def start_aria_listener(client, query, user_id, key):
     message = query.message
     if key == "newkey":
         question = await sendMessage(
-            "Send a key with value. Example: https-proxy-user:value', /ignore to cancel. Timeout: 60 sec",
+            "🔑 <b>Send a key with value. Example:</b> https-proxy-user:value, /ignore to cancel. Timeout: 60 sec",
             message,
         )
     else:
         question = await sendMessage(
-            "Send valid value for selected variable, /ignore to cancel. Timeout: 60 sec",
+            "⏱️ <b>Send valid value for selected variable</b>, /ignore to cancel. Timeout: 60 sec",
             message,
         )
     try:
@@ -476,7 +476,7 @@ async def start_aria_listener(client, query, user_id, key):
             filters.text, id=filters.user(user_id), timeout=60
         )
     except TimeoutError:
-        await client.send_message(message.chat.id, text="Too late 60s gone, try again!")
+        await client.send_message(message.chat.id, text="⏰ Too late 60s gone, try again!")
         return
     else:
         if response:
@@ -509,7 +509,7 @@ async def start_aria_listener(client, query, user_id, key):
 async def start_qbit_listener(client, query, user_id, key):
     message = query.message
     question = await sendMessage(
-        "Send valid value for selected variable, /ignore to cancel. Timeout: 60 sec",
+        "⏱️ <b>Send valid value for selected variable</b>, /ignore to cancel. Timeout: 60 sec",
         message,
     )
     try:
@@ -517,7 +517,7 @@ async def start_qbit_listener(client, query, user_id, key):
             filters.text, id=filters.user(user_id), timeout=60
         )
     except TimeoutError:
-        await client.send_message(message.chat.id, text="Too late 60s gone, try again!")
+        await client.send_message(message.chat.id, text="⏰ Too late 60s gone, try again!")
         return
     else:
         if response:

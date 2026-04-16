@@ -78,19 +78,17 @@ async def _search(key, site, message, method):
                     search_results = await res.json()
             if "error" in search_results or search_results["total"] == 0:
                 await editMessage(
-                    f"No result found for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i>",
+                    f"<b>No Results Found</b>\nQuery: <i>{key}</i>\nSite: <i>{SITES.get(site)}</i>",
                     message,
                 )
                 return
             msg = f"<b>Found {min(search_results['total'], TELEGRAPH_LIMIT)}</b>"
             if method == "apitrend":
-                msg += f" <b>trending result(s)\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
+                msg += f" <b>Trending Result(s)</b>\nSite: <i>{SITES.get(site)}</i>"
             elif method == "apirecent":
-                msg += (
-                    f" <b>recent result(s)\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
-                )
+                msg += f" <b>Recent Result(s)</b>\nSite: <i>{SITES.get(site)}</i>"
             else:
-                msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
+                msg += f" <b>Result(s) for <i>{key}</i></b>\nSite: <i>{SITES.get(site)}</i>"
             search_results = search_results["data"]
         except Exception as e:
             await editMessage(str(e), message)
@@ -213,20 +211,20 @@ async def tmdbSearch(message, id):
     SEARCH_PLUGINS = config_dict["SEARCH_PLUGINS"]
     if SITES is None and not SEARCH_PLUGINS:
         await editMessage(
-            "No API link or search PLUGINS added for this function", message
+            "❌ No API link or search PLUGINS added for this function", message
         )
     elif SITES is not None and SEARCH_PLUGINS:
         buttons.cb_buildbutton("Api", f"torser^{user_id}^apisearch^_^{id}")
         buttons.cb_buildbutton("Plugins", f"torser^{user_id}^plugin^_^{id}")
         buttons.cb_buildbutton("Cancel", f"torser^{user_id}^cancel")
         button = buttons.build_menu(2)
-        await editMessage("Choose tool to search:", message, button)
+        await editMessage("🔧 <b>Choose tool to search:</b>", message, button)
     elif SITES is not None:
         button = __api_buttons(user_id, "apisearch", id, True)
-        await editMessage("Choose site to search | API:", message, button)
+        await editMessage("🌐 <b>Choose site to search | API:</b>", message, button)
     else:
         button = await _plugin_buttons(user_id, id, True)
-        await editMessage("Choose site to search | Plugins:", message, button)
+        await editMessage("🔌 <b>Choose site to search | Plugins:</b>", message, button)
 
 
 async def torrentSearch(_, message):
@@ -236,28 +234,28 @@ async def torrentSearch(_, message):
     SEARCH_PLUGINS = config_dict["SEARCH_PLUGINS"]
     if SITES is None and not SEARCH_PLUGINS:
         await sendMessage(
-            "No API link or search PLUGINS added for this function", message
+            "❌ No API link or search PLUGINS added for this function", message
         )
     elif len(key) == 1 and SITES is None:
-        await sendMessage("Send a search key along with command", message)
+        await sendMessage("🔍 <b>Send a search key along with command</b>", message)
     elif len(key) == 1:
         buttons.cb_buildbutton("Trending", f"torser^{user_id}^apitrend")
         buttons.cb_buildbutton("Recent", f"torser^{user_id}^apirecent")
         buttons.cb_buildbutton("Cancel", f"torser^{user_id}^cancel")
         button = buttons.build_menu(2)
-        await sendMessage("Send a search key along with command", message, button)
+        await sendMessage("🔍 <b>Send a search key along with command</b>", message, button)
     elif SITES is not None and SEARCH_PLUGINS:
         buttons.cb_buildbutton("Api", f"torser^{user_id}^apisearch")
         buttons.cb_buildbutton("Plugins", f"torser^{user_id}^plugin")
         buttons.cb_buildbutton("Cancel", f"torser^{user_id}^cancel")
         button = buttons.build_menu(2)
-        await sendMessage("Choose tool to search:", message, button)
+        await sendMessage("🔧 <b>Choose tool to search:</b>", message, button)
     elif SITES is not None:
         button = __api_buttons(user_id, "apisearch")
-        await sendMessage("Choose site to search | API:", message, button)
+        await sendMessage("🌐 <b>Choose site to search | API:</b>", message, button)
     else:
         button = await _plugin_buttons(user_id)
-        await sendMessage("Choose site to search | Plugins:", message, button)
+        await sendMessage("🔌 <b>Choose site to search | Plugins:</b>", message, button)
 
 
 def __api_buttons(user_id, method, id=None, is_tdmb=False):
@@ -311,19 +309,15 @@ async def torrentSearchUpdate(_, query):
         else:
             key = None
     if user_id != int(data[1]):
-        await query.answer("Not Yours!", show_alert=True)
+        await query.answer("⛔ Not Yours!", show_alert=True)
     if data[2].startswith("api"):
         await query.answer()
         if len(data) > 4:
             button = __api_buttons(user_id, data[2], data[4], True)
-        else:
-            button = __api_buttons(user_id, data[2])
-        await editMessage("Choose site:", message, button)
-    elif data[2] == "plugin":
-        await query.answer()
-        if len(data) > 4:
-            button = await _plugin_buttons(user_id, data[4], True)
-        else:
+    else:
+        button = __api_buttons(user_id, "apisearch", id, True)
+        await editMessage("🌐 <b>Choose site to search | API:</b>", message, button)
+    else:
             button = await _plugin_buttons(user_id)
         await editMessage("Choose site:", message, button)
     elif data[2] != "cancel":
@@ -353,7 +347,7 @@ async def torrentSearchUpdate(_, query):
         await _search(key, site, message, method)
     else:
         await query.answer()
-        await editMessage("Search has been canceled!", message)
+        await editMessage("ℹ️ <b>Search has been canceled!</b>", message)
 
 
 bot.add_handler(

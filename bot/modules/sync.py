@@ -78,7 +78,7 @@ async def start_sync(message, path, destination, listener):
     return_code = await process.wait()
 
     if return_code == 0:
-        msg = "Sync completed successfully✅\n\n"
+        msg = "✅ <b>Sync completed successfully</b>\n\n"
         msg += "<b>Note:</b>"
         msg += "\n1.Use dedupe command to remove duplicate file/directory"
         msg += "\n2.Use rmdir command to remove empty directories"

@@ -95,7 +95,7 @@ async def clone(client, message):
         listener = TaskListener(message, tag, user_id)
         drive = gdClone(link, listener)
         if files <= 20:
-            msg = await sendMessage(f"Cloning: <code>{link}</code>", message)
+            msg = await sendMessage(f"📥 <b>Cloning:</b> <code>{link}</code>", message)
         else:
             msg = ""
             gid = "".join(SystemRandom().choices(ascii_letters + digits, k=12))

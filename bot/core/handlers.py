@@ -20,26 +20,37 @@ async def start(_, message):
     from bot.helper.telegram_helper.button_build import ButtonMaker
 
     buttons = ButtonMaker()
-    buttons.url_buildbutton("Repo", "https://github.com/Sam-Max/rcmltb")
-    buttons.url_buildbutton("Owner", "https://github.com/Sam-Max")
+    buttons.url_buildbutton("GitHub", "https://github.com/Sam-Max/rcmltb")
+    buttons.url_buildbutton("Developer", "https://github.com/Sam-Max")
     reply_markup = buttons.build_menu(2)
     if CustomFilters.user_filter or CustomFilters.chat_filter:
         msg = (
-            "**Hello, Welcome to Rclone-Telegram-Bot!\n\n"
-            "I can help you copy files from one cloud to another.\n"
-            "I can also mirror-leech files and links to Telegram or cloud**\n\n"
+            "🤖 <b>RCMLTB Bot</b>\n\n"
+            "📥 Mirror, Leech, and Transfer files between cloud storage and Telegram.\n\n"
+            "<b>Features:</b>\n"
+            "🔄 Mirror to Google Drive / Rclone remotes\n"
+            "📤 Leech to Telegram\n"
+            "🧲 Torrent / Magnet / Direct link support\n"
+            "🎬 YT-DLP video downloads\n"
+            "📋 Rclone copy / sync / bisync\n"
+            "📰 RSS feeds\n"
+            "🎥 TMDB search\n"
+            "⚡ Debrid integration\n\n"
+            "📚 Use /help for available commands."
         )
         await sendMarkup(msg, message, reply_markup)
     else:
         await sendMarkup(
-            "Not Authorized user, deploy your own version", message, reply_markup
+            "🚫 <b>Access Denied</b>\n\nYou are not authorized. Deploy your own instance.",
+            message,
+            reply_markup,
         )
 
 
 async def restart(_, message):
     from bot import scheduler, Interval
 
-    restart_msg = await sendMessage("Restarting...", message)
+    restart_msg = await sendMessage("🔄 <b>Restarting...</b>", message)
     if scheduler.running:
         scheduler.shutdown(wait=False)
     if Interval:
@@ -59,21 +70,25 @@ async def restart(_, message):
 
 async def ping(_, message):
     start_time = int(round(time() * 1000))
-    reply = await sendMessage("Starting Ping", message)
+    reply = await sendMessage("🏓 <b>Pong!</b>", message)
     end_time = int(round(time() * 1000))
-    await editMessage(f"{end_time - start_time} ms", reply)
+    await editMessage(f"<b>Latency:</b> {end_time - start_time} ms", reply)
 
 
 async def get_ip(_, message):
     stdout, stderr, code = await cmd_exec("curl https://api.ipify.org/", shell=True)
     if code == 0:
-        await message.reply_text(f"Your IP is {stdout.strip()}")
+        await message.reply_text(f"<b>Server IP:</b> <code>{stdout.strip()}</code>")
     else:
-        await message.reply_text(f"Error: {stderr}")
+        await message.reply_text(f"<b>Error:</b> {stderr}")
 
 
 async def get_log(client, message):
-    await client.send_document(chat_id=message.chat.id, document="botlog.txt")
+    await client.send_document(
+        chat_id=message.chat.id,
+        document="botlog.txt",
+        caption="📋 <b>Bot Log File</b>",
+    )
 
 
 def add_handlers():

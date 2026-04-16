@@ -26,9 +26,9 @@ async def tdmb_categories(_, message):
         button.cb_buildbutton("🎬 TV Shows", "tmdbsubcat^tv")
         button.cb_buildbutton("🔍 Search", "tmdbsearchapi")
         button.cb_buildbutton("✘ Close Menu", "tdmbcatinfo^close", position="footer")
-        await sendMessage("Choose one category", message, button.build_menu(2))
+        await sendMessage("🎬 <b>Choose one category</b>", message, button.build_menu(2))
     else:
-        await sendMessage("No Tmdb API key or search plugins provided", message)
+        await sendMessage("❌ No Tmdb API key or search plugins provided", message)
 
 
 async def tmdb_sub_categories(_, query):
@@ -43,7 +43,7 @@ async def tmdb_sub_categories(_, query):
         button.cb_buildbutton("Discover", "tdmbcatinfo^discover_tv")
     button.cb_buildbutton("✘ Close Menu", "tdmbcatinfo^close", position="footer")
     await query.answer()
-    await editMessage("Choose one category", message, button.build_menu(2))
+    await editMessage("🎬 <b>Choose one category</b>", message, button.build_menu(2))
 
 
 async def tmdb_get_category_info(_, query):
@@ -58,22 +58,22 @@ async def tmdb_get_category_info(_, query):
         await query.answer()
         movies = discover.discover_movies({"sort_by": "popularity.desc"})
         await pagination(button, movies, data[1], user_id)
-        await editMessage("Popular Movies", message, button.build_menu(2))
+        await editMessage("🎬 <b>Popular Movies</b>", message, button.build_menu(2))
     elif data[1] == "trending_movie":
         await query.answer()
         movies = trending.movie_week()
         await pagination(button, movies, data[1], user_id)
-        await editMessage("Trending Movies", message, button.build_menu(2))
+        await editMessage("🔥 <b>Trending Movies</b>", message, button.build_menu(2))
     elif data[1] == "discover_tv":
         await query.answer()
         shows = discover.discover_tv_shows({"sort_by": "popularity.desc"})
         await pagination(button, shows, data[1], user_id)
-        await editMessage("Popular TV Shows", message, button.build_menu(2))
+        await editMessage("📺 <b>Popular TV Shows</b>", message, button.build_menu(2))
     elif data[1] == "trending_tv":
         await query.answer()
         shows = trending.tv_day()
         await pagination(button, shows, data[1], user_id)
-        await editMessage("Trending TV Shows", message, button.build_menu(2))
+        await editMessage("🔥 <b>Trending TV Shows</b>", message, button.build_menu(2))
     else:
         await query.answer()
         await message.delete()
@@ -89,8 +89,8 @@ async def tmdb_get_details(_, query):
         movie = Movie()
         m = movie.details(data[2])
         title = m.title
-        msg = f"<b>Title:</b> {title}\n\n"
-        msg += f"<b>Plot:</b> {m.overview}\n\n"
+        msg = f"🎬 <b>Title:</b> {title}\n\n"
+        msg += f"📝 <b>Plot:</b> {m.overview}\n\n"
         tmdb_titles[m.id] = title
         if m.poster_path is None:
             button.cb_buildbutton("🔍 Torrent Search", f"tdmbsearch^{m.id}")
@@ -103,14 +103,14 @@ async def tmdb_get_details(_, query):
                 await sendPhoto(msg, message, path, button.build_menu(2))
                 osremove(path)
             else:
-                await sendMessage("Failed to retrieve image.", message)
+                await sendMessage("❌ Failed to retrieve image.", message)
     elif data[1] == "tv":
         await query.answer()
         tv = TV()
         m = tv.details(data[2])
         title = m.name
-        msg = f"<b>Title:</b> {title}\n\n"
-        msg += f"<b>Plot:</b> {m.overview}\n\n"
+        msg = f"📺 <b>Title:</b> {title}\n\n"
+        msg += f"📝 <b>Plot:</b> {m.overview}\n\n"
         tmdb_titles[m.id] = title
         if m.poster_path is None:
             button.cb_buildbutton("🔍 Torrent Search", f"tdmbsearch^{m.id}")
@@ -179,7 +179,7 @@ async def tmdb_menu_maker(type, info, button):
 
 async def pagination(button, info, type, user_id, offset=0):
     if len(info) == 0:
-        button.cb_buildbutton("❌Nothing to show❌", f"next_tmdb next^pages^{user_id}")
+                button.cb_buildbutton("❌ Nothing to show ❌", f"next_tmdb next^pages^{user_id}")
     else:
         total = len(info)
         tmdb_dict[user_id] = info
@@ -267,7 +267,7 @@ async def tmdb_search_api(client, query):
     button = ButtonMaker()
 
     question = await sendMessage(
-        "Send a movie or tv name to search, /ignore to cancel", message
+        "🔍 <b>Send a movie or tv name to search</b>, /ignore to cancel", message
     )
     try:
         if response := await client.listen.Message(
@@ -297,7 +297,7 @@ async def tmdb_search_api(client, query):
                 )
                 await sendMessage("Results found: ", message, button.build_menu(2))
     except TimeoutError:
-        await sendMessage("Too late 60s gone, try again!", message)
+        await sendMessage("⏰ Too late 60s gone, try again!", message)
     finally:
         await question.delete()
 

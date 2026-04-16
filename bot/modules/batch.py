@@ -83,7 +83,7 @@ async def _batch(client, message, isLeech=False):
                     _link = get_link(response.text)
                     if _link:
                         await sendMessage(
-                            "Send me the number of files to save from given link, /ignore to cancel",
+                            "📋 <b>Send me the number of files to save from given link</b>, /ignore to cancel",
                             message,
                         )
                         try:
@@ -96,7 +96,7 @@ async def _batch(client, message, isLeech=False):
                                 multi = int(response.text)
                             await download(message, _link, multi, isLeech=isLeech)
                         except ValueError:
-                            await sendMessage("Range must be an integer!", message)
+                            await sendMessage("❌ <b>Range must be an integer!</b>", message)
                         except FloodWait as fw:
                             await sleep(fw.seconds + 5)
                             await download(message, _link, multi, isLeech=isLeech)
@@ -127,9 +127,9 @@ async def _batch(client, message, isLeech=False):
                         create_task(mirror_leech, client, msg, isLeech=isLeech)
                         await sleep(7)
             else:
-                await sendMessage("Send a .txt file", message)
+                await sendMessage("📄 <b>Send a .txt file</b>", message)
     except TimeoutError:
-        await sendMessage("Too late 60s gone, try again!", message)
+        await sendMessage("⏰ Too late 60s gone, try again!", message)
     finally:
         await deleteMessage(question)
 
@@ -149,7 +149,7 @@ async def download(message, link, multi, isLeech, value=0):
 
     if "t.me/c/" in link:
         if not app:
-            await sendMessage("You need to set USER_SESSION_STRING!!", message)
+            await sendMessage("⚠️ <b>You need to set USER_SESSION_STRING!!</b>", message)
             return
         try:
             client = app
@@ -168,10 +168,10 @@ async def download(message, link, multi, isLeech, value=0):
                 try:
                     msg = await app.get_messages(chat, msg_id)
                 except Exception:
-                    await sendMessage("Make sure you joined the channel!!", message)
+                    await sendMessage("⚠️ <b>Make sure you joined the channel!!</b>", message)
                     return
             else:
-                await sendMessage("Bot needs to join chat to download!!", message)
+                await sendMessage("⚠️ <b>Bot needs to join chat to download!!</b>", message)
                 return
 
     _multi(message, link, value, multi, isLeech)

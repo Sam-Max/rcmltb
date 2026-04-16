@@ -1,3 +1,4 @@
+from html import escape as html_escape
 from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
@@ -27,7 +28,7 @@ async def cleanup_callback(client, callback_query):
     user_id = query.from_user.id
 
     if int(cmd[-1]) != user_id:
-        await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("⛔ This menu is not for you!", show_alert=True)
         return
     if cmd[1] == "remote":
         await rclone_cleanup(message, cmd[2], user_id, tag)
@@ -41,8 +42,8 @@ async def cleanup_callback(client, callback_query):
 
 async def rclone_cleanup(message, remote_name, user_id, tag):
     conf_path = await get_rclone_path(user_id, message)
-    msg = "**⏳Cleaning remote trash**\n"
-    msg += "\nIt may take some time depending on number of files"
+    msg = "🧹 <b>Cleaning Remote Trash</b>\n"
+    msg += "\nIt may take some time depending on the number of files"
     edit_msg = await editMessage(msg, message)
     cmd = ["rclone", "cleanup", f"--config={conf_path}", f"{remote_name}:"]
     process = await exec(*cmd, stdout=PIPE, stderr=PIPE)
@@ -50,11 +51,11 @@ async def rclone_cleanup(message, remote_name, user_id, tag):
     return_code = await process.wait()
     stdout = stdout.decode().strip()
     if return_code != 0:
-        err = stderr.decode().strip()
-        await sendMessage(f"Error: {err}", message)
+        err = html_escape(stderr.decode().strip())
+        await sendMessage(f"<b>Error:</b> <code>{err}</code>", message)
     else:
-        msg = "<b>Trash successfully cleaned ✅</b>\n"
-        msg += f"<b>cc:</b> {tag}\n"
+        msg = "✅ <b>Trash Cleaned</b>\n"
+        msg += f"<b>cc:</b> <code>{tag}</code>\n"
         await editMessage(msg, edit_msg)
 
 

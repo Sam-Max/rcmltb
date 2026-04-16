@@ -33,7 +33,7 @@ async def handle_mirrorselect(_, message):
         if config_dict["MULTI_RCLONE_CONFIG"] or await CustomFilters.sudo_filter("", message):
             await list_remotes(message, menu_type=Menus.MIRROR_SELECT)
         else:
-            await sendMessage("Not allowed to use", message)
+            await sendMessage("🚫 <b>Not allowed to use</b>", message)
 
 
 async def mirrorselect_callback(_, query):
@@ -45,7 +45,7 @@ async def mirrorselect_callback(_, query):
     rclone_remote = get_rclone_data("MIRROR_SELECT_REMOTE", user_id)
 
     if int(cmd[-1]) != user_id:
-        await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("⛔ This menu is not for you!", show_alert=True)
         return
     if cmd[1] == "remote":
         is_crypt = False if cmd[-2] == "False" else True
@@ -145,7 +145,7 @@ async def next_page_mirrorselect(_, callback_query):
 
     mirrorsel_remote = get_rclone_data("MIRROR_SELECT_REMOTE", user_id)
     base_dir = get_rclone_data("MIRROR_SELECT_BASE_DIR", user_id)
-    msg = f"Select folder where you want to store files\n\n<b>Path:</b><code>{mirrorsel_remote}:{base_dir}</code>"
+    msg = f"📁 <b>Select folder where you want to store files</b>\n\n<b>Path:</b><code>{mirrorsel_remote}:{base_dir}</code>"
     await editMessage(msg, message, reply_markup=buttons.build_menu(1))
 
 

@@ -73,7 +73,7 @@ async def calculate_size(message, remote_path, remote, user_id):
     data = await rclone_size(message, remote_path, remote, path)
     if data is not None:
         total_size = get_readable_size(data[1])
-        msg = f"Total Files: {data[0]}\nFolder Size: {total_size}"
+        msg = f"📊 <b>Total Files:</b> {data[0]}\n📁 <b>Folder Size:</b> {total_size}"
         buttons.cb_buildbutton(
             "⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", "footer"
         )
@@ -83,7 +83,7 @@ async def calculate_size(message, remote_path, remote, user_id):
 
 async def search_action(client, message, query, remote, user_id):
     conf_path = await get_rclone_path(user_id, message)
-    question = await sendMessage("Send file name to search, /ignore to cancel", message)
+    question = await sendMessage("🔍 <b>Send file name to search</b>, /ignore to cancel", message)
     try:
         response = await client.listen.Message(
             filters.text, id=filters.user(user_id), timeout=60
@@ -98,7 +98,7 @@ async def search_action(client, message, query, remote, user_id):
                     await client.listen.Cancel(filters.user(user_id))
                 else:
                     search_msg = await sendMessage(
-                        "**⏳Searching file(s) on remote...**\n\nPlease wait, it may take some time",
+                        "⏳ <b>Searching file(s) on remote...</b>\n\nPlease wait, it may take some time",
                         question,
                     )
                     conf_path = await get_rclone_path(user_id, message)
@@ -147,7 +147,7 @@ async def search_action(client, message, query, remote, user_id):
                         await search_msg.delete()
                         await sendMessage(msg, message)
                     else:
-                        await sendMessage("No file(s) found", message)
+                        await sendMessage("📭 <b>No file(s) found</b>", message)
             except Exception as ex:
                 await sendMessage(str(ex), message)
     finally:
@@ -158,13 +158,13 @@ async def delete_selection(message, user_id, is_folder=False):
     buttons = ButtonMaker()
     msg = ""
     if is_folder:
-        buttons.cb_buildbutton("Yes", f"myfilesmenu^yes^folder^{user_id}")
-        buttons.cb_buildbutton("No", f"myfilesmenu^no^folder^{user_id}")
-        msg += f"Are you sure you want to delete this folder permanently?"
+        buttons.cb_buildbutton("✅ Yes", f"myfilesmenu^yes^folder^{user_id}")
+        buttons.cb_buildbutton("❌ No", f"myfilesmenu^no^folder^{user_id}")
+        msg += "⚠️ <b>Are you sure you want to delete this folder permanently?</b>"
     else:
-        buttons.cb_buildbutton("Yes", f"myfilesmenu^yes^file^{user_id}")
-        buttons.cb_buildbutton("No", f"myfilesmenu^no^file^{user_id}")
-        msg += f"Are you sure you want to delete this file permanently?"
+        buttons.cb_buildbutton("✅ Yes", f"myfilesmenu^yes^file^{user_id}")
+        buttons.cb_buildbutton("❌ No", f"myfilesmenu^no^file^{user_id}")
+        msg += "⚠️ <b>Are you sure you want to delete this file permanently?</b>"
     await editMessage(msg, message, reply_markup=buttons.build_menu(2))
 
 
@@ -174,10 +174,10 @@ async def delete_selected(message, user_id, remote_path, remote, is_folder=False
     conf_path = await get_rclone_path(user_id, message)
     if is_folder:
         await rclone_purge(message, remote_path, remote, conf_path)
-        msg += f"The folder has been deleted successfully!!"
+        msg += "✅ <b>The folder has been deleted successfully!!</b>"
     else:
         await rclone_delete(message, remote_path, remote, conf_path)
-        msg += f"The file has been deleted successfully!!"
+        msg += "✅ <b>The file has been deleted successfully!!</b>"
     buttons.cb_buildbutton(
         "⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", "footer"
     )
@@ -193,13 +193,13 @@ async def delete_empty_dir(message, user_id, remote, remote_path):
         "⬅️ Back", f"myfilesmenu^back_remotes_menu^{user_id}", "footer"
     )
     buttons.cb_buildbutton("✘ Close Menu", f"myfilesmenu^close^{user_id}", "footer")
-    msg = "Directories successfully deleted!!"
+    msg = "✅ <b>Directories successfully deleted!!</b>"
     await editMessage(msg, message, reply_markup=buttons.build_menu(1))
 
 
 async def rclone_size(message, remote_path, remote, conf_path):
     await editMessage(
-        "**⏳Calculating Folder Size...**\n\nPlease wait, it will take some time depending on number of files",
+        "⏳ <b>Calculating Folder Size...</b>\n\nPlease wait, it will take some time depending on number of files",
         message,
     )
     cmd = [
@@ -248,7 +248,7 @@ async def rclone_delete(message, remote_path, remote, conf_path):
 
 async def rclone_rmdirs(message, remote, remote_path, conf_path):
     await editMessage(
-        "**⏳Removing empty directories...**\n\nPlease wait, it may take some time depending on number of dirs",
+        "⏳ <b>Removing empty directories...</b>\n\nPlease wait, it may take some time depending on number of dirs",
         message,
     )
     cmd = ["rclone", "rmdirs", f"--config={conf_path}", f"{remote}:{remote_path}"]
@@ -264,20 +264,20 @@ async def rclone_rmdirs(message, remote, remote_path, conf_path):
 async def rclone_mkdir(client, message, remote, remote_path, tag):
     user_id = message.reply_to_message.from_user.id
     conf_path = await get_rclone_path(user_id, message)
-    question = await sendMessage("Send name for directory, /ignore to cancel", message)
+    question = await sendMessage("📁 <b>Send name for directory</b>, /ignore to cancel", message)
     try:
         response = await client.listen.Message(
             filters.text, id=filters.user(user_id), timeout=60
         )
     except TimeoutError:
-        await sendMessage("Too late 60s gone, try again!", message)
+        await sendMessage("⏰ Too late 60s gone, try again!", message)
     else:
         if response:
             try:
                 if "/ignore" in response.text:
                     await client.listen.Cancel(filters.user(user_id))
                 else:
-                    edit_mgs = await sendMessage("⏳Creating Directory...", message)
+                    edit_mgs = await sendMessage("⏳ <b>Creating Directory...</b>", message)
                     path = f"{remote_path}/{response.text}"
                     cmd = [
                         "rclone",
@@ -304,7 +304,7 @@ async def rclone_mkdir(client, message, remote, remote_path, tag):
 
 
 async def rclone_dedupe(message, remote, remote_path, user_id, tag):
-    msg = "**⏳Deleting duplicate files**\n"
+    msg = "⏳ <b>Deleting duplicate files</b>\n"
     msg += "\nIt may take some time depending on number of duplicates files"
     edit_msg = await editMessage(msg, message)
     conf_path = await get_rclone_path(user_id, message)
@@ -340,7 +340,7 @@ async def rclone_dedupe(message, remote, remote_path, user_id, tag):
 async def rclone_rename(client, message, remote, remote_path, tag):
     user_id = message.reply_to_message.from_user.id
     conf_path = await get_rclone_path(user_id, message)
-    question = await sendMessage("Send new name for file, /ignore to cancel", message)
+    question = await sendMessage("✏️ <b>Send new name for file</b>, /ignore to cancel", message)
     try:
         response = await client.listen.Message(
             filters.text, id=filters.user(user_id), timeout=60
@@ -354,7 +354,7 @@ async def rclone_rename(client, message, remote, remote_path, tag):
                     await client.listen.Cancel(filters.user(user_id))
                 else:
                     new_name = response.text
-                    edit_msg = await sendMessage("⏳Renaming file...", message)
+                    edit_msg = await sendMessage("✏️ <b>Renaming file...</b>", message)
                     list_base = remote_path.split("/")
                     if len(list_base) > 1:
                         dest = list_base[:-1]

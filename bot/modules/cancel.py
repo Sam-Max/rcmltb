@@ -25,20 +25,22 @@ async def cancel_task(client, message):
         gid = msg[1]
         task = await getTaskByGid(gid)
         if task is None:
-            await sendMessage(f"GID: <code>{gid}</code> Not Found.", message)
+            await sendMessage(f"🔍 <b>Task Not Found</b>\n\nGID: <code>{gid}</code>", message)
             return
     elif reply_to_id := message.reply_to_message_id:
         async with status_dict_lock:
             task = status_dict.get(reply_to_id, None)
         if task is None:
-            await sendMessage(message, "This is not an active task!")
+            await sendMessage("📭 <b>No Active Task</b>\n\nThis message is not associated with an active task.", message)
             return
     elif len(msg) == 1:
-        msg = (
-            "Reply to an active Command message which was used to start the download"
-            f" or send <code>/{BotCommands.CancelCommand} GID</code> to cancel it!"
+        cmds = BotCommands.CancelCommand
+        help_msg = (
+            "🛑 <b>Cancel Task</b>\n\n"
+            "Reply to an active task message or use:\n"
+            f"<code>/{cmds[0]} GID</code> — cancel by GID"
         )
-        await sendMessage(message, msg)
+        await sendMessage(help_msg, message)
         return
 
     if (
@@ -46,7 +48,7 @@ async def cancel_task(client, message):
         and task.message.from_user.id != user_id
         and (user_id not in user_data or not user_data[user_id].get("is_sudo"))
     ):
-        await sendMessage("This is not for you!", message)
+        await sendMessage("🚫 <b>Access Denied</b>\n\nThis task does not belong to you.", message)
         return
 
     obj = task.task()
@@ -60,22 +62,22 @@ async def cancell_all_buttons(client, message):
     async with status_dict_lock:
         count = len(status_dict)
     if count == 0:
-        await sendMessage("No active tasks", message)
+        await sendMessage("📭 <b>No Active Tasks</b>\n\nThere are no tasks to cancel.", message)
         return
     buttons = ButtonMaker()
-    buttons.cb_buildbutton("Downloading", f"canall {MirrorStatus.STATUS_DOWNLOADING}")
-    buttons.cb_buildbutton("Uploading", f"canall {MirrorStatus.STATUS_UPLOADING}")
-    buttons.cb_buildbutton("Seeding", f"canall {MirrorStatus.STATUS_SEEDING}")
-    buttons.cb_buildbutton("Cloning", f"canall {MirrorStatus.STATUS_CLONING}")
-    buttons.cb_buildbutton("Splitting", f"canall {MirrorStatus.STATUS_SPLITTING}")
-    buttons.cb_buildbutton("Extracting", f"canall {MirrorStatus.STATUS_EXTRACTING}")
-    buttons.cb_buildbutton("Archiving", f"canall {MirrorStatus.STATUS_ARCHIVING}")
-    buttons.cb_buildbutton("QueuedDl", f"canall {MirrorStatus.STATUS_QUEUEDL}")
-    buttons.cb_buildbutton("QueuedUp", f"canall {MirrorStatus.STATUS_QUEUEUP}")
-    buttons.cb_buildbutton("Paused", f"canall {MirrorStatus.STATUS_PAUSED}")
-    buttons.cb_buildbutton("All", "canall all")
-    buttons.cb_buildbutton("Close", "canall close")
-    await sendMarkup("Choose tasks to cancel.", message, buttons.build_menu(2))
+    buttons.cb_buildbutton("⬇️ Downloading", f"canall {MirrorStatus.STATUS_DOWNLOADING}")
+    buttons.cb_buildbutton("⬆️ Uploading", f"canall {MirrorStatus.STATUS_UPLOADING}")
+    buttons.cb_buildbutton("🌱 Seeding", f"canall {MirrorStatus.STATUS_SEEDING}")
+    buttons.cb_buildbutton("📥 Cloning", f"canall {MirrorStatus.STATUS_CLONING}")
+    buttons.cb_buildbutton("✂️ Splitting", f"canall {MirrorStatus.STATUS_SPLITTING}")
+    buttons.cb_buildbutton("📂 Extracting", f"canall {MirrorStatus.STATUS_EXTRACTING}")
+    buttons.cb_buildbutton("📦 Archiving", f"canall {MirrorStatus.STATUS_ARCHIVING}")
+    buttons.cb_buildbutton("⏳ QueuedDl", f"canall {MirrorStatus.STATUS_QUEUEDL}")
+    buttons.cb_buildbutton("⏳ QueuedUp", f"canall {MirrorStatus.STATUS_QUEUEUP}")
+    buttons.cb_buildbutton("⏸️ Paused", f"canall {MirrorStatus.STATUS_PAUSED}")
+    buttons.cb_buildbutton("🗑️ All", "canall all")
+    buttons.cb_buildbutton("✘ Close", "canall close")
+    await sendMarkup("🛑 <b>Cancel All Tasks</b>\n\nSelect a category to cancel:", message, buttons.build_menu(2))
 
 
 async def cancel_all_update(client, query):
@@ -87,7 +89,7 @@ async def cancel_all_update(client, query):
     else:
         res = await cancel_all_(data[1])
         if not res:
-            await sendMessage(f"No matching tasks for {data[1]}!", message)
+            await sendMessage(f"📭 <b>No Matching Tasks</b>\n\nNo active {data[1]} tasks found.", message)
 
 
 async def cancel_all_(status):

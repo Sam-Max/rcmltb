@@ -1,3 +1,4 @@
+from html import escape as html_escape
 from json import loads
 from math import floor
 from pyrogram.filters import command, regex
@@ -30,7 +31,7 @@ async def storage_menu_cb(client, callback_query):
     user_id = query.from_user.id
 
     if int(cmd[-1]) != user_id:
-        await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("⛔ This menu is not for you!", show_alert=True)
         return
     if cmd[1] == "remote":
         await rclone_about(message, query, cmd[2], user_id)
@@ -51,14 +52,14 @@ async def rclone_about(message, query, remote_name, user_id):
     return_code = await process.wait()
     stdout = stdout.decode().strip()
     if return_code != 0:
-        err = stderr.decode().strip()
-        await sendMessage(f"Error: {err}", message)
+        err = html_escape(stderr.decode().strip())
+        await sendMessage(f"<b>Error:</b> <code>{err}</code>", message)
         return
     info = loads(stdout)
     if len(info) == 0:
-        await query.answer("Team Drive with Unlimited Storage", show_alert=True)
+        await query.answer("💾 Team Drive with Unlimited Storage", show_alert=True)
         return
-    result_msg = "<b>🗂 Storage Details</b>\n"
+    result_msg = "💾 <b>Storage Details</b>\n"
     try:
         used = get_readable_file_size(info["used"])
         total = get_readable_file_size(info["total"])
@@ -68,14 +69,14 @@ async def rclone_about(message, query, remote_name, user_id):
         used_percentage = f"{round(used_percentage, 2)}%"
         free_percentage = round((info["free"] * 100) / info["total"], 2)
         free_percentage = f"{free_percentage}%"
-        result_msg += used_bar
-        result_msg += f"<b>\nUsed:</b> {used} of {total}"
-        result_msg += f"<b>\nFree:</b> {free} of {total}"
-        result_msg += f"<b>\nTrashed:</b> {get_readable_file_size(info['trashed'])}"
-        result_msg += f"<b>\n\nStorage used:</b> {used_percentage}"
-        result_msg += f"<b>\nStorage free:</b> {free_percentage}"
+        result_msg += f"\n<code>{used_bar}</code>"
+        result_msg += f"\n<b>Used:</b> <code>{used}</code> of <code>{total}</code>"
+        result_msg += f"\n<b>Free:</b> <code>{free}</code> of <code>{total}</code>"
+        result_msg += f"\n<b>Trashed:</b> <code>{get_readable_file_size(info['trashed'])}</code>"
+        result_msg += f"\n\n<b>Storage Used:</b> <code>{used_percentage}</code>"
+        result_msg += f"\n<b>Storage Free:</b> <code>{free_percentage}</code>"
     except KeyError:
-        result_msg += f"<b>\nN/A:</b>"
+        result_msg += "\n<b>N/A</b>"
     button.cb_buildbutton("⬅️ Back", f"storagemenu^back^{user_id}", "footer")
     button.cb_buildbutton(
         "✘ Close Menu", f"storagemenu^close^{user_id}", "footer_second"

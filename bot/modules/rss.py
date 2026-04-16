@@ -32,26 +32,26 @@ handler_dict = {}
 async def rssMenu(event):
     user_id = event.from_user.id
     buttons = ButtonMaker()
-    buttons.cb_buildbutton("Subscribe", f"rss sub {user_id}")
-    buttons.cb_buildbutton("Subscriptions", f"rss list {user_id} 0")
-    buttons.cb_buildbutton("Get Items", f"rss get {user_id}")
-    buttons.cb_buildbutton("Edit", f"rss edit {user_id}")
-    buttons.cb_buildbutton("Pause", f"rss pause {user_id}")
-    buttons.cb_buildbutton("Resume", f"rss resume {user_id}")
-    buttons.cb_buildbutton("Unsubscribe", f"rss unsubscribe {user_id}")
+    buttons.cb_buildbutton("➕ Subscribe", f"rss sub {user_id}")
+    buttons.cb_buildbutton("📋 Subscriptions", f"rss list {user_id} 0")
+    buttons.cb_buildbutton("📥 Get Items", f"rss get {user_id}")
+    buttons.cb_buildbutton("✏️ Edit", f"rss edit {user_id}")
+    buttons.cb_buildbutton("⏸️ Pause", f"rss pause {user_id}")
+    buttons.cb_buildbutton("▶️ Resume", f"rss resume {user_id}")
+    buttons.cb_buildbutton("❌ Unsubscribe", f"rss unsubscribe {user_id}")
     if CustomFilters.sudo_filter("", event):
-        buttons.cb_buildbutton("All Subscriptions", f"rss listall {user_id} 0")
-        buttons.cb_buildbutton("Pause All", f"rss allpause {user_id}")
-        buttons.cb_buildbutton("Resume All", f"rss allresume {user_id}")
-        buttons.cb_buildbutton("Unsubscribe All", f"rss allunsub {user_id}")
-        buttons.cb_buildbutton("Delete User", f"rss deluser {user_id}")
+        buttons.cb_buildbutton("📚 All Subscriptions", f"rss listall {user_id} 0")
+        buttons.cb_buildbutton("⏸️ Pause All", f"rss allpause {user_id}")
+        buttons.cb_buildbutton("▶️ Resume All", f"rss allresume {user_id}")
+        buttons.cb_buildbutton("❌ Unsubscribe All", f"rss allunsub {user_id}")
+        buttons.cb_buildbutton("🗑️ Delete User", f"rss deluser {user_id}")
         if scheduler.running:
-            buttons.cb_buildbutton("Shutdown Rss", f"rss shutdown {user_id}")
+            buttons.cb_buildbutton("⏹️ Shutdown Rss", f"rss shutdown {user_id}")
         else:
-            buttons.cb_buildbutton("Start Rss", f"rss start {user_id}")
-    buttons.cb_buildbutton("Close", f"rss close {user_id}")
+            buttons.cb_buildbutton("▶️ Start Rss", f"rss start {user_id}")
+    buttons.cb_buildbutton("✘ Close", f"rss close {user_id}")
     button = buttons.build_menu(2)
-    msg = f"Rss Menu | Users: {len(rss_dict)} | Running: {scheduler.running}"
+    msg = f"📰 <b>Rss Menu</b> | Users: {len(rss_dict)} | Running: {scheduler.running}"
     return msg, button
 
 
@@ -143,7 +143,7 @@ async def rssSub(_, message, pre_event):
                     html = await res.text()
             rss_d = feedparse(html)
             last_title = rss_d.entries[0]["title"]
-            msg += "<b>Subscribed!</b>"
+            msg += "✅ <b>Subscribed!</b>"
             msg += f"\n<b>Title: </b><code>{title}</code>\n<b>Feed Url: </b>{feed_link}"
             msg += f"\n<b>latest record for </b>{rss_d.feed.title}:"
             msg += (
@@ -190,7 +190,7 @@ async def rssSub(_, message, pre_event):
                 f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf} - opt: {opt}"
             )
         except (IndexError, AttributeError) as e:
-            emsg = f"The link: {feed_link} doesn't seem to be a RSS feed or it's region-blocked!"
+            emsg = f"❌ The link: {feed_link} doesn't seem to be a RSS feed or it's region-blocked!"
             await sendMessage(emsg + "\nError: " + str(e), message)
         except Exception as e:
             await sendMessage(str(e), message)
@@ -493,7 +493,7 @@ async def rssListener(client, query):
     elif data[1] == "list":
         handler_dict[user_id] = False
         if len(rss_dict.get(int(data[2]), {})) == 0:
-            await query.answer(text="No subscriptions!", show_alert=True)
+            await query.answer(text="📭 No subscriptions!", show_alert=True)
         else:
             await query.answer()
             start = int(data[3])
@@ -644,7 +644,7 @@ Timeout: 60 sec.
             await sleep(0.5)
             await updateRssMenu(query)
         else:
-            await query.answer(text="Already Stopped!", show_alert=True)
+            await query.answer(text="ℹ️ Already Stopped!", show_alert=True)
     elif data[1] == "start":
         if not scheduler.running:
             await query.answer()
@@ -652,7 +652,7 @@ Timeout: 60 sec.
             scheduler.start()
             await updateRssMenu(query)
         else:
-            await query.answer(text="Already Running!", show_alert=True)
+            await query.answer(text="ℹ️ Already Running!", show_alert=True)
 
 
 async def rssMonitor():

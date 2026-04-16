@@ -41,7 +41,7 @@ async def handle_copy(client, message):
                 message, remote_type="remote_origin", menu_type=Menus.COPY
             )
         else:
-            await sendMessage("Not allowed to use", message)
+            await sendMessage("🚫 <b>Not allowed to use</b>", message)
 
 
 async def copy_menu_callback(client, callback_query):
@@ -59,7 +59,7 @@ async def copy_menu_callback(client, callback_query):
     destination_dir = get_rclone_data("COPY_DESTINATION_DIR", user_id)
 
     if int(cmd[-1]) != user_id:
-        await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("⛔ This menu is not for you!", show_alert=True)
         return
 
     # First Menu
@@ -220,12 +220,12 @@ async def next_page_copy(client, callback_query):
     if is_second_menu:
         destination_remote = get_rclone_data("COPY_DESTINATION_REMOTE", user_id)
         destination_dir = get_rclone_data("COPY_DESTINATION_DIR", user_id)
-        msg = f"Select folder where you want to copy\n\nPath:<code>{destination_remote}:{destination_dir}</code>"
+        msg = f"📂 <b>Select folder where you want to copy</b>\n\nPath:<code>{destination_remote}:{destination_dir}</code>"
         await editMessage(msg, message, reply_markup=buttons.build_menu(1))
     else:
         origin_remote = get_rclone_data("COPY_ORIGIN_REMOTE", user_id)
         origin_dir = get_rclone_data("COPY_ORIGIN_DIR", user_id)
-        msg = f"Select file or folder which you want to copy\n\nPath:<code>{origin_remote}:{origin_dir}</code>"
+        msg = f"📄 <b>Select file or folder which you want to copy</b>\n\nPath:<code>{origin_remote}:{origin_dir}</code>"
         await editMessage(msg, message, reply_markup=buttons.build_menu(1))
 
 

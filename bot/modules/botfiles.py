@@ -353,7 +353,7 @@ async def load_config():
 
 
 async def config_menu(user_id, message, edit=False):
-    msg = "❇️ **Rclone configuration**"
+    msg = "⚙️ <b>Rclone configuration</b>"
     rclone_conf = f"rclone/{user_id}/rclone.conf"
     token_pickle = f"tokens/{user_id}.pickle"
     debrid_token= "debrid/debrid_token.txt"
@@ -374,7 +374,7 @@ async def config_menu(user_id, message, edit=False):
         for i in info:
             remote = i.replace(":", "")
             remotes += f"- {remote}\n"
-        msg += "\n\n**Here is list of drives in config file:**"
+        msg += "\n\n📋 <b>Here is list of drives in config file:</b>"
         msg += f"\n{remotes}"
     
     if ospath.exists(rclone_conf):
@@ -449,7 +449,7 @@ async def handle_botfiles(client, message):
         if await CustomFilters.sudo_filter("", message):
             await config_menu(user_id, message)
         else:
-            await sendMessage("Not allowed to use", message)
+            await sendMessage("🚫 <b>Not allowed to use</b>", message)
 
 
 async def botfiles_callback(client, callback_query):
@@ -460,7 +460,7 @@ async def botfiles_callback(client, callback_query):
     user_id = query.from_user.id
 
     if int(cmd[-1]) != user_id:
-        await query.answer("This menu is not for you!", show_alert=True)
+        await query.answer("⛔ This menu is not for you!", show_alert=True)
         return
     
     try:
@@ -546,7 +546,7 @@ async def set_config_listener(client, query, message, rclone_global=False):
         
     try:
         question = await client.send_message(
-            message.chat.id, text="Send file, /ignore to cancel"
+            message.chat.id, text="📁 <b>Send file</b>, /ignore to cancel"
         )
         response = await client.listen.Message(
             filters.document | filters.text, id=filters.user(user_id), timeout=60
@@ -617,7 +617,7 @@ async def set_config_listener(client, query, message, rclone_global=False):
             if ospath.exists("accounts.zip"):
                 osremove("accounts.zip")
     except TimeoutError:
-        await client.send_message(message.chat.id, text="Too late 60s gone, try again!")
+        await client.send_message(message.chat.id, text="⏰ Too late 60s gone, try again!")
     except Exception as ex:
         await sendMessage(str(ex), message)
     finally:

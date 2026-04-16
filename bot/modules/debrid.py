@@ -29,11 +29,13 @@ async def authorize(_, query):
     rd_client = RealDebrid()
     try:
         response = rd_client.get_device_code()
-        text = f"""
-Go to the next url: {response["verification_url"]},
-and enter the folowing code: <code>{response["user_code"]}</code> 
-Timeout: 120s
-    """
+        text = (
+            f"🔐 <b>Real-Debrid Authorization</b>\n\n"
+            f"Visit the URL below and enter the code:\n"
+            f"<a href='{response['verification_url']}'>{response['verification_url']}</a>\n\n"
+            f"<b>Code:</b> <code>{response['user_code']}</code>\n"
+            f"<b>Timeout:</b> <code>120s</code>"
+        )
         await sendMessage(text, message)
 
         device_code = response["device_code"]
@@ -49,7 +51,7 @@ Timeout: 120s
                 os.makedirs(path, exist_ok=True)
                 with open(f"{path}", "w") as f:
                     f.write(res["token"])
-                await sendMessage("Authorized!!", message)
+                await sendMessage("✅ <b>Authorized</b>", message)
                 break
             await sleep(1000 * interval)
     except ProviderException as e:
@@ -62,7 +64,7 @@ async def get_user_torrents(_, query):
     try:
         response = await run_sync_to_async(rd_client.get_user_torrent_list, 1, 50)
         result = ""
-        msg = await sendMessage("Getting torrent list....", message)
+        msg = await sendMessage("📥 <b>Fetching torrent list...</b>", message)
         for index, res in enumerate(response, start=1):
             if res["links"]:
                 res = await run_sync_to_async(
@@ -99,7 +101,7 @@ async def add_magnet(client, query):
     message = query.message
     rd_client = RealDebrid(debrid_data.get("token", None))
     question = await sendMessage(
-        "Send a magnet link to add to debrid, /ignore to cancel",
+        "🧲 <b>Send a magnet link</b> to add to Debrid.\n/ignore to cancel",
         message,
     )
     try:
@@ -117,11 +119,11 @@ async def add_magnet(client, query):
                     )
                     if tor_info["status"] == "waiting_files_selection":
                         await run_sync_to_async(rd_client.select_files, tor_info["id"])
-                    msg = "Magnet link added to Debrid!!\n\n"
+                    msg = "✅ <b>Magnet link added to Debrid</b>\n\n"
                     msg += f"<b>Status:</b> <code>/info {response['id']}</code>"
                     await sendMessage(msg, query.message)
     except TimeoutError:
-        await sendMessage("Too late 60s gone, try again!", message)
+        await sendMessage("<b>Timed out.</b> No response in 60s, try again.", message)
     except ProviderException as e:
         await sendMessage(e.message, message)
     finally:
@@ -132,7 +134,7 @@ async def add_torrent(client, query):
     message = query.message
     rd_client = RealDebrid(debrid_data.get("token", None))
     question = await sendMessage(
-        "Send a torrent file to add to debrid, /ignore to cancel",
+        "📁 <b>Send a torrent file</b> to add to Debrid.\n/ignore to cancel",
         message,
     )
     try:
@@ -160,11 +162,11 @@ async def add_torrent(client, query):
                             await run_sync_to_async(
                                 rd_client.select_files, tor_info["id"]
                             )
-                        msg = "Torrent file added to Debrid!!\n\n"
+                        msg = "✅ <b>Torrent file added to Debrid</b>\n\n"
                         msg += f"<b>Status:</b> <code>/info {response['id']}</code>"
                         await sendMessage(msg, query.message)
     except TimeoutError:
-        await sendMessage("Too late 60s gone, try again!", message)
+        await sendMessage("<b>Timed out.</b> No response in 60s, try again.", message)
     except ProviderException as e:
         await sendMessage(e.message, message)
     finally:
@@ -175,7 +177,7 @@ async def delete_torrent(client, query):
     message = query.message
     rd_client = RealDebrid(debrid_data.get("token", None))
     question = await sendMessage(
-        "Send a torrent id to delete from debrid, /ignore to cancel", message
+        "🔢 <b>Send a torrent ID</b> to delete from Debrid.\n/ignore to cancel", message
     )
     try:
         if response := await client.listen.Message(filters.text, timeout=60):
@@ -184,9 +186,9 @@ async def delete_torrent(client, query):
             else:
                 id = response.text.strip()
                 await run_sync_to_async(rd_client.delete_torrent, id)
-                await sendMessage("Torrent Deleted!!", query.message)
+                await sendMessage("✅ <b>Torrent deleted</b>", query.message)
     except TimeoutError:
-        await sendMessage("Too late 60s gone, try again!", message)
+        await sendMessage("<b>Timed out.</b> No response in 60s, try again.", message)
     except ProviderException as e:
         await sendMessage(e.message, message)
     finally:
@@ -198,11 +200,12 @@ async def get_user(_, query):
     rd_client = RealDebrid(debrid_data.get("token", None))
     try:
         response = await run_sync_to_async(rd_client.get_user)
-        user_info = f"<b>User:</b> {response['username']}\n"
-        user_info += f"<b>E-mail:</b> {response['email']}\n"
-        user_info += f"<b>Fidelity points:</b> {response['points']}\n"
-        user_info += f"<b>Type:</b> {response['type']}\n"
-        user_info += f"<b>Expiration:</b> {response['expiration']}"
+        user_info = f"👤 <b>User Info</b>\n\n"
+        user_info += f"<b>User:</b> <code>{response['username']}</code>\n"
+        user_info += f"<b>Email:</b> <code>{response['email']}</code>\n"
+        user_info += f"<b>Points:</b> <code>{response['points']}</code>\n"
+        user_info += f"<b>Type:</b> <code>{response['type']}</code>\n"
+        user_info += f"<b>Expiration:</b> <code>{response['expiration']}</code>"
         await sendMessage(user_info, message)
     except ProviderException as e:
         await sendMessage(e.message, message)
@@ -212,8 +215,7 @@ async def get_availabilty(client, query):
     message = query.message
     rd_client = RealDebrid(debrid_data.get("token", None))
     question = await sendMessage(
-        """Send a magnet link to check if it is cached,
-and to extract download link, /ignore to cancel""",
+        "🔍 <b>Send a magnet link</b> to check cache availability and extract download link.\n/ignore to cancel",
         message,
     )
     try:
@@ -247,13 +249,13 @@ and to extract download link, /ignore to cancel""",
                                     result += f"{index}. <a href='{res['download']}'>{res['filename']}</a>\n\n"
                             await sendMessage(result, message)
                         else:
-                            await sendMessage("Torrent not cached!", message)
+                            await sendMessage("❌ <b>Torrent not cached</b>", message)
                     else:
                         await sendMessage(
-                            "Failed to extract hash from magnet!", message
+                            "❌ <b>Error:</b> Failed to extract hash from magnet link.", message
                         )
     except TimeoutError:
-        await sendMessage("Too late 60s gone, try again!", message)
+        await sendMessage("<b>Timed out.</b> No response in 60s, try again.", message)
     except ProviderException as e:
         await sendMessage(e.message, message)
     finally:
@@ -265,12 +267,11 @@ async def torrent_info(_, message):
     rd_client = RealDebrid(debrid_data.get("token", None))
     try:
         response = await run_sync_to_async(rd_client.get_torrent_info, id)
-        msg = f"<b>Name:</b> <code>{response['filename']}</code>\n"
-        msg += (
-            f"<b>Total Size: </b>{get_readable_file_size(response['original_bytes'])}\n"
-        )
-        msg += f"<b>Status: </b>{(response['status'].capitalize())}\n"
-        msg += f"<b>Progress: </b>{response['progress']}%"
+        msg = f"<b>Torrent Info</b>\n\n"
+        msg += f"<b>Name:</b> <code>{response['filename']}</code>\n"
+        msg += f"<b>Total Size:</b> <code>{get_readable_file_size(response['original_bytes'])}</code>\n"
+        msg += f"<b>Status:</b> <code>{response['status'].capitalize()}</code>\n"
+        msg += f"<b>Progress:</b> <code>{response['progress']}%</code>"
         await sendMessage(msg, message)
     except ProviderException as e:
         await sendMessage(e.message, message)
@@ -284,19 +285,19 @@ async def generate_link(client, query):
         hosts = ""
         for host in res:
             hosts += f"{host}, "
-        question = await sendMessage(
-            f"Send a link from the following hosters to unlock. \n/ignore to cancel\n\nSupported Hosts: {hosts}",
-            message,
-        )
+    question = await sendMessage(
+        f"🌐 <b>Supported Hosts:</b> <code>{hosts}</code>\n\n<b>Send a link</b> from the above hosters to generate a direct download link.\n/ignore to cancel",
+        message,
+    )
         if response := await client.listen.Message(filters.text, timeout=60):
             if "/ignore" in response.text:
                 pass
             else:
                 link = response.text.strip()
                 res = await run_sync_to_async(rd_client.create_download_link, link)
-                await sendMessage(f"Link: {res['download']}", query.message)
+                await sendMessage(f"🔗 <b>Download Link:</b>\n{res['download']}", query.message)
     except TimeoutError:
-        await sendMessage("Too late 60s gone, try again!", message)
+        await sendMessage("<b>Timed out.</b> No response in 60s, try again.", message)
     except ProviderException as e:
         await sendMessage(e.message, message)
     finally:
@@ -340,18 +341,18 @@ async def rd_callback(client, query):
 
 async def real_debrid(_, message):
     buttons = ButtonMaker()
-    buttons.cb_buildbutton("Authorize", f"rd^auth")
-    buttons.cb_buildbutton("User Info", f"rd^uinf")
-    buttons.cb_buildbutton("User Torrents", f"rd^ut")
-    buttons.cb_buildbutton("User Downloads", f"rd^ud")
-    buttons.cb_buildbutton("Check Available", f"rd^cha")
-    buttons.cb_buildbutton("Generate Link", f"rd^gl")
-    buttons.cb_buildbutton("Add Magnet", f"rd^addm")
-    buttons.cb_buildbutton("Add Torrent", f"rd^addt")
-    buttons.cb_buildbutton("Delete Torrent", f"rd^delt")
+    buttons.cb_buildbutton("🔐 Authorize", f"rd^auth")
+    buttons.cb_buildbutton("👤 User Info", f"rd^uinf")
+    buttons.cb_buildbutton("🧲 User Torrents", f"rd^ut")
+    buttons.cb_buildbutton("📥 User Downloads", f"rd^ud")
+    buttons.cb_buildbutton("🔍 Check Available", f"rd^cha")
+    buttons.cb_buildbutton("🔗 Generate Link", f"rd^gl")
+    buttons.cb_buildbutton("🧲 Add Magnet", f"rd^addm")
+    buttons.cb_buildbutton("📁 Add Torrent", f"rd^addt")
+    buttons.cb_buildbutton("🗑️ Delete Torrent", f"rd^delt")
     buttons.cb_buildbutton("✘ Close Menu", "rd^close", position="footer")
-    msg = "***DEBRID MENU***\n\n"
-    msg += "<b>Note:</b> Only support for real debrid for the moment"
+    msg = "⚡ <b>Debrid Menu</b>\n\n"
+    msg += "<b>Note:</b> Currently supports Real-Debrid only."
     await sendMessage(msg, message, buttons.build_menu(2))
 
 
