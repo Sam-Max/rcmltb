@@ -53,6 +53,11 @@ class TaskConfig:
         self.is_cancelled = False
         self.subproc = None
         self.new_dir = ""
+        self.force_upload = False
+        self.force_download = False
+        self.force_run = False
+        self.stop_duplicate = False
+        self.up_dest = ""
 
     async def clean(self):
         try:

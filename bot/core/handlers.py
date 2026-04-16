@@ -111,12 +111,16 @@ def add_handlers():
 
     # Import all modules to trigger their bot.add_handler() calls
     # This maintains backward compatibility with existing module structure
+    from pyrogram.filters import command, regex
+    from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+
     from bot.modules import (
         batch,
         cancel,
         botfiles,
         copy,
         debrid,
+        force_start,
         leech,
         mirror_leech,
         mirror_select,
@@ -142,6 +146,27 @@ def add_handlers():
         tmdb,
         bisync,
     )
+
+    # Register force_start handler
+    from bot.modules.force_start import remove_from_queue
+    bot.add_handler(
+        MessageHandler(
+            remove_from_queue,
+            filters=command(BotCommands.ForceStartCommand)
+            & (CustomFilters.user_filter | CustomFilters.chat_filter),
+        )
+    )
+
+    # Register improved torr_select handler
+    from bot.modules.torr_select import select as torr_select_handler
+    bot.add_handler(
+        MessageHandler(
+            torr_select_handler,
+            filters=command(BotCommands.SelectCommand)
+            & (CustomFilters.user_filter | CustomFilters.chat_filter),
+        )
+    )
+
     from bot.helper.ext_utils.help_messages import help_callback
 
     LOGGER.info(f"All handlers registered")

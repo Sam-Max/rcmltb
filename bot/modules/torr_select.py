@@ -1,20 +1,101 @@
 from pyrogram.handlers import CallbackQueryHandler
 from pyrogram import filters
-from os import remove as osremove, path as ospath
-from bot import bot, LOGGER
+from asyncio import iscoroutinefunction
+from aiofiles.os import remove, path as aiopath
+from bot import bot, status_dict, status_dict_lock, user_data, LOGGER
 from bot.core.torrent_manager import TorrentManager
-from bot.helper.telegram_helper.message_utils import sendStatusMessage
-from bot.helper.ext_utils.misc_utils import getTaskByGid
+from bot.core.config_manager import Config
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, deleteMessage
+from bot.helper.ext_utils.misc_utils import getTaskByGid, bt_selection_buttons
+from bot.helper.ext_utils.bot_utils import new_task
+from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
+
+
+@new_task
+async def select(_, message):
+    """Handle /sel command to select files from an active torrent download."""
+    user_id = message.from_user.id if message.from_user else message.sender_chat.id
+    msg = message.text.split()
+    if len(msg) > 1:
+        gid = msg[1]
+        task = await getTaskByGid(gid)
+        if task is None:
+            await sendMessage(f"GID: <code>{gid}</code> Not Found.", message)
+            return
+    elif reply_to_id := message.reply_to_message_id:
+        async with status_dict_lock:
+            task = status_dict.get(reply_to_id)
+        if task is None:
+            await sendMessage("This is not an active task!", message)
+            return
+    elif len(msg) == 1:
+        cmds = __import__("bot.helper.telegram_helper.bot_commands", fromlist=["BotCommands"]).BotCommands
+        help_msg = (
+            f"Reply to an active /cmd which was used to start the download or add gid along with cmd\n\n"
+            f"This command is for selecting files from an already added torrent. "
+            f"But you can always use /cmd with arg <code>s</code> to select files before download starts."
+        )
+        await sendMessage(help_msg, message)
+        return
+    if (
+        Config.OWNER_ID != user_id
+        and task.listener.user_id != user_id
+        and (user_id not in user_data or not user_data[user_id].get("is_sudo"))
+    ):
+        await sendMessage("This task is not for you!", message)
+        return
+    if not iscoroutinefunction(task.status):
+        await sendMessage("The task has finished the download stage!", message)
+        return
+    current_status = await task.status()
+    if current_status not in [
+        MirrorStatus.STATUS_DOWNLOADING,
+        MirrorStatus.STATUS_PAUSED,
+        MirrorStatus.STATUS_QUEUEDL,
+    ]:
+        await sendMessage(
+            "Task should be in download, pause, or queued status!",
+            message,
+        )
+        return
+    if task.name().startswith("[METADATA]") or task.name().startswith("Trying"):
+        await sendMessage("Try again after downloading metadata finishes!", message)
+        return
+
+    try:
+        if not task.queued:
+            await task.update()
+            id_ = task.gid()
+            if hasattr(task, "seeding"):
+                if task.listener.is_qbit:
+                    id_ = task.hash()
+                    await TorrentManager.qbittorrent.torrents.stop([id_])
+                else:
+                    try:
+                        await TorrentManager.aria2.forcePause(id_)
+                    except Exception as e:
+                        LOGGER.error(
+                            f"{e} Error in pause, this mostly happens after abuse aria2"
+                        )
+        task.listener.select = True
+    except Exception:
+        await sendMessage("This is not a bittorrent task!", message)
+        return
+
+    SBUTTONS = bt_selection_buttons(id_)
+    msg = "Your download paused. Choose files then press Done Selecting button to resume downloading."
+    await sendMessage(msg, message, SBUTTONS)
 
 
 async def get_confirm(client, query):
+    """Handle btsel callbacks for file selection confirmation."""
     user_id = query.from_user.id
     data = query.data.split()
     message = query.message
     task = await getTaskByGid(data[2])
     if task is None:
         await query.answer("This task has been cancelled!", show_alert=True)
-        await message.delete()
+        await deleteMessage(message)
         return
     if not hasattr(task, "seeding"):
         await query.answer(
@@ -37,15 +118,15 @@ async def get_confirm(client, query):
             tor_info = await TorrentManager.qbittorrent.torrents.info(hash=id_)
             if tor_info:
                 tor_info = tor_info[0]
-                path = tor_info.content_path.rrsplit("/", 1)[0]
+                path = tor_info.content_path.rsplit("/", 1)[0]
                 res = await TorrentManager.qbittorrent.torrents.files(hash=id_)
                 for f in res:
                     if f.priority == 0:
                         f_paths = [f"{path}/{f.name}", f"{path}/{f.name}.!qB"]
                         for f_path in f_paths:
-                            if ospath.exists(f_path):
+                            if await aiopath.exists(f_path):
                                 try:
-                                    osremove(f_path)
+                                    await remove(f_path)
                                 except Exception:
                                     pass
                 await TorrentManager.qbittorrent.torrents.resume(hashes=[id_])
@@ -53,13 +134,12 @@ async def get_confirm(client, query):
             try:
                 download = await TorrentManager.aria2.tellStatus(id_)
                 files = download.get("files", [])
-                dir_path = download.get("dir", "")
                 for f in files:
                     if not f.get("selected", True):
                         f_path = f.get("path", "")
-                        if ospath.exists(f_path):
+                        if await aiopath.exists(f_path):
                             try:
-                                osremove(f_path)
+                                await remove(f_path)
                             except Exception:
                                 pass
                 await TorrentManager.aria2.unpause(id_)
@@ -68,12 +148,12 @@ async def get_confirm(client, query):
                     f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!"
                 )
         await sendStatusMessage(message)
-        await message.delete()
+        await deleteMessage(message)
     elif data[1] == "rm":
         await query.answer()
         obj = task.task()
         await obj.cancel_task()
-        await message.delete()
+        await deleteMessage(message)
 
 
 bot.add_handler(CallbackQueryHandler(get_confirm, filters=filters.regex("btsel")))

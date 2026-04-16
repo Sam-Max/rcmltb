@@ -101,23 +101,17 @@ def is_archive(file):
 def is_archive_split(file):
     return bool(search(SPLIT_REGEX, file))
 
-
-def is_url(url):
-    return bool(re_match(URL_REGEX, url))
-
-
-def is_gdrive_link(url):
-    return "drive.google.com" in url
-
-
-def is_gdrive_id(id_):
-    return bool(
-        re_match(r"^(mtp:)?(?:[a-zA-Z0-9-_]{33}|[a-zA-Z0-9_-]{19})$|^gdl$|^root$", id_)
-    )
-
-
-def is_mega_link(url):
-    return "mega.nz" in url or "mega.co.nz" in url
+# Link validation functions moved to links_utils.py (backward compat imports)
+from bot.helper.ext_utils.links_utils import (
+    is_url,
+    is_gdrive_link,
+    is_gdrive_id,
+    is_mega_link,
+    is_magnet,
+    is_share_link,
+    is_telegram_link,
+    is_rclone_path,
+)
 
 
 def get_mega_link_type(url):
@@ -127,10 +121,6 @@ def get_mega_link_type(url):
         return "folder"
     else:
         return "file"
-
-
-def is_magnet(url):
-    return bool(re_match(MAGNET_REGEX, url))
 
 
 async def get_content_type(link):

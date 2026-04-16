@@ -38,6 +38,8 @@ class _BotCommands:
         self.TMDB = f"tmdb{CMD_INDEX}"
         self.Debrid = f"debrid{CMD_INDEX}"
         self.DebridInfo = f"info{CMD_INDEX}"
+        self.ForceStartCommand = [f"force_start{CMD_INDEX}", f"fs{CMD_INDEX}"]
+        self.SelectCommand = f"sel{CMD_INDEX}"
 
 
 BotCommands = _BotCommands()
