@@ -47,7 +47,7 @@ class RcloneMirror:
         conf_path = await get_rclone_path(self.__user_id, self.message)
         folder_name = self.name.replace(".", "")
         is_multi_remote_up = config_dict["MULTI_REMOTE_UP"]
-        is_sudo_filter = CustomFilters.sudo_filter("", self.message)
+        is_sudo_filter = await CustomFilters.sudo_filter("", self.message)
 
         if config_dict["MULTI_RCLONE_CONFIG"] or is_sudo_filter:
             if is_multi_remote_up and len(remotes_multi) > 0:

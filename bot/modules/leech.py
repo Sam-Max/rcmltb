@@ -59,7 +59,7 @@ async def leech(client, message):
         if message.reply_to_message:
             await mirror_leech(client, message, isLeech=True)
             return
-        elif config_dict["MULTI_RCLONE_CONFIG"] or CustomFilters.sudo_filter(
+        elif config_dict["MULTI_RCLONE_CONFIG"] or await CustomFilters.sudo_filter(
             "", message
         ):
             await sendMarkup(

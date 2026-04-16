@@ -23,7 +23,7 @@ from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclo
 
 
 async def is_remote_selected(user_id, message):
-    if CustomFilters.sudo_filter("", message):
+    if await CustomFilters.sudo_filter("", message):
         if DEFAULT_OWNER_REMOTE := config_dict["DEFAULT_OWNER_REMOTE"]:
             update_rclone_data("MIRROR_SELECT_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
             return True
@@ -137,7 +137,7 @@ async def list_remotes(
         if conf.get(remote, "type") == "crypt":
             is_crypt = True
             crypt_icon = "🔐"
-        if CustomFilters.sudo_filter("", message) and config_dict["MULTI_REMOTE_UP"]:
+        if await CustomFilters.sudo_filter("", message) and config_dict["MULTI_REMOTE_UP"]:
             if remote in remotes_multi:
                 prev_icon = "✅"
             buttons.cb_buildbutton(

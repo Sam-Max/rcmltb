@@ -3,6 +3,7 @@ from bot import DOWNLOAD_DIR, app, bot
 from bot.helper.ext_utils.help_messages import BATCH_HELP_DICT
 from pyrogram.errors import FloodWait
 from pyrogram import filters
+from pyrogram.types import LinkPreviewOptions
 from bot.helper.ext_utils.bot_utils import create_task, new_task
 from bot.helper.telegram_helper.filters import CustomFilters
 from pyrogram.handlers import MessageHandler
@@ -68,11 +69,11 @@ async def _batch(client, message, isLeech=False):
                             msg = f"/leech {link}" if isLeech else f"/mirror {link}"
                         if isLeech:
                             msg = await bot.send_message(
-                                message.chat.id, msg, disable_web_page_preview=True
+                                message.chat.id, msg, link_preview_options=LinkPreviewOptions(is_disabled=True)
                             )
                         else:
                             msg = await bot.send_message(
-                                message.chat.id, msg, disable_web_page_preview=True
+                                message.chat.id, msg, link_preview_options=LinkPreviewOptions(is_disabled=True)
                             )
                         msg = await client.get_messages(message.chat.id, msg.id)
                         msg.from_user = message.from_user
@@ -113,13 +114,13 @@ async def _batch(client, message, isLeech=False):
                             msg = await bot.send_message(
                                 message.chat.id,
                                 f"/leech {link}",
-                                disable_web_page_preview=True,
+                                link_preview_options=LinkPreviewOptions(is_disabled=True),
                             )
                         else:
                             msg = await bot.send_message(
                                 message.chat.id,
                                 f"/mirror {link}",
-                                disable_web_page_preview=True,
+                                link_preview_options=LinkPreviewOptions(is_disabled=True),
                             )
                         msg = await client.get_messages(message.chat.id, msg.id)
                         msg.from_user = message.from_user.id

@@ -393,7 +393,7 @@ async def config_menu(user_id, message, edit=False):
             "📃 token.pickle", f"configmenu^add_token_pickle^{user_id}", "footer_second"
             )
 
-    if CustomFilters.sudo_filter("", message):
+    if await CustomFilters.sudo_filter("", message):
         global_rc = f"rclone/rclone_global/rclone.conf"
         if ospath.exists(global_rc):
             buttons.cb_buildbutton(
@@ -446,7 +446,7 @@ async def handle_botfiles(client, message):
     if config_dict["MULTI_RCLONE_CONFIG"]:
         await config_menu(user_id, message)
     else:
-        if CustomFilters.sudo_filter("", message):
+        if await CustomFilters.sudo_filter("", message):
             await config_menu(user_id, message)
         else:
             await sendMessage("Not allowed to use", message)
