@@ -227,7 +227,6 @@ def get_readable_message(chat_id=None, status_filter="all"):
     # Filter tasks based on status_filter
     all_tasks = list(status_dict.values())
     if status_filter != "all":
-        from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
         filter_map = {
             "dl": [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_QUEUEDL],
             "ul": [MirrorStatus.STATUS_UPLOADING, MirrorStatus.STATUS_QUEUEUP],
