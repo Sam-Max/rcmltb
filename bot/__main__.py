@@ -9,6 +9,8 @@ from bot import (
     bot,
     bot_loop,
     scheduler,
+    aria2_options,
+    qbit_options,
 )
 from os import path as ospath, remove as osremove, execl as osexecl
 from bot.helper.ext_utils.help_messages import (
@@ -24,8 +26,9 @@ from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.mirror_leech_utils.download_utils.aria2_download import (
     start_aria2_listener,
 )
+from bot.core.torrent_manager import TorrentManager, aria2c_global
 from .helper.telegram_helper.bot_commands import BotCommands
-from .helper.ext_utils.bot_utils import cmd_exec, run_sync_to_async
+from .helper.ext_utils.bot_utils import cmd_exec
 from json import loads
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.message_utils import editMessage, sendMarkup, sendMessage
@@ -121,7 +124,36 @@ async def get_log(client, message):
 
 
 async def main():
+    global aria2_options, qbit_options
     await start_cleanup()
+
+    await TorrentManager.initiate()
+    LOGGER.info("TorrentManager initiated")
+
+    if not aria2_options:
+        aria2_options = await TorrentManager.get_aria2_options()
+    else:
+        a2c_glo = {}
+        for op in aria2c_global:
+            if op in aria2_options:
+                a2c_glo[op] = aria2_options[op]
+        await TorrentManager.set_aria2_options(a2c_glo)
+
+    if not qbit_options:
+        qbit_options = await TorrentManager.get_qbit_preferences()
+        if "listen_port" in qbit_options:
+            del qbit_options["listen_port"]
+        for k in list(qbit_options.keys()):
+            if k.startswith("rss"):
+                del qbit_options[k]
+    else:
+        qb_opt = {**qbit_options}
+        for k, v in list(qb_opt.items()):
+            if v in ["", "*"]:
+                del qb_opt[k]
+        await TorrentManager.set_qbit_preferences(qb_opt)
+
+    await TorrentManager.aria2_init()
 
     await create_mirror_help_buttons()
     await create_ytdl_help_buttons()
@@ -130,7 +162,7 @@ async def main():
 
     await torr_search.initiate_search_tools()
     await debrid.load_debrid_token()
-    await run_sync_to_async(start_aria2_listener, wait=False)
+    start_aria2_listener()
 
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:

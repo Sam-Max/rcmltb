@@ -3,7 +3,7 @@ aiofiles
 aioshutil
 anytree
 apscheduler
-aria2p
+aioaria2
 asyncio
 bencoding
 beautifulsoup4
@@ -27,7 +27,7 @@ pymongo
 kurigram
 python-dotenv
 python-magic
-qbittorrent-api
+aioqbt
 requests
 speedtest-cli
 telegraph

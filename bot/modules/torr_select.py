@@ -1,8 +1,8 @@
 from pyrogram.handlers import CallbackQueryHandler
 from pyrogram import filters
 from os import remove as osremove, path as ospath
-from bot import bot, aria2, LOGGER
-from bot.helper.ext_utils.bot_utils import run_sync_to_async
+from bot import bot, LOGGER
+from bot.core.torrent_manager import TorrentManager
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from bot.helper.ext_utils.misc_utils import getTaskByGid
 
@@ -34,30 +34,35 @@ async def get_confirm(client, query):
         await query.answer()
         id_ = data[3]
         if len(id_) > 20:
-            client = task.client()
-            tor_info = (await run_sync_to_async(client.torrents_info, torrent_hash=id_))[0]
-            path = tor_info.content_path.rsplit("/", 1)[0]
-            res = await run_sync_to_async(client.torrents_files, torrent_hash=id_)
-            for f in res:
-                if f.priority == 0:
-                    f_paths = [f"{path}/{f.name}", f"{path}/{f.name}.!qB"]
-                    for f_path in f_paths:
+            tor_info = await TorrentManager.qbittorrent.torrents.info(hash=id_)
+            if tor_info:
+                tor_info = tor_info[0]
+                path = tor_info.content_path.rrsplit("/", 1)[0]
+                res = await TorrentManager.qbittorrent.torrents.files(hash=id_)
+                for f in res:
+                    if f.priority == 0:
+                        f_paths = [f"{path}/{f.name}", f"{path}/{f.name}.!qB"]
+                        for f_path in f_paths:
+                            if ospath.exists(f_path):
+                                try:
+                                    osremove(f_path)
+                                except Exception:
+                                    pass
+                await TorrentManager.qbittorrent.torrents.resume(hashes=[id_])
+        else:
+            try:
+                download = await TorrentManager.aria2.tellStatus(id_)
+                files = download.get("files", [])
+                dir_path = download.get("dir", "")
+                for f in files:
+                    if not f.get("selected", True):
+                        f_path = f.get("path", "")
                         if ospath.exists(f_path):
                             try:
                                 osremove(f_path)
-                            except:
+                            except Exception:
                                 pass
-            await run_sync_to_async(client.torrents_resume, torrent_hashes=id_)
-        else:
-            res = await run_sync_to_async(aria2.client.get_files, id_)
-            for f in res:
-                if f["selected"] == "false" and ospath.exists(f["path"]):
-                    try:
-                        osremove(f["path"])
-                    except:
-                        pass
-            try:
-                await run_sync_to_async(aria2.client.unpause, id_)
+                await TorrentManager.aria2.unpause(id_)
             except Exception as e:
                 LOGGER.error(
                     f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!"

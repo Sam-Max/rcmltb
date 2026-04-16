@@ -12,8 +12,6 @@ from time import sleep, time
 from sys import exit
 from dotenv import load_dotenv, dotenv_values
 from pymongo import MongoClient
-from aria2p import API as ariaAPI, Client as ariaClient
-from qbittorrentapi import Client as qbitClient
 from subprocess import Popen, run as srun
 from pyrogram import Client as tgClient, enums
 from pyrogram.types import LinkPreviewOptions
@@ -253,26 +251,6 @@ if not ospath.exists("accounts"):
     config_dict["USE_SERVICE_ACCOUNTS"] = False
 
 
-aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
-
-
-def aria2c_init():
-    try:
-        LOGGER.info("Initializing Aria2c")
-        link = "https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent"
-        dire = DOWNLOAD_DIR.rstrip("/")
-        aria2.add_uris([link], {"dir": dire})
-        sleep(3)
-        downloads = aria2.get_downloads()
-        sleep(10)
-        aria2.remove(downloads, force=True, files=True, clean=True)
-    except Exception as e:
-        LOGGER.error(f"Aria2c initializing error: {e}")
-
-
-Thread(target=aria2c_init).start()
-sleep(1.5)
-
 aria2c_global = [
     "bt-max-open-files",
     "download-result",
@@ -288,38 +266,6 @@ aria2c_global = [
     "save-cookies",
     "server-stat-of",
 ]
-
-if not aria2_options:
-    aria2_options = aria2.client.get_global_option()
-else:
-    a2c_glo = {}
-    for op in aria2c_global:
-        if op in aria2_options:
-            a2c_glo[op] = aria2_options[op]
-    aria2.set_global_options(a2c_glo)
-
-
-def get_client():
-    return qbitClient(
-        host="localhost",
-        port=8090,
-        REQUESTS_ARGS={"timeout": (30, 60)},
-    )
-
-
-qb_client = get_client()
-if not qbit_options:
-    qbit_options = dict(qb_client.app_preferences())
-    del qbit_options["listen_port"]
-    for k in list(qbit_options.keys()):
-        if k.startswith("rss"):
-            del qbit_options[k]
-else:
-    qb_opt = {**qbit_options}
-    for k, v in list(qb_opt.items()):
-        if v in ["", "*"]:
-            del qb_opt[k]
-    qb_client.app_set_preferences(qb_opt)
 
 LOGGER.info("Creating Pyrogram client")
 bot = tgClient(

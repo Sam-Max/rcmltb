@@ -14,7 +14,6 @@ from bot import (
     LOGGER,
     OWNER_ID,
     Interval,
-    aria2,
     aria2_options,
     bot,
     config_dict,
@@ -23,6 +22,7 @@ from bot import (
     user_data,
     leech_log,
 )
+from bot.core.torrent_manager import TorrentManager
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import run_sync_to_async, setInterval
 from bot.helper.ext_utils.db_handler import DbManager
@@ -180,33 +180,14 @@ async def load_config():
     USER_SESSION_STRING = environ.get("USER_SESSION_STRING", "")
 
     TORRENT_TIMEOUT = environ.get("TORRENT_TIMEOUT", "")
-    downloads = await run_sync_to_async(aria2.get_downloads)
     if len(TORRENT_TIMEOUT) == 0:
-        for download in downloads:
-            if not download.is_complete:
-                try:
-                    await run_sync_to_async(
-                        aria2.client.change_option(
-                            download.gid, {"bt-stop-timeout": "0"}
-                        )
-                    )
-                except Exception as e:
-                    LOGGER.error(e)
+        await TorrentManager.change_aria2_option("bt-stop-timeout", "0")
         aria2_options["bt-stop-timeout"] = "0"
         if DATABASE_URL:
             await DbManager().update_aria2("bt-stop-timeout", "0")
         TORRENT_TIMEOUT = ""
     else:
-        for download in downloads:
-            if not download.is_complete:
-                try:
-                    await run_sync_to_async(
-                        aria2.client.change_option(
-                            download.gid, {"bt-stop-timeout": TORRENT_TIMEOUT}
-                        )
-                    )
-                except Exception as e:
-                    LOGGER.error(e)
+        await TorrentManager.change_aria2_option("bt-stop-timeout", TORRENT_TIMEOUT)
         aria2_options["bt-stop-timeout"] = TORRENT_TIMEOUT
         if DATABASE_URL:
             await DbManager().update_aria2("bt-stop-timeout", TORRENT_TIMEOUT)

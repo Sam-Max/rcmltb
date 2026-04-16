@@ -1,21 +1,21 @@
 from time import time
 from asyncio import sleep
 from os import path as ospath, remove as osremove
+from aioqbt.api import AddFormBuilder
 from bot import (
     QbInterval,
     QbTorrents,
     status_dict,
     status_dict_lock,
     qb_listener_lock,
-    get_client,
     config_dict,
     bot_loop,
     LOGGER,
 )
+from bot.core.torrent_manager import TorrentManager
 from bot.helper.ext_utils.bot_utils import (
     get_readable_time,
     new_task,
-    run_sync_to_async,
 )
 from bot.helper.telegram_helper.message_utils import (
     deleteMessage,
@@ -30,47 +30,48 @@ from bot.helper.mirror_leech_utils.status_utils.status_utils import clean_unwant
 
 
 async def add_qb_torrent(link, path, listener, ratio, seed_time):
-    client = await run_sync_to_async(get_client)
     ADD_TIME = time()
     try:
-        url = link
-        tpath = None
+        form = AddFormBuilder.with_client(TorrentManager.qbittorrent)
         if ospath.exists(link):
-            url = None
-            tpath = link
-        op = await run_sync_to_async(
-            client.torrents_add,
-            url,
-            tpath,
-            path,
-            tags=f"{listener.uid}",
-            ratio_limit=ratio,
-            seeding_time_limit=seed_time,
-            headers={"user-agent": "Wget/1.12"},
-        )
-        if op.lower() == "ok.":
-            tor_info = await run_sync_to_async(
-                client.torrents_info, tag=f"{listener.uid}"
-            )
-            if len(tor_info) == 0:
-                while True:
-                    tor_info = await run_sync_to_async(
-                        client.torrents_info, tag=f"{listener.uid}"
-                    )
-                    if len(tor_info) > 0:
-                        break
-                    elif time() - ADD_TIME >= 120:
-                        msg = "Not added! Check if the link is valid or not. If it's torrent file then report, this happens if torrent file size above 10mb."
-                        await sendMessage(msg, listener.message)
-                        return
-            tor_info = tor_info[0]
-            ext_hash = tor_info.hash
+            with open(link, "rb") as f:
+                data = f.read()
+            form = form.include_file(data)
         else:
+            form = form.include_url(link)
+        form = form.savepath(path).tags([f"{listener.uid}"])
+        if ratio:
+            form = form.ratio_limit(ratio)
+        if seed_time:
+            form = form.seeding_time_limit(int(seed_time))
+        try:
+            await TorrentManager.qbittorrent.torrents.add(form.build())
+        except Exception as e:
+            LOGGER.error(
+                f"{e}. {listener.uid}. Already added torrent or unsupported link/file type!"
+            )
             await sendMessage(
-                "This Torrent already added or unsupported/invalid link/file.",
+                f"{e}. {listener.uid}. Already added torrent or unsupported link/file type!",
                 listener.message,
             )
             return
+
+        tor_info = await TorrentManager.qbittorrent.torrents.info(tag=f"{listener.uid}")
+        if len(tor_info) == 0:
+            while True:
+                tor_info = await TorrentManager.qbittorrent.torrents.info(
+                    tag=f"{listener.uid}"
+                )
+                if len(tor_info) > 0:
+                    break
+                elif time() - ADD_TIME >= 120:
+                    msg = "Not added! Check if the link is valid or not. If it's torrent file then report, this happens if torrent file size above 10mb."
+                    await sendMessage(msg, listener.message)
+                    return
+                await sleep(1)
+
+        tor_info = tor_info[0]
+        ext_hash = tor_info.hash
 
         async with status_dict_lock:
             status_dict[listener.uid] = QbitTorrentStatus(listener)
@@ -84,8 +85,8 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
                 metamsg = "Downloading Metadata, wait then you can select files. Use torrent file to avoid this wait."
                 meta = await sendMessage(metamsg, listener.message)
                 while True:
-                    tor_info = await run_sync_to_async(
-                        client.torrents_info, tag=f"{listener.uid}"
+                    tor_info = await TorrentManager.qbittorrent.torrents.info(
+                        tag=f"{listener.uid}"
                     )
                     if len(tor_info) == 0:
                         await deleteMessage(meta)
@@ -99,12 +100,12 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
                         ]:
                             await deleteMessage(meta)
                             break
-                    except:
+                    except Exception:
                         await deleteMessage(meta)
                         return
 
             ext_hash = tor_info.hash
-            await run_sync_to_async(client.torrents_pause, torrent_hashes=ext_hash)
+            await TorrentManager.qbittorrent.torrents.stop(hashes=[ext_hash])
             SBUTTONS = bt_selection_buttons(ext_hash)
             msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
             await sendMarkup(msg, listener.message, SBUTTONS)
@@ -120,14 +121,17 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
 #### QBIT_LISTENER ####
 
 
-async def __remove_torrent(client, hash_, tag):
-    await run_sync_to_async(
-        client.torrents_delete, torrent_hashes=hash_, delete_files=True
+async def __remove_torrent(hash_, tag):
+    await TorrentManager.qbittorrent.torrents.delete(
+        hashes=[hash_], delete_files=True
     )
     async with qb_listener_lock:
         if tag in QbTorrents:
             del QbTorrents[tag]
-    await run_sync_to_async(client.torrents_delete_tags, tags=tag)
+    try:
+        await TorrentManager.qbittorrent.torrents.delete_tags(tags=[tag])
+    except Exception:
+        pass
 
 
 @new_task
@@ -138,11 +142,10 @@ async def __onDownloadError(err, tor):
     if not hasattr(download, "client"):
         return
     listener = download.listener()
-    client = download.client()
     await listener.onDownloadError(err)
-    await run_sync_to_async(client.torrents_pause, torrent_hashes=ext_hash)
+    await TorrentManager.qbittorrent.torrents.stop(hashes=[ext_hash])
     await sleep(0.3)
-    await __remove_torrent(client, ext_hash, tor.tags)
+    await __remove_torrent(ext_hash, tor.tags)
 
 
 @new_task
@@ -153,10 +156,9 @@ async def __onSeedFinish(tor):
     if not hasattr(download, "client"):
         return
     listener = download.listener()
-    client = download.client()
     msg = f"Seeding stopped with Ratio: {round(tor.ratio, 3)} and Time: {get_readable_time(tor.seeding_time)}"
     await listener.onUploadError(msg)
-    await __remove_torrent(client, ext_hash, tor.tags)
+    await __remove_torrent(ext_hash, tor.tags)
 
 
 @new_task
@@ -168,13 +170,11 @@ async def __onDownloadComplete(tor):
     if not hasattr(download, "client"):
         return
     listener = download.listener()
-    client = download.client()
     if not listener.seed:
-        await run_sync_to_async(client.torrents_pause, torrent_hashes=ext_hash)
+        await TorrentManager.qbittorrent.torrents.stop(hashes=[ext_hash])
     if listener.select:
         await clean_unwanted(listener.dir)
     await listener.onDownloadComplete()
-    client = await run_sync_to_async(get_client)
     if listener.seed:
         async with status_dict_lock:
             if listener.uid in status_dict:
@@ -183,7 +183,7 @@ async def __onDownloadComplete(tor):
             else:
                 removed = True
         if removed:
-            await __remove_torrent(client, ext_hash, tag)
+            await __remove_torrent(ext_hash, tag)
             return
         async with qb_listener_lock:
             if tag in QbTorrents:
@@ -193,21 +193,19 @@ async def __onDownloadComplete(tor):
         await update_all_messages()
         if not config_dict["NO_TASKS_LOGS"]:
             LOGGER.info(f"Seeding started: {tor.name} - Hash: {ext_hash}")
-        await run_sync_to_async(client.auth_log_out)
     else:
-        await __remove_torrent(client, ext_hash, tag)
+        await __remove_torrent(ext_hash, tag)
 
 
 async def __qb_listener():
-    client = await run_sync_to_async(get_client)
     while True:
         async with qb_listener_lock:
             try:
-                if len(await run_sync_to_async(client.torrents_info)) == 0:
+                torrents = await TorrentManager.qbittorrent.torrents.info()
+                if len(torrents) == 0:
                     QbInterval.clear()
-                    await run_sync_to_async(client.auth_log_out)
                     break
-                for tor_info in await run_sync_to_async(client.torrents_info):
+                for tor_info in torrents:
                     tag = tor_info.tags
                     if tag not in QbTorrents:
                         continue
@@ -221,8 +219,8 @@ async def __qb_listener():
                         ):
                             __onDownloadError("Dead Torrent!", tor_info)
                         else:
-                            await run_sync_to_async(
-                                client.torrents_reannounce, torrent_hashes=tor_info.hash
+                            await TorrentManager.qbittorrent.torrents.reannounce(
+                                hashes=[tor_info.hash]
                             )
                     elif state == "downloading":
                         QbTorrents[tag]["stalled_time"] = time()
@@ -236,8 +234,8 @@ async def __qb_listener():
                             msg += f"{tor_info.hash} Downloaded Bytes: {tor_info.downloaded} "
                             msg += f"Size: {tor_info.size} Total Size: {tor_info.total_size}"
                             LOGGER.warning(msg)
-                            await run_sync_to_async(
-                                client.torrents_recheck, torrent_hashes=tor_info.hash
+                            await TorrentManager.qbittorrent.torrents.recheck(
+                                hashes=[tor_info.hash]
                             )
                             QbTorrents[tag]["rechecked"] = True
                         elif (
@@ -247,12 +245,12 @@ async def __qb_listener():
                         ):
                             __onDownloadError("Dead Torrent!", tor_info)
                         else:
-                            await run_sync_to_async(
-                                client.torrents_reannounce, torrent_hashes=tor_info.hash
+                            await TorrentManager.qbittorrent.torrents.reannounce(
+                                hashes=[tor_info.hash]
                             )
                     elif state == "missingFiles":
-                        await run_sync_to_async(
-                            client.torrents_recheck, torrent_hashes=tor_info.hash
+                        await TorrentManager.qbittorrent.torrents.recheck(
+                            hashes=[tor_info.hash]
                         )
                     elif state == "error":
                         __onDownloadError(
@@ -273,7 +271,6 @@ async def __qb_listener():
                         __onSeedFinish(tor_info)
             except Exception as e:
                 LOGGER.error(str(e))
-                client = await run_sync_to_async(get_client)
         await sleep(3)
 
 

@@ -9,16 +9,15 @@ from bot import (
     TG_MAX_SPLIT_SIZE,
     bot,
     Interval,
-    aria2,
     config_dict,
     aria2_options,
     aria2c_global,
-    get_client,
     qbit_options,
     status_reply_dict_lock,
     status_dict,
     leech_log,
 )
+from bot.core.torrent_manager import TorrentManager
 from bot.core.config_manager import Config
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import run_sync_to_async, setInterval
@@ -219,17 +218,15 @@ async def ownerset_callback(client, callback_query):
                 GLOBAL_EXTENSION_FILTER.clear()
                 GLOBAL_EXTENSION_FILTER.extend([".aria2", "!qB"])
             elif data[3] == "TORRENT_TIMEOUT":
-                downloads = await run_sync_to_async(aria2.get_downloads)
+                downloads = await TorrentManager.aria2.tellActive()
                 for download in downloads:
-                    if not download.is_complete:
-                        try:
-                            await run_sync_to_async(
-                                aria2.client.change_option,
-                                download.gid,
-                                {"bt-stop-timeout": "0"},
-                            )
-                        except Exception as e:
-                            LOGGER.error(e)
+                    try:
+                        await TorrentManager.aria2.changeOption(
+                            download.get("gid"),
+                            {"bt-stop-timeout": "0"},
+                        )
+                    except Exception as e:
+                        LOGGER.error(e)
                 aria2_options["bt-stop-timeout"] = "0"
                 if DATABASE_URL:
                     await DbManager().update_aria2("bt-stop-timeout", "0")
@@ -273,40 +270,24 @@ async def ownerset_callback(client, callback_query):
                 value = None
             await query.answer(text=f"{value}", show_alert=True)
         elif data[2] == "resetaria":
-            aria2_defaults = await run_sync_to_async(aria2.client.get_global_option)
-            if aria2_defaults[data[3]] == aria2_options[data[3]]:
+            aria2_defaults = await TorrentManager.get_aria2_options()
+            if aria2_defaults.get(data[3], "") == aria2_options.get(data[3], ""):
                 await query.answer(
                     text="Value already same as you added in aria.sh!", show_alert=True
                 )
                 return
             await query.answer()
-            value = aria2_defaults[data[3]]
+            value = aria2_defaults.get(data[3], "")
             aria2_options[data[3]] = value
             await edit_menus(message, "aria")
-            downloads = await run_sync_to_async(aria2.get_downloads)
-            for download in downloads:
-                if not download.is_complete:
-                    try:
-                        await run_sync_to_async(
-                            aria2.client.change_option, download.gid, {data[2]: value}
-                        )
-                    except Exception as e:
-                        LOGGER.error(e)
+            await TorrentManager.change_aria2_option(data[3], value)
             if DATABASE_URL:
                 await DbManager().update_aria2(data[3], value)
         elif data[2] == "emptyaria":
             await query.answer()
             aria2_options[data[3]] = ""
             await edit_menus(message, "aria")
-            downloads = await run_sync_to_async(aria2.get_downloads)
-            for download in downloads:
-                if not download.is_complete:
-                    try:
-                        await run_sync_to_async(
-                            aria2.client.change_option, download.gid, {data[2]: ""}
-                        )
-                    except Exception as e:
-                        LOGGER.error(e)
+            await TorrentManager.change_aria2_option(data[3], "")
             if DATABASE_URL:
                 await DbManager().update_aria2(data[3], "")
     elif data[1] == "qbit":
@@ -329,7 +310,7 @@ async def ownerset_callback(client, callback_query):
             await query.answer(text=f"{value}", show_alert=True)
         elif data[2] == "emptyqbit":
             await query.answer()
-            await run_sync_to_async(get_client().app_set_preferences, {data[3]: ""})
+            await TorrentManager.set_qbit_preferences({data[3]: ""})
             qbit_options[data[3]] = ""
             await edit_menus(message, "qbit")
             if DATABASE_URL:
@@ -424,17 +405,9 @@ async def start_env_listener(client, query, user_id, key):
                                     )
                     elif key == "TORRENT_TIMEOUT":
                         value = int(value)
-                        downloads = await run_sync_to_async(aria2.get_downloads)
-                        for download in downloads:
-                            if not download.is_complete:
-                                try:
-                                    await run_sync_to_async(
-                                        aria2.client.change_option,
-                                        download.gid,
-                                        {"bt-stop-timeout": f"{value}"},
-                                    )
-                                except Exception as e:
-                                    LOGGER.error(e)
+                        await TorrentManager.change_aria2_option(
+                            "bt-stop-timeout", f"{value}"
+                        )
                         aria2_options["bt-stop-timeout"] = f"{value}"
                     elif key == "DEFAULT_OWNER_REMOTE":
                         update_rclone_data("MIRROR_SELECT_REMOTE", value, user_id)
@@ -520,19 +493,9 @@ async def start_aria_listener(client, query, user_id, key):
                     elif value.lower() == "false":
                         value = "false"
                     if key in aria2c_global:
-                        await run_sync_to_async(aria2.set_global_options, {key: value})
+                        await TorrentManager.set_aria2_options({key: value})
                     else:
-                        downloads = await run_sync_to_async(aria2.get_downloads)
-                        for download in downloads:
-                            if not download.is_complete:
-                                try:
-                                    await run_sync_to_async(
-                                        aria2.client.change_option,
-                                        download.gid,
-                                        {key: value},
-                                    )
-                                except Exception as e:
-                                    LOGGER.error(e)
+                        await TorrentManager.change_aria2_option(key, value)
                     aria2_options[key] = value
                     await edit_menus(message, "aria")
                     if DATABASE_URL:
@@ -572,9 +535,7 @@ async def start_qbit_listener(client, query, user_id, key):
                         value = float(value)
                     elif value.isdigit():
                         value = int(value)
-                    await run_sync_to_async(
-                        get_client().app_set_preferences, {key: value}
-                    )
+                    await TorrentManager.set_qbit_preferences({key: value})
                     qbit_options[key] = value
                     await edit_menus(message, "qbit")
                     if DATABASE_URL:

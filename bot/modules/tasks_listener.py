@@ -13,9 +13,9 @@ from bot import (
     status_dict,
     status_dict_lock,
     user_data,
-    aria2,
     config_dict,
 )
+from bot.core.torrent_manager import TorrentManager
 from bot.helper.ext_utils.bot_utils import (
     cmd_exec,
     is_archive,
@@ -89,7 +89,7 @@ class TaskListener:
             if Interval:
                 Interval[0].cancel()
                 Interval.clear()
-            await run_sync_to_async(aria2.purge)
+            await TorrentManager.aria2.purgeDownloadResult()
             await delete_all_messages()
         except:
             pass

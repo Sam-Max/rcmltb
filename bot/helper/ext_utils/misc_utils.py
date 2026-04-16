@@ -25,11 +25,10 @@ from bot import (
     LOGGER,
     user_data,
     TG_MAX_SPLIT_SIZE,
-    aria2,
-    get_client,
     status_dict,
     status_dict_lock,
 )
+from bot.core.torrent_manager import TorrentManager
 from json import loads as jsnloads
 from magic import Magic
 from subprocess import run as srun, check_output
@@ -105,7 +104,7 @@ async def clean_target(path: str):
 
 
 async def start_cleanup():
-    await run_sync_to_async(get_client().torrents_delete, torrent_hashes="all")
+    await TorrentManager.qbittorrent.torrents.delete(hashes="all", delete_files=True)
     if not config_dict["LOCAL_MIRROR"]:
         try:
             await aiormtree(DOWNLOAD_DIR)
@@ -115,8 +114,7 @@ async def start_cleanup():
 
 
 async def clean_all():
-    await run_sync_to_async(aria2.remove_all, True)
-    await run_sync_to_async(get_client().torrents_delete, torrent_hashes="all")
+    await TorrentManager.remove_all()
     if not config_dict["LOCAL_MIRROR"]:
         try:
             rmtree(DOWNLOAD_DIR)
