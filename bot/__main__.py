@@ -130,6 +130,9 @@ async def main():
             BotCommand(BotCommands.PingCommand, "Ping the bot"),
             BotCommand(BotCommands.LogsCommand, "Get bot logs"),
             BotCommand(BotCommands.RestartCommand, "Restart the bot"),
+            BotCommand(BotCommands.MediaInfoCommand, "Get media file information"),
+            BotCommand(BotCommands.PMirrorCommand, "Mirror from private channels"),
+            BotCommand(BotCommands.PLeechCommand, "Leech from private channels"),
         ]
     )
 

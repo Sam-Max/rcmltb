@@ -42,6 +42,9 @@ class _BotCommands:
         self.SelectCommand = f"sel{CMD_INDEX}"
         self.JdMirrorCommand = [f"jdmirror{CMD_INDEX}", f"jm{CMD_INDEX}"]
         self.JdLeechCommand = [f"jdleech{CMD_INDEX}", f"jl{CMD_INDEX}"]
+        self.MediaInfoCommand = f"mediainfo{CMD_INDEX}"
+        self.PMirrorCommand = f"pmirror{CMD_INDEX}"
+        self.PLeechCommand = f"pleech{CMD_INDEX}"
 
 
 BotCommands = _BotCommands()
