@@ -59,10 +59,13 @@ class TelegramDownloader:
     
     async def download(self):
         if IS_PREMIUM_USER and not self.__listener.isSuperGroup:
-            await sendMessage(
-                "Use SuperGroup to download with User!", self.__listener.message
-            )
-            return
+            # Check if we're using the userbot (app) - allow private channels
+            # when userbot has access
+            if self.__client != app and not await self._can_userbot_access():
+                await sendMessage(
+                    "Use SuperGroup to download with User!", self.__listener.message
+                )
+                return
         if self.__file is None:
             return
         if self.name == "":
@@ -95,6 +98,17 @@ class TelegramDownloader:
 
     async def __onDownloadError(self, error):
         await self.__listener.onDownloadError(error)
+
+    async def _can_userbot_access(self):
+        """Check if userbot can access this chat."""
+        if not app:
+            return False
+        try:
+            # Try to get chat info via userbot
+            chat = await app.get_chat(self.__listener.message.chat.id)
+            return chat is not None
+        except Exception:
+            return False
 
     async def cancel_task(self):
         LOGGER.info("Cancelling download by user request")
