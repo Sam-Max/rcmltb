@@ -603,9 +603,11 @@ async def set_config_listener(client, query, message, rclone_global=False):
                     ).wait()
                 elif file_name in [".netrc", "netrc"]:
                     await (await create_subprocess_exec("touch", ".netrc")).wait()
-                    await (
-                        await create_subprocess_exec("cp", ".netrc", "/root/.netrc")
-                    ).wait()
+                    # Only copy to /root/.netrc if running as root
+                    if environ.get("HOME") == "/root":
+                        await (
+                            await create_subprocess_exec("cp", ".netrc", "/root/.netrc")
+                        ).wait()
                     await (
                         await create_subprocess_exec("chmod", "600", ".netrc")
                     ).wait()

@@ -68,13 +68,18 @@ async def load_configurations():
             shell=True,
         )
 
-    srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
+    # Check if qBittorrent is already running before starting
+    qb_check = srun(["pgrep", "-x", "qbittorrent-nox"], capture_output=True)
+    if qb_check.returncode != 0:
+        srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
 
     if not ospath.exists(".netrc"):
         with open(".netrc", "w"):
             pass
     srun(["chmod", "600", ".netrc"])
-    srun(["cp", ".netrc", "/root/.netrc"])
+    # Only copy to /root/.netrc if running as root
+    if environ.get("HOME") == "/root":
+        srun(["cp", ".netrc", "/root/.netrc"])
     srun(["chmod", "+x", "aria.sh"])
     srun("./aria.sh", shell=True)
     if ospath.exists("accounts.zip"):
