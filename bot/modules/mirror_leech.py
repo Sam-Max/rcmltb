@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from bot import DOWNLOAD_DIR, OWNER_ID, bot, config_dict
+from bot import DOWNLOAD_DIR, OWNER_ID, bot, config_dict, user_data
 from asyncio import TimeoutError, sleep
 from bot.modules.queue import conditional_queue_add
 from pyrogram import filters
@@ -44,6 +44,9 @@ from bot.helper.mirror_leech_utils.download_utils.qbit_downloader import add_qb_
 from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import (
     TelegramDownloader,
 )
+from bot.helper.mirror_leech_utils.download_utils.jd_download import add_jd_download
+from bot.helper.ext_utils.task_manager import check_running_tasks, start_from_queued
+from bot.helper.ext_utils.misc_utils import apply_name_substitute
 from bot.modules.tasks_listener import TaskListener
 
 
@@ -54,7 +57,37 @@ async def handle_mirror(client, message):
     await mirror_leech(client, message)
 
 
-async def mirror_leech(client, message, isLeech=False, sameDir=None):
+async def handle_jd_mirror(client, message):
+    """Handle JDownloader mirror command."""
+    from bot.core.jdownloader_booter import jdownloader
+
+    if not jdownloader.is_connected:
+        await sendMessage(
+            "JDownloader is not connected. Please check JD_EMAIL and JD_PASSWORD configuration.",
+            message
+        )
+        return
+
+    # Force download mode (not leech) for JDownloader
+    await mirror_leech(client, message, isLeech=False, sameDir=None, isJD=True)
+
+
+async def handle_jd_leech(client, message):
+    """Handle JDownloader leech command."""
+    from bot.core.jdownloader_booter import jdownloader
+
+    if not jdownloader.is_connected:
+        await sendMessage(
+            "JDownloader is not connected. Please check JD_EMAIL and JD_PASSWORD configuration.",
+            message
+        )
+        return
+
+    # Force leech mode for JDownloader
+    await mirror_leech(client, message, isLeech=True, sameDir=None, isJD=True)
+
+
+async def mirror_leech(client, message, isLeech=False, sameDir=None, isJD=False):
     user_id = message.from_user.id or message.sender_chat.id
     message_id = message.id
 
@@ -85,6 +118,12 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
     file = None
     seed_time = None
     ratio = None
+
+    # Apply name substitution if configured
+    user_dict = user_data.get(user_id, {})
+    name_sub = user_dict.get("name_sub") or config_dict.get("NAME_SUBSTITUTE", "")
+    if name_sub and name:
+        name = apply_name_substitute(name, name_sub)
 
     if not isinstance(seed, bool):
         dargs = seed.split(":")
@@ -189,12 +228,26 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
         sameDir,
     )
 
+    # Check queue limits for downloads
+    is_queued, event = await check_running_tasks(listener, state="dl")
+    if is_queued:
+        await sendMessage(
+            f"⏳ <b>Your task has been added to the download queue</b>\n"
+            f"Position: <code>{len(event) if hasattr(event, '__len__') else 'Unknown'}</code>",
+            message
+        )
+        if event:
+            await event.wait()
+
     if file is not None:
         if reply_message and not multi:
             buttons = ButtonMaker()
-            name = file.file_name if hasattr(file, "file_name") else "None"
+            file_name = file.file_name if hasattr(file, "file_name") else "None"
+            # Apply name substitution
+            if name_sub:
+                file_name = apply_name_substitute(file_name, name_sub)
             msg = "📝 <b>Which name do you want to use?</b>\n\n"
-            msg += f"<b>Name</b>: <code>{name}</code>\n\n"
+            msg += f"<b>Name</b>: <code>{file_name}</code>\n\n"
             msg += f"<b>Size</b>: <code>{get_readable_size(file.file_size)}</code>"
             buttons.cb_buildbutton("📄 By default", "mirrormenu^default")
             buttons.cb_buildbutton("✏️ Rename", "mirrormenu^rename")
@@ -202,11 +255,19 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
             listener_dict[message_id] = [listener, file, message, isLeech, user_id, ""]
             await sendMarkup(msg, message, reply_markup=buttons.build_menu(2))
         else:
-            tgdown = TelegramDownloader(file, client, listener, f"{path}/", name)
+            # Apply name substitution to custom name for Telegram downloads
+            tg_name = name
+            if name_sub and tg_name:
+                tg_name = apply_name_substitute(tg_name, name_sub)
+            tgdown = TelegramDownloader(file, client, listener, f"{path}/", tg_name)
             await conditional_queue_add(message, tgdown.download)
     elif is_gdrive_link(link):
         await conditional_queue_add(
             message, add_gd_download, link, name, path, listener
+        )
+    elif link.endswith(".dlc"):
+        await conditional_queue_add(
+            message, add_jd_download, link, name, path, listener
         )
     elif is_magnet(link) or ospath.exists(link):
         await conditional_queue_add(
@@ -383,3 +444,19 @@ if config_dict["AUTO_MIRROR"]:
             filters=filters.video | filters.document | filters.audio | filters.photo,
         )
     )
+
+# JDownloader command handlers
+bot.add_handler(
+    MessageHandler(
+        handle_jd_mirror,
+        filters=filters.command(BotCommands.JdMirrorCommand)
+        & (CustomFilters.user_filter | CustomFilters.chat_filter),
+    )
+)
+bot.add_handler(
+    MessageHandler(
+        handle_jd_leech,
+        filters=filters.command(BotCommands.JdLeechCommand)
+        & (CustomFilters.user_filter | CustomFilters.chat_filter),
+    )
+)

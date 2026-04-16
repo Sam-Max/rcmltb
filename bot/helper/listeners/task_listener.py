@@ -78,6 +78,10 @@ class TaskListener(TaskConfig):
         pass
 
     async def onDownloadComplete(self):
+        # Check for queued tasks when download completes
+        from bot.helper.ext_utils.task_manager import start_from_queued
+        await start_from_queued()
+
         multi_links = False
         while True:
             if self.sameDir:
@@ -288,6 +292,29 @@ class TaskListener(TaskConfig):
 
         up_dir, up_name = path.rsplit("/", 1)
         size = await get_path_size(up_dir)
+
+        # Apply name substitution to upload name
+        from bot.helper.ext_utils.misc_utils import apply_name_substitute
+        name_sub = self.user_dict.get("name_sub") or config_dict.get("NAME_SUBSTITUTE", "")
+        if name_sub:
+            up_name = apply_name_substitute(up_name, name_sub)
+            # Rename the file/folder if needed
+            new_path = f"{up_dir}/{up_name}"
+            if new_path != path and await aiopath.exists(path):
+                from aiofiles.os import rename
+                await rename(path, new_path)
+                path = new_path
+
+        # Check queue limits for uploads
+        is_queued, event = await check_running_tasks(self, state="up")
+        if is_queued:
+            from bot.helper.telegram_helper.message_utils import sendMessage
+            await sendMessage(
+                f"⏳ <b>Your task has been added to the upload queue</b>",
+                self.message
+            )
+            if event:
+                await event.wait()
 
         if self.isLeech:
             m_size = []
@@ -567,6 +594,11 @@ class TaskListener(TaskConfig):
             if self.uid in status_dict.keys():
                 del status_dict[self.uid]
             count = len(status_dict)
+
+        # Check for queued tasks when upload completes
+        from bot.helper.ext_utils.task_manager import start_from_queued
+        await start_from_queued()
+
         if count == 0:
             await self.clean()
         else:
