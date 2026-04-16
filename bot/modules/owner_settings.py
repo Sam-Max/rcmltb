@@ -19,6 +19,7 @@ from bot import (
     status_dict,
     leech_log,
 )
+from bot.core.config_manager import Config
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import run_sync_to_async, setInterval
 from bot.helper.ext_utils.db_handler import DbManager
@@ -246,6 +247,8 @@ async def ownerset_callback(client, callback_query):
                     )
             await query.answer("Reseted")
             config_dict[data[3]] = value
+            if hasattr(Config, data[3]):
+                Config.set(data[3], value)
             if DATABASE_URL:
                 await DbManager().update_config({data[3]: value})
             if data[3] in ["SEARCH_PLUGINS", "SEARCH_API_LINK"]:
@@ -470,6 +473,8 @@ async def start_env_listener(client, query, user_id, key):
                                 x = x.lstrip(".")
                             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
                     config_dict[key] = value
+                    if hasattr(Config, key):
+                        Config.set(key, value)
                     await edit_menus(message, "env")
                     if DATABASE_URL:
                         await DbManager().update_config({key: value})

@@ -57,16 +57,21 @@ status_dict = {}
 status_reply_dict_lock = Lock()
 status_reply_dict = {}
 
-BOT_TOKEN = environ.get("BOT_TOKEN", "")
+from bot.core.config_manager import Config
+
+Config.load()
+
+BOT_TOKEN = Config.BOT_TOKEN
 if len(BOT_TOKEN) == 0:
     LOGGER.error("BOT_TOKEN variable is missing! Exiting now")
     exit(1)
 
 bot_id = BOT_TOKEN.split(":", 1)[0]
 
-DATABASE_URL = environ.get("DATABASE_URL", "")
+DATABASE_URL = Config.DATABASE_URL or ""
 if len(DATABASE_URL) == 0:
-    DATABASE_URL = None
+    Config.DATABASE_URL = ""
+    DATABASE_URL = ""
 
 if DATABASE_URL:
     conn = MongoClient(DATABASE_URL)
@@ -83,9 +88,10 @@ if DATABASE_URL:
         db.settings.deployConfig.replace_one(
             {"_id": bot_id}, current_config, upsert=True
         )
-    elif config_dict := db.settings.config.find_one({"_id": bot_id}):
-        del config_dict["_id"]
-        for key, value in config_dict.items():
+    elif saved_config := db.settings.config.find_one({"_id": bot_id}):
+        del saved_config["_id"]
+        Config.load_dict(saved_config)
+        for key, value in saved_config.items():
             environ[key] = str(value)
     if pf_dict := db.settings.files.find_one({"_id": bot_id}):
         del pf_dict["_id"]
@@ -101,222 +107,102 @@ if DATABASE_URL:
         del qbit_opt["_id"]
         qbit_options = qbit_opt
     conn.close()
-    BOT_TOKEN = environ.get("BOT_TOKEN", "")
+    BOT_TOKEN = Config.BOT_TOKEN
     bot_id = BOT_TOKEN.split(":", 1)[0]
-    DATABASE_URL = environ.get("DATABASE_URL", "")
-else:
-    config_dict = {}
+    DATABASE_URL = Config.DATABASE_URL
 
-OWNER_ID = environ.get("OWNER_ID", "")
-if len(OWNER_ID) == 0:
+OWNER_ID = Config.OWNER_ID
+if OWNER_ID == 0:
     LOGGER.error("OWNER_ID variable is missing! Exiting now")
     exit(1)
-else:
-    OWNER_ID = int(OWNER_ID)
 
-TELEGRAM_API_ID = environ.get("TELEGRAM_API_ID", "")
-if len(TELEGRAM_API_ID) == 0:
+TELEGRAM_API_ID = Config.TELEGRAM_API_ID
+if TELEGRAM_API_ID == 0:
     LOGGER.error("TELEGRAM_API_ID variable is missing! Exiting now")
     exit(1)
-else:
-    TELEGRAM_API_ID = int(TELEGRAM_API_ID)
 
-TELEGRAM_API_HASH = environ.get("TELEGRAM_API_HASH", "")
+TELEGRAM_API_HASH = Config.TELEGRAM_API_HASH
 if len(TELEGRAM_API_HASH) == 0:
     LOGGER.error("TELEGRAM_API_HASH variable is missing! Exiting now")
     exit(1)
 
-ALLOWED_CHATS = environ.get("ALLOWED_CHATS", "")
+ALLOWED_CHATS = Config.ALLOWED_CHATS
 if len(ALLOWED_CHATS) != 0:
     aid = ALLOWED_CHATS.split()
     for id_ in aid:
         user_data[int(id_.strip())] = {"is_auth": True}
 
-SUDO_USERS = environ.get("SUDO_USERS", "")
+SUDO_USERS = Config.SUDO_USERS
 if len(SUDO_USERS) != 0:
     aid = SUDO_USERS.split()
     for id_ in aid:
         user_data[int(id_.strip())] = {"is_sudo": True}
 
-STATUS_LIMIT = environ.get("STATUS_LIMIT", "")
-STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+STATUS_LIMIT = Config.STATUS_LIMIT
+STATUS_UPDATE_INTERVAL = Config.STATUS_UPDATE_INTERVAL
+AUTO_DELETE_MESSAGE_DURATION = Config.AUTO_DELETE_MESSAGE_DURATION
+PARALLEL_TASKS = Config.PARALLEL_TASKS
+AS_DOCUMENT = Config.AS_DOCUMENT
+AUTO_MIRROR = Config.AUTO_MIRROR
+MULTI_REMOTE_UP = Config.MULTI_REMOTE_UP
+SEARCH_API_LINK = Config.SEARCH_API_LINK
+TMDB_API_KEY = Config.TMDB_API_KEY
+TMDB_LANGUAGE = Config.TMDB_LANGUAGE
+SEARCH_LIMIT = Config.SEARCH_LIMIT
+SEARCH_PLUGINS = Config.SEARCH_PLUGINS
+TORRENT_TIMEOUT = Config.TORRENT_TIMEOUT
+WEB_PINCODE = Config.WEB_PINCODE
+EQUAL_SPLITS = Config.EQUAL_SPLITS
+DEFAULT_OWNER_REMOTE = Config.DEFAULT_OWNER_REMOTE
+DEFAULT_GLOBAL_REMOTE = Config.DEFAULT_GLOBAL_REMOTE
+GD_INDEX_URL = Config.GD_INDEX_URL
+YT_DLP_OPTIONS = Config.YT_DLP_OPTIONS
+VIEW_LINK = Config.VIEW_LINK
+LOCAL_MIRROR = Config.LOCAL_MIRROR
+RC_INDEX_USER = Config.RC_INDEX_USER
+RC_INDEX_PASS = Config.RC_INDEX_PASS
+RC_INDEX_URL = Config.RC_INDEX_URL
+RC_INDEX_PORT = Config.RC_INDEX_PORT
+USE_SERVICE_ACCOUNTS = Config.USE_SERVICE_ACCOUNTS
+SERVICE_ACCOUNTS_REMOTE = Config.SERVICE_ACCOUNTS_REMOTE
+MULTI_RCLONE_CONFIG = Config.MULTI_RCLONE_CONFIG
+REMOTE_SELECTION = Config.REMOTE_SELECTION
+RCLONE_COPY_FLAGS = Config.RCLONE_COPY_FLAGS
+RCLONE_UPLOAD_FLAGS = Config.RCLONE_UPLOAD_FLAGS
+RCLONE_DOWNLOAD_FLAGS = Config.RCLONE_DOWNLOAD_FLAGS
+SERVER_SIDE = Config.SERVER_SIDE
+CMD_INDEX = Config.CMD_INDEX
+RSS_CHAT_ID = Config.RSS_CHAT_ID
+RSS_DELAY = Config.RSS_DELAY
+QB_BASE_URL = Config.QB_BASE_URL
+QB_SERVER_PORT = Config.QB_SERVER_PORT
+UPSTREAM_REPO = Config.UPSTREAM_REPO
+UPSTREAM_BRANCH = Config.UPSTREAM_BRANCH
+IS_TEAM_DRIVE = Config.IS_TEAM_DRIVE
+GDRIVE_FOLDER_ID = Config.GDRIVE_FOLDER_ID
+DOWNLOAD_DIR = Config.DOWNLOAD_DIR
+EXTENSION_FILTER = Config.EXTENSION_FILTER
+MEGA_EMAIL = Config.MEGA_EMAIL
+MEGA_PASSWORD = Config.MEGA_PASSWORD
+LEECH_LOG = Config.LEECH_LOG
+NO_TASKS_LOGS = Config.NO_TASKS_LOGS
+BOT_PM = Config.BOT_PM
+USER_SESSION_STRING = Config.USER_SESSION_STRING
 
-STATUS_UPDATE_INTERVAL = environ.get("STATUS_UPDATE_INTERVAL", "")
-if len(STATUS_UPDATE_INTERVAL) == 0:
-    STATUS_UPDATE_INTERVAL = 10
-else:
-    STATUS_UPDATE_INTERVAL = int(STATUS_UPDATE_INTERVAL)
-
-AUTO_DELETE_MESSAGE_DURATION = environ.get("AUTO_DELETE_MESSAGE_DURATION", "")
-if len(AUTO_DELETE_MESSAGE_DURATION) == 0:
-    AUTO_DELETE_MESSAGE_DURATION = 30
-else:
-    AUTO_DELETE_MESSAGE_DURATION = int(AUTO_DELETE_MESSAGE_DURATION)
-
-PARALLEL_TASKS = environ.get("PARALLEL_TASKS", "")
-PARALLEL_TASKS = 0 if len(PARALLEL_TASKS) == 0 else int(PARALLEL_TASKS)
-
-AS_DOCUMENT = environ.get("AS_DOCUMENT", "")
-AS_DOCUMENT = AS_DOCUMENT.lower() == "true"
-
-AUTO_MIRROR = environ.get("AUTO_MIRROR", "")
-AUTO_MIRROR = AUTO_MIRROR.lower() == "true"
-
-MULTI_REMOTE_UP = environ.get("MULTI_REMOTE_UP", "")
-MULTI_REMOTE_UP = MULTI_REMOTE_UP.lower() == "true"
-
-SEARCH_API_LINK = environ.get("SEARCH_API_LINK", "").rstrip("/")
-if len(SEARCH_API_LINK) == 0:
-    SEARCH_API_LINK = ""
-
-TMDB_API_KEY = environ.get("TMDB_API_KEY", "")
-if len(TMDB_API_KEY) == 0:
-    TMDB_API_KEY = ""
-
-TMDB_LANGUAGE = environ.get("TMDB_LANGUAGE", "")
-if len(TMDB_LANGUAGE) == 0:
-    TMDB_LANGUAGE = "en"
-
-SEARCH_LIMIT = environ.get("SEARCH_LIMIT", "")
-SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
-
-SEARCH_PLUGINS = environ.get("SEARCH_PLUGINS", "")
-if len(SEARCH_PLUGINS) == 0:
-    SEARCH_PLUGINS = ""
-
-TORRENT_TIMEOUT = environ.get("TORRENT_TIMEOUT", "")
-TORRENT_TIMEOUT = "" if len(TORRENT_TIMEOUT) == 0 else int(TORRENT_TIMEOUT)
-
-WEB_PINCODE = environ.get("WEB_PINCODE", "")
-WEB_PINCODE = WEB_PINCODE.lower() == "true"
-
-EQUAL_SPLITS = environ.get("EQUAL_SPLITS", "")
-EQUAL_SPLITS = EQUAL_SPLITS.lower() == "true"
-
-DEFAULT_OWNER_REMOTE = environ.get("DEFAULT_OWNER_REMOTE", "")
-
-DEFAULT_GLOBAL_REMOTE = environ.get("DEFAULT_GLOBAL_REMOTE", "")
-
-GD_INDEX_URL = environ.get("GD_INDEX_URL", "").rstrip("/")
-if len(GD_INDEX_URL) == 0:
-    GD_INDEX_URL = ""
-
-YT_DLP_OPTIONS = environ.get("YT_DLP_OPTIONS", "")
-if len(YT_DLP_OPTIONS) == 0:
-    YT_DLP_OPTIONS = ""
-
-VIEW_LINK = environ.get("VIEW_LINK", "")
-VIEW_LINK = VIEW_LINK.lower() == "true"
-
-LOCAL_MIRROR = environ.get("LOCAL_MIRROR", "")
-LOCAL_MIRROR = LOCAL_MIRROR.lower() == "true"
-
-RC_INDEX_USER = environ.get("RC_INDEX_USER", "")
-RC_INDEX_USER = "admin" if len(RC_INDEX_USER) == 0 else RC_INDEX_USER
-
-RC_INDEX_PASS = environ.get("RC_INDEX_PASS", "")
-RC_INDEX_PASS = "admin" if len(RC_INDEX_PASS) == 0 else RC_INDEX_PASS
-
-RC_INDEX_URL = environ.get("RC_INDEX_URL", "")
-RC_INDEX_URL = "" if len(RC_INDEX_URL) == 0 else RC_INDEX_URL
-
-RC_INDEX_PORT = environ.get("RC_INDEX_PORT", "")
-RC_INDEX_PORT = 8080 if len(RC_INDEX_PORT) == 0 else int(RC_INDEX_PORT)
-
-USE_SERVICE_ACCOUNTS = environ.get("USE_SERVICE_ACCOUNTS", "")
-USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == "true"
-
-SERVICE_ACCOUNTS_REMOTE = environ.get("SERVICE_ACCOUNTS_REMOTE", "")
-
-MULTI_RCLONE_CONFIG = environ.get("MULTI_RCLONE_CONFIG", "")
-MULTI_RCLONE_CONFIG = MULTI_RCLONE_CONFIG.lower() == "true"
-
-REMOTE_SELECTION = environ.get("REMOTE_SELECTION", "")
-REMOTE_SELECTION = REMOTE_SELECTION.lower() == "true"
-
-RCLONE_COPY_FLAGS = environ.get("RCLONE_COPY_FLAGS", "")
-if len(RCLONE_COPY_FLAGS) == 0:
-    RCLONE_COPY_FLAGS = ""
-
-RCLONE_UPLOAD_FLAGS = environ.get("RCLONE_UPLOAD_FLAGS", "")
-if len(RCLONE_UPLOAD_FLAGS) == 0:
-    RCLONE_UPLOAD_FLAGS = ""
-
-RCLONE_DOWNLOAD_FLAGS = environ.get("RCLONE_DOWNLOAD_FLAGS", "")
-if len(RCLONE_DOWNLOAD_FLAGS) == 0:
-    RCLONE_DOWNLOAD_FLAGS = ""
-
-SERVER_SIDE = environ.get("SERVER_SIDE", "")
-SERVER_SIDE = SERVER_SIDE.lower() == "true"
-
-CMD_INDEX = environ.get("CMD_INDEX", "")
-
-RSS_CHAT_ID = environ.get("RSS_CHAT_ID", "")
-RSS_CHAT_ID = "" if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
-
-RSS_DELAY = environ.get("RSS_DELAY", "")
-RSS_DELAY = 900 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
-
-QB_BASE_URL = environ.get("QB_BASE_URL", "").rstrip("/")
-if len(QB_BASE_URL) == 0:
-    LOGGER.warning("QB_BASE_URL not provided!")
-    QB_BASE_URL = ""
-
-QB_SERVER_PORT = environ.get("QB_SERVER_PORT", "")
-if len(QB_SERVER_PORT) == 0:
-    QB_SERVER_PORT = 80
-
-UPSTREAM_REPO = environ.get("UPSTREAM_REPO", "")
-if len(UPSTREAM_REPO) == 0:
-    UPSTREAM_REPO = ""
-
-UPSTREAM_BRANCH = environ.get("UPSTREAM_BRANCH", "")
-if len(UPSTREAM_BRANCH) == 0:
-    UPSTREAM_BRANCH = "master"
-
-IS_TEAM_DRIVE = environ.get("IS_TEAM_DRIVE", "")
-IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == "true"
-
-GDRIVE_FOLDER_ID = environ.get("GDRIVE_FOLDER_ID", "")
-if len(GDRIVE_FOLDER_ID) == 0:
-    GDRIVE_FOLDER_ID = ""
-
-DOWNLOAD_DIR = environ.get("DOWNLOAD_DIR", "")
-if len(DOWNLOAD_DIR) == 0:
-    DOWNLOAD_DIR = "/usr/src/app/downloads/"
-elif not DOWNLOAD_DIR.endswith("/"):
-    DOWNLOAD_DIR = f"{DOWNLOAD_DIR}/"
-
-EXTENSION_FILTER = environ.get("EXTENSION_FILTER", "")
 if len(EXTENSION_FILTER) > 0:
     fx = EXTENSION_FILTER.split()
     for x in fx:
         x = x.lstrip(".")
         GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
 
-MEGA_EMAIL = environ.get("MEGA_EMAIL", "")
-MEGA_PASSWORD = environ.get("MEGA_PASSWORD", "")
-if len(MEGA_EMAIL) == 0 or len(MEGA_PASSWORD) == 0:
-    LOGGER.warning("MEGA Credentials not provided!")
-    MEGA_EMAIL = ""
-    MEGA_PASSWORD = ""
-
-LEECH_LOG = environ.get("LEECH_LOG", "")
 if len(LEECH_LOG) != 0:
     leech_log.clear()
     aid = LEECH_LOG.split()
     for id_ in aid:
         leech_log.append(int(id_.strip()))
 
-NO_TASKS_LOGS = environ.get("NO_TASKS_LOGS", "")
-NO_TASKS_LOGS = NO_TASKS_LOGS.lower() == "true"
-
-BOT_PM = environ.get("BOT_PM", "")
-BOT_PM = BOT_PM.lower() == "true"
-
 IS_PREMIUM_USER = False
 app = ""
-USER_SESSION_STRING = environ.get("USER_SESSION_STRING", "")
 if len(USER_SESSION_STRING) != 0:
     LOGGER.info("Creating Pyrogram client from USER_SESSION_STRING")
     app = tgClient(
@@ -334,72 +220,12 @@ if len(USER_SESSION_STRING) != 0:
     IS_PREMIUM_USER = app.me.is_premium
 
 TG_MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
-LEECH_SPLIT_SIZE = environ.get("LEECH_SPLIT_SIZE", "")
-if len(LEECH_SPLIT_SIZE) == 0 or int(LEECH_SPLIT_SIZE) > TG_MAX_SPLIT_SIZE:
+LEECH_SPLIT_SIZE = Config.LEECH_SPLIT_SIZE
+if LEECH_SPLIT_SIZE == 0 or LEECH_SPLIT_SIZE > TG_MAX_SPLIT_SIZE:
     LEECH_SPLIT_SIZE = TG_MAX_SPLIT_SIZE
-else:
-    LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE)
+Config.LEECH_SPLIT_SIZE = LEECH_SPLIT_SIZE
 
-config_dict = {
-    "AS_DOCUMENT": AS_DOCUMENT,
-    "ALLOWED_CHATS": ALLOWED_CHATS,
-    "AUTO_DELETE_MESSAGE_DURATION": AUTO_DELETE_MESSAGE_DURATION,
-    "AUTO_MIRROR": AUTO_MIRROR,
-    "NO_TASKS_LOGS": NO_TASKS_LOGS,
-    "BOT_TOKEN": BOT_TOKEN,
-    "BOT_PM": BOT_PM,
-    "CMD_INDEX": CMD_INDEX,
-    "DATABASE_URL": DATABASE_URL,
-    "DEFAULT_OWNER_REMOTE": DEFAULT_OWNER_REMOTE,
-    "DEFAULT_GLOBAL_REMOTE": DEFAULT_GLOBAL_REMOTE,
-    "DOWNLOAD_DIR": DOWNLOAD_DIR,
-    "EQUAL_SPLITS": EQUAL_SPLITS,
-    "EXTENSION_FILTER": EXTENSION_FILTER,
-    "GDRIVE_FOLDER_ID": GDRIVE_FOLDER_ID,
-    "IS_TEAM_DRIVE": IS_TEAM_DRIVE,
-    "GD_INDEX_URL": GD_INDEX_URL,
-    "LOCAL_MIRROR": LOCAL_MIRROR,
-    "LEECH_SPLIT_SIZE": LEECH_SPLIT_SIZE,
-    "LEECH_LOG": LEECH_LOG,
-    "MEGA_EMAIL": MEGA_EMAIL,
-    "MEGA_PASSWORD": MEGA_PASSWORD,
-    "MULTI_REMOTE_UP": MULTI_REMOTE_UP,
-    "MULTI_RCLONE_CONFIG": MULTI_RCLONE_CONFIG,
-    "OWNER_ID": OWNER_ID,
-    "PARALLEL_TASKS": PARALLEL_TASKS,
-    "QB_BASE_URL": QB_BASE_URL,
-    "QB_SERVER_PORT": QB_SERVER_PORT,
-    "RCLONE_COPY_FLAGS": RCLONE_COPY_FLAGS,
-    "RCLONE_UPLOAD_FLAGS": RCLONE_UPLOAD_FLAGS,
-    "RCLONE_DOWNLOAD_FLAGS": RCLONE_DOWNLOAD_FLAGS,
-    "REMOTE_SELECTION": REMOTE_SELECTION,
-    "RSS_CHAT_ID": RSS_CHAT_ID,
-    "RSS_DELAY": RSS_DELAY,
-    "RC_INDEX_URL": RC_INDEX_URL,
-    "RC_INDEX_PORT": RC_INDEX_PORT,
-    "RC_INDEX_USER": RC_INDEX_USER,
-    "RC_INDEX_PASS": RC_INDEX_PASS,
-    "SEARCH_PLUGINS": SEARCH_PLUGINS,
-    "SERVER_SIDE": SERVER_SIDE,
-    "SEARCH_API_LINK": SEARCH_API_LINK,
-    "SEARCH_LIMIT": SEARCH_LIMIT,
-    "SERVICE_ACCOUNTS_REMOTE": SERVICE_ACCOUNTS_REMOTE,
-    "STATUS_LIMIT": STATUS_LIMIT,
-    "STATUS_UPDATE_INTERVAL": STATUS_UPDATE_INTERVAL,
-    "SUDO_USERS": SUDO_USERS,
-    "TELEGRAM_API_ID": TELEGRAM_API_ID,
-    "TELEGRAM_API_HASH": TELEGRAM_API_HASH,
-    "TMDB_API_KEY": TMDB_API_KEY,
-    "TMDB_LANGUAGE": TMDB_LANGUAGE,
-    "TORRENT_TIMEOUT": TORRENT_TIMEOUT,
-    "UPSTREAM_REPO": UPSTREAM_REPO,
-    "UPSTREAM_BRANCH": UPSTREAM_BRANCH,
-    "USER_SESSION_STRING": USER_SESSION_STRING,
-    "USE_SERVICE_ACCOUNTS": USE_SERVICE_ACCOUNTS,
-    "VIEW_LINK": VIEW_LINK,
-    "WEB_PINCODE": WEB_PINCODE,
-    "YT_DLP_OPTIONS": YT_DLP_OPTIONS,
-}
+config_dict = Config.get_all()
 
 if QB_BASE_URL:
     Popen(
@@ -423,6 +249,7 @@ if ospath.exists("accounts.zip"):
     srun(["chmod", "-R", "777", "accounts"])
     osremove("accounts.zip")
 if not ospath.exists("accounts"):
+    Config.USE_SERVICE_ACCOUNTS = False
     config_dict["USE_SERVICE_ACCOUNTS"] = False
 
 
