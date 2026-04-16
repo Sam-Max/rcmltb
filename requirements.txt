@@ -23,7 +23,6 @@ motor
 pillow
 psutil
 pybase64
-pymongo
 kurigram
 python-dotenv
 python-magic

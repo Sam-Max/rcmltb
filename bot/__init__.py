@@ -11,7 +11,7 @@ from faulthandler import enable as faulthandler_enable
 from time import sleep, time
 from sys import exit
 from dotenv import load_dotenv, dotenv_values
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 from subprocess import Popen, run as srun
 from pyrogram import Client as tgClient, enums
 from pyrogram.types import LinkPreviewOptions
@@ -72,39 +72,46 @@ if len(DATABASE_URL) == 0:
     DATABASE_URL = ""
 
 if DATABASE_URL:
-    conn = MongoClient(DATABASE_URL)
-    db = conn.rcmltb
-    current_config = dict(dotenv_values("config.env"))
-    old_config = db.settings.deployConfig.find_one({"_id": bot_id})
-    if old_config is None:
-        db.settings.deployConfig.replace_one(
-            {"_id": bot_id}, current_config, upsert=True
-        )
-    else:
-        del old_config["_id"]
-    if old_config and old_config != current_config:
-        db.settings.deployConfig.replace_one(
-            {"_id": bot_id}, current_config, upsert=True
-        )
-    elif saved_config := db.settings.config.find_one({"_id": bot_id}):
-        del saved_config["_id"]
-        Config.load_dict(saved_config)
-        for key, value in saved_config.items():
-            environ[key] = str(value)
-    if pf_dict := db.settings.files.find_one({"_id": bot_id}):
-        del pf_dict["_id"]
-        for key, value in pf_dict.items():
-            if value:
-                file_ = key.replace("__", ".")
-                with open(file_, "wb+") as f:
-                    f.write(value)
-    if a2c_options := db.settings.aria2c.find_one({"_id": bot_id}):
-        del a2c_options["_id"]
-        aria2_options = a2c_options
-    if qbit_opt := db.settings.qbittorrent.find_one({"_id": bot_id}):
-        del qbit_opt["_id"]
-        qbit_options = qbit_opt
-    conn.close()
+
+    async def __load_from_db():
+        global aria2_options, qbit_options, bot_id, DATABASE_URL
+        conn = AsyncIOMotorClient(DATABASE_URL)
+        db = conn.rcmltb
+        current_config = dict(dotenv_values("config.env"))
+        old_config = await db.settings.deployConfig.find_one({"_id": bot_id})
+        if old_config is None:
+            await db.settings.deployConfig.replace_one(
+                {"_id": bot_id}, current_config, upsert=True
+            )
+        else:
+            del old_config["_id"]
+        if old_config and old_config != current_config:
+            await db.settings.deployConfig.replace_one(
+                {"_id": bot_id}, current_config, upsert=True
+            )
+        elif saved_config := await db.settings.config.find_one({"_id": bot_id}):
+            del saved_config["_id"]
+            Config.load_dict(saved_config)
+            for key, value in saved_config.items():
+                environ[key] = str(value)
+        if pf_dict := await db.settings.files.find_one({"_id": bot_id}):
+            del pf_dict["_id"]
+            for key, value in pf_dict.items():
+                if value:
+                    file_ = key.replace("__", ".")
+                    with open(file_, "wb+") as f:
+                        f.write(value)
+        if a2c_options := await db.settings.aria2c.find_one({"_id": bot_id}):
+            del a2c_options["_id"]
+            aria2_options = a2c_options
+        if qbit_opt := await db.settings.qbittorrent.find_one({"_id": bot_id}):
+            del qbit_opt["_id"]
+            qbit_options = qbit_opt
+        conn.close()
+
+    from asyncio import run as async_run
+    async_run(__load_from_db())
+    del async_run
     BOT_TOKEN = Config.BOT_TOKEN
     bot_id = BOT_TOKEN.split(":", 1)[0]
     DATABASE_URL = Config.DATABASE_URL
