@@ -38,6 +38,12 @@ async def status_handler(client, message):
         reply_message = await sendMessage(msg, message)
         await auto_delete_message(message, reply_message)
     else:
+        # Initialize per-chat state if not exists
+        from bot.helper.ext_utils.bot_utils import status_pages
+        chat_id = message.chat.id
+        if chat_id not in status_pages:
+            status_pages[chat_id] = {"start": 0, "page": 1, "filter": "all"}
+
         await sendStatusMessage(message)
         async with status_reply_dict_lock:
             try:
@@ -58,10 +64,25 @@ async def status_pages(client, callback_query):
     query = callback_query
     await query.answer()
     data = query.data.split()
+    chat_id = callback_query.message.chat.id
+
+    # Import here to avoid circular import
+    from bot.helper.ext_utils.bot_utils import status_pages as status_state
+
+    # Initialize per-chat state if not exists
+    if chat_id not in status_state:
+        status_state[chat_id] = {"start": 0, "page": 1, "filter": "all"}
+
     if data[1] == "ref":
         await update_all_messages(True)
+    elif data[1] == "stats":
+        # Just refresh, don't change anything
+        await update_all_messages(True)
     else:
-        await turn(data)
+        current_filter = await turn(data, chat_id)
+        # Update the filter in state
+        status_state[chat_id]["filter"] = current_filter
+        await update_all_messages(True)
 
 
 bot.add_handler(

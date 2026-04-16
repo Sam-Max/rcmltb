@@ -41,9 +41,11 @@ HASH_REGEX = r"urn:btih:([A-Fa-f0-9]{40})"
 URL_REGEX = r"^(?!\/)(rtmps?:\/\/|mms:\/\/|rtsp:\/\/|https?:\/\/|ftp:\/\/)?([^\/:]+:[^\/@]+@)?(www\.)?(?=[^\/:\s]+\.[^\/:\s]+)([^\/:\s]+\.[^\/:\s]+)(:\d+)?(\/[^#\s]*[\s\S]*)?(\?[^#\s]*)?(#.*)?$"
 SIZE_UNITS = ["B", "KB", "MB", "GB", "TB", "PB"]
 
-STATUS_START = 0
-PAGE_NO = 1
 PAGES = 1
+
+# Per-chat status pagination state
+# {chat_id: {"start": 0, "page": 1, "filter": "all"}}
+status_pages = {}
 
 ARCH_EXT = [
     ".tar.bz2",
@@ -176,18 +178,44 @@ def speed_string_to_bytes(size_text: str):
     return size
 
 
-def get_readable_message():
+def get_readable_message(chat_id=None, status_filter="all"):
     msg = ""
     button = None
     STATUS_LIMIT = config_dict["STATUS_LIMIT"]
-    tasks = len(status_dict)
-    globals()["PAGES"] = (tasks + STATUS_LIMIT - 1) // STATUS_LIMIT
-    if PAGE_NO > PAGES and PAGES != 0:
-        globals()["STATUS_START"] = STATUS_LIMIT * (PAGES - 1)
-        globals()["PAGE_NO"] = PAGES
-    for download in list(status_dict.values())[
-        STATUS_START : STATUS_LIMIT + STATUS_START
-    ]:
+
+    # Get per-chat state or use defaults
+    if chat_id and chat_id in status_pages:
+        start = status_pages[chat_id]["start"]
+        page = status_pages[chat_id]["page"]
+    else:
+        start = 0
+        page = 1
+
+    # Filter tasks based on status_filter
+    all_tasks = list(status_dict.values())
+    if status_filter != "all":
+        from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
+        filter_map = {
+            "dl": [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_QUEUEDL],
+            "ul": [MirrorStatus.STATUS_UPLOADING, MirrorStatus.STATUS_QUEUEUP],
+            "seed": [MirrorStatus.STATUS_SEEDING],
+            "clone": [MirrorStatus.STATUS_CLONING],
+            "queue": [MirrorStatus.STATUS_QUEUEDL, MirrorStatus.STATUS_QUEUEUP],
+        }
+        if status_filter in filter_map:
+            all_tasks = [t for t in all_tasks if t.status() in filter_map[status_filter]]
+
+    tasks = len(all_tasks)
+    globals()["PAGES"] = (tasks + STATUS_LIMIT - 1) // STATUS_LIMIT if tasks > 0 else 1
+
+    # Adjust page if out of bounds
+    if page > PAGES and PAGES != 0:
+        page = PAGES
+        start = STATUS_LIMIT * (PAGES - 1)
+        if chat_id:
+            status_pages[chat_id] = {"start": start, "page": page, "filter": status_filter}
+
+    for download in all_tasks[start : STATUS_LIMIT + start]:
         if download.message.chat.type.name in ["SUPERGROUP", "CHANNEL"]:
             msg += f"<b><a href='{download.message.link}'>{download.status()}</a>: </b>"
         else:
@@ -238,13 +266,37 @@ def get_readable_message():
             up_speed += text_size_to_bytes(download.speed())
         elif tstatus == MirrorStatus.STATUS_SEEDING:
             up_speed += text_size_to_bytes(download.upload_speed())
-    if tasks > STATUS_LIMIT:
-        msg += f"<b>Page:</b> {PAGE_NO}/{PAGES} | <b>Tasks:</b> {tasks}\n"
-        buttons = ButtonMaker()
+
+    # Build buttons
+    buttons = ButtonMaker()
+
+    # Add filter buttons
+    filter_labels = {
+        "all": "All",
+        "dl": "DL",
+        "ul": "UL",
+        "seed": "Seed",
+        "clone": "Clone",
+        "queue": "Queue",
+    }
+    for filter_key, filter_label in filter_labels.items():
+        prefix = "✓" if status_filter == filter_key else ""
+        buttons.cb_buildbutton(f"{prefix}{filter_label}", f"status filter {filter_key}")
+
+    # Add navigation buttons
+    if tasks > STATUS_LIMIT or PAGES > 1:
         buttons.cb_buildbutton("⏪", "status pre")
+        buttons.cb_buildbutton(f"{page}/{PAGES}", "status stats")
         buttons.cb_buildbutton("⏩", "status nex")
-        buttons.cb_buildbutton("♻️", "status ref")
-        button = buttons.build_menu(3)
+
+    # Add step buttons for direct page navigation
+    if PAGES > 1:
+        for i in range(1, min(PAGES + 1, 6)):  # Show up to 5 page buttons
+            buttons.cb_buildbutton(str(i), f"status step {i}")
+
+    buttons.cb_buildbutton("♻️", "status ref")
+    button = buttons.build_menu(3)
+
     msg += f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(config_dict['DOWNLOAD_DIR']).free)}"
     msg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botUptime)}"
     msg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
@@ -265,24 +317,54 @@ def text_size_to_bytes(size_text):
     return size
 
 
-async def turn(data):
+async def turn(data, chat_id=None):
     STATUS_LIMIT = config_dict["STATUS_LIMIT"]
-    global STATUS_START, PAGE_NO
+
+    # Get current state
+    if chat_id and chat_id in status_pages:
+        start = status_pages[chat_id]["start"]
+        page = status_pages[chat_id]["page"]
+        current_filter = status_pages[chat_id].get("filter", "all")
+    else:
+        start = 0
+        page = 1
+        current_filter = "all"
+
     async with status_dict_lock:
         if data[1] == "nex":
-            if PAGE_NO == PAGES:
-                STATUS_START = 0
-                PAGE_NO = 1
+            if page == PAGES:
+                start = 0
+                page = 1
             else:
-                STATUS_START += STATUS_LIMIT
-                PAGE_NO += 1
+                start += STATUS_LIMIT
+                page += 1
         elif data[1] == "pre":
-            if PAGE_NO == 1:
-                STATUS_START = STATUS_LIMIT * (PAGES - 1)
-                PAGE_NO = PAGES
+            if page == 1:
+                start = STATUS_LIMIT * (PAGES - 1)
+                page = PAGES
             else:
-                STATUS_START -= STATUS_LIMIT
-                PAGE_NO -= 1
+                start -= STATUS_LIMIT
+                page -= 1
+        elif data[1] == "filter" and len(data) > 2:
+            # Handle filter button
+            current_filter = data[2]
+            start = 0
+            page = 1
+        elif data[1] == "step" and len(data) > 2:
+            # Handle step button (direct page navigation)
+            try:
+                target_page = int(data[2])
+                if 1 <= target_page <= PAGES:
+                    page = target_page
+                    start = STATUS_LIMIT * (page - 1)
+            except ValueError:
+                pass
+
+    # Save updated state
+    if chat_id:
+        status_pages[chat_id] = {"start": start, "page": page, "filter": current_filter}
+
+    return current_filter
 
 
 class setInterval:

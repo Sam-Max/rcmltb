@@ -167,11 +167,17 @@ async def update_all_messages(force=False):
             return
         for chat_id in list(status_reply_dict.keys()):
             status_reply_dict[chat_id][1] = time()
-    msg, buttons = await run_sync_to_async(get_readable_message)
-    if msg is None:
-        return
+
+    # Import here to avoid circular import
+    from bot.helper.ext_utils.bot_utils import status_pages
+
     async with status_reply_dict_lock:
         for chat_id in list(status_reply_dict.keys()):
+            # Get per-chat filter
+            status_filter = status_pages.get(chat_id, {}).get("filter", "all")
+            msg, buttons = await run_sync_to_async(get_readable_message, chat_id, status_filter)
+            if msg is None:
+                continue
             if status_reply_dict[chat_id] and msg != status_reply_dict[chat_id][0].text:
                 rmsg = await editMessage(msg, status_reply_dict[chat_id][0], buttons)
                 if isinstance(rmsg, str) and rmsg.startswith("Telegram says: [400"):
@@ -182,11 +188,18 @@ async def update_all_messages(force=False):
 
 
 async def sendStatusMessage(msg):
-    progress, buttons = await run_sync_to_async(get_readable_message)
+    chat_id = msg.chat.id
+
+    # Import here to avoid circular import
+    from bot.helper.ext_utils.bot_utils import status_pages
+
+    # Get per-chat filter
+    status_filter = status_pages.get(chat_id, {}).get("filter", "all")
+
+    progress, buttons = await run_sync_to_async(get_readable_message, chat_id, status_filter)
     if progress is None:
         return
     async with status_reply_dict_lock:
-        chat_id = msg.chat.id
         if chat_id in list(status_reply_dict.keys()):
             message = status_reply_dict[chat_id][0]
             await deleteMessage(message)
