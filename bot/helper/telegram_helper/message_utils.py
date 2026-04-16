@@ -11,6 +11,7 @@ from bot import (
 )
 from pyrogram.errors import FloodWait, FloodPremiumWait, MessageNotModified
 from pyrogram.enums.parse_mode import ParseMode
+from pyrogram.types import ReplyParameters
 from bot.helper.ext_utils.bot_utils import get_readable_message, run_sync_to_async, setInterval
 
 
@@ -18,7 +19,7 @@ async def sendMessage(text: str, message, reply_markup=None):
     try:
         return await bot.send_message(
             message.chat.id,
-            reply_to_message_id=message.id,
+            reply_parameters=ReplyParameters(message_id=message.id),
             text=text,
             reply_markup=reply_markup,
             disable_web_page_preview=True,
@@ -34,7 +35,7 @@ async def sendPhoto(text, message, path, reply_markup):
     try:
         return await bot.send_photo(
             chat_id=message.chat.id,
-            reply_to_message_id=message.id,
+            reply_parameters=ReplyParameters(message_id=message.id),
             photo=path,
             caption=text,
             reply_markup=reply_markup,
@@ -50,7 +51,7 @@ async def sendMarkup(text: str, message, reply_markup):
     try:
         return await bot.send_message(
             message.chat.id,
-            reply_to_message_id=message.id,
+            reply_parameters=ReplyParameters(message_id=message.id),
             text=text,
             reply_markup=reply_markup,
         )
@@ -133,7 +134,7 @@ async def sendFile(message, file, caption=""):
     try:
         return await bot.send_document(
             document=file,
-            reply_to_message_id=message.id,
+            reply_parameters=ReplyParameters(message_id=message.id),
             caption=caption,
             parse_mode=ParseMode.HTML,
             chat_id=message.chat.id,

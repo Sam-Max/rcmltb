@@ -5,6 +5,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
+from pyrogram.types import ReplyParameters
 
 
 async def shell(client, message):
@@ -32,7 +33,7 @@ async def shell(client, message):
                 chat_id=message.chat.id,
                 document=doc,
                 file_name=doc.name,
-                reply_to_message_id=message.id,
+                reply_parameters=ReplyParameters(message_id=message.id),
             )
     elif len(reply) != 0:
         await message.reply_text(reply)

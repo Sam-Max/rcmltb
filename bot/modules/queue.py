@@ -13,6 +13,7 @@ import inspect
 import sys
 import uuid
 from bot import LOGGER, PARALLEL_TASKS, bot_loop, bot
+from pyrogram.types import ReplyParameters
 
 
 queue = None
@@ -228,7 +229,7 @@ async def add_to_queue(message, task, *args, **kwargs):
     if queue.queue.full():
         return await bot.send_message(
             message.chat.id,
-            reply_to_message_id=message.id,
+            reply_parameters=ReplyParameters(message_id=message.id),
             text="Queue is full, wait for a slot to be available..",
         )
     await queue.put(
