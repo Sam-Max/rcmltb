@@ -12,5 +12,9 @@ config.env
 .vscode
 pyrogram.session
 pyrogram_session.session
+pyrogram.session-journal
 Thumbnails/*
-
+qBittorrent/*
+aria.sh
+qbittorrent.conf
+qbittorrent-data/*
