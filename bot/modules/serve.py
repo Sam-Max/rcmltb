@@ -39,9 +39,9 @@ async def serve_callback(client, query):
 
     if data[1] == "remote":
         SELECTED_REMOTE.append(data[2])
-    button = ButtonMaker()
-    button.cb_buildbutton("🌐 HTTP", "servemenu^http")
-    button.cb_buildbutton("📡 WEBDAV", "servemenu^webdav")
+        button = ButtonMaker()
+        button.cb_buildbutton("🌐 HTTP", "servemenu^http")
+        button.cb_buildbutton("📡 WEBDAV", "servemenu^webdav")
         await editMarkup(
             "📡 <b>Select Protocol</b>\nChoose a protocol to serve the remote:", message, button.build_menu(2)
         )

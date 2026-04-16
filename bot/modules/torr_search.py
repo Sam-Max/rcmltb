@@ -310,15 +310,15 @@ async def torrentSearchUpdate(_, query):
             key = None
     if user_id != int(data[1]):
         await query.answer("⛔ Not Yours!", show_alert=True)
-    if data[2].startswith("api"):
+    elif data[2].startswith("api"):
         await query.answer()
         if len(data) > 4:
             button = __api_buttons(user_id, data[2], data[4], True)
-    else:
-        button = __api_buttons(user_id, "apisearch", id, True)
+        else:
+            button = __api_buttons(user_id, "apisearch", id, True)
         await editMessage("🌐 <b>Choose site to search | API:</b>", message, button)
-    else:
-            button = await _plugin_buttons(user_id)
+    elif data[2] == "plugin":
+        button = await _plugin_buttons(user_id)
         await editMessage("Choose site:", message, button)
     elif data[2] != "cancel":
         await query.answer()

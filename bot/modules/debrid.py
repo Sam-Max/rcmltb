@@ -285,10 +285,10 @@ async def generate_link(client, query):
         hosts = ""
         for host in res:
             hosts += f"{host}, "
-    question = await sendMessage(
-        f"🌐 <b>Supported Hosts:</b> <code>{hosts}</code>\n\n<b>Send a link</b> from the above hosters to generate a direct download link.\n/ignore to cancel",
-        message,
-    )
+        question = await sendMessage(
+            f"🌐 <b>Supported Hosts:</b> <code>{hosts}</code>\n\n<b>Send a link</b> from the above hosters to generate a direct download link.\n/ignore to cancel",
+            message,
+        )
         if response := await client.listen.Message(filters.text, timeout=60):
             if "/ignore" in response.text:
                 pass

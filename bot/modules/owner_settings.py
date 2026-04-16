@@ -183,9 +183,9 @@ async def ownerset_callback(client, callback_query):
                 "DOWNLOAD_DIR",
                 "DATABASE_URL",
             ]:
-            await query.answer(
-                text="🔄 Restart required for this to apply!", show_alert=True
-            )
+                await query.answer(
+                    text="🔄 Restart required for this to apply!", show_alert=True
+                )
             else:
                 await query.answer()
             await update_buttons(message, data[3], data[2])

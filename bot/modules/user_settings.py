@@ -172,8 +172,8 @@ async def edit_user_settings(client, query):
         await query.answer()
         buttons = ButtonMaker()
         if ospath.exists(thumb_path):
-        buttons.cb_buildbutton("👁 View Thumbnail", f"userset {user_id} vthumb")
-        buttons.cb_buildbutton("🗑️ Delete Thumbnail", f"userset {user_id} dthumb")
+            buttons.cb_buildbutton("👁 View Thumbnail", f"userset {user_id} vthumb")
+            buttons.cb_buildbutton("🗑️ Delete Thumbnail", f"userset {user_id} dthumb")
         buttons.cb_buildbutton("Back", f"userset {user_id} back")
         buttons.cb_buildbutton("Close", f"userset {user_id} close")
         question = await editMessage(
