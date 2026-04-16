@@ -48,20 +48,20 @@ class JDownloaderListener:
 
 async def jdownloader_monitor(listener, gid):
     """Monitor JDownloader download progress.
-    
+
     Args:
         listener: TaskListener instance
         gid: Package UUID
     """
     jd_listener = JDownloaderListener(listener, gid)
     await jd_listener.on_download_start()
-    
+
     while not jd_listener._finished:
         try:
-            if not jdownloader.is_connected:
+            if not jdownloader.is_connected or not jdownloader.device:
                 await sleep(5)
                 continue
-            
+
             # Query download status
             packages = await jdownloader.device.downloads.query_packages()
             package = None
@@ -83,10 +83,11 @@ async def jdownloader_monitor(listener, gid):
             else:
                 # Package not in downloads anymore, check if finished
                 await sleep(2)
-                packages = await jdownloader.device.downloads.query_packages()
-                if not any(pkg.get("uuid") == gid for pkg in packages):
-                    await jd_listener.on_download_complete()
-                    break
+                if jdownloader.device:
+                    packages = await jdownloader.device.downloads.query_packages()
+                    if not any(pkg.get("uuid") == gid for pkg in packages):
+                        await jd_listener.on_download_complete()
+                        break
             
             await sleep(3)
             

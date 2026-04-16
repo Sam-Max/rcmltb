@@ -14,14 +14,14 @@ from bot.helper.mirror_leech_utils.status_utils.jdownloader_status import (
 
 async def add_jd_download(link, name, path, listener):
     """Add a download to JDownloader.
-    
+
     Args:
         link: URL to download (HTTP link or DLC file path)
         name: Custom name for the download
         path: Download path
         listener: TaskListener instance
     """
-    if not jdownloader.is_connected:
+    if not jdownloader.is_connected or not jdownloader.device:
         await sendMessage("JDownloader not connected. Please check configuration.", listener.message)
         return
 
@@ -80,13 +80,13 @@ async def add_jd_download(link, name, path, listener):
 
 async def handle_dlc_file(file_path, listener, path):
     """Handle DLC container file.
-    
+
     Args:
         file_path: Path to DLC file
         listener: TaskListener instance
         path: Download path
     """
-    if not jdownloader.is_connected:
+    if not jdownloader.is_connected or not jdownloader.device:
         await sendMessage("JDownloader not connected.", listener.message)
         return
     
