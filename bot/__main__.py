@@ -33,6 +33,7 @@ from json import loads
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.message_utils import editMessage, sendMarkup, sendMessage
 from .helper.ext_utils.misc_utils import clean_all, exit_clean_up, start_cleanup
+from pyrogram.types import BotCommand
 from .modules import (
     batch,
     cancel,
@@ -196,6 +197,28 @@ async def main():
         )
     )
     bot.add_handler(MessageHandler(get_ip, filters=command(BotCommands.IpCommand)))
+
+    await bot.set_bot_commands(
+        [
+            BotCommand(BotCommands.StartCommand, "Start the bot"),
+            BotCommand(BotCommands.MirrorCommand[0], "Mirror to cloud"),
+            BotCommand(BotCommands.LeechCommand[0], "Leech to Telegram"),
+            BotCommand(BotCommands.CloneCommand, "Clone Google Drive files"),
+            BotCommand(BotCommands.CopyCommand, "Copy files between remotes"),
+            BotCommand(BotCommands.StatusCommand, "Show download status"),
+            BotCommand(BotCommands.StatsCommand, "Show bot stats"),
+            BotCommand(BotCommands.CancelCommand, "Cancel a task"),
+            BotCommand(BotCommands.CancelAllCommand, "Cancel all tasks"),
+            BotCommand(BotCommands.RssCommand, "RSS feed manager"),
+            BotCommand(BotCommands.TorrentSearchCommand, "Search torrents"),
+            BotCommand(BotCommands.ServeCommand, "Serve files via web"),
+            BotCommand(BotCommands.UserSetCommand, "User settings"),
+            BotCommand(BotCommands.OwnerSetCommand, "Owner settings"),
+            BotCommand(BotCommands.PingCommand, "Ping the bot"),
+            BotCommand(BotCommands.LogsCommand, "Get bot logs"),
+            BotCommand(BotCommands.RestartCommand, "Restart the bot"),
+        ]
+    )
     LOGGER.info("Bot Started!")
     signal(SIGINT, exit_clean_up)
 
