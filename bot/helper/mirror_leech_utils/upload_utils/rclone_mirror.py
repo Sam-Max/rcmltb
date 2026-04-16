@@ -20,6 +20,7 @@ from bot.helper.ext_utils.rclone_utils import (
     is_gdrive_remote,
     setRcloneFlags,
 )
+from bot.helper.ext_utils.template_utils import apply_upload_template
 from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_leech_utils.status_utils.status_utils import MirrorStatus
 
@@ -79,15 +80,36 @@ class RcloneMirror:
     async def upload(
         self, path, conf_path, mime_type, remote, folder_name, base_dir=""
     ):
+        # Get user settings for template
+        from bot import user_data
+        user_dict = user_data.get(self.__user_id, {})
+        template = user_dict.get("upload_template") or config_dict.get("UPLOAD_PATH_TEMPLATE", "")
+
+        # Apply template if configured
+        if template:
+            username = self.message.from_user.username or str(self.__user_id)
+            category = user_dict.get("category", "")
+            dynamic_path = apply_upload_template(
+                template,
+                self.__user_id,
+                username,
+                category=category,
+                task_type="mirror"
+            )
+            if base_dir:
+                base_dir = f"{base_dir}/{dynamic_path}".replace("//", "/")
+            else:
+                base_dir = f"/{dynamic_path}"
+
         if mime_type == "Folder":
             self.name = folder_name
             if base_dir:
-                rclone_path = f"{remote}:{base_dir}{folder_name}"
+                rclone_path = f"{remote}:{base_dir}/{folder_name}".replace("//", "/")
             else:
                 rclone_path = f"{remote}:/{folder_name}"
         else:
             if base_dir:
-                rclone_path = f"{remote}:{base_dir}"
+                rclone_path = f"{remote}:{base_dir}".replace("//", "/")
             else:
                 rclone_path = f"{remote}:/"
 

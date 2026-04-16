@@ -69,6 +69,7 @@ class Config:
     QUEUE_DOWNLOAD = 0
     QUEUE_UPLOAD = 0
     NAME_SUBSTITUTE = ""
+    UPLOAD_PATH_TEMPLATE = ""
 
     @classmethod
     def _convert(cls, key: str, value):
