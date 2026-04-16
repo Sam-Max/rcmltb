@@ -58,12 +58,13 @@ async def jdownloader_monitor(listener, gid):
 
     while not jd_listener._finished:
         try:
-            if not jdownloader.is_connected or not jdownloader.device:
+            device = jdownloader.get_device()
+            if not jdownloader.is_connected or not device:
                 await sleep(5)
                 continue
 
             # Query download status
-            packages = await jdownloader.device.downloads.query_packages()
+            packages = await device.downloads.query_packages()
             package = None
             
             for pkg in packages:
@@ -83,8 +84,9 @@ async def jdownloader_monitor(listener, gid):
             else:
                 # Package not in downloads anymore, check if finished
                 await sleep(2)
-                if jdownloader.device:
-                    packages = await jdownloader.device.downloads.query_packages()
+                device = jdownloader.get_device()
+                if device:
+                    packages = await device.downloads.query_packages()
                     if not any(pkg.get("uuid") == gid for pkg in packages):
                         await jd_listener.on_download_complete()
                         break

@@ -21,7 +21,8 @@ async def add_jd_download(link, name, path, listener):
         path: Download path
         listener: TaskListener instance
     """
-    if not jdownloader.is_connected or not jdownloader.device:
+    device = jdownloader.get_device()
+    if not jdownloader.is_connected or not device:
         await sendMessage("JDownloader not connected. Please check configuration.", listener.message)
         return
 
@@ -32,7 +33,7 @@ async def add_jd_download(link, name, path, listener):
                 # Read and encode DLC file
                 with open(link, "rb") as f:
                     dlc_content = b64encode(f.read()).decode()
-                await jdownloader.device.linkgrabber.add_container(
+                await device.linkgrabber.add_container(
                     "DLC", f"data:;base64,{dlc_content}"
                 )
             else:
@@ -40,7 +41,7 @@ async def add_jd_download(link, name, path, listener):
                 return
         else:
             # Add direct link
-            await jdownloader.device.linkgrabber.add_links([
+            await device.linkgrabber.add_links([
                 {
                     "url": link,
                     "packageName": name or "",
@@ -49,29 +50,29 @@ async def add_jd_download(link, name, path, listener):
             ])
 
         LOGGER.info(f"Added JDownloader link: {link}")
-        
+
         # Wait for package to be added
         await sleep(5)
-        
+
         # Query packages to get the new package ID
-        packages = await jdownloader.device.linkgrabber.query_packages()
+        packages = await device.linkgrabber.query_packages()
         if not packages:
             await sendMessage("Failed to add link to JDownloader.", listener.message)
             return
-        
+
         # Get the most recent package
         package = packages[-1]
         gid = package.get("uuid")
-        
+
         # Create status object
         async with status_dict_lock:
             status_dict[listener.uid] = JDownloaderStatus(listener, gid)
-        
+
         await listener.onDownloadStart()
         await sendStatusMessage(listener.message)
-        
+
         # Start downloading
-        await jdownloader.device.downloads.start_downloads(package_ids=[gid])
+        await device.downloads.start_downloads(package_ids=[gid])
         
     except Exception as e:
         LOGGER.error(f"Error adding JDownloader download: {e}")
@@ -86,38 +87,39 @@ async def handle_dlc_file(file_path, listener, path):
         listener: TaskListener instance
         path: Download path
     """
-    if not jdownloader.is_connected or not jdownloader.device:
+    device = jdownloader.get_device()
+    if not jdownloader.is_connected or not device:
         await sendMessage("JDownloader not connected.", listener.message)
         return
-    
+
     try:
         with open(file_path, "rb") as f:
             dlc_content = b64encode(f.read()).decode()
-        
-        await jdownloader.device.linkgrabber.add_container(
+
+        await device.linkgrabber.add_container(
             "DLC", f"data:;base64,{dlc_content}"
         )
-        
+
         LOGGER.info(f"Added DLC file: {file_path}")
-        
+
         await sleep(5)
-        
-        packages = await jdownloader.device.linkgrabber.query_packages()
+
+        packages = await device.linkgrabber.query_packages()
         if not packages:
             await sendMessage("Failed to add DLC file.", listener.message)
             return
-        
+
         package = packages[-1]
         gid = package.get("uuid")
-        
+
         async with status_dict_lock:
             status_dict[listener.uid] = JDownloaderStatus(listener, gid)
-        
+
         await listener.onDownloadStart()
         await sendStatusMessage(listener.message)
-        
-        await jdownloader.device.downloads.start_downloads(package_ids=[gid])
-        
+
+        await device.downloads.start_downloads(package_ids=[gid])
+
     except Exception as e:
         LOGGER.error(f"Error handling DLC file: {e}")
         await sendMessage(f"Error: {str(e)}", listener.message)

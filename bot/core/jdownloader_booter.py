@@ -8,8 +8,8 @@ from bot.core.config_manager import Config
 from bot.helper.ext_utils.bot_utils import new_task
 
 try:
-    from myjd import MyJdApi
-    from myjd.exception import (
+    from myjdapi import Myjdapi
+    from myjdapi.exception import (
         MYJDApiException,
         MYJDConnectionException,
         MYJDDecodeException,
@@ -17,18 +17,18 @@ try:
     MYJD_AVAILABLE = True
 except ImportError:
     MYJD_AVAILABLE = False
-    MyJdApi = None
+    Myjdapi = None
     MYJDApiException = Exception
     MYJDConnectionException = Exception
     MYJDDecodeException = Exception
 
 
 class JDownloader:
-    """Extended MyJdApi class with boot and connection management."""
+    """Extended Myjdapi class with boot and connection management."""
 
     def __init__(self):
-        if MYJD_AVAILABLE and MyJdApi:
-            self._api = MyJdApi()
+        if MYJD_AVAILABLE and Myjdapi:
+            self._api = Myjdapi()
         else:
             self._api = None
         self._is_connected = False
@@ -49,7 +49,7 @@ class JDownloader:
         self._boot_attempted = True
 
         if not MYJD_AVAILABLE:
-            LOGGER.warning("myjd package not installed, JDownloader support disabled")
+            LOGGER.warning("myjdapi package not installed, JDownloader support disabled")
             return
 
         jd_email = getattr(Config, "JD_EMAIL", "")
@@ -114,7 +114,7 @@ class JDownloader:
 
         try:
             self._is_connected = False
-            await self._api.connect_api(jd_email, jd_password)
+            self._api.connect(jd_email, jd_password)
             self._is_connected = True
             LOGGER.info("JDownloader connected successfully")
             return True
@@ -131,7 +131,7 @@ class JDownloader:
         if not self._api:
             return False
         try:
-            await self._api.reconnect_api()
+            self._api.reconnect()
             self._is_connected = True
             return True
         except Exception as e:
@@ -144,16 +144,21 @@ class JDownloader:
         if not self._api:
             return
         try:
-            await self._api.disconnect_api()
+            self._api.disconnect()
         except Exception:
             pass
         self._is_connected = False
 
-    @property
-    def device(self):
-        """Access the JDownloader device API."""
-        if self._api:
-            return self._api.device
+    def get_device(self):
+        """Get the JDownloader device API.
+
+        Returns the device object if connected, None otherwise.
+        """
+        if self._api and self._is_connected:
+            try:
+                return self._api.get_device()
+            except Exception:
+                return None
         return None
 
 

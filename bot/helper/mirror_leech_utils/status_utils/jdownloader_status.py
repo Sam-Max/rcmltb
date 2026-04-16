@@ -15,10 +15,11 @@ class JDownloaderStatus:
 
     async def _update_info(self):
         """Update download info from JDownloader."""
-        if not jdownloader.is_connected:
+        device = jdownloader.get_device()
+        if not jdownloader.is_connected or not device:
             return
         try:
-            packages = await jdownloader.device.linkgrabber.query_packages()
+            packages = await device.linkgrabber.query_packages()
             for package in packages:
                 if package.get("uuid") == self._gid:
                     self._info = package
@@ -80,9 +81,10 @@ class JDownloaderStatus:
 
     async def cancel_task(self):
         """Cancel the download task."""
-        if jdownloader.is_connected:
+        device = jdownloader.get_device()
+        if jdownloader.is_connected and device:
             try:
-                await jdownloader.device.linkgrabber.remove_links(
+                await device.linkgrabber.remove_links(
                     package_ids=[self._gid]
                 )
             except Exception as e:
