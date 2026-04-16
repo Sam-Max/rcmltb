@@ -63,6 +63,12 @@ class Config:
     VIEW_LINK = False
     WEB_PINCODE = False
     YT_DLP_OPTIONS = {}
+    JD_EMAIL = ""
+    JD_PASSWORD = ""
+    QUEUE_ALL = 0
+    QUEUE_DOWNLOAD = 0
+    QUEUE_UPLOAD = 0
+    NAME_SUBSTITUTE = ""
 
     @classmethod
     def _convert(cls, key: str, value):
