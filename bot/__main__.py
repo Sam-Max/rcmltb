@@ -42,32 +42,33 @@ async def main():
     await gather(TgClient.start_bot(), TgClient.start_user())
     LOGGER.info("Telegram clients started")
 
-    # 3. Initialize TorrentManager (must happen before start_cleanup)
-    await TorrentManager.initiate()
-    LOGGER.info("TorrentManager initiated")
-
-    # 4. Start cleanup and load configurations
-    await start_cleanup()
-    LOGGER.info("Cleanup done")
-
+    # 3. Start services and load configurations
     try:
         await load_configurations()
         LOGGER.info("Configurations loaded")
     except Exception as e:
         LOGGER.warning(f"load_configurations error (non-fatal): {e}")
 
-    # 5. Update derived variables
+    # 4. Initialize TorrentManager
+    await TorrentManager.initiate()
+    LOGGER.info("TorrentManager initiated")
+
+    # 5. Start cleanup
+    await start_cleanup()
+    LOGGER.info("Cleanup done")
+
+    # 6. Update derived variables
     await update_variables()
     LOGGER.info("Variables updated")
 
-    # 6. Update aria2 and qbit options
+    # 7. Update aria2 and qbit options
     await gather(update_aria2_options(), update_qbit_options())
     LOGGER.info("Aria2/qBittorrent options updated")
 
-    # 7. Initialize aria2
+    # 8. Initialize aria2
     await TorrentManager.aria2_init()
 
-    # 8. Create help buttons and init telegraph
+    # 9. Create help buttons and init telegraph
     from bot.helper.ext_utils.telegraph_helper import init_telegraph
     await gather(
         create_mirror_help_buttons(),
@@ -78,22 +79,22 @@ async def main():
     )
     LOGGER.info("Help buttons and telegraph created")
 
-    # 9. Initialize search tools and debrid
+    # 10. Initialize search tools and debrid
     from bot.modules import torr_search, debrid
     await gather(
         torr_search.initiate_search_tools(),
         debrid.load_debrid_token(),
     )
 
-    # 10. Start aria2 listener
+    # 11. Start aria2 listener
     from bot.helper.listeners.aria2_listener import add_aria2_callbacks
     add_aria2_callbacks()
 
-    # 11. Register handlers
+    # 12. Register handlers
     from bot.core.handlers import add_handlers
     add_handlers()
 
-    # 12. Handle restart message
+    # 13. Handle restart message
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
@@ -103,7 +104,7 @@ async def main():
             pass
         osremove(".restartmsg")
 
-    # 13. Set bot commands
+    # 14. Set bot commands
     await TgClient.bot.set_bot_commands(
         [
             BotCommand(BotCommands.StartCommand, "Start the bot"),
@@ -126,7 +127,7 @@ async def main():
         ]
     )
 
-    # 14. Save settings to DB
+    # 15. Save settings to DB
     await save_settings()
 
     LOGGER.info("Bot Started!")
