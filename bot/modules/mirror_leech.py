@@ -12,7 +12,6 @@ from bot.helper.ext_utils.bot_utils import (
     get_content_type,
     is_gdrive_link,
     is_magnet,
-    is_mega_link,
     is_url,
     new_task,
     run_sync_to_async,
@@ -41,7 +40,6 @@ from bot.helper.mirror_leech_utils.download_utils.aria2_download import (
     add_aria2c_download,
 )
 from bot.helper.mirror_leech_utils.download_utils.gd_downloader import add_gd_download
-from bot.helper.mirror_leech_utils.download_utils.mega_download import add_mega_download
 from bot.helper.mirror_leech_utils.download_utils.qbit_downloader import add_qb_torrent
 from bot.helper.mirror_leech_utils.download_utils.telegram_downloader import (
     TelegramDownloader,
@@ -164,8 +162,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
         return
 
     if (
-        not is_mega_link(link)
-        and not is_magnet(link)
+        not is_magnet(link)
         and not is_gdrive_link(link)
         and not link.endswith(".torrent")
         and file is None
@@ -210,10 +207,6 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None):
     elif is_gdrive_link(link):
         await conditional_queue_add(
             message, add_gd_download, link, name, path, listener
-        )
-    elif is_mega_link(link):
-        await conditional_queue_add(
-            message, add_mega_download, link, f"{path}/", listener, name
         )
     elif is_magnet(link) or ospath.exists(link):
         await conditional_queue_add(

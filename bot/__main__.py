@@ -125,10 +125,10 @@ async def get_log(client, message):
 
 async def main():
     global aria2_options, qbit_options
-    await start_cleanup()
-
     await TorrentManager.initiate()
     LOGGER.info("TorrentManager initiated")
+
+    await start_cleanup()
 
     if not aria2_options:
         aria2_options = await TorrentManager.get_aria2_options()
