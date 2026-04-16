@@ -80,4 +80,8 @@ class TelegraphHelper:
 
 
 telegraph = TelegraphHelper("Rclone-Telegram-Bot", "https://github.com/Sam-Max/rcmltb/")
-bot_loop.run_until_complete(telegraph.create_account())
+
+
+async def init_telegraph():
+    """Initialize telegraph account. Call during startup."""
+    await telegraph.create_account()

@@ -74,7 +74,7 @@ class TelegramUploader:
                     if file.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
                         try:
                             osremove(self.__upload_path)
-                        except:
+                        except Exception:
                             pass
                         continue
                     f_size = ospath.getsize(self.__upload_path)
@@ -104,7 +104,7 @@ class TelegramUploader:
                     ):
                         try:
                             osremove(self.__upload_path)
-                        except:
+                        except Exception:
                             pass
         if self.__is_cancelled:
             return
@@ -399,7 +399,7 @@ class TelegramUploader:
     def speed(self):
         try:
             return self.__processed_bytes / (time() - self.__start_time)
-        except:
+        except Exception:
             return 0
 
     @property

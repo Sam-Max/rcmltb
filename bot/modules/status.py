@@ -44,7 +44,7 @@ async def status_handler(client, message):
                 if Interval:
                     Interval[0].cancel()
                     Interval.clear()
-            except:
+            except Exception:
                 pass
             finally:
                 Interval.append(

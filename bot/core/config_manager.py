@@ -45,7 +45,7 @@ class Config:
     RSS_DELAY = 900
     SEARCH_API_LINK = ""
     SEARCH_LIMIT = 0
-    SEARCH_PLUGINS = ""
+    SEARCH_PLUGINS = []
     SERVER_SIDE = False
     SERVICE_ACCOUNTS_REMOTE = ""
     STATUS_LIMIT = 10
@@ -62,7 +62,7 @@ class Config:
     USER_SESSION_STRING = ""
     VIEW_LINK = False
     WEB_PINCODE = False
-    YT_DLP_OPTIONS = ""
+    YT_DLP_OPTIONS = {}
 
     @classmethod
     def _convert(cls, key: str, value):
@@ -89,6 +89,20 @@ class Config:
 
         if expected_type is str:
             return str(value) if value is not None else ""
+
+        if expected_type in (list, dict):
+            if not isinstance(value, str):
+                raise TypeError(
+                    f"Invalid type for {key}: expected {expected_type} (as string), got {type(value)}"
+                )
+            if not value:
+                return expected_type()
+            evaluated = literal_eval(value)
+            if not isinstance(evaluated, expected_type):
+                raise TypeError(
+                    f"Invalid type for {key}: expected {expected_type}, got {type(evaluated)}"
+                )
+            return evaluated
 
         try:
             return expected_type(value)
@@ -119,7 +133,19 @@ class Config:
             for key in dir(cls)
             if not key.startswith("_")
             and not callable(getattr(cls, key))
-            and key not in {"_convert", "get", "set", "get_all", "load", "load_dict"}
+            and key
+            not in {
+                "_convert",
+                "get",
+                "set",
+                "get_all",
+                "load",
+                "load_dict",
+                "_is_valid_config_attr",
+                "_process_config_value",
+                "_validate_required_config",
+                "_load_from_module",
+            }
         }
 
     @classmethod
@@ -155,6 +181,25 @@ class Config:
         return converted_value
 
     @classmethod
+    def _validate_required_config(cls):
+        if not cls.BOT_TOKEN:
+            LOGGER.error("BOT_TOKEN variable is missing! Exiting now")
+            from sys import exit
+            exit(1)
+        if cls.OWNER_ID == 0:
+            LOGGER.error("OWNER_ID variable is missing! Exiting now")
+            from sys import exit
+            exit(1)
+        if cls.TELEGRAM_API_ID == 0:
+            LOGGER.error("TELEGRAM_API_ID variable is missing! Exiting now")
+            from sys import exit
+            exit(1)
+        if not cls.TELEGRAM_API_HASH:
+            LOGGER.error("TELEGRAM_API_HASH variable is missing! Exiting now")
+            from sys import exit
+            exit(1)
+
+    @classmethod
     def load_from_env(cls):
         for attr in dir(cls):
             if not cls._is_valid_config_attr(attr):
@@ -180,5 +225,27 @@ class Config:
                 setattr(cls, key, processed)
 
     @classmethod
+    def _load_from_module(cls):
+        try:
+            from importlib import import_module
+            settings = import_module("config")
+            for attr in dir(settings):
+                if attr.startswith("_") or callable(getattr(settings, attr)):
+                    continue
+                if not hasattr(cls, attr):
+                    continue
+                raw_value = getattr(settings, attr)
+                processed = cls._process_config_value(attr, raw_value)
+                if processed is not None:
+                    setattr(cls, attr, processed)
+                elif raw_value is not None:
+                    setattr(cls, attr, cls._convert(attr, raw_value))
+            return True
+        except ModuleNotFoundError:
+            return False
+
+    @classmethod
     def load(cls):
-        cls.load_from_env()
+        if not cls._load_from_module():
+            cls.load_from_env()
+        cls._validate_required_config()

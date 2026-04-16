@@ -138,7 +138,7 @@ async def get_content_type(link):
         async with ClientSession(trust_env=True) as session:
             async with session.get(link, verify_ssl=False) as response:
                 return response.headers.get("Content-Type")
-    except:
+    except Exception:
         return None
 
 
@@ -225,7 +225,7 @@ def get_readable_message():
             if hasattr(download, "seeders_num"):
                 try:
                     msg += f"\n<b>Seeders:</b> {download.seeders_num()} | <b>Leechers:</b> {download.leechers_num()}"
-                except:
+                except Exception:
                     pass
         elif download.status() == MirrorStatus.STATUS_SEEDING:
             msg += f"\n<b>Size: </b>{download.size()}"

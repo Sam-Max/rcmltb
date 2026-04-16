@@ -80,7 +80,7 @@ async def safe_run(
         else:
             LOGGER.error("%s is not a coroutine or function", task, stack_info=True)
     # catching all exceptions is bad, but this is a background task
-    except:
+    except Exception:
         _, exception, _ = sys.exc_info()
         if exception_callback:
             if inspect.iscoroutinefunction(exception_callback):

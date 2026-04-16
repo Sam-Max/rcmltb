@@ -2,22 +2,11 @@ __version__ = "4.6"
 __author__ = "Sam-Max"
 
 from uvloop import install
-from asyncio import Lock
+from asyncio import Lock, new_event_loop, set_event_loop
 from socket import setdefaulttimeout
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
-from os import environ, getcwd, remove as osremove, path as ospath
-from threading import Thread
+from time import time
 from faulthandler import enable as faulthandler_enable
-from time import sleep, time
-from sys import exit
-from dotenv import load_dotenv, dotenv_values
-from motor.motor_asyncio import AsyncIOMotorClient
-from subprocess import Popen, run as srun
-from pyrogram import Client as tgClient, enums
-from pyrogram.types import LinkPreviewOptions
-from bot.conv_pyrogram import Conversation
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from tzlocal import get_localzone
 
 faulthandler_enable()
 
@@ -35,13 +24,15 @@ basicConfig(
 
 LOGGER = getLogger(__name__)
 
+from dotenv import load_dotenv
 load_dotenv("config.env", override=True)
 
-Interval = []
-QbInterval = []
+from bot.core.config_manager import Config
+Config.load()
+
+bot_id = Config.BOT_TOKEN.split(":", 1)[0]
+
 GLOBAL_EXTENSION_FILTER = [".aria2", "!qB"]
-QbTorrents = {}
-qb_listener_lock = Lock()
 user_data = {}
 leech_log = []
 tmdb_titles = {}
@@ -55,241 +46,156 @@ status_dict = {}
 status_reply_dict_lock = Lock()
 status_reply_dict = {}
 
-from bot.core.config_manager import Config
+queued_dl = {}
+queued_up = {}
+non_queued_dl = set()
+non_queued_up = set()
+queue_dict_lock = Lock()
+same_directory_lock = Lock()
 
-Config.load()
-
-BOT_TOKEN = Config.BOT_TOKEN
-if len(BOT_TOKEN) == 0:
-    LOGGER.error("BOT_TOKEN variable is missing! Exiting now")
-    exit(1)
-
-bot_id = BOT_TOKEN.split(":", 1)[0]
-
-DATABASE_URL = Config.DATABASE_URL or ""
-if len(DATABASE_URL) == 0:
-    Config.DATABASE_URL = ""
-    DATABASE_URL = ""
-
-if DATABASE_URL:
-
-    async def __load_from_db():
-        global aria2_options, qbit_options, bot_id, DATABASE_URL
-        conn = AsyncIOMotorClient(DATABASE_URL)
-        db = conn.rcmltb
-        current_config = dict(dotenv_values("config.env"))
-        old_config = await db.settings.deployConfig.find_one({"_id": bot_id})
-        if old_config is None:
-            await db.settings.deployConfig.replace_one(
-                {"_id": bot_id}, current_config, upsert=True
-            )
-        else:
-            del old_config["_id"]
-        if old_config and old_config != current_config:
-            await db.settings.deployConfig.replace_one(
-                {"_id": bot_id}, current_config, upsert=True
-            )
-        elif saved_config := await db.settings.config.find_one({"_id": bot_id}):
-            del saved_config["_id"]
-            Config.load_dict(saved_config)
-            for key, value in saved_config.items():
-                environ[key] = str(value)
-        if pf_dict := await db.settings.files.find_one({"_id": bot_id}):
-            del pf_dict["_id"]
-            for key, value in pf_dict.items():
-                if value:
-                    file_ = key.replace("__", ".")
-                    with open(file_, "wb+") as f:
-                        f.write(value)
-        if a2c_options := await db.settings.aria2c.find_one({"_id": bot_id}):
-            del a2c_options["_id"]
-            aria2_options = a2c_options
-        if qbit_opt := await db.settings.qbittorrent.find_one({"_id": bot_id}):
-            del qbit_opt["_id"]
-            qbit_options = qbit_opt
-        conn.close()
-
-    from asyncio import run as async_run
-    async_run(__load_from_db())
-    del async_run
-    BOT_TOKEN = Config.BOT_TOKEN
-    bot_id = BOT_TOKEN.split(":", 1)[0]
-    DATABASE_URL = Config.DATABASE_URL
-
-OWNER_ID = Config.OWNER_ID
-if OWNER_ID == 0:
-    LOGGER.error("OWNER_ID variable is missing! Exiting now")
-    exit(1)
-
-TELEGRAM_API_ID = Config.TELEGRAM_API_ID
-if TELEGRAM_API_ID == 0:
-    LOGGER.error("TELEGRAM_API_ID variable is missing! Exiting now")
-    exit(1)
-
-TELEGRAM_API_HASH = Config.TELEGRAM_API_HASH
-if len(TELEGRAM_API_HASH) == 0:
-    LOGGER.error("TELEGRAM_API_HASH variable is missing! Exiting now")
-    exit(1)
-
-ALLOWED_CHATS = Config.ALLOWED_CHATS
-if len(ALLOWED_CHATS) != 0:
-    aid = ALLOWED_CHATS.split()
-    for id_ in aid:
-        user_data[int(id_.strip())] = {"is_auth": True}
-
-SUDO_USERS = Config.SUDO_USERS
-if len(SUDO_USERS) != 0:
-    aid = SUDO_USERS.split()
-    for id_ in aid:
-        user_data[int(id_.strip())] = {"is_sudo": True}
-
-STATUS_LIMIT = Config.STATUS_LIMIT
-STATUS_UPDATE_INTERVAL = Config.STATUS_UPDATE_INTERVAL
-AUTO_DELETE_MESSAGE_DURATION = Config.AUTO_DELETE_MESSAGE_DURATION
-PARALLEL_TASKS = Config.PARALLEL_TASKS
-AS_DOCUMENT = Config.AS_DOCUMENT
-AUTO_MIRROR = Config.AUTO_MIRROR
-MULTI_REMOTE_UP = Config.MULTI_REMOTE_UP
-SEARCH_API_LINK = Config.SEARCH_API_LINK
-TMDB_API_KEY = Config.TMDB_API_KEY
-TMDB_LANGUAGE = Config.TMDB_LANGUAGE
-SEARCH_LIMIT = Config.SEARCH_LIMIT
-SEARCH_PLUGINS = Config.SEARCH_PLUGINS
-TORRENT_TIMEOUT = Config.TORRENT_TIMEOUT
-WEB_PINCODE = Config.WEB_PINCODE
-EQUAL_SPLITS = Config.EQUAL_SPLITS
-DEFAULT_OWNER_REMOTE = Config.DEFAULT_OWNER_REMOTE
-DEFAULT_GLOBAL_REMOTE = Config.DEFAULT_GLOBAL_REMOTE
-GD_INDEX_URL = Config.GD_INDEX_URL
-YT_DLP_OPTIONS = Config.YT_DLP_OPTIONS
-VIEW_LINK = Config.VIEW_LINK
-LOCAL_MIRROR = Config.LOCAL_MIRROR
-RC_INDEX_USER = Config.RC_INDEX_USER
-RC_INDEX_PASS = Config.RC_INDEX_PASS
-RC_INDEX_URL = Config.RC_INDEX_URL
-RC_INDEX_PORT = Config.RC_INDEX_PORT
-USE_SERVICE_ACCOUNTS = Config.USE_SERVICE_ACCOUNTS
-SERVICE_ACCOUNTS_REMOTE = Config.SERVICE_ACCOUNTS_REMOTE
-MULTI_RCLONE_CONFIG = Config.MULTI_RCLONE_CONFIG
-REMOTE_SELECTION = Config.REMOTE_SELECTION
-RCLONE_COPY_FLAGS = Config.RCLONE_COPY_FLAGS
-RCLONE_UPLOAD_FLAGS = Config.RCLONE_UPLOAD_FLAGS
-RCLONE_DOWNLOAD_FLAGS = Config.RCLONE_DOWNLOAD_FLAGS
-SERVER_SIDE = Config.SERVER_SIDE
-CMD_INDEX = Config.CMD_INDEX
-RSS_CHAT_ID = Config.RSS_CHAT_ID
-RSS_DELAY = Config.RSS_DELAY
-QB_BASE_URL = Config.QB_BASE_URL
-QB_SERVER_PORT = Config.QB_SERVER_PORT
-UPSTREAM_REPO = Config.UPSTREAM_REPO
-UPSTREAM_BRANCH = Config.UPSTREAM_BRANCH
-IS_TEAM_DRIVE = Config.IS_TEAM_DRIVE
-GDRIVE_FOLDER_ID = Config.GDRIVE_FOLDER_ID
-DOWNLOAD_DIR = Config.DOWNLOAD_DIR
-EXTENSION_FILTER = Config.EXTENSION_FILTER
-MEGA_EMAIL = Config.MEGA_EMAIL
-MEGA_PASSWORD = Config.MEGA_PASSWORD
-LEECH_LOG = Config.LEECH_LOG
-NO_TASKS_LOGS = Config.NO_TASKS_LOGS
-BOT_PM = Config.BOT_PM
-USER_SESSION_STRING = Config.USER_SESSION_STRING
-
-if len(EXTENSION_FILTER) > 0:
-    fx = EXTENSION_FILTER.split()
-    for x in fx:
-        x = x.lstrip(".")
-        GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
-
-if len(LEECH_LOG) != 0:
-    leech_log.clear()
-    aid = LEECH_LOG.split()
-    for id_ in aid:
-        leech_log.append(int(id_.strip()))
-
-IS_PREMIUM_USER = False
-app = ""
-if len(USER_SESSION_STRING) != 0:
-    LOGGER.info("Creating Pyrogram client from USER_SESSION_STRING")
-    app = tgClient(
-        "pyrogram_session",
-        api_id=TELEGRAM_API_ID,
-        api_hash=TELEGRAM_API_HASH,
-        session_string=USER_SESSION_STRING,
-        max_concurrent_transmissions=10,
-        parse_mode=enums.ParseMode.HTML,
-        max_message_cache_size=15000,
-        max_topic_cache_size=15000,
-        sleep_threshold=60,
-        link_preview_options=LinkPreviewOptions(is_disabled=True),
-    ).start()
-    IS_PREMIUM_USER = app.me.is_premium
-
-TG_MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
-LEECH_SPLIT_SIZE = Config.LEECH_SPLIT_SIZE
-if LEECH_SPLIT_SIZE == 0 or LEECH_SPLIT_SIZE > TG_MAX_SPLIT_SIZE:
-    LEECH_SPLIT_SIZE = TG_MAX_SPLIT_SIZE
-Config.LEECH_SPLIT_SIZE = LEECH_SPLIT_SIZE
+Interval = []
+QbInterval = []
+QbTorrents = {}
+qb_listener_lock = Lock()
 
 config_dict = Config.get_all()
 
-if QB_BASE_URL:
-    Popen(
-        f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{QB_SERVER_PORT} --worker-class gevent",
-        shell=True,
-    )
+TG_MAX_SPLIT_SIZE = 2097152000
+LEECH_SPLIT_SIZE = Config.LEECH_SPLIT_SIZE
+if LEECH_SPLIT_SIZE == 0:
+    LEECH_SPLIT_SIZE = TG_MAX_SPLIT_SIZE
 
-srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
+bot_loop = new_event_loop()
+set_event_loop(bot_loop)
 
-if not ospath.exists(".netrc"):
-    with open(".netrc", "w"):
-        pass
-srun(["chmod", "600", ".netrc"])
-srun(["cp", ".netrc", "/root/.netrc"])
-srun(["chmod", "+x", "aria.sh"])
-srun("./aria.sh", shell=True)
-if ospath.exists("accounts.zip"):
-    if ospath.exists("accounts"):
-        srun(["rm", "-rf", "accounts"])
-    srun(["7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"])
-    srun(["chmod", "-R", "777", "accounts"])
-    osremove("accounts.zip")
-if not ospath.exists("accounts"):
-    Config.USE_SERVICE_ACCOUNTS = False
-    config_dict["USE_SERVICE_ACCOUNTS"] = False
-
-
-aria2c_global = [
-    "bt-max-open-files",
-    "download-result",
-    "keep-unfinished-download-result",
-    "log",
-    "log-level",
-    "max-concurrent-downloads",
-    "max-download-result",
-    "max-overall-download-limit",
-    "save-session",
-    "max-overall-upload-limit",
-    "optimize-concurrent-downloads",
-    "save-cookies",
-    "server-stat-of",
-]
-
-LOGGER.info("Creating Pyrogram client")
-bot = tgClient(
-    "pyrogram",
-    api_id=TELEGRAM_API_ID,
-    api_hash=TELEGRAM_API_HASH,
-    bot_token=BOT_TOKEN,
-    workers=1000,
-    max_concurrent_transmissions=10,
-    parse_mode=enums.ParseMode.HTML,
-    max_message_cache_size=15000,
-    max_topic_cache_size=15000,
-    sleep_threshold=0,
-    link_preview_options=LinkPreviewOptions(is_disabled=True),
-)
-Conversation(bot)
-bot.start()
-bot_loop = bot.loop
-
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from tzlocal import get_localzone
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
+
+
+class _BotProxy:
+    """Proxy that delegates to TgClient.bot once it's initialized.
+    Buffers add_handler() calls made before bot is ready and replays them later."""
+
+    def __init__(self):
+        self._pending_handlers = []
+
+    def __getattr__(self, name):
+        from bot.core.telegram_manager import TgClient
+        if TgClient.bot is None:
+            raise RuntimeError("Bot client not initialized yet. Call TgClient.start_bot() first.")
+        return getattr(TgClient.bot, name)
+
+    def add_handler(self, handler, group=0):
+        from bot.core.telegram_manager import TgClient
+        if TgClient.bot is not None:
+            TgClient.bot.add_handler(handler, group)
+        else:
+            self._pending_handlers.append((handler, group))
+
+    def _flush_pending_handlers(self):
+        """Replay all buffered handler registrations to the real bot client."""
+        from bot.core.telegram_manager import TgClient
+        if TgClient.bot is None:
+            return
+        for handler, group in self._pending_handlers:
+            TgClient.bot.add_handler(handler, group)
+        count = len(self._pending_handlers)
+        self._pending_handlers.clear()
+        if count:
+            LOGGER.info(f"Flushed {count} deferred handler registrations")
+
+    def __bool__(self):
+        from bot.core.telegram_manager import TgClient
+        return TgClient.bot is not None
+
+
+class _AppProxy:
+    """Proxy that delegates to TgClient.user once it's initialized."""
+
+    def __getattr__(self, name):
+        from bot.core.telegram_manager import TgClient
+        if TgClient.user is None:
+            raise RuntimeError("User client not initialized yet.")
+        return getattr(TgClient.user, name)
+
+    def __bool__(self):
+        from bot.core.telegram_manager import TgClient
+        return TgClient.user is not None
+
+
+bot = _BotProxy()
+app = _AppProxy()
+
+
+# Backward compatibility: map removed module-level variables to Config attributes
+_CONFIG_ALIASES = {
+    "OWNER_ID": "OWNER_ID",
+    "DATABASE_URL": "DATABASE_URL",
+    "TELEGRAM_API_ID": "TELEGRAM_API_ID",
+    "TELEGRAM_API_HASH": "TELEGRAM_API_HASH",
+    "BOT_TOKEN": "BOT_TOKEN",
+    "DOWNLOAD_DIR": "DOWNLOAD_DIR",
+    "AUTO_MIRROR": "AUTO_MIRROR",
+    "PARALLEL_TASKS": "PARALLEL_TASKS",
+    "STATUS_LIMIT": "STATUS_LIMIT",
+    "STATUS_UPDATE_INTERVAL": "STATUS_UPDATE_INTERVAL",
+    "AUTO_DELETE_MESSAGE_DURATION": "AUTO_DELETE_MESSAGE_DURATION",
+    "AS_DOCUMENT": "AS_DOCUMENT",
+    "MULTI_REMOTE_UP": "MULTI_REMOTE_UP",
+    "SEARCH_API_LINK": "SEARCH_API_LINK",
+    "TMDB_API_KEY": "TMDB_API_KEY",
+    "TMDB_LANGUAGE": "TMDB_LANGUAGE",
+    "SEARCH_LIMIT": "SEARCH_LIMIT",
+    "SEARCH_PLUGINS": "SEARCH_PLUGINS",
+    "TORRENT_TIMEOUT": "TORRENT_TIMEOUT",
+    "WEB_PINCODE": "WEB_PINCODE",
+    "EQUAL_SPLITS": "EQUAL_SPLITS",
+    "DEFAULT_OWNER_REMOTE": "DEFAULT_OWNER_REMOTE",
+    "DEFAULT_GLOBAL_REMOTE": "DEFAULT_GLOBAL_REMOTE",
+    "GD_INDEX_URL": "GD_INDEX_URL",
+    "YT_DLP_OPTIONS": "YT_DLP_OPTIONS",
+    "VIEW_LINK": "VIEW_LINK",
+    "LOCAL_MIRROR": "LOCAL_MIRROR",
+    "RC_INDEX_USER": "RC_INDEX_USER",
+    "RC_INDEX_PASS": "RC_INDEX_PASS",
+    "RC_INDEX_URL": "RC_INDEX_URL",
+    "RC_INDEX_PORT": "RC_INDEX_PORT",
+    "USE_SERVICE_ACCOUNTS": "USE_SERVICE_ACCOUNTS",
+    "SERVICE_ACCOUNTS_REMOTE": "SERVICE_ACCOUNTS_REMOTE",
+    "MULTI_RCLONE_CONFIG": "MULTI_RCLONE_CONFIG",
+    "REMOTE_SELECTION": "REMOTE_SELECTION",
+    "RCLONE_COPY_FLAGS": "RCLONE_COPY_FLAGS",
+    "RCLONE_UPLOAD_FLAGS": "RCLONE_UPLOAD_FLAGS",
+    "RCLONE_DOWNLOAD_FLAGS": "RCLONE_DOWNLOAD_FLAGS",
+    "SERVER_SIDE": "SERVER_SIDE",
+    "CMD_INDEX": "CMD_INDEX",
+    "RSS_CHAT_ID": "RSS_CHAT_ID",
+    "RSS_DELAY": "RSS_DELAY",
+    "QB_BASE_URL": "QB_BASE_URL",
+    "QB_SERVER_PORT": "QB_SERVER_PORT",
+    "UPSTREAM_REPO": "UPSTREAM_REPO",
+    "UPSTREAM_BRANCH": "UPSTREAM_BRANCH",
+    "IS_TEAM_DRIVE": "IS_TEAM_DRIVE",
+    "GDRIVE_FOLDER_ID": "GDRIVE_FOLDER_ID",
+    "EXTENSION_FILTER": "EXTENSION_FILTER",
+    "MEGA_EMAIL": "MEGA_EMAIL",
+    "MEGA_PASSWORD": "MEGA_PASSWORD",
+    "LEECH_LOG": "LEECH_LOG",
+    "NO_TASKS_LOGS": "NO_TASKS_LOGS",
+    "BOT_PM": "BOT_PM",
+    "USER_SESSION_STRING": "USER_SESSION_STRING",
+    "LEECH_SPLIT_SIZE": "LEECH_SPLIT_SIZE",
+}
+
+
+def __getattr__(name):
+    if name in _CONFIG_ALIASES:
+        return getattr(Config, _CONFIG_ALIASES[name])
+    if name == "IS_PREMIUM_USER":
+        from bot.core.telegram_manager import TgClient
+        return TgClient.IS_PREMIUM_USER
+    if name == "aria2c_global":
+        from bot.core.torrent_manager import aria2c_global
+        return aria2c_global
+    raise AttributeError(f"module 'bot' has no attribute '{name}'")

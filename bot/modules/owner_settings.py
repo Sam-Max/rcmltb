@@ -389,7 +389,7 @@ async def start_env_listener(client, query, user_id, key):
                                 if Interval:
                                     Interval[0].cancel()
                                     Interval.clear()
-                            except:
+                            except Exception:
                                 pass
                             finally:
                                 Interval.append(setInterval(value, update_all_messages))

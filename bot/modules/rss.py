@@ -687,7 +687,7 @@ async def rssMonitor():
                 while True:
                     try:
                         await sleep(10)
-                    except:
+                    except Exception:
                         raise RssShutdownException("Rss Monitor Stopped!")
                     try:
                         item_title = rss_d.entries[feed_count]["title"]

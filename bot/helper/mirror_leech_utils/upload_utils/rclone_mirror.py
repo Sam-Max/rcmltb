@@ -150,7 +150,7 @@ class RcloneMirror:
                     try:
                         del_file = ospath.join(dirpath, file)
                         osremove(del_file)
-                    except:
+                    except Exception:
                         return
 
     async def cancel_task(self):
@@ -158,6 +158,6 @@ class RcloneMirror:
         if self.process is not None:
             try:
                 self.process.kill()
-            except:
+            except Exception:
                 pass
         await self.__listener.onUploadError("Upload cancelled!")

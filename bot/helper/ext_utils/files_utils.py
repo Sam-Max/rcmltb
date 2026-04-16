@@ -1,15 +1,13 @@
 from asyncio import create_subprocess_exec
+from asyncio.subprocess import PIPE
 from shutil import rmtree
-from sys import exit
-from aiohttp import ClientSession
-from bot.helper.ext_utils.bot_utils import (
-    cmd_exec,
-    run_async_to_sync,
-    run_sync_to_async,
+from re import (
+    I,
+    IGNORECASE,
+    compile,
+    search as re_search,
+    split as re_split,
 )
-from bot.helper.telegram_helper.button_build import ButtonMaker
-from re import I, split as re_split
-from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from aioshutil import rmtree as aiormtree
 from aiofiles.os import (
     remove as aioremove,
@@ -17,22 +15,19 @@ from aiofiles.os import (
     mkdir as aiomkdir,
     makedirs,
 )
-from re import search as re_search
 from bot import (
-    GLOBAL_EXTENSION_FILTER,
     config_dict,
-    DOWNLOAD_DIR,
     LOGGER,
     user_data,
     TG_MAX_SPLIT_SIZE,
-    status_dict,
-    status_dict_lock,
 )
+from bot.helper.ext_utils.bot_utils import (
+    cmd_exec,
+    run_sync_to_async,
+)
+from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.core.torrent_manager import TorrentManager
-from json import loads as jsnloads
 from magic import Magic
-from subprocess import run as srun, check_output
-from asyncio.subprocess import PIPE
 from os import path as ospath, walk as oswalk
 
 
@@ -78,6 +73,21 @@ ARCH_EXT = [
 
 ZIP_EXT = (".zip", ".7z", ".gzip2", ".iso", ".wim", ".rar")
 
+FIRST_SPLIT_REGEX = r"(\.|_)part0*1\.rar$|(\.|_)7z\.0*1$|(\.|_)zip\.0*1$|^(?!.*(\.|_)part\d+\.rar$).*\.rar$"
+SPLIT_REGEX = r"\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$"
+
+
+def is_first_archive_split(file):
+    return bool(re_search(FIRST_SPLIT_REGEX, file))
+
+
+def is_archive(file):
+    return file.endswith(tuple(ARCH_EXT))
+
+
+def is_archive_split(file):
+    return bool(re_search(SPLIT_REGEX, file))
+
 
 async def clean_download(path):
     if await aiopath.exists(path):
@@ -104,28 +114,29 @@ async def clean_target(path: str):
 
 
 async def start_cleanup():
-    try:
-        await TorrentManager.qbittorrent.torrents.delete(hashes="all", delete_files=True)
-    except Exception:
-        pass
+    await TorrentManager.qbittorrent.torrents.delete(hashes="all", delete_files=True)
     if not config_dict["LOCAL_MIRROR"]:
         try:
-            await aiormtree(DOWNLOAD_DIR)
+            await aiormtree(config_dict["DOWNLOAD_DIR"])
         except Exception as e:
             LOGGER.error(str(e))
-    await makedirs(DOWNLOAD_DIR, exist_ok=True)
+    await makedirs(config_dict["DOWNLOAD_DIR"], exist_ok=True)
 
 
 async def clean_all():
     await TorrentManager.remove_all()
     if not config_dict["LOCAL_MIRROR"]:
         try:
-            rmtree(DOWNLOAD_DIR)
+            rmtree(config_dict["DOWNLOAD_DIR"])
         except Exception as e:
             LOGGER.error(str(e))
 
 
 def exit_clean_up(signal, frame):
+    from bot.helper.ext_utils.bot_utils import run_async_to_sync
+    from subprocess import run as srun
+    from sys import exit
+
     try:
         LOGGER.info("Please wait, while we clean up and stop the running downloads")
         run_async_to_sync(clean_all())
@@ -134,18 +145,6 @@ def exit_clean_up(signal, frame):
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
         exit(1)
-
-
-def get_readable_size(size):
-    """Get size in readable format"""
-
-    units = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB"]
-    size = float(size)
-    i = 0
-    while size >= 1024.0 and i < len(units):
-        i += 1
-        size /= 1024.0
-    return "%.2f %s" % (size, units[i])
 
 
 def get_base_name(orig_path: str):
@@ -165,6 +164,56 @@ async def get_path_size(path: str):
             abs_path = ospath.join(root, f)
             total_size += await aiopath.getsize(abs_path)
     return total_size
+
+
+def get_mime_type(file_path):
+    mime = Magic(mime=True)
+    mime_type = mime.from_file(file_path)
+    mime_type = mime_type or "text/plain"
+    return mime_type
+
+
+async def get_document_type(path):
+    is_video, is_audio, is_image = False, False, False
+    if path.endswith(tuple(ARCH_EXT)) or re_search(
+        r".+(\.|_)(rar|7z|zip|bin)(\.0*\d+)?$", path
+    ):
+        return is_video, is_audio, is_image
+    mime_type = await run_sync_to_async(get_mime_type, path)
+    if mime_type.startswith("audio"):
+        return False, True, False
+    if mime_type.startswith("image"):
+        return False, False, True
+    if not mime_type.startswith("video") and not mime_type.endswith("octet-stream"):
+        return is_video, is_audio, is_image
+    try:
+        result = await cmd_exec(
+            [
+                "ffprobe",
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-print_format",
+                "json",
+                "-show_streams",
+                path,
+            ]
+        )
+        if res := result[1]:
+            LOGGER.warning(f"Get Document Type: {res}")
+    except Exception as e:
+        LOGGER.error(f"Get Document Type: {e}. Mostly File not found!")
+        return is_video, is_audio, is_image
+    fields = eval(result[0]).get("streams")
+    if fields is None:
+        LOGGER.error(f"get_document_type: {result}")
+        return is_video, is_audio, is_image
+    for stream in fields:
+        if stream.get("codec_type") == "video":
+            is_video = True
+        elif stream.get("codec_type") == "audio":
+            is_audio = True
+    return is_video, is_audio, is_image
 
 
 async def split_file(
@@ -295,68 +344,6 @@ async def split_file(
     return True
 
 
-async def get_document_type(path):
-    is_video, is_audio, is_image = False, False, False
-    if path.endswith(tuple(ARCH_EXT)) or re_search(
-        r".+(\.|_)(rar|7z|zip|bin)(\.0*\d+)?$", path
-    ):
-        return is_video, is_audio, is_image
-    mime_type = await run_sync_to_async(get_mime_type, path)
-    if mime_type.startswith("audio"):
-        return False, True, False
-    if mime_type.startswith("image"):
-        return False, False, True
-    if not mime_type.startswith("video") and not mime_type.endswith("octet-stream"):
-        return is_video, is_audio, is_image
-    try:
-        result = await cmd_exec(
-            [
-                "ffprobe",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-print_format",
-                "json",
-                "-show_streams",
-                path,
-            ]
-        )
-        if res := result[1]:
-            LOGGER.warning(f"Get Document Type: {res}")
-    except Exception as e:
-        LOGGER.error(f"Get Document Type: {e}. Mostly File not found!")
-        return is_video, is_audio, is_image
-    fields = eval(result[0]).get("streams")
-    if fields is None:
-        LOGGER.error(f"get_document_type: {result}")
-        return is_video, is_audio, is_image
-    for stream in fields:
-        if stream.get("codec_type") == "video":
-            is_video = True
-        elif stream.get("codec_type") == "audio":
-            is_audio = True
-    return is_video, is_audio, is_image
-
-
-async def count_files_and_folders(path):
-    total_files = 0
-    total_folders = 0
-    for _, dirs, files in await run_sync_to_async(oswalk, path):
-        total_files += len(files)
-        for f in files:
-            if f.endswith(tuple(GLOBAL_EXTENSION_FILTER)):
-                total_files -= 1
-        total_folders += len(dirs)
-    return total_folders, total_files
-
-
-def get_mime_type(file_path):
-    mime = Magic(mime=True)
-    mime_type = mime.from_file(file_path)
-    mime_type = mime_type or "text/plain"
-    return mime_type
-
-
 async def get_media_info(path):
     try:
         result = await cmd_exec(
@@ -387,77 +374,19 @@ async def get_media_info(path):
     return duration, artist, title
 
 
-def get_video_resolution(path):
-    try:
-        result = check_output(
-            [
-                "ffprobe",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-select_streams",
-                "v:0",
-                "-show_entries",
-                "stream=width,height",
-                "-of",
-                "json",
-                path,
-            ]
-        ).decode("utf-8")
-        fields = jsnloads(result)["streams"][0]
-
-        width = int(fields["width"])
-        height = int(fields["height"])
-        return width, height
-    except Exception as e:
-        LOGGER.error(f"get_video_resolution: {e}")
-        return 480, 320
-
-
-def bt_selection_buttons(id_):
-    gid = id_[:12] if len(id_) > 20 else id_
-    pincode = "".join([n for n in id_ if n.isdigit()][:4])
-    buttons = ButtonMaker()
-    QB_BASE_URL = config_dict["QB_BASE_URL"]
-    QB_SERVER_PORT = config_dict["QB_SERVER_PORT"]
-    if config_dict["WEB_PINCODE"]:
-        buttons.url_buildbutton("Select Files", f"{QB_BASE_URL}:{QB_SERVER_PORT}/app/files/{id_}")
-        buttons.cb_buildbutton("Pincode", f"btsel pin {gid} {pincode}")
-    else:
-        buttons.url_buildbutton(
-            "Select Files", f"{QB_BASE_URL}:{QB_SERVER_PORT}/app/files/{id_}?pin_code={pincode}"
-        )
-    buttons.cb_buildbutton("Cancel", f"btsel rm {gid} {id_}")
-    buttons.cb_buildbutton("Done Selecting", f"btsel done {gid} {id_}")
-    return buttons.build_menu(2)
-
-
-async def getTaskByGid(gid):
-    async with status_dict_lock:
-        for dl in status_dict.values():
-            if dl.gid() == gid:
-                return dl
-    return None
-
-
-async def getAllTasks(status: str):
-    async with status_dict_lock:
-        if status == "all":
-            return list(status_dict.values())
-        return [dl for dl in status_dict.values() if dl.status() == status]
-
-
-async def get_image_from_url(url, filename):
-    async with ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status == 200:
-                content = await response.read()
-                file_path = ospath.join("images", f"{filename}.jpg")
-                directory = ospath.dirname(file_path)
-                if not await aiopath.exists(directory):
-                    await makedirs(directory)
-                with open(file_path, "wb") as f:
-                    f.write(content)
-                return file_path
-            else:
-                return None
+async def clean_unwanted(path):
+    LOGGER.info(f"Cleaning unwanted files/folders: {path}")
+    for dirpath, _, files in await run_sync_to_async(oswalk, path, topdown=False):
+        for filee in files:
+            if (
+                filee.endswith(".!qB")
+                or filee.endswith(".parts")
+                and filee.startswith(".")
+            ):
+                aioremove(ospath.join(dirpath, filee))
+        if dirpath.endswith((".unwanted")):
+            aiormtree(dirpath)
+    for dirpath, _, files in await run_sync_to_async(oswalk, path, topdown=False):
+        from os import listdir, rmdir
+        if not listdir(dirpath):
+            rmdir(dirpath)

@@ -30,7 +30,7 @@ async def select_format(_, query):
 
     try:
         task_info = ytdl_dict[user_id]
-    except:
+    except Exception:
         await editMessage("This is an old task", message)
         return
 

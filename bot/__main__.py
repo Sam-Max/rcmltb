@@ -1,204 +1,110 @@
-from asyncio import create_subprocess_exec
+from asyncio import create_subprocess_exec, gather
 from signal import signal, SIGINT
 from aiofiles import open as aiopen
 from time import time
+from os import path as ospath, remove as osremove, execl as osexecl
+from sys import executable
+
 from bot import (
     LOGGER,
-    Interval,
-    QbInterval,
-    bot,
     bot_loop,
     scheduler,
-    aria2_options,
-    qbit_options,
+    config_dict,
 )
-from os import path as ospath, remove as osremove, execl as osexecl
+from bot.core.telegram_manager import TgClient
+from bot.core.startup import (
+    load_settings,
+    load_configurations,
+    save_settings,
+    update_variables,
+    update_aria2_options,
+    update_qbit_options,
+)
+from bot.core.torrent_manager import TorrentManager
 from bot.helper.ext_utils.help_messages import (
     create_batch_help_buttons,
     create_leech_help_buttons,
     create_mirror_help_buttons,
     create_ytdl_help_buttons,
 )
-from pyrogram.filters import command
-from pyrogram.handlers import MessageHandler
-from sys import executable
-from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.mirror_leech_utils.download_utils.aria2_download import (
-    start_aria2_listener,
-)
-from bot.core.torrent_manager import TorrentManager, aria2c_global
-from .helper.telegram_helper.bot_commands import BotCommands
-from .helper.ext_utils.bot_utils import cmd_exec
-from json import loads
-from .helper.telegram_helper.filters import CustomFilters
-from .helper.telegram_helper.message_utils import editMessage, sendMarkup, sendMessage
-from .helper.ext_utils.misc_utils import clean_all, exit_clean_up, start_cleanup
+from bot.helper.ext_utils.misc_utils import clean_all, exit_clean_up, start_cleanup
+from bot.helper.telegram_helper.message_utils import sendMessage
 from pyrogram.types import BotCommand
-from .modules import (
-    batch,
-    cancel,
-    botfiles,
-    copy,
-    debrid,
-    leech,
-    mirror_leech,
-    mirror_select,
-    myfilesset,
-    owner_settings,
-    rcfm,
-    stats,
-    status,
-    clone,
-    storage,
-    cleanup,
-    torr_search,
-    torr_select,
-    user_settings,
-    ytdlp,
-    shell,
-    exec,
-    rss,
-    serve,
-    sync,
-    gd_count,
-    queue,
-    tmdb,
-)
-
-
-async def start(_, message):
-    buttons = ButtonMaker()
-    buttons.url_buildbutton("Repo", "https://github.com/Sam-Max/rcmltb")
-    buttons.url_buildbutton("Owner", "https://github.com/Sam-Max")
-    reply_markup = buttons.build_menu(2)
-    if CustomFilters.user_filter or CustomFilters.chat_filter:
-        msg = """
-**Hello, ¡Welcome to Rclone-Telegram-Bot!\n
-I can help you copy files from one cloud to another.
-I can also can mirror-leech files and links to Telegram or cloud**\n\n
-        """
-        await sendMarkup(msg, message, reply_markup)
-    else:
-        await sendMarkup(
-            "Not Authorized user, deploy your own version", message, reply_markup
-        )
-
-
-async def restart(_, message):
-    restart_msg = await sendMessage("Restarting...", message)
-    if scheduler.running:
-        scheduler.shutdown(wait=False)
-    if Interval:
-        for intvl in list(Interval.values()):
-            intvl.cancel()
-    if QbInterval:
-        QbInterval[0].cancel()
-    await clean_all()
-    await (
-        await create_subprocess_exec(
-            "pkill", "-9", "-f", "gunicorn|aria2c|rclone|qbittorrent-nox|ffmpeg"
-        )
-    ).wait()
-    await (await create_subprocess_exec("python3", "update.py")).wait()
-    async with aiopen(".restartmsg", "w") as f:
-        await f.write(f"{restart_msg.chat.id}\n{restart_msg.id}\n")
-    osexecl(executable, executable, "-m", "bot")
-
-
-async def ping(_, message):
-    start_time = int(round(time() * 1000))
-    reply = await sendMessage("Starting Ping", message)
-    end_time = int(round(time() * 1000))
-    await editMessage(f"{end_time - start_time} ms", reply)
-
-
-async def get_ip(_, message):
-    stdout, stderr, code = await cmd_exec("curl https://api.ipify.org/", shell=True)
-    if code == 0:
-        await message.reply_text(f"Your IP is {stdout.strip()}")
-    else:
-        await message.reply_text(f"Error: {stderr}")
-
-
-async def get_log(client, message):
-    await client.send_document(chat_id=message.chat.id, document="botlog.txt")
+from bot.helper.telegram_helper.bot_commands import BotCommands
 
 
 async def main():
-    global aria2_options, qbit_options
+    # 1. Load settings from DB
+    await load_settings()
+    LOGGER.info("Settings loaded from database")
+
+    # 2. Start Telegram clients (concurrently)
+    await gather(TgClient.start_bot(), TgClient.start_user())
+    LOGGER.info("Telegram clients started")
+
+    # 3. Initialize TorrentManager (must happen before start_cleanup)
     await TorrentManager.initiate()
     LOGGER.info("TorrentManager initiated")
 
+    # 4. Start cleanup and load configurations
     await start_cleanup()
+    LOGGER.info("Cleanup done")
 
-    if not aria2_options:
-        aria2_options = await TorrentManager.get_aria2_options()
-    else:
-        a2c_glo = {}
-        for op in aria2c_global:
-            if op in aria2_options:
-                a2c_glo[op] = aria2_options[op]
-        await TorrentManager.set_aria2_options(a2c_glo)
+    try:
+        await load_configurations()
+        LOGGER.info("Configurations loaded")
+    except Exception as e:
+        LOGGER.warning(f"load_configurations error (non-fatal): {e}")
 
-    if not qbit_options:
-        qbit_options = await TorrentManager.get_qbit_preferences()
-        if "listen_port" in qbit_options:
-            del qbit_options["listen_port"]
-        for k in list(qbit_options.keys()):
-            if k.startswith("rss"):
-                del qbit_options[k]
-    else:
-        qb_opt = {**qbit_options}
-        for k, v in list(qb_opt.items()):
-            if v in ["", "*"]:
-                del qb_opt[k]
-        await TorrentManager.set_qbit_preferences(qb_opt)
+    # 5. Update derived variables
+    await update_variables()
+    LOGGER.info("Variables updated")
 
+    # 6. Update aria2 and qbit options
+    await gather(update_aria2_options(), update_qbit_options())
+    LOGGER.info("Aria2/qBittorrent options updated")
+
+    # 7. Initialize aria2
     await TorrentManager.aria2_init()
 
-    await create_mirror_help_buttons()
-    await create_ytdl_help_buttons()
-    await create_leech_help_buttons()
-    await create_batch_help_buttons()
+    # 8. Create help buttons and init telegraph
+    from bot.helper.ext_utils.telegraph_helper import init_telegraph
+    await gather(
+        create_mirror_help_buttons(),
+        create_ytdl_help_buttons(),
+        create_leech_help_buttons(),
+        create_batch_help_buttons(),
+        init_telegraph(),
+    )
+    LOGGER.info("Help buttons and telegraph created")
 
-    await torr_search.initiate_search_tools()
-    await debrid.load_debrid_token()
-    start_aria2_listener()
+    # 9. Initialize search tools and debrid
+    from bot.modules import torr_search, debrid
+    await gather(
+        torr_search.initiate_search_tools(),
+        debrid.load_debrid_token(),
+    )
 
+    # 10. Start aria2 listener
+    from bot.helper.listeners.aria2_listener import add_aria2_callbacks
+    add_aria2_callbacks()
+
+    # 11. Register handlers
+    from bot.core.handlers import add_handlers
+    add_handlers()
+
+    # 12. Handle restart message
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
         try:
-            await bot.edit_message_text(chat_id, msg_id, "Restarted successfully!")
-        except:
+            await TgClient.bot.edit_message_text(chat_id, msg_id, "Restarted successfully!")
+        except Exception:
             pass
         osremove(".restartmsg")
 
-    bot.add_handler(MessageHandler(start, filters=command(BotCommands.StartCommand)))
-    bot.add_handler(
-        MessageHandler(
-            restart,
-            filters=command(BotCommands.RestartCommand)
-            & (CustomFilters.owner_filter | CustomFilters.sudo_filter),
-        )
-    )
-    bot.add_handler(
-        MessageHandler(
-            get_log,
-            filters=command(BotCommands.LogsCommand)
-            & (CustomFilters.owner_filter | CustomFilters.sudo_filter),
-        )
-    )
-    bot.add_handler(
-        MessageHandler(
-            ping,
-            filters=command(BotCommands.PingCommand)
-            & (CustomFilters.user_filter | CustomFilters.chat_filter),
-        )
-    )
-    bot.add_handler(MessageHandler(get_ip, filters=command(BotCommands.IpCommand)))
-
-    await bot.set_bot_commands(
+    # 13. Set bot commands
+    await TgClient.bot.set_bot_commands(
         [
             BotCommand(BotCommands.StartCommand, "Start the bot"),
             BotCommand(BotCommands.MirrorCommand[0], "Mirror to cloud"),
@@ -219,6 +125,10 @@ async def main():
             BotCommand(BotCommands.RestartCommand, "Restart the bot"),
         ]
     )
+
+    # 14. Save settings to DB
+    await save_settings()
+
     LOGGER.info("Bot Started!")
     signal(SIGINT, exit_clean_up)
 

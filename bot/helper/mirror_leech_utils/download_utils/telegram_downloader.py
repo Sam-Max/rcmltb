@@ -54,7 +54,7 @@ class TelegramDownloader:
         self.downloaded_bytes = current
         try:
             self.progress = current / self.size * 100
-        except:
+        except Exception:
             pass
     
     async def download(self):

@@ -94,7 +94,7 @@ class DbManager:
         await self.__db.settings.deployConfig.replace_one(
             {"_id": bot_id}, current_config, upsert=True
         )
-        self.__conn.close
+        self.__conn.close()
 
     async def update_config(self, dict_):
         if self.__err:
@@ -102,7 +102,7 @@ class DbManager:
         await self.__db.settings.config.update_one(
             {"_id": bot_id}, {"$set": dict_}, upsert=True
         )
-        self.__conn.close
+        self.__conn.close()
 
     async def update_aria2(self, key, value):
         if self.__err:
@@ -110,7 +110,7 @@ class DbManager:
         await self.__db.settings.aria2c.update_one(
             {"_id": bot_id}, {"$set": {key: value}}, upsert=True
         )
-        self.__conn.close
+        self.__conn.close()
 
     async def update_qbittorrent(self, key, value):
         if self.__err:
@@ -118,7 +118,7 @@ class DbManager:
         await self.__db.settings.qbittorrent.update_one(
             {"_id": bot_id}, {"$set": {key: value}}, upsert=True
         )
-        self.__conn.close
+        self.__conn.close()
 
     async def update_private_file(self, path):
         if self.__err:
@@ -134,7 +134,7 @@ class DbManager:
         )
         if path == "config.env":
             await self.update_deploy_config()
-        self.__conn.close
+        self.__conn.close()
 
     async def update_user_doc(self, user_id, key, path=""):
         if self.__err:
@@ -147,7 +147,7 @@ class DbManager:
         await self.__db.users.update_one(
             {"_id": user_id}, {"$set": {key: doc_bin}}, upsert=True
         )
-        self.__conn.close
+        self.__conn.close()
 
     async def update_user_data(self, user_id):
         if self.__err:
@@ -156,7 +156,7 @@ class DbManager:
         if data.get("thumb"):
             del data["thumb"]
         await self.__db.users.update_one({"_id": user_id}, {"$set": data}, upsert=True)
-        self.__conn.close
+        self.__conn.close()
 
     async def update_thumb(self, user_id, path=None):
         if self.__err:
@@ -169,7 +169,7 @@ class DbManager:
         await self.__db.users.update_one(
             {"_id": user_id}, {"$set": {"thumb": image_bin}}, upsert=True
         )
-        self.__conn.close
+        self.__conn.close()
 
     async def rss_update(self, user_id):
         if self.__err:
@@ -177,7 +177,7 @@ class DbManager:
         await self.__db.rss[bot_id].replace_one(
             {"_id": user_id}, rss_dict[user_id], upsert=True
         )
-        self.__conn.close
+        self.__conn.close()
 
     async def rss_update_all(self):
         if self.__err:
@@ -186,20 +186,16 @@ class DbManager:
             await self.__db.rss[bot_id].replace_one(
                 {"_id": user_id}, rss_dict[user_id], upsert=True
             )
-        self.__conn.close
+        self.__conn.close()
 
     async def rss_delete(self, user_id):
         if self.__err:
             return
         await self.__db.rss[bot_id].delete_one({"_id": user_id})
-        self.__conn.close
+        self.__conn.close()
 
     async def trunc_table(self, name):
         if self.__err:
             return
         await self.__db[name][bot_id].drop()
-        self.__conn.close
-
-
-if DATABASE_URL:
-    bot_loop.run_until_complete(DbManager().db_load())
+        self.__conn.close()

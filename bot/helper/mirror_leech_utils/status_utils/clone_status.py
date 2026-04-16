@@ -30,7 +30,7 @@ class CloneStatus:
     def progress_raw(self):
         try:
             return self.__obj.transferred_size / self.__size * 100
-        except:
+        except Exception:
             return 0
 
     def progress(self):
@@ -49,7 +49,7 @@ class CloneStatus:
         try:
             seconds = (self.__size - self.__obj.transferred_size) / self.speed_raw()
             return f"{get_readable_time(seconds)}"
-        except:
+        except Exception:
             return "-"
 
     def task(self):

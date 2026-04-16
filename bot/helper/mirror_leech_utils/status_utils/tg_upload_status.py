@@ -40,7 +40,7 @@ class TgUploadStatus:
         try:
             seconds = (self.__size - self.__obj.processed_bytes) / self.__obj.speed
             return get_readable_time(seconds)
-        except:
+        except Exception:
             return "-"
 
     def gid(self) -> str:

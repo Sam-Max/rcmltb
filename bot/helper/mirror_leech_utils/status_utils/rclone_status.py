@@ -24,7 +24,7 @@ class RcloneStatus:
                 self.__transfered_bytes = self.info[0]
                 try:
                     self.__percent = int(self.info[1].strip("% "))
-                except:
+                except Exception:
                     pass
                 self.__speed = self.info[2]
                 self.__eta = self.info[3].replace("ETA", "")

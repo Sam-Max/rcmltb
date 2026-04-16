@@ -78,6 +78,6 @@ class RcloneLeech:
         if self.process is not None:
             try:
                 self.process.kill()
-            except:
+            except Exception:
                 pass
         await self.__listener.onDownloadError("Download cancelled!")
