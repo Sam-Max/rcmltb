@@ -1,13 +1,32 @@
 
-An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with rclone support added, and other features and changes from base code.
+<div align="center">
 
+# 🤖 rcmltb
 
-**NOTE**: Base repository added recently its own rclone implementation. 
+### **Rclone Mirror-Leech Telegram Bot**
 
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![Pyrogram](https://img.shields.io/badge/Pyrogram-Async-blue.svg)](https://docs.pyrogram.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 
-## Features:
+A powerful **asynchronous** Telegram bot for transferring files between cloud storage services and Telegram.
 
-### Rclone
+**Mirror** → Cloud | **Leech** → Telegram | **Clone** → Cloud to Cloud
+
+[Features](#-features) • [Commands](#-bot-commands) • [Deployment](#-deployment) • [Configuration](#%EF%B8%8F-configuration)
+
+</div>
+
+---
+
+> 💡 **Fork Notice**: Originally based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with enhanced **Rclone** support and additional features. The base repository has since added its own rclone implementation.
+
+---
+
+## 🌟 Features
+
+### ☁️ Rclone
 - Copy file/folder from cloud to cloud
 - Leech file/folder from cloud to Telegram
 - Mirror Link/Torrent/Magnets/Mega/Telegram-Files to cloud
@@ -19,430 +38,507 @@ An Rclone Mirror-Leech Telegram Bot to transfer to and from many clouds. Based o
 - Sync between clouds (not folders)
 - Search files on cloud
 - Clean cloud trash
-- View cloud storage info 
+- View cloud storage info
 
-### Others
+### 🔧 Core Features
+| Feature | Description |
+|---------|-------------|
+| **Queue System** | Advanced queuing with `QUEUE_ALL`, `QUEUE_DOWNLOAD`, `QUEUE_UPLOAD` limits |
+| **RSS Feed** | Monitor feeds with size detection, retry logic, and forum topic support |
+| **Private Channels** | Mirror/leech from private Telegram channels (`/pmirror`, `/pleech`) |
+| **Upload Templates** | Dynamic paths with variables like `{username}`, `{date}`, `{category}` |
+| **MediaInfo** | Detailed media file analysis with `/mediainfo` |
+| **Screenshots** | User-configurable screenshot generation |
+| **Name Substitution** | Pattern-based filename renaming (`old::new`) |
+| **Force Start** | Bypass queue for urgent tasks |
+| **JDownloader** | Integration with JDownloader |
+| **Status Filters** | Per-chat pagination with DL/UL/Seed/Clone/Queue filters |
+
+### 📦 Additional Features
 - Send rclone config file from bot
 - Renaming menu for Telegram files
 - Index support (rclone index for all remotes)
-- Search tmdb titles
+- Search TMDB titles
 - Mirror and Leech files in batch from Telegram private/restricted channels
-- Mirror and Leech links in batch from .txt file
+- Mirror and Leech links in batch from `.txt` file
 - Extract and zip link/file from Telegram to cloud
 - Extract and zip folder/file from cloud to Telegram
 - Mirror to local host (no cloud upload)
-- Queue system for all Tasks.
-- Debrid Manager (only real debrid support)
-- Refactor of the whole code to use only pyrogram with asyncio
-- Docker based image based on ubuntu
-- Compatible with linux `amd64, arm64/v8, arm/v7`
+- Debrid Manager (Real-Debrid support)
+- Refactored to use Pyrogram with asyncio
+- Docker-based image (Ubuntu)
+- Compatible with Linux `amd64`, `arm64/v8`, `arm/v7`
 
-## Commands for bot(set through @BotFather)
+---
 
-```
-mirror - or /m Mirror to selected cloud 
-mirror_batch - or /mb Mirror Telegram files/links in batch to cloud
-mirror_select - or /ms Select a fixed cloud/folder for mirror 
-leech - or /l Leech from cloud/link to Telegram
-leech_batch - or /lb Leech Telegram files/links in batch to Telegram 
-ytdl - or /y Mirror ytdlp supported link
-ytdl_leech - or /yl Leech yt-dlp supported link
-files - or /bf Bot configuration files
-debrid - Debrid Manager
-rcfm - Rclone File Manager
-copy - Copy from cloud to cloud
-clone - Clone gdrive link file/folder 
-count - count file/folder fom gdrive link
-user_setting - User settings
-own_setting - Owner settings
-rss - Rss feed
-tmdb - Search titles
-cleanup - Clean cloud trash
-cancel_all - Cancel all tasks
-storage - Cloud details
-serve - Serve cloud as web index 
-sync - Sync two clouds
-torrsch - Search for torrents
-status - Status message of tasks
-stats - Bot stats
-shell - Run cmds in shell
-log - Bot log
-ip - show ip
-ping - Ping bot
-restart - Restart bot
-```
+## 🤖 Bot Commands
 
-## How to deploy?
+Set these commands through [@BotFather](https://t.me/BotFather).
 
-1. **Installing requirements**
+### 📥 Mirror Commands
+| Command | Description |
+|---------|-------------|
+| `mirror` or `/m` | Mirror to selected cloud |
+| `mirror_batch` or `/mb` | Mirror Telegram files/links in batch |
+| `mirror_select` or `/ms` | Select a fixed cloud/folder for mirror |
+| `pmirror` | Mirror from private Telegram channels |
+| `ytdl` or `/y` | Mirror yt-dlp supported link |
+| `ytdl_leech` or `/yl` | Leech yt-dlp supported link |
 
-- Clone repo:
+### 📤 Leech Commands
+| Command | Description |
+|---------|-------------|
+| `leech` or `/l` | Leech from cloud/link to Telegram |
+| `leech_batch` or `/lb` | Leech Telegram files/links in batch |
+| `pleech` | Leech from private Telegram channels |
 
-```
+### ☁️ Cloud Management
+| Command | Description |
+|---------|-------------|
+| `copy` | Copy from cloud to cloud |
+| `clone` | Clone Google Drive link file/folder |
+| `count` | Count file/folder from Google Drive link |
+| `rcfm` | Rclone File Manager |
+| `sync` | Sync two clouds |
+| `cleanup` | Clean cloud trash |
+| `storage` | Cloud storage details |
+| `serve` | Serve cloud as web index |
+
+### ⚙️ System & Tools
+| Command | Description |
+|---------|-------------|
+| `files` or `/bf` | Bot configuration files |
+| `debrid` | Debrid Manager |
+| `rss` | RSS feed monitor |
+| `mediainfo` | Get detailed media file information |
+| `forcestart` | Force start a queued task |
+| `user_setting` | User settings |
+| `own_setting` | Owner settings |
+| `tmdb` | Search titles |
+| `torrsch` | Search for torrents |
+| `cancel_all` | Cancel all tasks |
+
+### 📊 Status & Info
+| Command | Description |
+|---------|-------------|
+| `status` | Status message of tasks |
+| `stats` | Bot statistics |
+| `log` | Bot log |
+| `ip` | Show IP address |
+| `ping` | Ping bot |
+
+### 🔧 Admin Commands
+| Command | Description |
+|---------|-------------|
+| `shell` | Run commands in shell |
+| `restart` | Restart bot |
+
+---
+
+## 🚀 Deployment
+
+### 1️⃣ Installing Requirements
+
+**Clone the repository:**
+```bash
 git clone https://github.com/Sam-Max/rcmltb rcmltb/ && cd rcmltb
 ```
 
-- For Debian based distros
-```
+**For Debian-based distros:**
+```bash
 sudo apt install python3 python3-pip
 ```
 
 Install Docker by following the [official Docker docs](https://docs.docker.com/engine/install/debian/)
 
-- For Arch and it's derivatives:
-
-```
+**For Arch and derivatives:**
+```bash
 sudo pacman -S docker python
 ```
 
-- Install dependencies for running setup scripts:
-
-```
+**Install dependencies for setup scripts:**
+```bash
 pip3 install -r requirements-cli.txt
 ```
 
-2. **Set up config file**
+---
 
-- cp config_sample.env config.env 
+### 2️⃣ Configuration
 
-- Fill up the fields on the config.env: **NOTE**: All values must be filled between quotes, even if it's `Int`, `Bool` or `List`.
-
-**1. Mandatory Fields**
-
-  - `API_ID`: get this from https://my.telegram.org. `Int`
-  - `API_HASH`: get this from https://my.telegram.org. `Str`
-  - `BOT_TOKEN`: The Telegram Bot Token (get from @BotFather). `Str`
-  - `OWNER_ID`: your Telegram User ID (not username) of the owner of the bot. `Int`
-
-**2. Optional Fields**
-
-  - `DOWNLOAD_DIR`: The path to the local folder where the downloads will go. `Str`
-  - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission separated by spaces. `Str`
-  - `ALLOWED_CHATS`: list of IDs of allowed chats who can use this bot separated by spaces `Str`
-  - `AUTO_MIRROR`: For auto mirroring files sent to the bot. **NOTE**: If you add bot to group(not channel), you can also use this feature. Default is `False`. `Bool`
-  - `DATABASE_URL`: Your Mongo Database URL (Connection string). Data will be saved in Database (auth and sudo users, owner and user setting, etc). **NOTE**: You can always edit all settings saved in database from mongodb site -> (browse collections). `Str`
-  - `CMD_INDEX`: index number that will be added at the end of all commands. `Str`
-  - `GD_INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index. `Str`
-  - `VIEW_LINK`: View Link button to open file Google Drive Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`. Compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. Default is `False`. `Bool`
-  - `STATUS_LIMIT`: No. of tasks shown in status message with buttons.`Int`
-  - `LOCAL_MIRROR`= set to `True` for enabling files to remain on host. Default to False.
-  - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent
-  - `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message. Set to `-1` to disable auto message deletion. `Int`
-  - `TMDB_API_KEY`: your tmdb API key. [Click here](https://www.themoviedb.org/settings/api) 
-  - `TMDB_LANGUAGE`: tmdb search language. Default `en`.
-  - `PARALLEL_TASKS`: Number of parallel tasks for queue system. `Int`
-
-  ### Update
-
-  - `UPSTREAM_REPO`: Your github repository link. If your repo is private, add your github repo link with format: `https://username:{githubtoken}@github.com/{username}/{reponame}`: get token from [Github settings](https://github.com/settings/tokens). `Str`. With this field you can update your bot from public/private repository on each restart. 
-  - `UPSTREAM_BRANCH`: Upstream branch for update. Default is `master`. `Str`
-  **NOTE**: If any change in docker or requirements you will need to deploy/build again with updated repo for changes to apply. DON'T delete .gitignore file.
-
-  ### Rclone
-  
-  - `DEFAULT_OWNER_REMOTE`: to set default remote from your rclone config for mirroring. (only for owner). `Str`
-  - `DEFAULT_GLOBAL_REMOTE`: to set default remote from global rclone config for mirroring. Use this when `MULTI_RCLONE_CONFIG` is `False`. `Str`
-  - `MULTI_RCLONE_CONFIG`: set to `True` for allowing each user to use their own rclone config. Default to False. `Bool` 
-  - `REMOTE_SELECTION`: set to `True` to activate selection of cloud server each time using mirror command. Default to `False`. `Bool`
-  - `MULTI_REMOTE_UP`= set to `True` for allowing upload to multiple clouds servers at the same time. `Bool`. (only for owner)
-  - `USE_SERVICE_ACCOUNTS`: set to `True` for enabling SA for rclone copy. Default to False. `Bool`.
-  - `SERVICE_ACCOUNTS_REMOTE`= name of the shared drive remote from your rclone config file. `Str`. **Note**: remote must have `team_drive` field with `id` in order to work. `Str`
-  - `SERVER_SIDE`= set to `True` for enabling rclone server side copy. Default to False. **NOTE**: if you get errors while copy set this to `False`. `Bool`
-  - `RCLONE_COPY_FLAGS` = key:value,key. All Flags: [RcloneFlags](https://rclone.org/flags/).`Str`
-  - `RCLONE_UPLOAD_FLAGS` = key:value,key. `Str`
-  - `RCLONE_DOWNLOAD_FLAGS` = key:value,key.`Str`
-  - `RC_INDEX_URL`: Public IP/domain where bot is running. Format of URL must be: http://myip, where myip is the Public IP/Domain. `Str`
-  - `RC_INDEX_PORT`: Port to use. Default to `8080`. `Str`
-  - `RC_INDEX_USER`: Custom user. Default to `admin`. `Str`
-  - `RC_INDEX_PASS`: Custom password. Default to `admin`. `Str`
-
-  ### GDrive Tools
-
-  - `GDRIVE_FOLDER_ID`: Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to clone. Required for `Google Drive`. `Int`
-  - `IS_TEAM_DRIVE`: Set `True` if TeamDrive. Default is `False`. `Bool`
-  - `EXTENSION_FILTER`: File extensions that won't clone. Separate them by space. `Str`
-  **Notes**: Must add **token.pickle** file directly to root for cloning to work. You can use /files command to add from bot.
-   
-  ### Leech
-
-  - `LEECH_SPLIT_SIZE`: Telegram upload limit in bytes, to automatically slice the file bigger that this size into small parts to upload to Telegram. Default is `2GB` for non premium account or `4GB` if your account is premium. `Int`
-  - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (not working with zip cmd). Default is `False`. `Bool`
-  - `USER_SESSION_STRING`: Pyrogram session string for batch commands and for telegram premium upload. To generate string session use this command `python3 session_generator.py` on command line on your pc from repository folder. **NOTE**: When using string session, you have to use with `LEECH_LOG`. You can also use batch commands without string session, but you can't save messages from private/restricted telegram channels. `Str`
-  - `LEECH_LOG`: Chat ID. Upload files to specific chat/chats. Add chats separated by spaces. `Str` **NOTE**: Only available for superGroup/channel. Add `-100` before channel/supergroup id. Add bot in that channel/group as admin if using without string session.
-  - `BOT_PM`: set to `True` if you want to send leeched files in user's PM. Default to False. `Bool`
-
-  ### MEGA
-
-  - `MEGA_EMAIL`: E-Mail used to sign up on mega.nz for using premium account.`Str`
-  - `MEGA_PASSWORD`: Password for mega.nz account.`Str`
-
-  ### RSS
-
-  - `RSS_DELAY`: Time in seconds for rss refresh interval. Default is `900` in sec. `Int`
-  - `RSS_CHAT_ID`: Chat ID where rss links will be sent. If you want message to be sent to the channel then add channel id. Add `-100` before channel id. `Int`
-  - **RSS NOTE**: `RSS_CHAT_ID` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` --OR-- *CHANNEL*. If using channel then bot should be added in both channel and group(linked to channel) and `RSS_CHAT_ID` is the channel id, so messages sent by the bot to channel will be forwarded to group. Otherwise with `USER_STRING_SESSION` add group id for `RSS_CHAT_ID`. If `DATABASE_URL` not added you will miss the feeds while bot offline.    
-
-  ### qBittorrent/Aria2c
-
-  - `QB_BASE_URL`: Valid BASE URL where the bot is deployed to use qbittorrent web selection and local mirror. Format of URL should be http://myip, where myip is the Public IP/Domain. If you have chosen port other than 80, write it in this format http://myip:port (http and not https).`Str`
-  - `QB_SERVER_PORT`: Port. Default to `80`. `Int`
-  - `WEB_PINCODE`: If empty or False means no pincode required while torrent file web selection. Bool
-  Qbittorrent NOTE: If your facing ram exceeded issue then set limit for MaxConnecs, decrease AsyncIOThreadsCount in qbittorrent config and set limit of DiskWriteCacheSize to 32.`Int`
-
-  ### Torrent Search
-
-  - `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrent-Api-py). `Str`
-  - `SEARCH_LIMIT`: Search limit for search api, limit for each site. Default is zero. `Int`
-  - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). Add/Delete plugins as you wish. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins).`List`
-
-3. **Deploying with Docker**
-
-- Build Docker image:
-
-```
-sudo docker build . -t rcmltb 
+Copy the sample config file:
+```bash
+cp sample_config.env config.env
 ```
 
-- Run the image:
+> **NOTE**: All values must be filled between quotes, even if it's `Int`, `Bool`, or `List`.
 
+#### Required Configuration
+
+| Variable | Description | Type |
+|----------|-------------|------|
+| `API_ID` | Get from https://my.telegram.org | `Int` |
+| `API_HASH` | Get from https://my.telegram.org | `Str` |
+| `BOT_TOKEN` | Telegram Bot Token from [@BotFather](https://t.me/BotFather) | `Str` |
+| `OWNER_ID` | Your Telegram User ID (not username) | `Int` |
+
+---
+
+#### Optional Configuration
+
+##### General Settings
+| Variable | Description | Type |
+|----------|-------------|------|
+| `DOWNLOAD_DIR` | Path to local downloads folder | `Str` |
+| `SUDO_USERS` | User IDs with sudo permission (space-separated) | `Str` |
+| `ALLOWED_CHATS` | Allowed chat IDs (space-separated) | `Str` |
+| `AUTO_MIRROR` | Auto mirror files sent to bot. Default: `False` | `Bool` |
+| `DATABASE_URL` | MongoDB connection string | `Str` |
+| `CMD_INDEX` | Index number added to commands | `Str` |
+| `GD_INDEX_URL` | Google Drive Index URL | `Str` |
+| `VIEW_LINK` | View link button instead of direct download. Default: `False` | `Bool` |
+| `STATUS_LIMIT` | Number of tasks shown in status | `Int` |
+| `LOCAL_MIRROR` | Keep files on host. Default: `False` | `Bool` |
+| `TORRENT_TIMEOUT` | Timeout for dead torrents (qBittorrent) | `Int` |
+| `AUTO_DELETE_MESSAGE_DURATION` | Auto-delete messages after X seconds. `-1` to disable | `Int` |
+| `TMDB_API_KEY` | TMDB API key ([Get here](https://www.themoviedb.org/settings/api)) | `Str` |
+| `TMDB_LANGUAGE` | TMDB search language. Default: `en` | `Str` |
+| `PARALLEL_TASKS` | Number of parallel tasks for queue | `Int` |
+
+##### Update Settings
+| Variable | Description | Type |
+|----------|-------------|------|
+| `UPSTREAM_REPO` | GitHub repository link (supports private repos with token) | `Str` |
+| `UPSTREAM_BRANCH` | Upstream branch. Default: `master` | `Str` |
+
+> **NOTE**: If docker or requirements change, rebuild the image for changes to apply.
+
+---
+
+##### ☁️ Rclone Settings
+| Variable | Description | Type |
+|----------|-------------|------|
+| `DEFAULT_OWNER_REMOTE` | Default remote for owner | `Str` |
+| `DEFAULT_GLOBAL_REMOTE` | Default remote from global config | `Str` |
+| `MULTI_RCLONE_CONFIG` | Allow each user their own config. Default: `False` | `Bool` |
+| `REMOTE_SELECTION` | Select cloud each mirror. Default: `False` | `Bool` |
+| `MULTI_REMOTE_UP` | Upload to multiple clouds. Default: `False` | `Bool` |
+| `USE_SERVICE_ACCOUNTS` | Enable Service Accounts. Default: `False` | `Bool` |
+| `SERVICE_ACCOUNTS_REMOTE` | Shared drive remote name | `Str` |
+| `SERVER_SIDE` | Enable server-side copy. Default: `False` | `Bool` |
+| `RCLONE_COPY_FLAGS` | Copy flags (key:value,key) | `Str` |
+| `RCLONE_UPLOAD_FLAGS` | Upload flags | `Str` |
+| `RCLONE_DOWNLOAD_FLAGS` | Download flags | `Str` |
+| `RC_INDEX_URL` | Public IP/domain for index | `Str` |
+| `RC_INDEX_PORT` | Index port. Default: `8080` | `Str` |
+| `RC_INDEX_USER` | Index user. Default: `admin` | `Str` |
+| `RC_INDEX_PASS` | Index password. Default: `admin` | `Str` |
+| `UPLOAD_PATH_TEMPLATE` | Dynamic path template (e.g., `"remote:/{username}/{category}/{date}/"`) | `Str` |
+
+**Template Variables:** `{username}`, `{user_id}`, `{date}`, `{year}`, `{month}`, `{day}`, `{category}`, `{task_type}`
+
+---
+
+##### 📁 Google Drive Settings
+| Variable | Description | Type |
+|----------|-------------|------|
+| `GDRIVE_FOLDER_ID` | Folder/TeamDrive ID or `root` | `Str` |
+| `IS_TEAM_DRIVE` | Set `True` if TeamDrive | `Bool` |
+| `EXTENSION_FILTER` | Excluded file extensions (space-separated) | `Str` |
+
+> **Note**: Add `token.pickle` to root for cloning. Use `/files` command to add via bot.
+
+---
+
+##### 📤 Leech Settings
+| Variable | Description | Type |
+|----------|-------------|------|
+| `LEECH_SPLIT_SIZE` | Upload limit (2GB non-premium, 4GB premium) | `Int` |
+| `EQUAL_SPLITS` | Split into equal parts. Default: `False` | `Bool` |
+| `USER_SESSION_STRING` | Pyrogram session string ([Generate](#session-generation)) | `Str` |
+| `LEECH_LOG` | Chat ID(s) for uploads (space-separated, add `-100` prefix) | `Str` |
+| `BOT_PM` | Send files to user's PM. Default: `False` | `Bool` |
+| `NAME_SUBSTITUTE` | Filename substitution pattern (`old::new\|old2::new2`) | `Str` |
+
+---
+
+##### ☁️ MEGA Settings
+| Variable | Description | Type |
+|----------|-------------|------|
+| `MEGA_EMAIL` | MEGA account email | `Str` |
+| `MEGA_PASSWORD` | MEGA account password | `Str` |
+
+---
+
+##### ⬇️ JDownloader Settings
+| Variable | Description | Type |
+|----------|-------------|------|
+| `JD_EMAIL` | JDownloader account email | `Str` |
+| `JD_PASSWORD` | JDownloader account password | `Str` |
+
+---
+
+##### 📊 Queue System Settings
+| Variable | Description | Type |
+|----------|-------------|------|
+| `QUEUE_ALL` | Max total concurrent tasks (`0` = unlimited) | `Int` |
+| `QUEUE_DOWNLOAD` | Max concurrent downloads (`0` = unlimited) | `Int` |
+| `QUEUE_UPLOAD` | Max concurrent uploads (`0` = unlimited) | `Int` |
+
+---
+
+##### 📡 RSS Settings
+| Variable | Description | Type |
+|----------|-------------|------|
+| `RSS_DELAY` | Refresh interval in seconds. Default: `900` | `Int` |
+| `RSS_CHAT_ID` | Chat ID for RSS messages. Supports `chat_id\|topic_id` | `Int` |
+| `RSS_SIZE_LIMIT` | Max torrent size in bytes (`0` = unlimited) | `Int` |
+
+**RSS Features:**
+- ✅ Size detection from feed summaries
+- ✅ Direct handler invocation
+- ✅ Retry logic (3 attempts)
+- ✅ Case-sensitive filters with `-stv` flag
+- ✅ Forum topic support
+- ✅ "Use This Chat" button
+- ✅ Browser-like HTTP headers
+
+> **RSS NOTE**: `RSS_CHAT_ID` is required. Use `USER_STRING_SESSION` **OR** a channel. For channels, add bot to both channel and linked group. Without `DATABASE_URL`, feeds during offline periods will be missed.
+
+---
+
+##### 🌐 qBittorrent/Aria2c Settings
+| Variable | Description | Type |
+|----------|-------------|------|
+| `QB_BASE_URL` | Bot URL for qBittorrent web selection | `Str` |
+| `QB_SERVER_PORT` | Port. Default: `80` | `Int` |
+| `WEB_PINCODE` | Require pincode for torrent selection. Default: `False` | `Bool` |
+
+> **qBittorrent Note**: For RAM issues, limit `MaxConnecs`, decrease `AsyncIOThreadsCount`, and set `DiskWriteCacheSize` to 32.
+
+---
+
+##### 🔍 Torrent Search Settings
+| Variable | Description | Type |
+|----------|-------------|------|
+| `SEARCH_API_LINK` | Torrent search API ([Deploy](https://github.com/Ryuk-me/Torrent-Api-py)) | `Str` |
+| `SEARCH_LIMIT` | Results per site. Default: `0` | `Int` |
+| `SEARCH_PLUGINS` | qBittorrent search plugin URLs | `List` |
+
+---
+
+### 3️⃣ Deploying with Docker
+
+**Build Docker image:**
+```bash
+sudo docker build . -t rcmltb
 ```
+
+**Run the image:**
+```bash
 sudo docker run -p 80:80 -p 8080:8080 rcmltb
 ```
 
-- To stop the container:
-
-```
-  sudo docker ps
-```
-
-```
-  sudo docker stop id
-```
-- To clear the container:
-
-```
-  sudo docker container prune
+**Stop container:**
+```bash
+sudo docker ps
+sudo docker stop <container_id>
 ```
 
-- To delete the images:
-
+**Clear container:**
+```bash
+sudo docker container prune
 ```
-  sudo docker image prune -a
+
+**Delete images:**
+```bash
+sudo docker image prune -a
 ```
 
-4. **Deploying using docker-compose**
+---
 
-**NOTE**: If you want to use port other than 80 (torrent file selection) or 8080 (rclone serve), change it in docker-compose.yml
+### 4️⃣ Deploying with Docker Compose
 
-- Install docker-compose
+> **NOTE**: Change ports in `docker-compose.yml` if not using 80 (torrents) or 8080 (rclone).
 
-```
+**Install docker-compose:**
+```bash
 sudo apt install docker-compose
 ```
 
-- Build and run Docker image:
-```
+**Build and run:**
+```bash
 sudo docker-compose up
 ```
 
-- After editing files with nano for example (nano start.sh):
-```
+**After editing files:**
+```bash
 sudo docker-compose up --build
 ```
 
-- To stop the image:
-```
+**Stop/Start:**
+```bash
 sudo docker-compose stop
-```
-
-- To run the image:
-```
 sudo docker-compose start
-
 ```
 
-## Generate Database
+---
 
-1. Go to `https://mongodb.com/` and sign-up.
-2. Create Shared Cluster (Free).
-4. Add `username` and `password` for your db and click on `Add my current IP Address`.
-6. Click on `Connect`, and then press on `Connect your application`.
-7. Choose `Driver` **python** and `version` **3.6 or later**.
-8. Copy your `connection string` and replace `<password>` with the password of your user, then press close.
-9. Go to `Network Access` tab, click on edit button and finally click `Allow access from anywhere` and confirm.
+## 🔐 Session Generation
 
-------
+To generate `USER_SESSION_STRING`:
 
-## How to create rclone config file
-
-**Check this youtube video (not mine, credits to author):** 
-<p><a href="https://www.youtube.com/watch?v=Sp9lG_BYlSg"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
-
-**Notes**:
-- When you create rclone.conf file add at least two accounts if you want to copy from cloud to cloud. 
-- For those on android phone, you can use [RCX app](https://play.google.com/store/apps/details?id=io.github.x0b.rcx&hl=en_IN&gl=US) app to create rclone.conf file. Use "Export rclone config" option in app menu to get config file.
-- Rclone supported providers:
-  > 1Fichier, Amazon Drive, Amazon S3, Backblaze B2, Box, Ceph, DigitalOcean Spaces, Dreamhost, **Dropbox**,   Enterprise File Fabric, FTP, GetSky, Google Cloud Storage, **Google Drive**, Google Photos, HDFS, HTTP, Hubic, IBM COS S3, Koofr, Mail.ru Cloud, **Mega**, Microsoft Azure Blob Storage, **Microsoft OneDrive**, **Nextcloud**, OVH, OpenDrive, Oracle Cloud Storage, ownCloud, pCloud, premiumize.me, put.io, Scaleway, Seafile, SFTP, **WebDAV**, Yandex Disk, etc. **Check all providers on official site**: [Click here](https://rclone.org/#providers).
-
-## Getting Google OAuth API credential file and token.pickle
-
-**NOTES**
-- You need OS with a browser.
-- Windows users should install python3 and pip. You can find how to install and use them from google.
-- You can ONLY open the generated link from `generate_drive_token.py` in local browser.
-
-1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
-2. Go to the OAuth Consent tab, fill it, and save.
-3. Go to the Credentials tab and click Create Credentials -> OAuth Client ID
-4. Choose Desktop and Create.
-5. Publish your OAuth consent screen App to prevent **token.pickle** from expire
-6. Use the download button to download your credentials.
-7. Move that file to the root of rclone-tg-bot, and rename it to **credentials.json**
-8. Visit [Google API page](https://console.developers.google.com/apis/library)
-9. Search for Google Drive Api and enable it
-10. Finally, run the script to generate **token.pickle** file for Google Drive:
+```bash
+python3 session_generator.py
 ```
+
+Run this on your PC from the repository folder.
+
+---
+
+## 🗄️ MongoDB Setup
+
+1. Go to [mongodb.com](https://mongodb.com/) and sign up
+2. Create a Shared Cluster (Free)
+3. Add `username` and `password`, click `Add my current IP Address`
+4. Click `Connect` → `Connect your application`
+5. Choose Driver: **Python**, Version: **3.6 or later**
+6. Copy the connection string, replace `<password>` with your user's password
+7. Go to `Network Access`, click Edit → `Allow access from anywhere` → Confirm
+
+---
+
+## ☁️ Rclone Configuration
+
+**Video Tutorial:** [YouTube Guide](https://www.youtube.com/watch?v=Sp9lG_BYlSg)
+
+### Quick Tips:
+- Add at least two accounts in `rclone.conf` for cloud-to-cloud copy
+- Android users: Use [RCX app](https://play.google.com/store/apps/details?id=io.github.x0b.rcx)
+
+### Supported Providers:
+1Fichier, Amazon Drive, Amazon S3, Backblaze B2, Box, Ceph, DigitalOcean Spaces, Dreamhost, **Dropbox**, Enterprise File Fabric, FTP, GetSky, Google Cloud Storage, **Google Drive**, Google Photos, HDFS, HTTP, Hubic, IBM COS S3, Koofr, Mail.ru Cloud, **Mega**, Microsoft Azure Blob Storage, **Microsoft OneDrive**, **Nextcloud**, OVH, OpenDrive, Oracle Cloud Storage, ownCloud, pCloud, premiumize.me, put.io, Scaleway, Seafile, SFTP, **WebDAV**, Yandex Disk, and more.
+
+[View all providers](https://rclone.org/#providers)
+
+---
+
+## 🔑 Google OAuth Setup
+
+> **Requirements**: OS with a browser. Windows users need Python3 and pip.
+
+1. Visit [Google Cloud Console](https://console.developers.google.com/apis/credentials)
+2. Go to OAuth Consent tab, fill it, save
+3. Credentials tab → Create Credentials → OAuth Client ID
+4. Choose **Desktop** and Create
+5. Publish your OAuth consent to prevent token expiry
+6. Download credentials, move to bot root, rename to `credentials.json`
+7. Visit [Google API Library](https://console.developers.google.com/apis/library)
+8. Search and enable **Google Drive API**
+9. Generate token:
+
+```bash
 pip3 install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 python3 generate_drive_token.py
 ```
-------
 
-## Bittorrent Seed
+---
 
-- Using `-d` argument alone will lead to use global options for aria2c or qbittorrent.
+## 🌱 Bittorrent Seeding
 
-## Qbittorrent
+Using `-d` alone uses global options for aria2c/qBittorrent.
 
-- Global options: `GlobalMaxRatio` and `GlobalMaxSeedingMinutes` in qbittorrent.conf, `-1` means no limit, but you can cancel manually.
-  - **NOTE**: Don't change `MaxRatioAction`.
+### qBittorrent Global Options:
+- `GlobalMaxRatio` and `GlobalMaxSeedingMinutes` in `qbittorrent.conf`
+- `-1` = no limit
+- **Don't change `MaxRatioAction`**
 
+---
 
-## Using Service Accounts to avoid user rate limit [For Google Drive Remotes]
+## 🔧 Service Accounts (Google Drive)
 
-> For Service Account to work, you must set `USE_SERVICE_ACCOUNTS`= "True" in config file or environment variables.
->**NOTE**: Using Service Accounts is only recommended for Team Drive.
+> Set `USE_SERVICE_ACCOUNTS="True"` to enable. Recommended for Team Drive only.
 
-### 1. Generate Service Accounts. [What is Service Account?](https://cloud.google.com/iam/docs/service-accounts)
+### Limits
+- 1 Service Account = ~750 GB/day
+- 1 Project = 100 Service Accounts = ~75 TB/day
 
-**Warning**: Abuse of this feature is not the aim of this project and we do **NOT** recommend that you make a lot of projects, just one project and 100 SAs allow you plenty of use, its also possible that over abuse might get your projects banned by Google.
+### Generate Service Accounts
 
->**NOTE**: If you have created SAs in past from this script, you can also just re download the keys by running:
-```
-python3 gen_sa_accounts.py --download-keys $PROJECTID
-```
->**NOTE:** 1 Service Account can copy around 750 GB a day, 1 project can make 100 Service Accounts so you can copy 75 TB a day.
-
-#### Two methods to create service accounts
-Choose one of these methods
-
-##### 1. Create Service Accounts in existed Project (Recommended Method)
-
-- List your projects ids
-
-```
+**List projects:**
+```bash
 python3 gen_sa_accounts.py --list-projects
 ```
 
-- Enable services automatically by this command
-
-```
+**Enable services:**
+```bash
 python3 gen_sa_accounts.py --enable-services $PROJECTID
 ```
 
-- Create Sevice Accounts to current project
-
-```
+**Create Service Accounts:**
+```bash
 python3 gen_sa_accounts.py --create-sas $PROJECTID
 ```
 
-- Download Sevice Accounts as accounts folder
-
-```
+**Download keys:**
+```bash
 python3 gen_sa_accounts.py --download-keys $PROJECTID
 ```
-##### 2. Create Service Accounts in New Project
-```
+
+**Quick setup (new project):**
+```bash
 python3 gen_sa_accounts.py --quick-setup 1 --new-only
 ```
-A folder named accounts will be created which will contain keys for the Service Accounts.
 
-### 2. Add Service Accounts
+### Add to Team Drive
 
-#### Two methods to add service accounts
-Choose one of these methods
-
-##### 1. Add Them To Google Group then to Team Drive (Recommended)
-- Mount accounts folder
-
-```
+**Method 1: Via Google Group (Recommended)**
+```bash
 cd accounts
-```
-
-- Grab emails form all accounts to emails.txt file that would be created in accounts folder
-- `For Windows using PowerShell`
-
-```
-$emails = Get-ChildItem .\**.json |Get-Content -Raw |ConvertFrom-Json |Select -ExpandProperty client_email >>emails.txt
-```
-
-- `For Linux`
-
-```
+# Extract emails
 grep -oPh '"client_email": "\K[^"]+' *.json > emails.txt
-```
-
-- Unmount acounts folder
-
-```
 cd ..
+# Add emails.txt to Google Group, then add Group to Team Drive as Manager
 ```
-Then add emails from emails.txt to Google Group, after that add this Google Group to your Shared Drive and promote it to manager and delete email.txt file from accounts folder
 
-##### 2. Add Them To Team Drive Directly
-- Run:
-
-```
+**Method 2: Direct add:**
+```bash
 python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 ```
-------
 
-## Yt-dlp and Aria2c Authentication Using .netrc File
-For using your premium accounts in yt-dlp or for protected Index Links, create .netrc and not netrc, this file will be hidden, so view hidden files to edit it after creation. Use following format on file: 
+---
 
-Format:
+## 🔐 .netrc Authentication
+
+For yt-dlp premium accounts or protected Index Links, create `.netrc`:
 
 ```
 machine host login username password my_password
 ```
 
-Example:
-
+**Example:**
 ```
 machine instagram login user.name password mypassword
 ```
 
-**Instagram Note**: You must login even if you want to download public posts and after first try you must confirm that this was you logged in from different ip(you can confirm from phone app).
+**Notes:**
+- **Instagram**: Must login even for public posts; confirm login from new IP
+- **YouTube**: Use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) instead
 
-**Youtube Note**: For `youtube` authentication use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
-
-Using Aria2c you can also use built in feature from bot with or without username. Here example for index link without username.
-
+**Aria2c index link example:**
 ```
 machine example.workers.dev password index_password
 ```
 
-Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts of different hosts can be added each separated by a new line.
+---
 
------
-
-## Donations
+## ☕ Support
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sammax09)
 
------
+---
 
-## Bot Screenshot: 
+## 📸 Screenshot
 
-<img src="./screenshot.png" alt="button menu example">
+<img src="./screenshot.png" alt="button menu example" width="400">
 
------
+---
