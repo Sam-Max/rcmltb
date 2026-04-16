@@ -95,6 +95,26 @@ def get_user_settings(from_user):
     else:
         thumbmsg = "Not Exists"
 
+    buttons.cb_buildbutton("📸 Screenshots", f"userset {user_id} sscreenshots")
+    screenshots_count = user_dict.get("screenshots_count", 0)
+    if screenshots_count == 0:
+        screenshots_msg = "Disabled"
+    else:
+        screenshots_msg = f"{screenshots_count} shots"
+
+    buttons.cb_buildbutton("📂 Category", f"userset {user_id} category")
+    category = user_dict.get("category", "")
+    category_msg = category if category else "None"
+
+    buttons.cb_buildbutton("📁 Upload Template", f"userset {user_id} utemplate")
+    upload_template = user_dict.get("upload_template", "")
+    if upload_template:
+        template_msg = "Custom"
+    elif config_dict.get("UPLOAD_PATH_TEMPLATE"):
+        template_msg = "Global"
+    else:
+        template_msg = "None"
+
     buttons.cb_buildbutton("✘ Close Menu", f"userset {user_id} close")
 
     text = f"""
@@ -102,6 +122,9 @@ def get_user_settings(from_user):
 
 Leech Type: <b>{ltype}</b>
 Custom Thumbnail: <b>{thumbmsg}</b>
+Screenshots: <b>{screenshots_msg}</b>
+Category: <b>{category_msg}</b>
+Upload Template: <b>{template_msg}</b>
 Leech Split Size: <b>{split_size}</b>
 Equal Splits: <b>{equal_splits}</b>
 YT-DLP Options: <b><code>{escape(ytopt)}</code></b>
@@ -321,6 +344,160 @@ Examples:
         update_user_ldata(
             user_id, "equal_splits", not user_dict.get("equal_splits", False)
         )
+        await update_user_settings(query)
+        if DATABASE_URL:
+            await DbManager().update_user_data(user_id)
+    elif data[2] == "sscreenshots":
+        await query.answer()
+        buttons = ButtonMaker()
+        current_count = user_dict.get("screenshots_count", 0)
+        if current_count > 0:
+            buttons.cb_buildbutton("Disable Screenshots", f"userset {user_id} ss_disable")
+        for count in [3, 5, 8, 10]:
+            btn_text = f"{count} shots"
+            if current_count == count:
+                btn_text = f"✓ {count} shots"
+            buttons.cb_buildbutton(btn_text, f"userset {user_id} ss_count {count}")
+
+        # Album option
+        is_album = user_dict.get("screenshots_as_album", True)
+        album_text = "✓ Send as Album" if is_album else "Send as Album"
+        buttons.cb_buildbutton(album_text, f"userset {user_id} ss_album")
+
+        buttons.cb_buildbutton("Back", f"userset {user_id} back")
+        buttons.cb_buildbutton("Close", f"userset {user_id} close")
+        await editMessage(
+            "📸 <b>Screenshots Settings</b>\n\nSelect number of screenshots to generate during leech (0 to disable):",
+            message,
+            buttons.build_menu(2)
+        )
+    elif data[2] == "ss_disable":
+        await query.answer()
+        update_user_ldata(user_id, "screenshots_count", 0)
+        await update_user_settings(query)
+        if DATABASE_URL:
+            await DbManager().update_user_data(user_id)
+    elif data[2] == "ss_count":
+        await query.answer()
+        count = int(data[3])
+        update_user_ldata(user_id, "screenshots_count", count)
+        await update_user_settings(query)
+        if DATABASE_URL:
+            await DbManager().update_user_data(user_id)
+    elif data[2] == "ss_album":
+        await query.answer()
+        current = user_dict.get("screenshots_as_album", True)
+        update_user_ldata(user_id, "screenshots_as_album", not current)
+        await update_user_settings(query)
+        if DATABASE_URL:
+            await DbManager().update_user_data(user_id)
+    elif data[2] == "category":
+        await query.answer()
+        buttons = ButtonMaker()
+        categories = ["Movies", "TV Shows", "Music", "Books", "Software", "Others"]
+        current_category = user_dict.get("category", "")
+        for cat in categories:
+            btn_text = f"✓ {cat}" if current_category == cat else cat
+            buttons.cb_buildbutton(btn_text, f"userset {user_id} set_cat {cat}")
+        if current_category:
+            buttons.cb_buildbutton("Clear Category", f"userset {user_id} clear_cat", "header")
+        buttons.cb_buildbutton("Back", f"userset {user_id} back")
+        buttons.cb_buildbutton("Close", f"userset {user_id} close")
+        await editMessage(
+            "📂 <b>Select Category</b>\n\nThis is used for upload path organization:",
+            message,
+            buttons.build_menu(2)
+        )
+    elif data[2] == "set_cat":
+        await query.answer()
+        category = data[3]
+        update_user_ldata(user_id, "category", category)
+        await update_user_settings(query)
+        if DATABASE_URL:
+            await DbManager().update_user_data(user_id)
+    elif data[2] == "clear_cat":
+        await query.answer()
+        update_user_ldata(user_id, "category", "")
+        await update_user_settings(query)
+        if DATABASE_URL:
+            await DbManager().update_user_data(user_id)
+    elif data[2] == "utemplate":
+        await query.answer()
+        buttons = ButtonMaker()
+        current_template = user_dict.get("upload_template", "")
+        global_template = config_dict.get("UPLOAD_PATH_TEMPLATE", "")
+
+        if current_template or global_template:
+            buttons.cb_buildbutton("Remove Custom Template", f"userset {user_id} rutemplate", "header")
+
+        buttons.cb_buildbutton("Set Custom Template", f"userset {user_id} set_utemplate")
+        buttons.cb_buildbutton("Back", f"userset {user_id} back")
+        buttons.cb_buildbutton("Close", f"userset {user_id} close")
+
+        template_preview = current_template or global_template or "Not set"
+        preview_path = ""
+        if template_preview != "Not set":
+            from bot.helper.ext_utils.template_utils import apply_upload_template
+            username = from_user.username or str(user_id)
+            preview_path = apply_upload_template(
+                template_preview,
+                user_id,
+                username,
+                category=user_dict.get("category", ""),
+                task_type="mirror"
+            )
+
+        rmsg = f"""📁 <b>Upload Path Template</b>
+
+<b>Current Template:</b> <code>{template_preview}</code>
+
+<b>Preview Path:</b> <code>{preview_path or 'N/A'}</code>
+
+<b>Available Variables:</b>
+<code>{{username}}</code> - Username
+<code>{{user_id}}</code> - User ID
+<code>{{date}}</code> - Current date (YYYY-MM-DD)
+<code>{{year}}</code> - Current year
+<code>{{month}}</code> - Current month
+<code>{{day}}</code> - Current day
+<code>{{category}}</code> - Selected category
+<code>{{task_type}}</code> - Task type (mirror/leech/clone)
+
+<b>Example:</b> <code>remote:/{{username}}/{{category}}/{{date}}/</code>
+"""
+        await editMessage(rmsg, message, buttons.build_menu(1))
+    elif data[2] == "set_utemplate":
+        await query.answer()
+        buttons = ButtonMaker()
+        buttons.cb_buildbutton("Back", f"userset {user_id} utemplate")
+        buttons.cb_buildbutton("Close", f"userset {user_id} close")
+        rmsg = """📁 <b>Set Upload Path Template</b>
+
+Send the template path with variables.
+
+<b>Example:</b>
+<code>remote:/{username}/{category}/{date}/</code>
+<code>remote:Mirror/{user_id}/{task_type}/{year}-{month}/</code>
+
+Send <code>/ignore</code> to cancel. Timeout: 60 sec"""
+        await editMessage(rmsg, message, buttons.build_menu(1))
+        try:
+            if response := await client.listen.Message(
+                filters.text, id=filters.user(user_id), timeout=60
+            ):
+                if "/ignore" in response.text:
+                    await client.listen.Cancel(filters.user(user_id))
+                else:
+                    template = response.text.strip()
+                    update_user_ldata(user_id, "upload_template", template)
+                    await update_user_settings(query)
+                    if DATABASE_URL:
+                        await DbManager().update_user_data(user_id)
+        except asyncio.TimeoutError:
+            await sendMessage("Too late 60s gone, try again!", message)
+    elif data[2] == "rutemplate":
+        await query.answer()
+        update_user_ldata(user_id, "upload_template", "")
         await update_user_settings(query)
         if DATABASE_URL:
             await DbManager().update_user_data(user_id)

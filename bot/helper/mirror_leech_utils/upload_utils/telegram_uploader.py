@@ -147,7 +147,8 @@ class TelegramUploader:
 
             if self.__as_doc or (not is_video and not is_audio and not is_image):
                 if is_video:
-                    if self.__listener.screenshots:
+                    # Send screenshots if enabled via command or user settings
+                    if self.__listener.screenshots or self.__screenshots_count > 0:
                         await self._send_screenshots()
                     if thumb is None:
                         thumb = await create_thumb(up_path, None)
@@ -182,7 +183,8 @@ class TelegramUploader:
                         progress=self.__upload_progress,
                     )
             elif is_video:
-                if self.__listener.screenshots:
+                # Send screenshots if enabled via command or user settings
+                if self.__listener.screenshots or self.__screenshots_count > 0:
                     await self._send_screenshots()
                 if not up_path.upper().endswith(("MKV", "MP4")):
                     new_path = up_path.split(".")[0] + ".mp4"
@@ -346,24 +348,50 @@ class TelegramUploader:
         user_id = self.__listener.message.from_user.id
         user_dict = user_data.get(user_id, {})
         self.__as_doc = user_dict.get("as_doc") or config_dict["AS_DOCUMENT"]
+        self.__screenshots_count = user_dict.get("screenshots_count", 0)
+        self.__screenshots_as_album = user_dict.get("screenshots_as_album", True)
         if not ospath.exists(self.__thumb):
             self.__thumb = None
 
-    async def _send_screenshots(self):
-        if isinstance(self.__listener.screenshots, str):
+    async def _send_screenshots(self, video_path=None, count=None, as_album=None):
+        """Send screenshots for a video file.
+
+        Args:
+            video_path: Path to video file (defaults to current upload path)
+            count: Number of screenshots (defaults to user setting or listener setting)
+            as_album: Whether to send as album (defaults to user setting)
+        """
+        # Determine count
+        if count is not None:
+            ss_nb = count
+        elif isinstance(self.__listener.screenshots, (int, str)):
             ss_nb = int(self.__listener.screenshots)
+        elif self.__screenshots_count > 0:
+            ss_nb = self.__screenshots_count
         else:
-            ss_nb = 10
-        outputs = await take_ss(self.__upload_path, ss_nb)
-        inputs = []
-        if outputs:
+            return  # Screenshots disabled
+
+        # Determine album mode
+        if as_album is not None:
+            send_album = as_album
+        else:
+            send_album = self.__screenshots_as_album
+
+        path = video_path or self.__upload_path
+        outputs = await take_ss(path, ss_nb)
+        if not outputs:
+            return
+
+        if send_album:
+            # Send as album
+            inputs = []
             for m in outputs:
                 if await aiopath.exists(m):
                     cap = m.rsplit("/", 1)[-1]
                     inputs.append(InputMediaPhoto(m, cap))
                 else:
                     outputs.remove(m)
-            if outputs:
+            if inputs:
                 self.__sent_msg = (
                     await self.__sent_msg.reply_media_group(
                         media=inputs,
@@ -371,8 +399,20 @@ class TelegramUploader:
                         disable_notification=True,
                     )
                 )[-1]
-                for m in outputs:
-                    await aioremove(m)
+        else:
+            # Send individually
+            for m in outputs:
+                if await aiopath.exists(m):
+                    await self.__sent_msg.reply_photo(
+                        photo=m,
+                        quote=True,
+                        disable_notification=True,
+                    )
+
+        # Cleanup
+        for m in outputs:
+            if await aiopath.exists(m):
+                await aioremove(m)
 
     async def __prepare_file(self, file_, dirpath):
         if len(file_) > 54:
