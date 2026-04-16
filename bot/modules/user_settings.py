@@ -81,6 +81,14 @@ def get_user_settings(from_user):
     else:
         ytopt = "None"
 
+    buttons.cb_buildbutton("📝 Name Substitute", f"userset {user_id} ns")
+    if user_dict.get("name_sub", False):
+        name_sub = user_dict["name_sub"]
+    elif "name_sub" not in user_dict and (NS := config_dict["NAME_SUBSTITUTE"]):
+        name_sub = NS
+    else:
+        name_sub = "None"
+
     buttons.cb_buildbutton("🖼️ Thumbnail", f"userset {user_id} sthumb")
     if ospath.exists(thumbpath):
         thumbmsg = "Exists"
@@ -97,7 +105,7 @@ Custom Thumbnail: <b>{thumbmsg}</b>
 Leech Split Size: <b>{split_size}</b>
 Equal Splits: <b>{equal_splits}</b>
 YT-DLP Options: <b><code>{escape(ytopt)}</code></b>
-Equal Splits: <b>{equal_splits}</b>
+Name Substitute: <b><code>{escape(name_sub)}</code></b>
 Rclone Config <b>{rccmsg}</b>
 Gdrive Token <b>{tokenmsg}</b>
 Gdrive ID is <code>{gdrive_id}</code>
@@ -121,6 +129,16 @@ async def set_yt_options(_, message, query):
     user_id = message.from_user.id
     value = message.text
     update_user_ldata(user_id, "yt_opt", value)
+    await message.delete()
+    await update_user_settings(query)
+    if DATABASE_URL:
+        await DbManager().update_user_data(user_id)
+
+
+async def set_name_substitute(_, message, query):
+    user_id = message.from_user.id
+    value = message.text
+    update_user_ldata(user_id, "name_sub", value)
     await message.delete()
     await update_user_settings(query)
     if DATABASE_URL:
@@ -227,6 +245,41 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     elif data[2] == "ryto":
         await query.answer()
         update_user_ldata(user_id, "yt_opt", "")
+        await update_user_settings(query)
+        if DATABASE_URL:
+            await DbManager().update_user_data(user_id)
+    elif data[2] == "ns":
+        await query.answer()
+        buttons = ButtonMaker()
+        buttons.cb_buildbutton("Back", f"userset {user_id} back")
+        if user_dict.get("name_sub", False) or config_dict["NAME_SUBSTITUTE"]:
+            buttons.cb_buildbutton(
+                "Remove Name Substitute", f"userset {user_id} rns", "header"
+            )
+        buttons.cb_buildbutton("Close", f"userset {user_id} close")
+        rmsg = """
+Send Name Substitute pattern.
+Format: old::new|old2::new2
+Use \\| for literal | in filenames
+Use \\:: for literal :: in filenames
+
+Examples:
+  script::code          # Replace "script" with "code"
+  mltb::                # Remove "mltb"
+  [test]::test          # Replace "[test]" with "test"
+  space::               # Remove spaces
+        """
+        await editMessage(rmsg, message, buttons.build_menu(1))
+        try:
+            if response := await client.listen.Message(
+                filters.text, id=filters.user(user_id), timeout=60
+            ):
+                await set_name_substitute(client, response, query)
+        except asyncio.TimeoutError:
+            await sendMessage("Too late 60s gone, try again!", message)
+    elif data[2] == "rns":
+        await query.answer()
+        update_user_ldata(user_id, "name_sub", "")
         await update_user_settings(query)
         if DATABASE_URL:
             await DbManager().update_user_data(user_id)

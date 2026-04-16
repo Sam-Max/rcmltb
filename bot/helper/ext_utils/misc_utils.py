@@ -461,3 +461,68 @@ async def get_image_from_url(url, filename):
                 return file_path
             else:
                 return None
+
+
+def apply_name_substitute(name: str, substitutes: str) -> str:
+    """Apply pattern replacements to filename.
+    
+    Format: old::new|old2::new2
+    Use \| for literal | in filenames
+    Use \:: for literal :: in filenames
+    
+    Examples:
+        script::code          # "script" → "code"
+        mltb::                # Remove "mltb"
+        [test]::test          # "[test]" → "test"
+        
+    Args:
+        name: Original filename
+        substitutes: Substitution pattern string
+        
+    Returns:
+        Substituted filename
+    """
+    if not substitutes or not name:
+        return name
+    
+    try:
+        # Split by | but handle escaped \|
+        import re
+        # Replace escaped | with a placeholder
+        placeholder = "\x00PIPE\x00"
+        temp_subs = substitutes.replace("\\|", placeholder)
+        
+        pairs = temp_subs.split("|")
+        result = name
+        
+        for pair in pairs:
+            if not pair.strip():
+                continue
+                
+            # Restore escaped | in the pair
+            pair = pair.replace(placeholder, "|")
+            
+            # Split by :: but handle escaped \::
+            colon_placeholder = "\x00COLON\x00"
+            temp_pair = pair.replace("\\::", colon_placeholder)
+            
+            if "::" not in temp_pair:
+                continue
+                
+            parts = temp_pair.split("::", 1)
+            if len(parts) != 2:
+                continue
+                
+            old_pattern = parts[0].replace(colon_placeholder, "::")
+            new_pattern = parts[1].replace(colon_placeholder, "::")
+            
+            # Escape regex special characters in old_pattern
+            old_pattern_escaped = re.escape(old_pattern)
+            
+            # Perform substitution
+            result = re.sub(old_pattern_escaped, new_pattern, result)
+            
+        return result
+    except Exception as e:
+        LOGGER.error(f"Error applying name substitution: {e}")
+        return name
