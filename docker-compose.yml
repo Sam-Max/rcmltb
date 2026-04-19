@@ -1,10 +1,10 @@
-version: "3.3"
-
 services:
   app:
     image: ghcr.io/sam-max/rcmltb:latest
     container_name: rcmltb
     command: bash start.sh
+    env_file:
+      - ./config.env
     volumes:
       # Downloads folder - ensure host directory has write permissions
       - ./downloads:/usr/src/app/downloads
