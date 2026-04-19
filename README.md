@@ -10,13 +10,17 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 
-A powerful **asynchronous** Telegram bot for transferring files between cloud storage services and Telegram.
+An **asynchronous** Telegram bot for transferring files between cloud storage services and Telegram.
 
 **Mirror** → Cloud | **Leech** → Telegram | **Clone** → Cloud to Cloud
 
 [Features](#-features) • [Commands](#-bot-commands) • [Deployment](#-deployment) • [Configuration](#%EF%B8%8F-configuration)
 
 </div>
+
+---
+
+> ⚠️ **Stability Notice**: The project is currently in a large refactor phase. During this period, behavior may be unstable and breaking changes can happen between updates until the refactor is completed.
 
 ---
 
