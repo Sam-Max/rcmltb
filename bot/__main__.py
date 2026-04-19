@@ -65,10 +65,7 @@ async def main():
     await gather(update_aria2_options(), update_qbit_options())
     LOGGER.info("Aria2/qBittorrent options updated")
 
-    # 8. Initialize aria2
-    await TorrentManager.aria2_init()
-
-    # 9. Create help buttons and init telegraph
+    # 8. Create help buttons and init telegraph
     from bot.helper.ext_utils.telegraph_helper import init_telegraph
     await gather(
         create_mirror_help_buttons(),
@@ -79,28 +76,28 @@ async def main():
     )
     LOGGER.info("Help buttons and telegraph created")
 
-    # 10. Initialize search tools and debrid
+    # 9. Initialize search tools and debrid
     from bot.modules import torr_search, debrid
     await gather(
         torr_search.initiate_search_tools(),
         debrid.load_debrid_token(),
     )
 
-    # 11. Start aria2 listener
+    # 10. Start aria2 listener
     from bot.helper.listeners.aria2_listener import add_aria2_callbacks
     add_aria2_callbacks()
 
-    # 12. Register handlers
+    # 11. Register handlers
     from bot.core.handlers import add_handlers
     add_handlers()
 
-    # 13. Boot JDownloader if configured
+    # 12. Boot JDownloader if configured
     if getattr(config_dict, "JD_EMAIL", "") and getattr(config_dict, "JD_PASSWORD", ""):
         from bot.core.jdownloader_booter import jdownloader_boot
         jdownloader_boot()
         LOGGER.info("JDownloader boot initiated")
 
-    # 14. Handle restart message
+    # 13. Handle restart message
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)

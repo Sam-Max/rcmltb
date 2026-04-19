@@ -174,22 +174,3 @@ class TorrentManager:
             await cls.qbittorrent.app.set_preferences(preferences)
         except Exception as e:
             LOGGER.error(f"Error setting qbit preferences: {e}")
-
-    @classmethod
-    async def aria2_init(cls):
-        try:
-            from bot import DOWNLOAD_DIR
-            LOGGER.info("Initializing Aria2c")
-            link = "https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent"
-            dire = DOWNLOAD_DIR.rstrip("/")
-            gid = await cls.aria2.addUri(uris=[link], options={"dir": dire})
-            import asyncio
-            await asyncio.sleep(3)
-            await asyncio.sleep(10)
-            await cls.aria2.removeDownloadResult(gid)
-            try:
-                await cls.aria2.forceRemove(gid)
-            except Exception:
-                pass
-        except Exception as e:
-            LOGGER.error(f"Aria2c initializing error: {e}")
