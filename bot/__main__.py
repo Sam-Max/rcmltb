@@ -111,6 +111,7 @@ async def main():
     await TgClient.bot.set_bot_commands(
         [
             BotCommand(BotCommands.StartCommand, "Start the bot"),
+            BotCommand(BotCommands.HelpCommand, "Show help and usage"),
             BotCommand(BotCommands.MirrorCommand[0], "Mirror to cloud"),
             BotCommand(BotCommands.LeechCommand[0], "Leech to Telegram"),
             BotCommand(BotCommands.CloneCommand, "Clone Google Drive files"),

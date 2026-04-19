@@ -130,6 +130,7 @@ def add_handlers():
         batch,
         cancel,
         botfiles,
+        help,
         copy,
         debrid,
         force_start,

@@ -4,6 +4,7 @@ from bot import CMD_INDEX
 class _BotCommands:
     def __init__(self):
         self.StartCommand = f"start{CMD_INDEX}"
+        self.HelpCommand = f"help{CMD_INDEX}"
         self.MirrorCommand = [f"mirror{CMD_INDEX}", f"m{CMD_INDEX}"]
         self.MirrorBatchCommand = [f"mirror_batch{CMD_INDEX}", f"mb{CMD_INDEX}"]
         self.MirrorSelectCommand = [f"mirror_select{CMD_INDEX}", f"ms{CMD_INDEX}"]
