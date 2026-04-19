@@ -177,7 +177,6 @@ class TelegramUploader:
                     self.__sent_msg = await self.__sent_msg.reply_document(
                         document=up_path,
                         caption=cap_mono,
-                        quote=True,
                         thumb=thumb,
                         disable_notification=True,
                         progress=self.__upload_progress,
@@ -230,7 +229,6 @@ class TelegramUploader:
                         width=width,
                         height=height,
                         caption=cap_mono,
-                        quote=True,
                         disable_notification=True,
                         thumb=thumb,
                         supports_streaming=True,
@@ -264,7 +262,6 @@ class TelegramUploader:
                 else:
                     self.__sent_msg = await self.__sent_msg.reply_audio(
                         audio=up_path,
-                        quote=True,
                         caption=cap_mono,
                         duration=duration,
                         performer=artist,
@@ -298,7 +295,6 @@ class TelegramUploader:
                     self.__sent_msg = await self.__sent_msg.reply_photo(
                         photo=up_path,
                         caption=cap_mono,
-                        quote=True,
                         disable_notification=True,
                         progress=self.__upload_progress,
                     )
@@ -395,7 +391,6 @@ class TelegramUploader:
                 self.__sent_msg = (
                     await self.__sent_msg.reply_media_group(
                         media=inputs,
-                        quote=True,
                         disable_notification=True,
                     )
                 )[-1]
@@ -405,7 +400,6 @@ class TelegramUploader:
                 if await aiopath.exists(m):
                     await self.__sent_msg.reply_photo(
                         photo=m,
-                        quote=True,
                         disable_notification=True,
                     )
 
