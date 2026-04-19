@@ -3,7 +3,7 @@ from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 from json import loads as jsonloads
 from configparser import ConfigParser
-from bot import GLOBAL_EXTENSION_FILTER, LOGGER, config_dict, remotes_multi
+from bot import GLOBAL_EXTENSION_FILTER, LOGGER, OWNER_ID, config_dict, remotes_multi, user_data
 from bot.helper.ext_utils.bot_utils import cmd_exec, run_sync_to_async
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.exceptions import NotRclonePathFound
@@ -42,12 +42,14 @@ async def is_remote_selected(user_id, message):
         return True
 
 
-async def is_rclone_config(user_id, message, isLeech=False):
+async def is_rclone_config(user_id, message, isLeech=False, show_prompt=False):
+    is_sudo_user = user_id == OWNER_ID or user_data.get(user_id, {}).get("is_sudo")
+
     if config_dict["MULTI_RCLONE_CONFIG"]:
         path = f"rclone/{user_id}/rclone.conf"
         no_path_msg = "Send a rclone config file, use /files command"
     else:
-        if CustomFilters.sudo(user_id):
+        if is_sudo_user:
             path = f"rclone/{user_id}/rclone.conf"
             no_path_msg = "Send a rclone config file, use /files command"
         else:
@@ -60,15 +62,33 @@ async def is_rclone_config(user_id, message, isLeech=False):
         if isLeech:
             return True
         else:
-            await sendMessage(no_path_msg, message)
+            if show_prompt and (config_dict["MULTI_RCLONE_CONFIG"] or is_sudo_user):
+                await send_rclone_config_upload_prompt(user_id, message)
+            else:
+                await sendMessage(no_path_msg, message)
             return False
 
 
+async def send_rclone_config_upload_prompt(user_id, message):
+    buttons = ButtonMaker()
+    buttons.cb_buildbutton(
+        "📤 Upload rclone.conf", f"configmenu^upload^rclone^{user_id}"
+    )
+    buttons.cb_buildbutton("✘ Close Menu", f"configmenu^close^{user_id}", "footer")
+    await sendMarkup(
+        "⚠️ <b>rclone.conf not found</b>\n\nUpload a rclone config file to continue.",
+        message,
+        reply_markup=buttons.build_menu(1),
+    )
+
+
 async def get_rclone_path(user_id, message=None):
+    is_sudo_user = user_id == OWNER_ID or user_data.get(user_id, {}).get("is_sudo")
+
     if config_dict["MULTI_RCLONE_CONFIG"]:
         path = f"rclone/{user_id}/rclone.conf"
     else:
-        if CustomFilters.sudo(user_id):
+        if is_sudo_user:
             path = f"rclone/{user_id}/rclone.conf"
         else:
             path = f"rclone/rclone_global/rclone.conf"

@@ -92,7 +92,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None, isJD=False)
     message_id = message.id
 
     if not isLeech:
-        if not await is_rclone_config(user_id, message):
+        if not await is_rclone_config(user_id, message, show_prompt=True):
             return
         if not await is_remote_selected(user_id, message):
             return
