@@ -541,9 +541,3 @@ machine example.workers.dev password index_password
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sammax09)
 
 ---
-
-## 📸 Screenshot
-
-<img src="./screenshot.png" alt="button menu example" width="400">
-
----
