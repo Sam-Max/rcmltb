@@ -40,11 +40,6 @@ You can add tuple and dict also. Use double quotes inside dict.
 
 mirror = """
 📥 <b>MIRROR COMMANDS MENU</b>
-
-Use this menu to build mirror commands quickly.
-
-<b>NOTE:</b>
-1. Commands that start with <b>qb</b> work only for torrent links/files.
 """
 
 new_name = """ 
@@ -54,7 +49,6 @@ new_name = """
 
 2. <b>By replying to link/file</b>  
 
-Note: It does not work with torrents.
 """
 
 extract = """ 
