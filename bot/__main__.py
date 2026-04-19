@@ -1,5 +1,5 @@
 from asyncio import create_subprocess_exec, gather
-from signal import signal, SIGINT, SIGTERM, SIGTSTP
+from signal import signal, SIGINT, SIGTERM, SIGTSTP, SIG_IGN
 from aiofiles import open as aiopen
 from time import time
 from os import path as ospath, remove as osremove, execl as osexecl
@@ -140,7 +140,7 @@ async def main():
     LOGGER.info("Bot Started!")
     signal(SIGINT, exit_clean_up)
     signal(SIGTERM, exit_clean_up)
-    signal(SIGTSTP, exit_clean_up)
+    signal(SIGTSTP, SIG_IGN)
 
 
 bot_loop.run_until_complete(main())

@@ -1,6 +1,7 @@
 from asyncio import (
     create_subprocess_exec,
     create_subprocess_shell,
+    iscoroutine,
     run_coroutine_threadsafe,
     sleep,
 )
@@ -424,7 +425,8 @@ async def run_sync_to_async(func, *args, wait=True, **kwargs):
 
 
 def run_async_to_sync(func, *args, wait=True, **kwargs):
-    future = run_coroutine_threadsafe(func(*args, **kwargs), bot_loop)
+    coro = func if iscoroutine(func) else func(*args, **kwargs)
+    future = run_coroutine_threadsafe(coro, bot_loop)
     if wait:
         return future.result()
     else:

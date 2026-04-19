@@ -133,18 +133,29 @@ async def clean_all():
 
 
 def exit_clean_up(signal, frame):
-    from bot.helper.ext_utils.bot_utils import run_async_to_sync
-    from subprocess import run as srun
-    from sys import exit
+    from bot import bot_loop
+    from asyncio import create_subprocess_exec
+
+    async def _shutdown_bot():
+        try:
+            await clean_all()
+        except Exception as e:
+            LOGGER.error(str(e))
+        try:
+            proc = await create_subprocess_exec(
+                "pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg"
+            )
+            await proc.wait()
+        except Exception as e:
+            LOGGER.error(str(e))
+        bot_loop.stop()
 
     try:
         LOGGER.info("Please wait, while we clean up and stop the running downloads")
-        run_async_to_sync(clean_all())
-        srun(["pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg"])
-        exit(0)
+        bot_loop.create_task(_shutdown_bot())
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
-        exit(1)
+        bot_loop.stop()
 
 
 def get_base_name(orig_path: str):
