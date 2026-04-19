@@ -90,7 +90,7 @@ bash start.sh
   and `dict` values with `literal_eval`.
 - `SEARCH_PLUGINS` and `YT_DLP_OPTIONS` are parsed from Python-literal strings,
   not JSON.
-- The README still shows `API_ID`, but the runtime uses `TELEGRAM_API_ID`.
+- The runtime uses `TELEGRAM_API_ID` and `TELEGRAM_API_HASH`.
 
 Required keys:
 
