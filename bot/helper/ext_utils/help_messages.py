@@ -39,11 +39,12 @@ You can add tuple and dict also. Use double quotes inside dict.
 """
 
 mirror = """
+📥 <b>MIRROR COMMANDS MENU</b>
 
-📥 ***MIRROR COMMANDS MENU***
+Use this menu to build mirror commands quickly.
 
 <b>NOTE:</b>
-1. Commands that start with <b>qb</b> are ONLY for torrents.
+1. Commands that start with <b>qb</b> work only for torrent links/files.
 """
 
 new_name = """ 
@@ -216,14 +217,14 @@ Each link inside .txt file separated by new line
 MIRROR_HELP_DICT = {
     "Cmd": mirror,
     "Menu": None,
-    "Rename": new_name,
-    "Zip": zip,
-    "Extract": extract,
-    "Multi": multi,
-    "Link": direct_link,
-    "Seed": torr_seed,
-    "Select": torr_select,
-    "Screenshot": screenshots,
+    "✏️Rename": new_name,
+    "🗜️Zip": zip,
+    "📦Extract": extract,
+    "🔢Multi": multi,
+    "🔗Links": direct_link,
+    "🌱Seeding": torr_seed,
+    "🎯TorrentSelect": torr_select,
+    "🖼️Screenshots": screenshots,
 }
 
 LEECH_HELP_DICT = {

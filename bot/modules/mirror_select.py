@@ -96,6 +96,19 @@ async def mirrorselect_callback(_, query):
     elif cmd[1] == "reset":
         remotes_multi.clear()
         await list_remotes(message, menu_type=Menus.MIRROR_SELECT, edit=True)
+    elif cmd[1] == "close":
+        await query.answer()
+        selected_remote = get_rclone_data("MIRROR_SELECT_REMOTE", user_id)
+        selected_base = get_rclone_data("MIRROR_SELECT_BASE_DIR", user_id)
+        await message.delete()
+        if selected_remote:
+            selected_path = f"{selected_remote}:{selected_base}"
+            await sendMessage(
+                "✅ <b>Destination saved</b>\n"
+                f"<b>Path:</b> <code>{selected_path}</code>\n\n"
+                f"Now send /{BotCommands.MirrorCommand[0]} &lt;link&gt;",
+                message,
+            )
     else:
         await query.answer()
         await message.delete()
@@ -116,7 +129,7 @@ async def next_page_mirrorselect(_, callback_query):
 
     buttons = ButtonMaker()
     buttons.cb_buildbutton(
-        "✅ Select this folder", f"{Menus.MIRROR_SELECT}^close^{user_id}"
+        "✅ Use this folder", f"{Menus.MIRROR_SELECT}^close^{user_id}"
     )
 
     next_info, _next_offset = await run_sync_to_async(rcloneListNextPage, info, next_offset)
@@ -145,7 +158,10 @@ async def next_page_mirrorselect(_, callback_query):
 
     mirrorsel_remote = get_rclone_data("MIRROR_SELECT_REMOTE", user_id)
     base_dir = get_rclone_data("MIRROR_SELECT_BASE_DIR", user_id)
-    msg = f"📁 <b>Select folder where you want to store files</b>\n\n<b>Path:</b><code>{mirrorsel_remote}:{base_dir}</code>"
+    msg = (
+        "📁 <b>Choose destination folder</b>\n\n"
+        f"<b>Path:</b> <code>{mirrorsel_remote}:{base_dir}</code>"
+    )
     await editMessage(msg, message, reply_markup=buttons.build_menu(1))
 
 

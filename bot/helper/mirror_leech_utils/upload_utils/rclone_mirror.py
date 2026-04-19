@@ -53,7 +53,13 @@ class RcloneMirror:
         if config_dict["MULTI_RCLONE_CONFIG"] or is_sudo_filter:
             if is_multi_remote_up and len(remotes_multi) > 0:
                 for rc_remote in remotes_multi:
-                    await self.upload(self.__path, conf_path, mime_type, rc_remote)
+                    await self.upload(
+                        self.__path,
+                        conf_path,
+                        mime_type,
+                        rc_remote,
+                        folder_name,
+                    )
                 await clean_download(self.__path)
                 return
 
@@ -122,7 +128,7 @@ class RcloneMirror:
             "-P",
         ]
 
-        is_gdrive = is_gdrive_remote(remote, conf_path)
+        is_gdrive = await is_gdrive_remote(remote, conf_path)
         await setRcloneFlags(cmd, "upload")
 
         if ospath.isdir(path):

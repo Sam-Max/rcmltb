@@ -94,7 +94,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None, isJD=False)
     if not isLeech:
         if not await is_rclone_config(user_id, message, show_prompt=True):
             return
-        if not await is_remote_selected(user_id, message):
+        if not await is_remote_selected(user_id, message, open_selector=True):
             return
 
     message_list = message.text.split("\n")
@@ -251,6 +251,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None, isJD=False)
             msg += f"<b>Size</b>: <code>{get_readable_size(file.file_size)}</code>"
             buttons.cb_buildbutton("📄 By default", "mirrormenu^default")
             buttons.cb_buildbutton("✏️ Rename", "mirrormenu^rename")
+            buttons.cb_buildbutton("ℹ️ Mirror Commands", "mirrormenu^commands")
             buttons.cb_buildbutton("✘ Close Menu", "mirrormenu^close", "footer")
             listener_dict[message_id] = [listener, file, message, isLeech, user_id, ""]
             await sendMarkup(msg, message, reply_markup=buttons.build_menu(2))
@@ -341,6 +342,9 @@ async def mirror_menu(client, query):
             await sendMessage("⏰ Too late 60s gone, try again!", message)
         finally:
             await question.delete()
+    elif cmd[1] == "commands":
+        await query.answer()
+        await sendMessage(MIRROR_HELP_DICT["Cmd"], message, MIRROR_HELP_DICT["Menu"])
     else:
         await query.answer()
         await query_message.delete()

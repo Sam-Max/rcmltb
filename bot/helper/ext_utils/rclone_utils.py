@@ -22,7 +22,7 @@ from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclone_data
 
 
-async def is_remote_selected(user_id, message):
+async def is_remote_selected(user_id, message, open_selector=False):
     if await CustomFilters.sudo_filter("", message):
         if DEFAULT_OWNER_REMOTE := config_dict["DEFAULT_OWNER_REMOTE"]:
             update_rclone_data("MIRROR_SELECT_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
@@ -33,10 +33,13 @@ async def is_remote_selected(user_id, message):
         elif len(remotes_multi) > 0:
             return True
         else:
-            await sendMessage(
-                f"Select a cloud first, use /{BotCommands.MirrorSelectCommand[0]}",
-                message,
-            )
+            if open_selector:
+                await list_remotes(message, menu_type=Menus.MIRROR_SELECT)
+            else:
+                await sendMessage(
+                    f"Select a cloud first, use /{BotCommands.MirrorSelectCommand[0]}",
+                    message,
+                )
             return False
     else:
         return True
@@ -177,12 +180,16 @@ async def list_remotes(
         msg = "Select cloud to view info"
     elif menu_type == Menus.MIRROR_SELECT:
         if config_dict["MULTI_REMOTE_UP"]:
-            msg = f"Select all clouds where you want to upload file"
-            buttons.cb_buildbutton("🔄 Reset", f"{menu_type}^reset^{user_id}" ,"footer")
+            msg = "Choose destination clouds for mirror uploads"
+            buttons.cb_buildbutton("🔄 Clear Selected", f"{menu_type}^reset^{user_id}", "footer")
         else:
             remote = get_rclone_data("MIRROR_SELECT_REMOTE", user_id)
-            dir = get_rclone_data("MIRROR_SELECT_BASE_DIR", user_id)
-            msg = f"Select cloud where you want to store files\n\n<b>Path:</b><code>{remote}:{dir}</code>"
+            base_dir = get_rclone_data("MIRROR_SELECT_BASE_DIR", user_id)
+            current_path = f"{remote}:{base_dir}" if remote else "Not set"
+            msg = (
+                "Choose destination cloud for mirror uploads"
+                f"\n\n<b>Current:</b> <code>{current_path}</code>"
+            )
     elif menu_type == Menus.SYNC:
         msg = f"Select <b>{remote_type}</b> cloud"
         msg += "<b>\n\nNote</b>: Sync make source and destination identical, modifying destination only."
@@ -190,7 +197,7 @@ async def list_remotes(
         msg = "Select cloud where your files are stored\n\n"
     if is_second_menu:
         msg = "Select folder where you want to copy"
-    buttons.cb_buildbutton("✘ Close Menu", f"{menu_type}^close^{user_id}", "footer")
+    buttons.cb_buildbutton("✖ Cancel", f"{menu_type}^close^{user_id}", "footer")
     if edit:
         await editMessage(msg, message, reply_markup=buttons.build_menu(2))
     else:
@@ -251,13 +258,16 @@ async def list_folder(
                 and conf.get(rclone_remote, "type") == "crypt"
             ):
                 rc_path = conf.get(rclone_remote, "remote")
-                msg = f"Crypt Remote\n\n<b>Path:</b><code>{rc_path}</code>"
-                buttons.cb_buildbutton("✅ Select", f"{menu_type}^close^{user_id}")
+                msg = (
+                    "🔐 <b>Crypt destination</b>"
+                    f"\n\n<b>Path:</b> <code>{rc_path}</code>"
+                )
+                buttons.cb_buildbutton("✅ Use this destination", f"{menu_type}^close^{user_id}")
                 buttons.cb_buildbutton(
                     "⬅️ Back", f"{menu_type}^{back_callback}^{user_id}", "footer_second"
                 )
                 buttons.cb_buildbutton(
-                    "✘ Close Menu", f"{menu_type}^close^{user_id}", "footer_third"
+                    "✖ Cancel", f"{menu_type}^close^{user_id}", "footer_third"
                 )
                 await editMessage(msg, message, reply_markup=buttons.build_menu(1))
                 return
@@ -265,9 +275,12 @@ async def list_folder(
             next_type = "next_ms"
             cmd.extend(["--dirs-only", "--fast-list", "--no-modtime"])
             buttons.cb_buildbutton(
-                "✅ Select this folder", f"{menu_type}^close^{user_id}"
+                "✅ Use this folder", f"{menu_type}^close^{user_id}"
             )
-            msg = f"Select folder where you want to store files\n\n<b>Path:</b><code>{rc_path}</code>"
+            msg = (
+                "📁 <b>Choose destination folder</b>"
+                f"\n\n<b>Path:</b> <code>{rc_path}</code>"
+            )
     elif menu_type == Menus.MYFILES:
         next_type = "next_myfiles"
         file_callback = "file_action"
@@ -347,7 +360,7 @@ async def list_folder(
         "⬅️ Back", f"{menu_type}^{back_callback}^{user_id}", "footer_second"
     )
     buttons.cb_buildbutton(
-        "✘ Close Menu", f"{menu_type}^close^{user_id}", "footer_third"
+        "✖ Cancel", f"{menu_type}^close^{user_id}", "footer_third"
     )
 
     if edit:
@@ -420,7 +433,7 @@ async def create_next_buttons(
         "⬅️ Back", f"{menu_type}^{data_back_cb}^{user_id}", "footer_third"
     )
     buttons.cb_buildbutton(
-        "✘ Close Menu", f"{menu_type}^close^{user_id}", "footer_third"
+        "✖ Cancel", f"{menu_type}^close^{user_id}", "footer_third"
     )
 
 
