@@ -1,0 +1,81 @@
+"""Optional Python config template for rcmltb.
+
+Copy to `config.py` and fill values, or prefer `config.env` for Docker/Compose.
+Do not commit real secrets.
+"""
+
+# Required
+BOT_TOKEN = ""
+OWNER_ID = 0
+TELEGRAM_API_ID = 0
+TELEGRAM_API_HASH = ""
+
+# Common
+DOWNLOAD_DIR = "/usr/src/app/downloads/"
+DATABASE_URL = ""
+CMD_INDEX = ""
+ALLOWED_CHATS = ""
+SUDO_USERS = ""
+AUTO_MIRROR = False
+LOCAL_MIRROR = False
+NO_TASKS_LOGS = False
+BOT_PM = False
+
+# Queue/status
+PARALLEL_TASKS = 0
+QUEUE_ALL = 0
+QUEUE_DOWNLOAD = 0
+QUEUE_UPLOAD = 0
+STATUS_LIMIT = 10
+STATUS_UPDATE_INTERVAL = 10
+AUTO_DELETE_MESSAGE_DURATION = 30
+
+# Rclone / Drive
+DEFAULT_OWNER_REMOTE = ""
+DEFAULT_GLOBAL_REMOTE = ""
+MULTI_RCLONE_CONFIG = False
+REMOTE_SELECTION = False
+MULTI_REMOTE_UP = False
+USE_SERVICE_ACCOUNTS = False
+SERVICE_ACCOUNTS_REMOTE = ""
+SERVER_SIDE = False
+RC_INDEX_URL = ""
+RC_INDEX_PORT = 8080
+RC_INDEX_USER = "admin"
+RC_INDEX_PASS = "admin"
+RCLONE_COPY_FLAGS = ""
+RCLONE_UPLOAD_FLAGS = ""
+RCLONE_DOWNLOAD_FLAGS = ""
+GDRIVE_FOLDER_ID = ""
+IS_TEAM_DRIVE = False
+GD_INDEX_URL = ""
+VIEW_LINK = False
+EXTENSION_FILTER = ""
+
+# Leech / uploads
+AS_DOCUMENT = False
+EQUAL_SPLITS = False
+LEECH_SPLIT_SIZE = 2097152000
+LEECH_LOG = ""
+NAME_SUBSTITUTE = ""
+UPLOAD_PATH_TEMPLATE = ""
+USER_SESSION_STRING = ""
+
+# Search / media
+SEARCH_API_LINK = ""
+SEARCH_LIMIT = 0
+SEARCH_PLUGINS = []
+TMDB_API_KEY = ""
+TMDB_LANGUAGE = "en"
+YT_DLP_OPTIONS = {}
+
+# External integrations
+QB_BASE_URL = ""
+QB_SERVER_PORT = 80
+RSS_CHAT_ID = 0
+RSS_DELAY = 900
+TORRENT_TIMEOUT = 0
+UPSTREAM_REPO = ""
+UPSTREAM_BRANCH = "master"
+JD_EMAIL = ""
+JD_PASSWORD = ""
