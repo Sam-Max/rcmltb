@@ -14,7 +14,7 @@ from bot import (
 )
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import run_sync_to_async, update_user_ldata
-from bot.helper.ext_utils.db_handler import DbManager
+from bot.helper.ext_utils.db_handler import database
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (
     editMessage,
@@ -155,7 +155,7 @@ async def set_yt_options(_, message, query):
     await message.delete()
     await update_user_settings(query)
     if DATABASE_URL:
-        await DbManager().update_user_data(user_id)
+        await database.update_user_data(user_id)
 
 
 async def set_name_substitute(_, message, query):
@@ -165,7 +165,7 @@ async def set_name_substitute(_, message, query):
     await message.delete()
     await update_user_settings(query)
     if DATABASE_URL:
-        await DbManager().update_user_data(user_id)
+        await database.update_user_data(user_id)
 
 
 async def leech_split_size(_, message, query):
@@ -175,7 +175,7 @@ async def leech_split_size(_, message, query):
     await message.delete()
     await update_user_settings(query)
     if DATABASE_URL:
-        await DbManager().update_user_data(user_id)
+        await database.update_user_data(user_id)
 
 
 async def edit_user_settings(client, query):
@@ -193,7 +193,7 @@ async def edit_user_settings(client, query):
         await query.answer()
         await update_user_settings(query)
         if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "vthumb":
         await query.answer()
         await sendFile(message, thumb_path, from_user.mention)
@@ -205,7 +205,7 @@ async def edit_user_settings(client, query):
             update_user_ldata(user_id, "thumb", "")
             await update_user_settings(query)
             if DATABASE_URL:
-                await DbManager().update_thumb(user_id)
+                await database.update_thumb(user_id)
         else:
             await query.answer(text="Old Settings", show_alert=True)
             await update_user_settings(query)
@@ -237,7 +237,7 @@ async def edit_user_settings(client, query):
                     update_user_ldata(user_id, "thumb", des_dir)
                     await update_user_settings(query)
                     if DATABASE_URL:
-                        await DbManager().update_thumb(user_id, des_dir)
+                        await database.update_thumb(user_id, des_dir)
                 except Exception as ex:
                     await editMessage(str(ex), question)
         except asyncio.TimeoutError:
@@ -270,7 +270,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         update_user_ldata(user_id, "yt_opt", "")
         await update_user_settings(query)
         if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "ns":
         await query.answer()
         buttons = ButtonMaker()
@@ -305,7 +305,7 @@ Examples:
         update_user_ldata(user_id, "name_sub", "")
         await update_user_settings(query)
         if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "lss":
         await query.answer()
         buttons = ButtonMaker()
@@ -338,7 +338,7 @@ Examples:
         update_user_ldata(user_id, "split_size", "")
         await update_user_settings(query)
         if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "esplits":
         await query.answer()
         update_user_ldata(
@@ -346,7 +346,7 @@ Examples:
         )
         await update_user_settings(query)
         if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "sscreenshots":
         await query.answer()
         buttons = ButtonMaker()
@@ -376,21 +376,21 @@ Examples:
         update_user_ldata(user_id, "screenshots_count", 0)
         await update_user_settings(query)
         if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "ss_count":
         await query.answer()
         count = int(data[3])
         update_user_ldata(user_id, "screenshots_count", count)
         await update_user_settings(query)
         if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "ss_album":
         await query.answer()
         current = user_dict.get("screenshots_as_album", True)
         update_user_ldata(user_id, "screenshots_as_album", not current)
         await update_user_settings(query)
         if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "category":
         await query.answer()
         buttons = ButtonMaker()
@@ -414,13 +414,13 @@ Examples:
         update_user_ldata(user_id, "category", category)
         await update_user_settings(query)
         if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "clear_cat":
         await query.answer()
         update_user_ldata(user_id, "category", "")
         await update_user_settings(query)
         if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "utemplate":
         await query.answer()
         buttons = ButtonMaker()
@@ -492,7 +492,7 @@ Send <code>/ignore</code> to cancel. Timeout: 60 sec"""
                     update_user_ldata(user_id, "upload_template", template)
                     await update_user_settings(query)
                     if DATABASE_URL:
-                        await DbManager().update_user_data(user_id)
+                        await database.update_user_data(user_id)
         except asyncio.TimeoutError:
             await sendMessage("Too late 60s gone, try again!", message)
     elif data[2] == "rutemplate":
@@ -500,7 +500,7 @@ Send <code>/ignore</code> to cancel. Timeout: 60 sec"""
         update_user_ldata(user_id, "upload_template", "")
         await update_user_settings(query)
         if DATABASE_URL:
-            await DbManager().update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "back":
         await client.listen.Cancel(filters.user(user_id))
         await query.answer()

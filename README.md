@@ -406,6 +406,32 @@ Run this on your PC from the repository folder.
 
 ## 🗄️ MongoDB Setup
 
+### Local MongoDB with Docker Compose (No Auth)
+
+`docker-compose.yml` includes a local `mongo` service with persistent storage.
+
+1. Set `DATABASE_URL` in `config.env`:
+
+```env
+DATABASE_URL="mongodb://mongo:27017/rcmltb"
+```
+
+2. Start services:
+
+```bash
+docker compose up -d
+```
+
+3. Verify both containers:
+
+```bash
+docker compose ps
+```
+
+MongoDB data persists in the `mongo_data` volume.
+
+### MongoDB Atlas (Cloud)
+
 1. Go to [mongodb.com](https://mongodb.com/) and sign up
 2. Create a Shared Cluster (Free)
 3. Add `username` and `password`, click `Add my current IP Address`

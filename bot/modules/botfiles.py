@@ -26,7 +26,7 @@ from bot import (
 from bot.core.torrent_manager import TorrentManager
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import setInterval
-from bot.helper.ext_utils.db_handler import DbManager
+from bot.helper.ext_utils.db_handler import database
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (
     editMarkup,
@@ -184,13 +184,13 @@ async def load_config():
         await TorrentManager.change_aria2_option("bt-stop-timeout", "0")
         aria2_options["bt-stop-timeout"] = "0"
         if DATABASE_URL:
-            await DbManager().update_aria2("bt-stop-timeout", "0")
+            await database.update_aria2("bt-stop-timeout", "0")
         TORRENT_TIMEOUT = ""
     else:
         await TorrentManager.change_aria2_option("bt-stop-timeout", TORRENT_TIMEOUT)
         aria2_options["bt-stop-timeout"] = TORRENT_TIMEOUT
         if DATABASE_URL:
-            await DbManager().update_aria2("bt-stop-timeout", TORRENT_TIMEOUT)
+            await database.update_aria2("bt-stop-timeout", TORRENT_TIMEOUT)
         TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
 
     IS_TEAM_DRIVE = environ.get("IS_TEAM_DRIVE", "")
@@ -348,7 +348,7 @@ async def load_config():
     )
 
     if DATABASE_URL:
-        await DbManager().update_config(config_dict)
+        await database.update_config(config_dict)
     await initiate_search_tools()
 
 
@@ -502,8 +502,8 @@ async def _delete_section_file(user_id, section):
             srun(["rm", "-rf", path])
         config_dict["USE_SERVICE_ACCOUNTS"] = False
         if DATABASE_URL:
-            await DbManager().update_config({"USE_SERVICE_ACCOUNTS": False})
-            await DbManager().update_private_file("accounts.zip")
+            await database.update_config({"USE_SERVICE_ACCOUNTS": False})
+            await database.update_private_file("accounts.zip")
         return
 
     if ospath.exists(path):
@@ -513,7 +513,7 @@ async def _delete_section_file(user_id, section):
         debrid_data.pop("token", None)
 
     if DATABASE_URL:
-        await DbManager().update_private_file(path)
+        await database.update_private_file(path)
 
 
 async def _start_upload_listener(client, query, message, user_id, section):
@@ -688,7 +688,7 @@ async def set_config_listener(
                 )
                 return
             if DATABASE_URL:
-                await DbManager().update_user_doc(user_id, file_type, rclone_path)
+                await database.update_user_doc(user_id, file_type, rclone_path)
             await sendMessage(
                 f"✅ <b>rclone.conf uploaded successfully.</b>\n"
                 f"<b>Saved to:</b> <code>{rclone_path}</code>",
@@ -707,7 +707,7 @@ async def set_config_listener(
                 )
                 return
             if DATABASE_URL:
-                await DbManager().update_user_doc(user_id, "token_pickle", des_dir)
+                await database.update_user_doc(user_id, "token_pickle", des_dir)
             await sendMessage("✅ <b>token.pickle uploaded successfully.</b>", message)
         elif target_section == "debrid":
             path = f"{getcwd()}/debrid/"
@@ -723,7 +723,7 @@ async def set_config_listener(
                 return
             await load_debrid_token()
             if DATABASE_URL:
-                await DbManager().update_private_file("debrid/debrid_token.txt")
+                await database.update_private_file("debrid/debrid_token.txt")
             await sendMessage("✅ <b>debrid token uploaded successfully.</b>", message)
         elif target_section == "config":
             saved_path = await client.download_media(response, file_name="config.env")
@@ -737,7 +737,7 @@ async def set_config_listener(
             load_dotenv("config.env", override=True)
             await load_config()
             if DATABASE_URL:
-                await DbManager().update_private_file("config.env")
+                await database.update_private_file("config.env")
             await sendMessage("✅ <b>config.env uploaded successfully.</b>", message)
         elif target_section == "accounts":
             saved_path = await client.download_media(response, file_name="accounts.zip")
@@ -762,7 +762,7 @@ async def set_config_listener(
             ).wait()
             await (await create_subprocess_exec("chmod", "-R", "777", "accounts")).wait()
             if DATABASE_URL:
-                await DbManager().update_private_file("accounts.zip")
+                await database.update_private_file("accounts.zip")
             await sendMessage("✅ <b>accounts.zip uploaded and extracted.</b>", message)
         else:
             await client.download_media(response, file_name="./")
@@ -772,7 +772,7 @@ async def set_config_listener(
                     await (await create_subprocess_exec("cp", ".netrc", "/root/.netrc")).wait()
                 await (await create_subprocess_exec("chmod", "600", ".netrc")).wait()
             if DATABASE_URL:
-                await DbManager().update_private_file(file_name)
+                await database.update_private_file(file_name)
             await sendMessage("✅ <b>File uploaded successfully.</b>", message)
         if ospath.exists("accounts.zip"):
             osremove("accounts.zip")

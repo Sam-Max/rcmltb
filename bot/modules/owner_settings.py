@@ -21,7 +21,7 @@ from bot.core.torrent_manager import TorrentManager
 from bot.core.config_manager import Config
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import run_sync_to_async, setInterval
-from bot.helper.ext_utils.db_handler import DbManager
+from bot.helper.ext_utils.db_handler import database
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (
     editMarkup,
@@ -229,7 +229,7 @@ async def ownerset_callback(client, callback_query):
                         LOGGER.error(e)
                 aria2_options["bt-stop-timeout"] = "0"
                 if DATABASE_URL:
-                    await DbManager().update_aria2("bt-stop-timeout", "0")
+                    await database.update_aria2("bt-stop-timeout", "0")
             elif data[3] == "QB_BASE_URL":
                 await (
                     await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")
@@ -247,7 +247,7 @@ async def ownerset_callback(client, callback_query):
             if hasattr(Config, data[3]):
                 Config.set(data[3], value)
             if DATABASE_URL:
-                await DbManager().update_config({data[3]: value})
+                await database.update_config({data[3]: value})
             if data[3] in ["SEARCH_PLUGINS", "SEARCH_API_LINK"]:
                 await initiate_search_tools()
             await edit_menus(message, "env")
@@ -282,14 +282,14 @@ async def ownerset_callback(client, callback_query):
             await edit_menus(message, "aria")
             await TorrentManager.change_aria2_option(data[3], value)
             if DATABASE_URL:
-                await DbManager().update_aria2(data[3], value)
+                await database.update_aria2(data[3], value)
         elif data[2] == "emptyaria":
             await query.answer()
             aria2_options[data[3]] = ""
             await edit_menus(message, "aria")
             await TorrentManager.change_aria2_option(data[3], "")
             if DATABASE_URL:
-                await DbManager().update_aria2(data[3], "")
+                await database.update_aria2(data[3], "")
     elif data[1] == "qbit":
         if data[2] == "qbit_menu":
             globals()["START"] = 0
@@ -314,7 +314,7 @@ async def ownerset_callback(client, callback_query):
             qbit_options[data[3]] = ""
             await edit_menus(message, "qbit")
             if DATABASE_URL:
-                await DbManager().update_qbittorrent(data[2], "")
+                await database.update_qbittorrent(data[2], "")
     elif data[1] == "edit":
         await query.answer()
         globals()["STATE"] = "edit"
@@ -450,7 +450,7 @@ async def start_env_listener(client, query, user_id, key):
                         Config.set(key, value)
                     await edit_menus(message, "env")
                     if DATABASE_URL:
-                        await DbManager().update_config({key: value})
+                        await database.update_config({key: value})
                     if key in ["SEARCH_PLUGINS", "SEARCH_API_LINK"]:
                         await initiate_search_tools()
             except KeyError:
@@ -499,7 +499,7 @@ async def start_aria_listener(client, query, user_id, key):
                     aria2_options[key] = value
                     await edit_menus(message, "aria")
                     if DATABASE_URL:
-                        await DbManager().update_aria2(key, value)
+                        await database.update_aria2(key, value)
             except KeyError:
                 await query.answer("Value doesn't exist")
     finally:
@@ -539,7 +539,7 @@ async def start_qbit_listener(client, query, user_id, key):
                     qbit_options[key] = value
                     await edit_menus(message, "qbit")
                     if DATABASE_URL:
-                        await DbManager().update_qbittorrent(key, value)
+                        await database.update_qbittorrent(key, value)
             except KeyError:
                 await query.answer("Value doesn't exist")
     finally:

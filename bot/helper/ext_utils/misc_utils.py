@@ -126,6 +126,8 @@ async def clean_all():
 
 
 async def _shutdown_bot():
+    from bot.helper.ext_utils.db_handler import database
+
     try:
         await clean_all()
     except Exception as e:
@@ -135,6 +137,10 @@ async def _shutdown_bot():
             "pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg"
         )
         await proc.wait()
+    except Exception as e:
+        LOGGER.error(str(e))
+    try:
+        await database.disconnect()
     except Exception as e:
         LOGGER.error(str(e))
     bot_loop.stop()

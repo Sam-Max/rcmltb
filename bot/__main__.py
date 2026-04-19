@@ -27,6 +27,7 @@ from bot.helper.ext_utils.help_messages import (
     create_mirror_help_buttons,
     create_ytdl_help_buttons,
 )
+from bot.helper.ext_utils.db_handler import database
 from bot.helper.ext_utils.misc_utils import clean_all, exit_clean_up, start_cleanup
 from bot.helper.telegram_helper.message_utils import sendMessage
 from pyrogram.types import BotCommand
@@ -34,6 +35,8 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 
 
 async def main():
+    await database.connect()
+
     # 1. Load settings from DB
     await load_settings()
     LOGGER.info("Settings loaded from database")

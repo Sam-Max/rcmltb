@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.db_handler import DbManager
+from bot.helper.ext_utils.db_handler import database
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (
     editMessage,
@@ -360,7 +360,7 @@ async def rssSub(_, message, pre_event):
         except Exception as e:
             await sendMessage(str(e), message)
     if DATABASE_URL:
-        await DbManager().rss_update(user_id)
+        await database.rss_update(user_id)
     if msg:
         await sendMessage(msg, message)
     await updateRssMenu(pre_event)
@@ -412,20 +412,20 @@ async def rssUpdate(client, message, pre_event, state):
                 addJob(config_dict["RSS_DELAY"])
                 scheduler.start()
         if is_sudo and DATABASE_URL and user_id != message.from_user.id:
-            await DbManager().rss_update(user_id)
+            await database.rss_update(user_id)
         if not rss_dict[user_id]:
             async with rss_dict_lock:
                 del rss_dict[user_id]
             if DATABASE_URL:
-                await DbManager().rss_delete(user_id)
+                await database.rss_delete(user_id)
                 if not rss_dict:
-                    await DbManager().trunc_table("rss")
+                    await database.trunc_table("rss")
     LOGGER.info(f"Rss link with Title(s): {updated} has been {state}d!")
     await sendMessage(
         f"Rss links with Title(s): <code>{updated}</code> has been {state}d!", message
     )
     if DATABASE_URL and rss_dict.get(user_id):
-        await DbManager().rss_update(user_id)
+        await database.rss_update(user_id)
     await updateRssMenu(pre_event)
 
 
@@ -584,7 +584,7 @@ async def rssEdit(client, message, pre_event):
             if "stv" in item or "-stv" in item:
                 rss_dict[user_id][title]["sensitive"] = sensitive
     if DATABASE_URL:
-        await DbManager().rss_update(user_id)
+        await database.rss_update(user_id)
     await updateRssMenu(pre_event)
 
 
@@ -596,7 +596,7 @@ async def rssDelete(client, message, pre_event):
         async with rss_dict_lock:
             del rss_dict[user]
         if DATABASE_URL:
-            await DbManager().rss_delete(user)
+            await database.rss_delete(user)
     await updateRssMenu(pre_event)
 
 
@@ -779,14 +779,14 @@ Timeout: 60 sec.
             async with rss_dict_lock:
                 del rss_dict[int(data[2])]
             if DATABASE_URL:
-                await DbManager().rss_delete(int(data[2]))
+                await database.rss_delete(int(data[2]))
             await updateRssMenu(query)
         elif data[1].endswith("pause"):
             async with rss_dict_lock:
                 for title in list(rss_dict[int(data[2])].keys()):
                     rss_dict[int(data[2])][title]["paused"] = True
             if DATABASE_URL:
-                await DbManager().rss_update(int(data[2]))
+                await database.rss_update(int(data[2]))
         elif data[1].endswith("resume"):
             async with rss_dict_lock:
                 for title in list(rss_dict[int(data[2])].keys()):
@@ -794,7 +794,7 @@ Timeout: 60 sec.
             if scheduler.state == 2:
                 scheduler.resume()
             if DATABASE_URL:
-                await DbManager().rss_update(int(data[2]))
+                await database.rss_update(int(data[2]))
         await updateRssMenu(query)
     elif data[1].startswith("all"):
         if len(rss_dict) == 0:
@@ -805,7 +805,7 @@ Timeout: 60 sec.
             async with rss_dict_lock:
                 rss_dict.clear()
             if DATABASE_URL:
-                await DbManager().trunc_table("rss")
+                await database.trunc_table("rss")
             await updateRssMenu(query)
         elif data[1].endswith("pause"):
             async with rss_dict_lock:
@@ -815,7 +815,7 @@ Timeout: 60 sec.
             if scheduler.running:
                 scheduler.pause()
             if DATABASE_URL:
-                await DbManager().rss_update_all()
+                await database.rss_update_all()
         elif data[1].endswith("resume"):
             async with rss_dict_lock:
                 for user in list(rss_dict.keys()):
@@ -827,7 +827,7 @@ Timeout: 60 sec.
                 addJob(config_dict["RSS_DELAY"])
                 scheduler.start()
             if DATABASE_URL:
-                await DbManager().rss_update_all()
+                await database.rss_update_all()
     elif data[1] == "deluser":
         if len(rss_dict) == 0:
             await query.answer(text="No subscriptions!", show_alert=True)
@@ -1033,7 +1033,7 @@ async def rssMonitor():
                     rss_dict[user][title].update(
                         {"last_feed": last_link, "last_title": last_title}
                     )
-                await DbManager().rss_update(user)
+                await database.rss_update(user)
                 LOGGER.info(f"Feed Name: {title}")
                 LOGGER.info(f"Last item: {last_link}")
                 
