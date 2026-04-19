@@ -1,4 +1,4 @@
-FROM sammax23/rcmltb
+FROM python:3.12-slim
 
 WORKDIR /usr/src/app
 RUN chmod 777 /usr/src/app && mkdir -p /usr/src/app/downloads && chmod 777 /usr/src/app/downloads

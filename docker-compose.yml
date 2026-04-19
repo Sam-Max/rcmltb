@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   app:
-    build: .
+    image: ghcr.io/sam-max/rcmltb:latest
     container_name: rcmltb
     command: bash start.sh
     volumes:
