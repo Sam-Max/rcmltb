@@ -5,7 +5,7 @@
 
 ### **Rclone Mirror-Leech Telegram Bot**
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![Pyrogram](https://img.shields.io/badge/Pyrogram-Async-blue.svg)](https://docs.pyrogram.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
@@ -82,8 +82,10 @@ Set these commands through [@BotFather](https://t.me/BotFather).
 | `mirror_batch` or `/mb` | Mirror Telegram files/links in batch |
 | `mirror_select` or `/ms` | Select a fixed cloud/folder for mirror |
 | `pmirror` | Mirror from private Telegram channels |
+| `jdmirror` or `/jm` | Mirror via JDownloader |
 | `ytdl` or `/y` | Mirror yt-dlp supported link |
 | `ytdl_leech` or `/yl` | Leech yt-dlp supported link |
+| `jdleech` or `/jl` | Leech via JDownloader |
 
 ### 📤 Leech Commands
 | Command | Description |
@@ -100,6 +102,7 @@ Set these commands through [@BotFather](https://t.me/BotFather).
 | `count` | Count file/folder from Google Drive link |
 | `rcfm` | Rclone File Manager |
 | `sync` | Sync two clouds |
+| `bisync` | Bidirectional cloud sync |
 | `cleanup` | Clean cloud trash |
 | `storage` | Cloud storage details |
 | `serve` | Serve cloud as web index |
@@ -111,7 +114,8 @@ Set these commands through [@BotFather](https://t.me/BotFather).
 | `debrid` | Debrid Manager |
 | `rss` | RSS feed monitor |
 | `mediainfo` | Get detailed media file information |
-| `forcestart` | Force start a queued task |
+| `cancel` | Cancel a task |
+| `force_start` or `/fs` | Force start a queued task |
 | `user_setting` | User settings |
 | `own_setting` | Owner settings |
 | `tmdb` | Search titles |
@@ -131,6 +135,7 @@ Set these commands through [@BotFather](https://t.me/BotFather).
 | Command | Description |
 |---------|-------------|
 | `shell` | Run commands in shell |
+| `exec` | Run Python code |
 | `restart` | Restart bot |
 
 ---
@@ -176,8 +181,8 @@ cp sample_config.env config.env
 
 | Variable | Description | Type |
 |----------|-------------|------|
-| `API_ID` | Get from https://my.telegram.org | `Int` |
-| `API_HASH` | Get from https://my.telegram.org | `Str` |
+| `TELEGRAM_API_ID` | Get from https://my.telegram.org | `Int` |
+| `TELEGRAM_API_HASH` | Get from https://my.telegram.org | `Str` |
 | `BOT_TOKEN` | Telegram Bot Token from [@BotFather](https://t.me/BotFather) | `Str` |
 | `OWNER_ID` | Your Telegram User ID (not username) | `Int` |
 
@@ -302,7 +307,7 @@ cp sample_config.env config.env
 - ✅ "Use This Chat" button
 - ✅ Browser-like HTTP headers
 
-> **RSS NOTE**: `RSS_CHAT_ID` is required. Use `USER_STRING_SESSION` **OR** a channel. For channels, add bot to both channel and linked group. Without `DATABASE_URL`, feeds during offline periods will be missed.
+> **RSS NOTE**: `RSS_CHAT_ID` is required. Use `USER_SESSION_STRING` **OR** a channel. For channels, add bot to both channel and linked group. Without `DATABASE_URL`, feeds during offline periods will be missed.
 
 ---
 
