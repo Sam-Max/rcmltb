@@ -110,16 +110,16 @@ async def main():
     await TgClient.bot.set_bot_commands(
         [
             BotCommand(BotCommands.StartCommand, "Start the bot"),
-            BotCommand(BotCommands.HelpCommand, "Show help and usage"),
             BotCommand(BotCommands.MirrorCommand[0], "Mirror to cloud"),
+            BotCommand(BotCommands.YtdlMirrorCommand[0], "Download with yt-dlp to cloud"),
             BotCommand(BotCommands.LeechCommand[0], "Leech to Telegram"),
+            BotCommand(BotCommands.YtdlLeechCommand[0], "Download with yt-dlp to Telegram"),
             BotCommand(BotCommands.CloneCommand, "Clone Google Drive files"),
             BotCommand(BotCommands.CopyCommand, "Copy files between remotes"),
             BotCommand(BotCommands.StatusCommand, "Show download status"),
             BotCommand(BotCommands.StatsCommand, "Show bot stats"),
             BotCommand(BotCommands.CancelCommand, "Cancel a task"),
             BotCommand(BotCommands.CancelAllCommand, "Cancel all tasks"),
-
             BotCommand(BotCommands.TorrentSearchCommand, "Search torrents"),
             BotCommand(BotCommands.ServeCommand, "Serve files via web"),
             BotCommand(BotCommands.UserSetCommand, "User settings"),
@@ -127,7 +127,9 @@ async def main():
             BotCommand(BotCommands.PingCommand, "Ping the bot"),
             BotCommand(BotCommands.LogsCommand, "Get bot logs"),
             BotCommand(BotCommands.RestartCommand, "Restart the bot"),
+            
             BotCommand(BotCommands.MediaInfoCommand, "Get media file information"),
+            BotCommand(BotCommands.HelpCommand, "Show help and usage"),
         ]
     )
 
