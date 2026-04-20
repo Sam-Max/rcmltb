@@ -117,7 +117,7 @@ class TaskListener(TaskConfig):
                 multi_links = True
             download = status_dict[self.uid]
             name = str(download.name()).replace("/", "")
-            gid = download.gid()
+            gid = await download.gid()
 
         if not config_dict["NO_TASKS_LOGS"]:
             LOGGER.info(f"Download completed: {name}")

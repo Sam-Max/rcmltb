@@ -175,7 +175,7 @@ async def update_all_messages(force=False):
         for chat_id in list(status_reply_dict.keys()):
             # Get per-chat filter
             status_filter = status_pages.get(chat_id, {}).get("filter", "all")
-            msg, buttons = await run_sync_to_async(get_readable_message, chat_id, status_filter)
+            msg, buttons = await get_readable_message(chat_id, status_filter)
             if msg is None:
                 continue
             if status_reply_dict[chat_id] and msg != status_reply_dict[chat_id][0].text:
@@ -196,7 +196,7 @@ async def sendStatusMessage(msg):
     # Get per-chat filter
     status_filter = status_pages.get(chat_id, {}).get("filter", "all")
 
-    progress, buttons = await run_sync_to_async(get_readable_message, chat_id, status_filter)
+    progress, buttons = await get_readable_message(chat_id, status_filter)
     if progress is None:
         return
     async with status_reply_dict_lock:

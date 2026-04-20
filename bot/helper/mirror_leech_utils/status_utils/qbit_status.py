@@ -109,8 +109,9 @@ class QbitTorrentStatus:
     def task(self):
         return self
 
-    def gid(self):
-        return self.hash()[:12]
+    async def gid(self):
+        h = await self.hash()
+        return h[:12]
 
     async def hash(self):
         await self.__update()
@@ -131,6 +132,7 @@ class QbitTorrentStatus:
         await self.__update()
         if self.__info is None:
             return
+        tag = self.__info.tags[0] if isinstance(self.__info.tags, list) else self.__info.tags
         await TorrentManager.qbittorrent.torrents.stop(hashes=[self.__info.hash])
         if await self.status() != MirrorStatus.STATUS_SEEDING:
             if not config_dict["NO_TASKS_LOGS"]:
@@ -142,10 +144,10 @@ class QbitTorrentStatus:
             )
             try:
                 await TorrentManager.qbittorrent.torrents.delete_tags(
-                    tags=[self.__info.tags]
+                    tags=[tag]
                 )
             except Exception:
                 pass
             async with qb_listener_lock:
-                if self.__info.tags in QbTorrents:
-                    del QbTorrents[self.__info.tags]
+                if tag in QbTorrents:
+                    del QbTorrents[tag]

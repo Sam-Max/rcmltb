@@ -17,7 +17,12 @@ from bot.helper.mirror_leech_utils.status_utils.qbit_status import QbitTorrentSt
 from bot.helper.telegram_helper.message_utils import update_all_messages
 
 
+def _get_tag(tags):
+    return tags[0] if isinstance(tags, list) else tags
+
+
 async def __remove_torrent(hash_, tag):
+    tag = _get_tag(tag)
     await TorrentManager.qbittorrent.torrents.delete(
         hashes=[hash_], delete_files=True
     )
@@ -60,7 +65,7 @@ async def __onSeedFinish(tor):
 @new_task
 async def __onDownloadComplete(tor):
     ext_hash = tor.hash
-    tag = tor.tags
+    tag = _get_tag(tor.tags)
     await sleep(2)
     download = await getTaskByGid(ext_hash[:12])
     if not hasattr(download, "client"):
@@ -108,7 +113,7 @@ async def __qb_listener():
                     QbInterval.clear()
                     break
                 for tor_info in torrents:
-                    tag = tor_info.tags
+                    tag = _get_tag(tor_info.tags)
                     if tag not in QbTorrents:
                         continue
                     state = tor_info.state

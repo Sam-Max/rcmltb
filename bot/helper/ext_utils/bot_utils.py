@@ -4,6 +4,7 @@ from asyncio import (
     iscoroutine,
     run_coroutine_threadsafe,
     sleep,
+    iscoroutinefunction,
 )
 from asyncio.subprocess import PIPE
 from concurrent.futures import ThreadPoolExecutor
@@ -47,6 +48,22 @@ PAGES = 1
 # Per-chat status pagination state
 # {chat_id: {"start": 0, "page": 1, "filter": "all"}}
 status_pages = {}
+
+
+async def _get_attr(obj, attr_name, default=None):
+    """Safely get an attribute that may be sync or async."""
+    try:
+        val = getattr(obj, attr_name, default)
+        if val is None:
+            return default
+        if callable(val):
+            if iscoroutinefunction(val):
+                return await val()
+            return val()
+        return val
+    except Exception:
+        return default
+
 
 ARCH_EXT = [
     ".tar.bz2",
@@ -212,128 +229,155 @@ def get_size_bytes(size_text):
         return 0
 
 
-def get_readable_message(chat_id=None, status_filter="all"):
+async def get_readable_message(chat_id=None, status_filter="all"):
     msg = ""
     button = None
     STATUS_LIMIT = config_dict["STATUS_LIMIT"]
 
-    # Get per-chat state or use defaults
-    if chat_id and chat_id in status_pages:
-        start = status_pages[chat_id]["start"]
-        page = status_pages[chat_id]["page"]
-    else:
-        start = 0
-        page = 1
-
-    # Filter tasks based on status_filter
-    all_tasks = list(status_dict.values())
-    if status_filter != "all":
-        filter_map = {
-            "dl": [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_QUEUEDL],
-            "ul": [MirrorStatus.STATUS_UPLOADING, MirrorStatus.STATUS_QUEUEUP],
-            "seed": [MirrorStatus.STATUS_SEEDING],
-            "clone": [MirrorStatus.STATUS_CLONING],
-            "queue": [MirrorStatus.STATUS_QUEUEDL, MirrorStatus.STATUS_QUEUEUP],
-        }
-        if status_filter in filter_map:
-            all_tasks = [t for t in all_tasks if t.status() in filter_map[status_filter]]
-
-    tasks = len(all_tasks)
-    globals()["PAGES"] = (tasks + STATUS_LIMIT - 1) // STATUS_LIMIT if tasks > 0 else 1
-
-    # Adjust page if out of bounds
-    if page > PAGES and PAGES != 0:
-        page = PAGES
-        start = STATUS_LIMIT * (PAGES - 1)
-        if chat_id:
-            status_pages[chat_id] = {"start": start, "page": page, "filter": status_filter}
-
-    for download in all_tasks[start : STATUS_LIMIT + start]:
-        if download.message.chat.type.name in ["SUPERGROUP", "CHANNEL"]:
-            msg += f"<b><a href='{download.message.link}'>{download.status()}</a>: </b>"
+    try:
+        # Get per-chat state or use defaults
+        if chat_id and chat_id in status_pages:
+            start = status_pages[chat_id]["start"]
+            page = status_pages[chat_id]["page"]
         else:
-            msg += f"<b>{download.status()}: </b>"
-        if download.type() == TaskType.RCLONE:
-            msg += f"\n<code>{str(download.name())}</code>"
-        else:
-            msg += f"<code>{escape(f'{download.name()}')}</code>"
-        if download.status() not in [
-            MirrorStatus.STATUS_SPLITTING,
-            MirrorStatus.STATUS_SEEDING,
-        ]:
-            if (
-                download.type() == TaskType.RCLONE
-                or download.type() == TaskType.RCLONE_SYNC
-            ):
-                msg += f"\n{get_progress_bar_rclone(download.progress())} {download.progress()}%"
-                msg += f"\n<b>Processed:</b> {download.processed_bytes()}"
+            start = 0
+            page = 1
+
+        # Filter tasks based on status_filter
+        all_tasks = list(status_dict.values())
+        if status_filter != "all":
+            filter_map = {
+                "dl": [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_QUEUEDL],
+                "ul": [MirrorStatus.STATUS_UPLOADING, MirrorStatus.STATUS_QUEUEUP],
+                "seed": [MirrorStatus.STATUS_SEEDING],
+                "clone": [MirrorStatus.STATUS_CLONING],
+                "queue": [MirrorStatus.STATUS_QUEUEDL, MirrorStatus.STATUS_QUEUEUP],
+            }
+            if status_filter in filter_map:
+                filtered_tasks = []
+                for t in all_tasks:
+                    tstatus = await _get_attr(t, "status")
+                    if tstatus in filter_map[status_filter]:
+                        filtered_tasks.append(t)
+                all_tasks = filtered_tasks
+
+        tasks = len(all_tasks)
+        globals()["PAGES"] = (tasks + STATUS_LIMIT - 1) // STATUS_LIMIT if tasks > 0 else 1
+
+        # Adjust page if out of bounds
+        if page > PAGES and PAGES != 0:
+            page = PAGES
+            start = STATUS_LIMIT * (PAGES - 1)
+            if chat_id:
+                status_pages[chat_id] = {"start": start, "page": page, "filter": status_filter}
+
+        for download in all_tasks[start : STATUS_LIMIT + start]:
+            status = await _get_attr(download, "status")
+            download_type = await _get_attr(download, "type")
+            download_name = await _get_attr(download, "name")
+            download_size = await _get_attr(download, "size", "0B")
+            download_progress = await _get_attr(download, "progress", "0%")
+            download_processed = await _get_attr(download, "processed_bytes", "0B")
+            download_speed = await _get_attr(download, "speed", "0B/s")
+            download_eta = await _get_attr(download, "eta", "-")
+            download_gid = await _get_attr(download, "gid", "")
+            download_upload_speed = await _get_attr(download, "upload_speed", "0B/s")
+            download_uploaded = await _get_attr(download, "uploaded_bytes", "0B")
+            download_ratio = await _get_attr(download, "ratio", "0.0")
+            download_seeding_time = await _get_attr(download, "seeding_time", "0s")
+
+            if download.message.chat.type.name in ["SUPERGROUP", "CHANNEL"]:
+                msg += f"<b><a href='{download.message.link}'>{status}</a>: </b>"
             else:
-                msg += f"\n{get_progress_bar_string(download.progress())} {download.progress()}"
-                msg += f"\n<b>Processed:</b> {download.processed_bytes()} of {download.size()}"
-            if queue:
-                msg += f"\n<b>Enqueue:</b> {queue.queue.qsize()}/{queue.queue.maxsize}"
-            msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
-            if hasattr(download, "seeders_num"):
-                try:
-                    msg += f"\n<b>Seeders:</b> {download.seeders_num()} | <b>Leechers:</b> {download.leechers_num()}"
-                except Exception:
-                    pass
-        elif download.status() == MirrorStatus.STATUS_SEEDING:
-            msg += f"\n<b>Size: </b>{download.size()}"
-            msg += f"\n<b>Speed: </b>{download.upload_speed()}"
-            msg += f" | <b>Uploaded: </b>{download.uploaded_bytes()}"
-            msg += f"\n<b>Ratio: </b>{download.ratio()}"
-            msg += f" | <b>Time: </b>{download.seeding_time()}"
-        else:
-            msg += f"\n<b>Size: </b>{download.size()}"
-        msg += f"\n<code>/{BotCommands.CancelCommand} {download.gid()}</code>\n\n"
-    if len(msg) == 0:
+                msg += f"<b>{status}: </b>"
+            if download_type == TaskType.RCLONE:
+                msg += f"\n<code>{str(download_name)}</code>"
+            else:
+                msg += f"<code>{escape(f'{download_name}')}</code>"
+            if status not in [
+                MirrorStatus.STATUS_SPLITTING,
+                MirrorStatus.STATUS_SEEDING,
+            ]:
+                if (
+                    download_type == TaskType.RCLONE
+                    or download_type == TaskType.RCLONE_SYNC
+                ):
+                    msg += f"\n{get_progress_bar_rclone(download_progress)} {download_progress}%"
+                    msg += f"\n<b>Processed:</b> {download_processed}"
+                else:
+                    msg += f"\n{get_progress_bar_string(download_progress)} {download_progress}"
+                    msg += f"\n<b>Processed:</b> {download_processed} of {download_size}"
+                if queue:
+                    msg += f"\n<b>Enqueue:</b> {queue.queue.qsize()}/{queue.queue.maxsize}"
+                msg += f"\n<b>Speed:</b> {download_speed} | <b>ETA:</b> {download_eta}"
+                if hasattr(download, "seeders_num"):
+                    try:
+                        seeders = await _get_attr(download, "seeders_num", 0)
+                        leechers = await _get_attr(download, "leechers_num", 0)
+                        msg += f"\n<b>Seeders:</b> {seeders} | <b>Leechers:</b> {leechers}"
+                    except Exception:
+                        pass
+            elif status == MirrorStatus.STATUS_SEEDING:
+                msg += f"\n<b>Size: </b>{download_size}"
+                msg += f"\n<b>Speed: </b>{download_upload_speed}"
+                msg += f" | <b>Uploaded: </b>{download_uploaded}"
+                msg += f"\n<b>Ratio: </b>{download_ratio}"
+                msg += f" | <b>Time: </b>{download_seeding_time}"
+            else:
+                msg += f"\n<b>Size: </b>{download_size}"
+            msg += f"\n<code>/{BotCommands.CancelCommand} {download_gid}</code>\n\n"
+        if len(msg) == 0:
+            return None, None
+        dl_speed = 0
+        up_speed = 0
+        for download in status_dict.values():
+            tstatus = await _get_attr(download, "status")
+            if tstatus == MirrorStatus.STATUS_DOWNLOADING:
+                dl_speed += text_size_to_bytes(await _get_attr(download, "speed", "0B/s"))
+            elif tstatus == MirrorStatus.STATUS_UPLOADING:
+                up_speed += text_size_to_bytes(await _get_attr(download, "speed", "0B/s"))
+            elif tstatus == MirrorStatus.STATUS_SEEDING:
+                up_speed += text_size_to_bytes(await _get_attr(download, "upload_speed", "0B/s"))
+
+        # Build buttons
+        buttons = ButtonMaker()
+
+        # Add filter buttons
+        filter_labels = {
+            "all": "All",
+            "dl": "DL",
+            "ul": "UL",
+            "seed": "Seed",
+            "clone": "Clone",
+            "queue": "Queue",
+        }
+        for filter_key, filter_label in filter_labels.items():
+            prefix = "✓" if status_filter == filter_key else ""
+            buttons.cb_buildbutton(f"{prefix}{filter_label}", f"status filter {filter_key}")
+
+        # Add navigation buttons
+        if tasks > STATUS_LIMIT or PAGES > 1:
+            buttons.cb_buildbutton("⏪", "status pre")
+            buttons.cb_buildbutton(f"{page}/{PAGES}", "status stats")
+            buttons.cb_buildbutton("⏩", "status nex")
+
+        # Add step buttons for direct page navigation
+        if PAGES > 1:
+            for i in range(1, min(PAGES + 1, 6)):  # Show up to 5 page buttons
+                buttons.cb_buildbutton(str(i), f"status step {i}")
+
+        buttons.cb_buildbutton("♻️", "status ref")
+        button = buttons.build_menu(3)
+
+        msg += f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(config_dict['DOWNLOAD_DIR']).free)}"
+        msg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botUptime)}"
+        msg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
+        return msg, button
+    except Exception as e:
+        import traceback
+        LOGGER.error(f"Error in get_readable_message: {e}")
+        LOGGER.error(traceback.format_exc())
         return None, None
-    dl_speed = 0
-    up_speed = 0
-    for download in status_dict.values():
-        tstatus = download.status()
-        if tstatus == MirrorStatus.STATUS_DOWNLOADING:
-            dl_speed += text_size_to_bytes(download.speed())
-        elif tstatus == MirrorStatus.STATUS_UPLOADING:
-            up_speed += text_size_to_bytes(download.speed())
-        elif tstatus == MirrorStatus.STATUS_SEEDING:
-            up_speed += text_size_to_bytes(download.upload_speed())
-
-    # Build buttons
-    buttons = ButtonMaker()
-
-    # Add filter buttons
-    filter_labels = {
-        "all": "All",
-        "dl": "DL",
-        "ul": "UL",
-        "seed": "Seed",
-        "clone": "Clone",
-        "queue": "Queue",
-    }
-    for filter_key, filter_label in filter_labels.items():
-        prefix = "✓" if status_filter == filter_key else ""
-        buttons.cb_buildbutton(f"{prefix}{filter_label}", f"status filter {filter_key}")
-
-    # Add navigation buttons
-    if tasks > STATUS_LIMIT or PAGES > 1:
-        buttons.cb_buildbutton("⏪", "status pre")
-        buttons.cb_buildbutton(f"{page}/{PAGES}", "status stats")
-        buttons.cb_buildbutton("⏩", "status nex")
-
-    # Add step buttons for direct page navigation
-    if PAGES > 1:
-        for i in range(1, min(PAGES + 1, 6)):  # Show up to 5 page buttons
-            buttons.cb_buildbutton(str(i), f"status step {i}")
-
-    buttons.cb_buildbutton("♻️", "status ref")
-    button = buttons.build_menu(3)
-
-    msg += f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(config_dict['DOWNLOAD_DIR']).free)}"
-    msg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botUptime)}"
-    msg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
-    return msg, button
 
 
 def text_size_to_bytes(size_text):

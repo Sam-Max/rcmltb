@@ -65,6 +65,12 @@ zip = """
 1.<code>/cmd</code> link -z
 
 2.<code>/cmd</code> link -z password (zip password protected)
+
+3.<b>Reply to a file:</b>
+
+<code>/cmd</code> -z
+
+<code>/cmd</code> -z password (zip password protected)
 """
 
 multi = """

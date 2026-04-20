@@ -456,7 +456,7 @@ def bt_selection_buttons(id_):
 async def getTaskByGid(gid):
     async with status_dict_lock:
         for dl in status_dict.values():
-            if dl.gid() == gid:
+            if await dl.gid() == gid:
                 return dl
     return None
 

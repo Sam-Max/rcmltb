@@ -70,7 +70,7 @@ async def select(_, message):
             id_ = task.gid()
             if hasattr(task, "seeding"):
                 if task.listener.is_qbit:
-                    id_ = task.hash()
+                    id_ = await task.hash()
                     await TorrentManager.qbittorrent.torrents.stop([id_])
                 else:
                     try:
