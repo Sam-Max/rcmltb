@@ -24,10 +24,6 @@ An **asynchronous** Telegram bot for transferring files between cloud storage se
 
 ---
 
-> 💡 **Fork Notice**: Originally based on [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) with enhanced **Rclone** support and additional features. The base repository has since added its own rclone implementation.
-
----
-
 ## 🌟 Features
 
 ### ☁️ Rclone
