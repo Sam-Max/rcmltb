@@ -1,4 +1,5 @@
 from html import escape
+from inspect import iscoroutine
 from json import loads as jsonloads
 from os import path as ospath, remove as osremove, walk
 
@@ -118,7 +119,12 @@ class TaskListener(TaskConfig):
                 multi_links = True
             download = status_dict[self.uid]
             name = str(download.name()).replace("/", "")
-            gid = await download.gid()
+            gid_attr = download.gid
+            if callable(gid_attr):
+                gid_result = gid_attr()
+                gid = await gid_result if iscoroutine(gid_result) else gid_result
+            else:
+                gid = gid_attr
 
         if not config_dict["NO_TASKS_LOGS"]:
             LOGGER.info(f"Download completed: {name}")
