@@ -158,6 +158,20 @@ class TaskConfig:
                 )
             )
 
+    async def clean(self):
+        from bot import Interval
+        from bot.helper.ext_utils.bot_utils import status_pages
+
+        try:
+            if Interval:
+                Interval[0].cancel()
+                Interval.clear()
+        except Exception as e:
+            LOGGER.error(str(e))
+
+        await delete_all_messages()
+        status_pages.clear()
+
     async def proceed_extract(self, path, gid):
         """Extract archive files."""
         from bot.helper.ext_utils.files_utils import (

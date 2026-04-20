@@ -177,6 +177,8 @@ async def sendStatusMessage(msg):
             await deleteMessage(message)
             del status_reply_dict[chat_id]
         message = await sendMarkup(progress, msg, buttons)
+        if not message:
+            return
         message.text = progress
         status_reply_dict[chat_id] = [message, time()]
         if not Interval:

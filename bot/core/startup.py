@@ -1,5 +1,6 @@
 from asyncio import create_subprocess_exec
 from os import environ, getcwd, makedirs, path as ospath, remove as osremove
+from shutil import which
 from subprocess import Popen, run as srun
 
 from dotenv import dotenv_values
@@ -92,6 +93,21 @@ async def load_settings():
 
 
 async def load_configurations():
+    home = environ.get("HOME", "")
+    deno_bin = ospath.join(home, ".deno", "bin") if home else ""
+    if deno_bin and ospath.isdir(deno_bin):
+        current_path = environ.get("PATH", "")
+        if deno_bin not in current_path.split(":"):
+            environ["PATH"] = f"{deno_bin}:{current_path}" if current_path else deno_bin
+
+    if deno_path := which("deno"):
+        LOGGER.info(f"Deno runtime detected at: {deno_path}")
+    else:
+        LOGGER.warning(
+            "Deno runtime not found. yt-dlp YouTube extraction may miss formats. "
+            "Install Deno or add it to PATH."
+        )
+
     if Config.QB_BASE_URL:
         Popen(
             f"gunicorn qbitweb.wserver:app --bind 0.0.0.0:{Config.QB_SERVER_PORT} --worker-class gevent",
@@ -107,9 +123,9 @@ async def load_configurations():
         with open(".netrc", "w"):
             pass
     srun(["chmod", "600", ".netrc"])
-    # Only copy to /root/.netrc if running as root
-    if environ.get("HOME") == "/root":
-        srun(["cp", ".netrc", "/root/.netrc"])
+    # Copy .netrc to home directory for yt-dlp
+    if home and home != getcwd():
+        srun(["cp", ".netrc", f"{home}/.netrc"])
     srun(["chmod", "+x", "aria.sh"])
     srun("./aria.sh", shell=True)
     if ospath.exists("accounts.zip"):

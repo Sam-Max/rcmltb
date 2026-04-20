@@ -1,5 +1,7 @@
 from asyncio import Event, wait_for
 from functools import partial
+from os import path as ospath
+from shutil import which
 from time import time
 from yt_dlp import YoutubeDL
 
@@ -44,7 +46,7 @@ async def select_format(_, query, obj):
     elif data[1] == "back":
         await obj.back_to_main()
     elif data[1] == "cancel":
-        await editMessage(message, "Task has been cancelled.")
+        await editMessage("Task has been cancelled.", message)
         obj.qual = None
         obj.listener.is_cancelled = True
         obj.event.set()
@@ -82,7 +84,7 @@ class YtSelection:
         try:
             await wait_for(self.event.wait(), timeout=self._timeout)
         except Exception:
-            await editMessage(self._reply_to, "Timed Out. Task has been cancelled!")
+            await editMessage("Timed Out. Task has been cancelled!", self._reply_to)
             self.qual = None
             self.listener.is_cancelled = True
             self.event.set()
@@ -232,6 +234,24 @@ def extract_info(link, options):
         return result
 
 
+def get_yt_runtime_options():
+    options = {"remote_components": ["ejs:github"]}
+    deno_path = which("deno")
+    if not deno_path:
+        fallback_paths = [
+            "/usr/local/bin/deno",
+            "/root/.deno/bin/deno",
+            ospath.expanduser("~/.deno/bin/deno"),
+        ]
+        for path_ in fallback_paths:
+            if ospath.isfile(path_) and ospath.exists(path_):
+                deno_path = path_
+                break
+    if deno_path:
+        options["js_runtimes"] = {"deno": {"path": deno_path}}
+    return options
+
+
 class YtDlp(TaskListener):
     def __init__(
         self,
@@ -316,11 +336,20 @@ class YtDlp(TaskListener):
                 }
 
         if not self.is_leech and not self.up_dest:
+            from bot.helper.ext_utils.rclone_data_holder import get_rclone_data
             from bot.helper.ext_utils.rclone_utils import is_rclone_config, is_remote_selected
+
             if not await is_rclone_config(self.user_id, self.message):
                 return
             if not await is_remote_selected(self.user_id, self.message):
                 return
+
+            selected_remote = get_rclone_data("MIRROR_SELECT_REMOTE", self.user_id)
+            selected_base = get_rclone_data("MIRROR_SELECT_BASE_DIR", self.user_id) or ""
+            if selected_remote:
+                self.up_dest = f"{selected_remote}:{selected_base}".rstrip("/")
+            elif config_dict.get("DEFAULT_GLOBAL_REMOTE"):
+                self.up_dest = f"{config_dict['DEFAULT_GLOBAL_REMOTE']}:/"
 
         path = f"{DOWNLOAD_DIR}{self.uid}{self.folder_name}"
         self.dir = path
@@ -351,7 +380,11 @@ class YtDlp(TaskListener):
             await sendMessage(str(e), self.message)
             return
 
-        options = {"usenetrc": True, "cookiefile": "cookies.txt"}
+        options = {
+            "usenetrc": True,
+            "cookiefile": "cookies.txt",
+            **get_yt_runtime_options(),
+        }
         if opt:
             if isinstance(opt, str):
                 yt_opt = opt.split("|")
@@ -403,7 +436,11 @@ class YtDlp(TaskListener):
         LOGGER.info(f"Downloading with YT-DLP: {self.link}")
         playlist = "entries" in result
         ydl = YoutubeDLHelper(self)
-        await ydl.add_download(path, qual, playlist, opt)
+        try:
+            await ydl.add_download(path, qual, playlist, opt)
+        except Exception as e:
+            LOGGER.error(f"YT-DLP task failed: {e}")
+            await self.onDownloadError(str(e))
 
     def _get_tag(self, input_list):
         username = self.message.from_user.username

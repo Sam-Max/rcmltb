@@ -21,6 +21,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rclone \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Deno for yt-dlp JavaScript execution (required for YouTube extraction)
+RUN curl -fsSL https://deno.land/install.sh | sh && \
+    ln -s /root/.deno/bin/deno /usr/local/bin/deno
+
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 

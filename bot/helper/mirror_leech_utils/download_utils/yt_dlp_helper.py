@@ -2,6 +2,7 @@ from logging import getLogger
 from os import path as ospath, listdir
 from re import search as re_search
 from secrets import token_urlsafe
+from shutil import which
 from yt_dlp import YoutubeDL, DownloadError
 
 from bot import status_dict_lock, config_dict, status_dict, LOGGER
@@ -73,7 +74,30 @@ class YoutubeDLHelper:
                 "file_access": lambda n: 3,
                 "extractor": lambda n: 3,
             },
+            "remote_components": ["ejs:github"],
         }
+        deno_path = self._resolve_deno_path()
+        if deno_path:
+            self.opts["js_runtimes"] = {"deno": {"path": deno_path}}
+        else:
+            LOGGER.warning(
+                "Deno runtime not found in PATH. yt-dlp YouTube extraction may miss formats."
+            )
+
+    @staticmethod
+    def _resolve_deno_path():
+        deno_path = which("deno")
+        if deno_path:
+            return deno_path
+        fallback_paths = [
+            "/usr/local/bin/deno",
+            "/root/.deno/bin/deno",
+            ospath.expanduser("~/.deno/bin/deno"),
+        ]
+        for path_ in fallback_paths:
+            if ospath.isfile(path_) and ospath.exists(path_):
+                return path_
+        return None
 
     @property
     def download_speed(self):
@@ -157,6 +181,7 @@ class YoutubeDLHelper:
                         self._listener.name, ext = ospath.splitext(
                             ydl.prepare_filename(entry, outtmpl=outtmpl_)
                         )
+                        self.name = self._listener.name
                         if not self._ext:
                             self._ext = ext
             else:
@@ -166,6 +191,7 @@ class YoutubeDLHelper:
                 self._listener.name = (
                     f"{self._listener.name}{ext}" if self._listener.name else real_name
                 )
+                self.name = self._listener.name
                 if not self._ext:
                     self._ext = ext
 
