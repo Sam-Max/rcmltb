@@ -83,7 +83,6 @@ Set these commands through [@BotFather](https://t.me/BotFather).
 | `mirror` or `/m` | Mirror to selected cloud |
 | `mirror_batch` or `/mb` | Mirror Telegram files/links in batch |
 | `mirror_select` or `/ms` | Select a fixed cloud/folder for mirror |
-| `pmirror` | Mirror from private Telegram channels |
 | `jdmirror` or `/jm` | Mirror via JDownloader |
 | `ytdl` or `/y` | Mirror yt-dlp supported link |
 | `ytdl_leech` or `/yl` | Leech yt-dlp supported link |
@@ -94,7 +93,6 @@ Set these commands through [@BotFather](https://t.me/BotFather).
 |---------|-------------|
 | `leech` or `/l` | Leech from cloud/link to Telegram |
 | `leech_batch` or `/lb` | Leech Telegram files/links in batch |
-| `pleech` | Leech from private Telegram channels |
 
 ### ☁️ Cloud Management
 | Command | Description |

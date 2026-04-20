@@ -173,7 +173,7 @@ Use `BotCommands` instead of raw strings. All commands are suffixed with
 
 | Area | Commands | Main files |
 | --- | --- | --- |
-| Mirror and leech | `mirror/m`, `leech/l`, `mirror_batch/mb`, `leech_batch/lb`, `mirror_select/ms`, `ytdl/y`, `ytdl_leech/yl`, `pmirror`, `pleech`, `jdmirror/jm`, `jdleech/jl` | `mirror_leech.py`, `leech.py`, `batch.py`, `mirror_select.py`, `ytdlp.py`, `pmirror.py` |
+| Mirror and leech | `mirror/m`, `leech/l`, `mirror_batch/mb`, `leech_batch/lb`, `mirror_select/ms`, `ytdl/y`, `ytdl_leech/yl`,  `jdmirror/jm`, `jdleech/jl` | `mirror_leech.py`, `leech.py`, `batch.py`, `mirror_select.py`, `ytdlp.py` |
 | Cloud transfer | `clone`, `copy`, `sync`, `bisync`, `rcfm`, `storage`, `cleanup`, `serve`, `count` | `clone.py`, `copy.py`, `sync.py`, `bisync.py`, `rcfm.py`, `storage.py`, `cleanup.py`, `serve.py`, `gd_count.py` |
 | Task control | `status`, `cancel`, `cancel_all`, `force_start/fs` | `status.py`, `cancel.py`, `force_start.py` |
 | Search and metadata | `torrsch`, `tmdb`, `mediainfo`, `sel` | `torr_search.py`, `tmdb.py`, `mediainfo.py`, `torr_select.py` |
@@ -204,8 +204,9 @@ Callback prefixes worth preserving:
   `-d`, `-i`, `-m`, `-n`, `-au`, `-ap`, `-e`, `-z`, and `-ss`.
 - `TaskListener` handles the post-download pipeline: zip, extract, name
   substitution, queue gating, split handling, and upload routing.
-- Telegram private mirror/leech: `pmirror` and `pleech` use the optional
-  `app` userbot to access private channels when `USER_SESSION_STRING` is set.
+- Telegram private mirror/leech: Use `mirror` or `leech` commands with the
+  `-ut` flag and private channel links. The optional `app` userbot is used
+  to access private channels when `USER_SESSION_STRING` is set.
 - Rclone navigation: `leech`, `copy`, `rcfm`, `storage`, `cleanup`, and `serve`
   all build inline menus through `menu_utils`, `rclone_utils`, and
   `rclone_data_holder`.
