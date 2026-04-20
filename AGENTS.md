@@ -6,7 +6,7 @@ This file provides guidance for AI coding agents working in this repository.
 
 rcmltb is an async Telegram transfer bot for mirror, leech, clone, copy,
 sync, and media workflows across Telegram, Google Drive, rclone remotes, MEGA,
-Direct Links, torrents, TMDB, RSS, and Real-Debrid.
+Direct Links, torrents, and TMDB.
 
 The current codebase assumes Python 3.10+ even though the README badge still
 mentions 3.9+. Several files use `|` union typing syntax, so do not target 3.9.
@@ -33,7 +33,7 @@ aria2c, qBittorrent, rclone, yt-dlp, JDownloader, and MongoDB-backed state.
 - `bot/modules/tasks_listener.py` is a compatibility shim that re-exports
   `TaskListener` from `bot/helper/listeners/task_listener.py`.
 - `bot/helper/mirror_leech_utils/` contains download backends, upload backends,
-  status objects, Google Drive helpers, and Real-Debrid helpers.
+  status objects, and Google Drive helpers.
 - `qbitweb/` provides the torrent selection web UI that is served by gunicorn
   when qBittorrent selection is enabled.
 - Root scripts: `start.sh`, `update.py`, `session_generator.py`,
@@ -48,7 +48,6 @@ Do not edit these unless the user explicitly asks:
 - `config.env` and `config.py`
 - `pyrogram.session*`
 - `.netrc`
-- `debrid/debrid_token.txt`
 - `tokens/`, `rclone/`, `Thumbnails/`, `downloads/`
 - `qBittorrent/`
 - `botlog.txt` and other generated logs
@@ -116,9 +115,8 @@ Important config groups:
   `NAME_SUBSTITUTE`, `UPLOAD_PATH_TEMPLATE`, `USER_SESSION_STRING`
 - Search/media: `SEARCH_API_LINK`, `SEARCH_LIMIT`, `SEARCH_PLUGINS`,
   `TMDB_API_KEY`, `TMDB_LANGUAGE`
-- External integrations: `QB_BASE_URL`, `QB_SERVER_PORT`, `RSS_CHAT_ID`,
-  `RSS_DELAY`, `RSS_SIZE_LIMIT`, `UPSTREAM_REPO`, `UPSTREAM_BRANCH`,
-  `JD_EMAIL`, `JD_PASSWORD`
+- External integrations: `QB_BASE_URL`, `QB_SERVER_PORT`, `UPSTREAM_REPO`,
+  `UPSTREAM_BRANCH`, `JD_EMAIL`, `JD_PASSWORD`
 
 ## Runtime State and Proxies
 
@@ -136,7 +134,7 @@ Important config groups:
 - `Interval` and `QbInterval` hold periodic jobs.
 - `QbTorrents` and `qb_listener_lock` support qBittorrent listener state.
 - `user_data` stores auth users, sudo users, and per-user settings.
-- `aria2_options`, `qbit_options`, `rss_dict`, `tmdb_titles`, `remotes_multi`,
+- `aria2_options`, `qbit_options`, `tmdb_titles`, `remotes_multi`,
   `leech_log`, and `GLOBAL_EXTENSION_FILTER` are live runtime caches.
 - `TG_MAX_SPLIT_SIZE` is 2GB. `TgClient.MAX_SPLIT_SIZE` becomes 4GB when the
   user client is premium.
@@ -144,8 +142,8 @@ Important config groups:
 
 ## Startup Flow
 
-1. `load_settings()` restores DB-backed config, private files, user data, and
-   RSS data if `DATABASE_URL` is set.
+1. `load_settings()` restores DB-backed config, private files, and user data
+   if `DATABASE_URL` is set.
 2. `TgClient.start_bot()` and `TgClient.start_user()` start the Pyrogram clients
    concurrently.
 3. `load_configurations()` starts qbitweb when `QB_BASE_URL` is set, ensures
@@ -160,7 +158,7 @@ Important config groups:
    settings.
 8. `TorrentManager.aria2_init()` performs a lightweight aria2 health check.
 9. Help buttons and Telegraph are initialized.
-10. Torrent search tools and the Real-Debrid token are loaded.
+10. Torrent search tools are loaded.
 11. aria2 callbacks are registered.
 12. `add_handlers()` imports the command modules and registers the handlers.
 13. JDownloader is booted if `JD_EMAIL` and `JD_PASSWORD` are configured.
@@ -178,7 +176,7 @@ Use `BotCommands` instead of raw strings. All commands are suffixed with
 | Mirror and leech | `mirror/m`, `leech/l`, `mirror_batch/mb`, `leech_batch/lb`, `mirror_select/ms`, `ytdl/y`, `ytdl_leech/yl`, `pmirror`, `pleech`, `jdmirror/jm`, `jdleech/jl` | `mirror_leech.py`, `leech.py`, `batch.py`, `mirror_select.py`, `ytdlp.py`, `pmirror.py` |
 | Cloud transfer | `clone`, `copy`, `sync`, `bisync`, `rcfm`, `storage`, `cleanup`, `serve`, `count` | `clone.py`, `copy.py`, `sync.py`, `bisync.py`, `rcfm.py`, `storage.py`, `cleanup.py`, `serve.py`, `gd_count.py` |
 | Task control | `status`, `cancel`, `cancel_all`, `force_start/fs` | `status.py`, `cancel.py`, `force_start.py` |
-| Search and metadata | `rss`, `torrsch`, `tmdb`, `mediainfo`, `debrid`, `info`, `sel` | `rss.py`, `torr_search.py`, `tmdb.py`, `mediainfo.py`, `debrid.py`, `torr_select.py` |
+| Search and metadata | `torrsch`, `tmdb`, `mediainfo`, `sel` | `torr_search.py`, `tmdb.py`, `mediainfo.py`, `torr_select.py` |
 | Settings and admin | `files/bf`, `user_setting`, `own_setting`, `shell`, `exec`, `restart`, `ping`, `ip`, `log` | `botfiles.py`, `user_settings.py`, `owner_settings.py`, `shell.py`, `exec.py`, `core/handlers.py` |
 | Help | `help` | `help_messages.py` |
 
@@ -196,7 +194,7 @@ Callback prefixes worth preserving:
 - `mirrormenu`, `remoteselectmenu`, `leechmenu`, `leechselect`
 - `copymenu`, `next_copy`, `myfilesmenu`, `next_myfiles`
 - `servemenu`, `syncmenu`, `bisyncmenu`, `storagemenu`, `cleanupmenu`
-- `ownersetmenu`, `userset`, `status`, `canall`, `rss`, `rd`, `ytq`
+- `ownersetmenu`, `userset`, `status`, `canall`, `ytq`
 - `tmdbsubcat`, `tmdbdetails`, `tmdbnext`, `tdmbsearch`, `help`
 
 ## Core Workflows
@@ -215,16 +213,12 @@ Callback prefixes worth preserving:
   plugins. It can publish large result sets through Telegraph pages.
 - TMDB: `tmdb.py` needs `TMDB_API_KEY` and search plugins, stores titles in
   `tmdb_titles`, and can hand off to torrent search.
-- RSS: `rss.py` is scheduler-driven and can resolve existing command handlers
-  directly, so feed actions reuse the normal command code paths.
 - Status and queue: `PARALLEL_TASKS` enables the async queue manager; otherwise
   tasks run immediately. `QUEUE_ALL`, `QUEUE_DOWNLOAD`, and `QUEUE_UPLOAD` are
   enforced by `task_manager.py`. Status pages use `status_pages` plus `turn()`.
 - Settings: owner settings edit config, aria2, and qBittorrent state; user
   settings store per-user thumbs, split sizes, yt-dlp options, categories, name
   substitution, and upload templates.
-- Debrid: `debrid.py` stores the Real-Debrid token in `debrid/debrid_token.txt`
-  and exposes authorization and info flows through callbacks.
 
 ## Helper Modules
 
@@ -250,7 +244,7 @@ Callback prefixes worth preserving:
   creation/editing for search and help flows.
 - `bot/helper/ext_utils/template_utils.py`: upload path templating.
 - `bot/helper/ext_utils/db_handler.py`: Mongo persistence for config, files,
-  user data, thumbs, and RSS.
+  user data, and thumbs.
 - `bot/helper/ext_utils/task_manager.py`: queue-limit enforcement and duplicate
   GDrive detection.
 - `bot/helper/ext_utils/help_messages.py`: help text and help menu callbacks.

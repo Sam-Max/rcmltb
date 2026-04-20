@@ -12,7 +12,6 @@ from bot import (
     aria2_options,
     qbit_options,
     GLOBAL_EXTENSION_FILTER,
-    rss_dict,
 )
 from bot.core.config_manager import Config
 from bot.helper.ext_utils.db_handler import database
@@ -90,13 +89,7 @@ async def load_settings():
             user_data[uid] = row
         LOGGER.info("Users data has been imported from Database")
 
-    if await db.rss[bot_id].find_one():
-        rows = db.rss[bot_id].find({})
-        async for row in rows:
-            title = row["_id"]
-            del row["_id"]
-            rss_dict[title] = row
-        LOGGER.info("Rss data has been imported from Database")
+
 
 async def load_configurations():
     if Config.QB_BASE_URL:
@@ -202,6 +195,7 @@ async def update_qbit_options():
         qbit_options = await TorrentManager.get_qbit_preferences()
         if "listen_port" in qbit_options:
             del qbit_options["listen_port"]
+        # Clean up any legacy rss-related options from qbit_options if present
         for k in list(qbit_options.keys()):
             if k.startswith("rss"):
                 del qbit_options[k]

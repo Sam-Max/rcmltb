@@ -42,9 +42,6 @@ class Config:
     RCLONE_DOWNLOAD_FLAGS = ""
     RCLONE_UPLOAD_FLAGS = ""
     REMOTE_SELECTION = False
-    RSS_CHAT_ID = 0
-    RSS_DELAY = 900
-    RSS_SIZE_LIMIT = 0
     SEARCH_API_LINK = ""
     SEARCH_LIMIT = 0
     SEARCH_PLUGINS = []

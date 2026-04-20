@@ -1,6 +1,5 @@
 from asyncio import TimeoutError, create_subprocess_exec, create_subprocess_shell
 from asyncio.subprocess import PIPE, create_subprocess_exec as exec
-from bot.modules.debrid import debrid_data, load_debrid_token
 from pyrogram.filters import regex, command
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -171,12 +170,6 @@ async def load_config():
     if len(YT_DLP_OPTIONS) == 0:
         YT_DLP_OPTIONS = ""
 
-    RSS_CHAT_ID = environ.get("RSS_CHAT_ID", "")
-    RSS_CHAT_ID = "" if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
-
-    RSS_DELAY = environ.get("RSS_DELAY", "")
-    RSS_DELAY = 900 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
-
     USER_SESSION_STRING = environ.get("USER_SESSION_STRING", "")
 
     TORRENT_TIMEOUT = environ.get("TORRENT_TIMEOUT", "")
@@ -318,8 +311,6 @@ async def load_config():
             "PARALLEL_TASKS": PARALLEL_TASKS,
             "QB_BASE_URL": QB_BASE_URL,
             "QB_SERVER_PORT": QB_SERVER_PORT,
-            "RSS_CHAT_ID": RSS_CHAT_ID,
-            "RSS_DELAY": RSS_DELAY,
             "SEARCH_PLUGINS": SEARCH_PLUGINS,
             "SEARCH_API_LINK": SEARCH_API_LINK,
             "SEARCH_LIMIT": SEARCH_LIMIT,
@@ -361,7 +352,6 @@ def _section_title(section):
         "rclone": "👤 My rclone config",
         "token": "🔑 Google Drive token",
         "rclone_global": "🌐 Global rclone config",
-        "debrid": "🧪 Debrid token",
         "config": "🛠 Bot config",
         "accounts": "📦 Service accounts",
     }[section]
@@ -372,7 +362,6 @@ def _section_path(section, user_id):
         "rclone": f"rclone/{user_id}/rclone.conf",
         "token": f"tokens/{user_id}.pickle",
         "rclone_global": "rclone/rclone_global/rclone.conf",
-        "debrid": "debrid/debrid_token.txt",
         "config": "config.env",
         "accounts": "accounts",
     }[section]
@@ -381,7 +370,7 @@ def _section_path(section, user_id):
 def _overview_sections(user_id):
     sections = ["rclone", "token"]
     if _can_manage_global(user_id):
-        sections.extend(["rclone_global", "debrid", "config", "accounts"])
+        sections.extend(["rclone_global", "config", "accounts"])
     return sections
 
 
@@ -424,7 +413,7 @@ async def files_menu(user_id, message, edit=False):
 
 
 async def files_section_menu(user_id, message, section, edit=False):
-    if section in {"rclone_global", "debrid", "config", "accounts"} and not _can_manage_global(
+    if section in {"rclone_global", "config", "accounts"} and not _can_manage_global(
         user_id
     ):
         await sendMessage("🚫 <b>Not allowed to use</b>", message)
@@ -509,9 +498,6 @@ async def _delete_section_file(user_id, section):
     if ospath.exists(path):
         osremove(path)
 
-    if section == "debrid":
-        debrid_data.pop("token", None)
-
     if DATABASE_URL:
         await database.update_private_file(path)
 
@@ -533,18 +519,15 @@ def _resolve_action(action):
         "get_rclone_conf": ("view", "rclone"),
         "get_global_rclone_conf": ("view", "rclone_global"),
         "get_token_pickle": ("view", "token"),
-        "get_debrid_token": ("view", "debrid"),
         "get_config_env": ("view", "config"),
         "add_rclone_conf": ("upload", "rclone"),
         "add_global_rclone_conf": ("upload", "rclone_global"),
         "add_token_pickle": ("upload", "token"),
-        "add_debrid_token": ("upload", "debrid"),
         "add_config_env": ("upload", "config"),
         "add_accounts": ("upload", "accounts"),
         "delete_clone_conf": ("delete", "rclone"),
         "delete_global_rclone_conf": ("delete", "rclone_global"),
         "delete_token_pickle": ("delete", "token"),
-        "delete_debrid_token": ("delete", "debrid"),
         "delete_config_env": ("delete", "config"),
         "delete_accounts": ("delete", "accounts"),
     }
@@ -573,7 +556,7 @@ async def botfiles_callback(client, callback_query):
     if action in {"section", "view", "upload", "delete"} and len(cmd) > 2:
         section = cmd[2]
 
-    if section in {"rclone_global", "debrid", "config", "accounts"} and not _can_manage_global(
+    if section in {"rclone_global", "config", "accounts"} and not _can_manage_global(
         user_id
     ):
         await query.answer("⛔ This menu is not for you!", show_alert=True)
@@ -664,8 +647,6 @@ async def set_config_listener(
                 target_section = "rclone_global" if rclone_global else "rclone"
             elif file_name == "token.pickle":
                 target_section = "token"
-            elif file_name == "debrid_token.txt":
-                target_section = "debrid"
             elif file_name == "config.env":
                 target_section = "config"
             elif file_name == "accounts.zip":
@@ -709,22 +690,6 @@ async def set_config_listener(
             if DATABASE_URL:
                 await database.update_user_doc(user_id, "token_pickle", des_dir)
             await sendMessage("✅ <b>token.pickle uploaded successfully.</b>", message)
-        elif target_section == "debrid":
-            path = f"{getcwd()}/debrid/"
-            makedirs(path, exist_ok=True)
-            des_dir = f"{path}debrid_token.txt"
-            saved_path = await client.download_media(response, file_name=des_dir)
-            if not _ensure_target_file(saved_path, des_dir):
-                await sendMessage(
-                    "❌ <b>Failed to save debrid token.</b>\n"
-                    "Check disk space and write permissions.",
-                    message,
-                )
-                return
-            await load_debrid_token()
-            if DATABASE_URL:
-                await database.update_private_file("debrid/debrid_token.txt")
-            await sendMessage("✅ <b>debrid token uploaded successfully.</b>", message)
         elif target_section == "config":
             saved_path = await client.download_media(response, file_name="config.env")
             if not _ensure_target_file(saved_path, "config.env"):

@@ -32,7 +32,6 @@ from bot.helper.telegram_helper.message_utils import (
 )
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.rclone_data_holder import update_rclone_data
-from bot.modules.rss import addJob
 from bot.modules.torr_search import initiate_search_tools
 
 
@@ -45,7 +44,6 @@ default_values = {
     "STATUS_UPDATE_INTERVAL": 10,
     "LEECH_SPLIT_SIZE": TG_MAX_SPLIT_SIZE,
     "SEARCH_LIMIT": 0,
-    "RSS_DELAY": 900,
 }
 
 
@@ -174,7 +172,6 @@ async def ownerset_callback(client, callback_query):
                 "ALLOWED_CHATS",
                 "USER_SESSION_STRING",
                 "AUTO_MIRROR",
-                "RSS_DELAY",
                 "CMD_INDEX",
                 "TELEGRAM_API_HASH",
                 "TELEGRAM_API_ID",
@@ -411,11 +408,6 @@ async def start_env_listener(client, query, user_id, key):
                         aria2_options["bt-stop-timeout"] = f"{value}"
                     elif key == "DEFAULT_OWNER_REMOTE":
                         update_rclone_data("MIRROR_SELECT_REMOTE", value, user_id)
-                    elif key == "RSS_DELAY":
-                        value = int(value)
-                        addJob(value)
-                    elif key == "RSS_CHAT_ID":
-                        value = int(value)
                     elif key == "DOWNLOAD_DIR":
                         if not value.endswith("/"):
                             value = f"{value}/"

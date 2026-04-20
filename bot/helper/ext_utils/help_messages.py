@@ -152,43 +152,6 @@ leech = """
 <b>Send link to leech, /ignore to cancel</b>
 """
 
-RSS_HELP_MESSAGE = """
-📰 <b>RSS Subscription Help</b>
-
-<b>Basic Format:</b>
-<code>Title link</code>
-
-<b>With Filters & Options:</b>
-<code>Title link c: cmd inf: xx exf: xx opt: options stv</code>
-
-<b>Arguments:</b>
-• <code>c:</code> - Command to execute (mirror, leech, etc.)
-• <code>inf:</code> - Include words filter
-• <code>exf:</code> - Exclude words filter
-• <code>opt:</code> - Options like up, rcf, pswd
-• <code>stv</code> - Case-sensitive filter (add this flag for case-sensitive matching)
-
-<b>Examples:</b>
-<code>MyFeed https://rss.example.com c: mirror inf: 1080 or 720 exf: cam opt: up: gd</code>
-
-<code>MyFeed2 https://rss2.example.com c: leech inf: HDR stv</code>
-
-<b>Filter Notes:</b>
-1. | means AND
-2. Use <code>or</code> between similar keys (qualities, extensions)
-3. Add <code>stv</code> for case-sensitive filtering
-4. Check title format to avoid wrong matches
-
-<b>Size Detection:</b>
-• Size is automatically detected from feed summaries
-• Set <code>RSS_SIZE_LIMIT</code> in config to skip large torrents
-
-<b>Forum Topics:</b>
-• Use <code>chat_id|topic_id</code> format in RSS_CHAT_ID
-
-Timeout: 60 sec.
-"""
-
 CLONE_HELP_MESSAGE = """
 Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link along with command or by replying to the link 
 

@@ -48,7 +48,6 @@ An **asynchronous** Telegram bot for transferring files between cloud storage se
 | Feature | Description |
 |---------|-------------|
 | **Queue System** | Advanced queuing with `QUEUE_ALL`, `QUEUE_DOWNLOAD`, `QUEUE_UPLOAD` limits |
-| **RSS Feed** | Monitor feeds with size detection, retry logic, and forum topic support |
 | **Private Channels** | Mirror/leech from private Telegram channels |
 | **Upload Templates** | Dynamic paths with variables like `{username}`, `{date}`, `{category}` |
 | **MediaInfo** | Detailed media file analysis with `/mediainfo` |
@@ -68,7 +67,6 @@ An **asynchronous** Telegram bot for transferring files between cloud storage se
 - Extract and zip link/file from Telegram to cloud
 - Extract and zip folder/file from cloud to Telegram
 - Mirror to local host (no cloud upload)
-- Debrid Manager (Real-Debrid support)
 - Refactored to use Pyrogram with asyncio
 - Docker-based image (Ubuntu)
 - Compatible with Linux `amd64`, `arm64/v8`, `arm/v7`
@@ -115,8 +113,6 @@ Set these commands through [@BotFather](https://t.me/BotFather).
 | Command | Description |
 |---------|-------------|
 | `files` or `/bf` | Bot configuration files |
-| `debrid` | Debrid Manager |
-| `rss` | RSS feed monitor |
 | `mediainfo` | Get detailed media file information |
 | `cancel` | Cancel a task |
 | `force_start` or `/fs` | Force start a queued task |
@@ -292,26 +288,6 @@ cp sample_config.env config.env
 | `QUEUE_ALL` | Max total concurrent tasks (`0` = unlimited) | `Int` |
 | `QUEUE_DOWNLOAD` | Max concurrent downloads (`0` = unlimited) | `Int` |
 | `QUEUE_UPLOAD` | Max concurrent uploads (`0` = unlimited) | `Int` |
-
----
-
-##### 📡 RSS Settings
-| Variable | Description | Type |
-|----------|-------------|------|
-| `RSS_DELAY` | Refresh interval in seconds. Default: `900` | `Int` |
-| `RSS_CHAT_ID` | Chat ID for RSS messages. Supports `chat_id\|topic_id` | `Int` |
-| `RSS_SIZE_LIMIT` | Max torrent size in bytes (`0` = unlimited) | `Int` |
-
-**RSS Features:**
-- ✅ Size detection from feed summaries
-- ✅ Direct handler invocation
-- ✅ Retry logic (3 attempts)
-- ✅ Case-sensitive filters with `-stv` flag
-- ✅ Forum topic support
-- ✅ "Use This Chat" button
-- ✅ Browser-like HTTP headers
-
-> **RSS NOTE**: `RSS_CHAT_ID` is required. Use `USER_SESSION_STRING` **OR** a channel. For channels, add bot to both channel and linked group. Without `DATABASE_URL`, feeds during offline periods will be missed.
 
 ---
 

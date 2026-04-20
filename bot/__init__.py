@@ -39,7 +39,6 @@ tmdb_titles = {}
 remotes_multi = []
 aria2_options = {}
 qbit_options = {}
-rss_dict = {}
 
 status_dict_lock = Lock()
 status_dict = {}
@@ -67,10 +66,6 @@ if LEECH_SPLIT_SIZE == 0:
 
 bot_loop = new_event_loop()
 set_event_loop(bot_loop)
-
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from tzlocal import get_localzone
-scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
 
 
 class _BotProxy:
@@ -170,9 +165,6 @@ _CONFIG_ALIASES = {
     "RCLONE_DOWNLOAD_FLAGS": "RCLONE_DOWNLOAD_FLAGS",
     "SERVER_SIDE": "SERVER_SIDE",
     "CMD_INDEX": "CMD_INDEX",
-    "RSS_CHAT_ID": "RSS_CHAT_ID",
-    "RSS_DELAY": "RSS_DELAY",
-    "RSS_SIZE_LIMIT": "RSS_SIZE_LIMIT",
     "QB_BASE_URL": "QB_BASE_URL",
     "QB_SERVER_PORT": "QB_SERVER_PORT",
     "UPSTREAM_REPO": "UPSTREAM_REPO",

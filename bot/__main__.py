@@ -8,7 +8,6 @@ from sys import executable
 from bot import (
     LOGGER,
     bot_loop,
-    scheduler,
     config_dict,
 )
 from bot.core.telegram_manager import TgClient
@@ -79,12 +78,9 @@ async def main():
     )
     LOGGER.info("Help buttons and telegraph created")
 
-    # 9. Initialize search tools and debrid
-    from bot.modules import torr_search, debrid
-    await gather(
-        torr_search.initiate_search_tools(),
-        debrid.load_debrid_token(),
-    )
+    # 9. Initialize search tools
+    from bot.modules import torr_search
+    await torr_search.initiate_search_tools()
 
     # 10. Start aria2 listener
     from bot.helper.listeners.aria2_listener import add_aria2_callbacks
@@ -123,7 +119,7 @@ async def main():
             BotCommand(BotCommands.StatsCommand, "Show bot stats"),
             BotCommand(BotCommands.CancelCommand, "Cancel a task"),
             BotCommand(BotCommands.CancelAllCommand, "Cancel all tasks"),
-            BotCommand(BotCommands.RssCommand, "RSS feed manager"),
+
             BotCommand(BotCommands.TorrentSearchCommand, "Search torrents"),
             BotCommand(BotCommands.ServeCommand, "Serve files via web"),
             BotCommand(BotCommands.UserSetCommand, "User settings"),

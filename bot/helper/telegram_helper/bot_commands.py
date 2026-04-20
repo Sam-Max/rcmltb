@@ -31,14 +31,12 @@ class _BotCommands:
         self.OwnerSetCommand = f"own_setting{CMD_INDEX}"
         self.CancelAllCommand = f"cancel_all{CMD_INDEX}"
         self.CancelCommand = f"cancel{CMD_INDEX}"
-        self.RssCommand = f"rss{CMD_INDEX}"
+
         self.LogsCommand = f"log{CMD_INDEX}"
         self.RestartCommand = f"restart{CMD_INDEX}"
         self.PingCommand = f"ping{CMD_INDEX}"
         self.IpCommand = f"ip{CMD_INDEX}"
         self.TMDB = f"tmdb{CMD_INDEX}"
-        self.Debrid = f"debrid{CMD_INDEX}"
-        self.DebridInfo = f"info{CMD_INDEX}"
         self.ForceStartCommand = [f"force_start{CMD_INDEX}", f"fs{CMD_INDEX}"]
         self.SelectCommand = f"sel{CMD_INDEX}"
         self.JdMirrorCommand = [f"jdmirror{CMD_INDEX}", f"jm{CMD_INDEX}"]

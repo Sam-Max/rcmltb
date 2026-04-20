@@ -16,12 +16,6 @@ class NotRclonePathFound(Exception):
     pass
 
 
-class RssShutdownException(Exception):
-    """This exception should be raised when shutdown is called to stop the montior"""
-
-    pass
-
-
 class ProviderException(Exception):
     def __init__(self, message):
         self.message = message

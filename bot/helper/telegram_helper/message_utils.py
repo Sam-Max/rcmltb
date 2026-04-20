@@ -95,34 +95,6 @@ async def editMessage(text: str, message, reply_markup=None):
         return str(e)
 
 
-async def sendRss(text, chat_id=None, thread_id=None):
-    try:
-        target_chat = chat_id or config_dict["RSS_CHAT_ID"]
-        if app:
-            return await app.send_message(
-                chat_id=target_chat,
-                text=text,
-                message_thread_id=thread_id,
-                link_preview_options=LinkPreviewOptions(is_disabled=True),
-                disable_notification=True,
-            )
-        else:
-            return await bot.send_message(
-                chat_id=target_chat,
-                text=text,
-                message_thread_id=thread_id,
-                link_preview_options=LinkPreviewOptions(is_disabled=True),
-                disable_notification=True,
-            )
-    except (FloodWait, FloodPremiumWait) as f:
-        LOGGER.warning(str(f))
-        await sleep(f.value * 1.2)
-        return await sendRss(text, chat_id, thread_id)
-    except Exception as e:
-        LOGGER.error(str(e))
-        return str(e)
-
-
 async def deleteMessage(message):
     try:
         await bot.delete_messages(chat_id=message.chat.id, message_ids=message.id)

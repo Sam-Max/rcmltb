@@ -11,7 +11,6 @@ from bot import (
     bot_id,
     config_dict,
     qbit_options,
-    rss_dict,
     user_data,
 )
 
@@ -112,16 +111,6 @@ class DbManager:
                     with open(rclone_global, "wb+") as f:
                         f.write(row["rclone_global"])
             LOGGER.info("Users data has been imported from Database")
-        # Rss Data
-        if await self._db_ref.rss[bot_id].find_one():
-            rows = self._db_ref.rss[bot_id].find(
-                {}
-            )  # return a dict ==> {_id, link, last_feed, last_name, filters}
-            async for row in rows:
-                title = row["_id"]
-                del row["_id"]
-                rss_dict[title] = row
-            LOGGER.info("Rss data has been imported from Database.")
     async def update_deploy_config(self):
         if not await self._ensure_connected():
             return
@@ -203,26 +192,6 @@ class DbManager:
             await self._db_ref.users.update_one(
                 {"_id": user_id}, {"$unset": {"thumb": ""}}, upsert=True
             )
-
-    async def rss_update(self, user_id):
-        if not await self._ensure_connected():
-            return
-        await self._db_ref.rss[bot_id].replace_one(
-            {"_id": user_id}, rss_dict[user_id], upsert=True
-        )
-
-    async def rss_update_all(self):
-        if not await self._ensure_connected():
-            return
-        for user_id in list(rss_dict.keys()):
-            await self._db_ref.rss[bot_id].replace_one(
-                {"_id": user_id}, rss_dict[user_id], upsert=True
-            )
-
-    async def rss_delete(self, user_id):
-        if not await self._ensure_connected():
-            return
-        await self._db_ref.rss[bot_id].delete_one({"_id": user_id})
 
     async def trunc_table(self, name):
         if not await self._ensure_connected():
