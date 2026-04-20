@@ -127,8 +127,6 @@ async def main():
             BotCommand(BotCommands.PingCommand, "Ping the bot"),
             BotCommand(BotCommands.LogsCommand, "Get bot logs"),
             BotCommand(BotCommands.RestartCommand, "Restart the bot"),
-            
-            BotCommand(BotCommands.MediaInfoCommand, "Get media file information"),
             BotCommand(BotCommands.HelpCommand, "Show help and usage"),
         ]
     )

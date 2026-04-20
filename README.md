@@ -50,7 +50,7 @@ An **asynchronous** Telegram bot for transferring files between cloud storage se
 | **Queue System** | Advanced queuing with `QUEUE_ALL`, `QUEUE_DOWNLOAD`, `QUEUE_UPLOAD` limits |
 | **Private Channels** | Mirror/leech from private Telegram channels |
 | **Upload Templates** | Dynamic paths with variables like `{username}`, `{date}`, `{category}` |
-| **MediaInfo** | Detailed media file analysis with `/mediainfo` |
+| **Media Metadata** | Rich media captions and live status details |
 | **Screenshots** | User-configurable screenshot generation |
 | **Name Substitution** | Pattern-based filename renaming (`old::new`) |
 | **Force Start** | Bypass queue for urgent tasks |
@@ -111,7 +111,6 @@ Set these commands through [@BotFather](https://t.me/BotFather).
 | Command | Description |
 |---------|-------------|
 | `files` or `/bf` | Bot configuration files |
-| `mediainfo` | Get detailed media file information |
 | `cancel` | Cancel a task |
 | `force_start` or `/fs` | Force start a queued task |
 | `usetting` | User settings |

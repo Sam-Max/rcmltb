@@ -293,7 +293,10 @@ async def get_readable_message(chat_id=None, status_filter="all"):
             if download_type == TaskType.RCLONE:
                 msg += f"\n<code>{str(download_name)}</code>"
             else:
-                msg += f"<code>{escape(f'{download_name}')}</code>"
+                msg += f"\n<code>{escape(f'{download_name}')}</code>"
+            download_summary = await _get_attr(download, "summary", "")
+            if download_summary:
+                msg += f"\n<b>Media:</b> {escape(download_summary)}"
             if status not in [
                 MirrorStatus.STATUS_SPLITTING,
                 MirrorStatus.STATUS_SEEDING,

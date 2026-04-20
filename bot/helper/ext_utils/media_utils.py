@@ -2,8 +2,11 @@ from os import path as ospath
 from aiofiles.os import path as aiopath, makedirs
 from time import time
 from json import loads as jsnloads
+from re import search as re_search
+from PIL import Image
 from bot import LOGGER
-from bot.helper.ext_utils.bot_utils import cmd_exec
+from bot.helper.ext_utils.bot_utils import cmd_exec, run_sync_to_async
+from bot.helper.ext_utils.files_utils import get_mime_type, is_archive, is_archive_split
 from bot.helper.ext_utils.misc_utils import get_media_info
 
 
@@ -15,6 +18,8 @@ async def get_detailed_media_info(path):
         'bitrate': kbps,
         'size': bytes,
         'format': container_format,
+        'artist': str,
+        'title': str,
         'video': {
             'codec': str,
             'width': int,
@@ -66,6 +71,8 @@ async def get_detailed_media_info(path):
         "bitrate": 0,
         "size": 0,
         "format": "Unknown",
+        "artist": None,
+        "title": None,
         "video": None,
         "audio": [],
         "subtitles": [],
@@ -78,6 +85,9 @@ async def get_detailed_media_info(path):
         info["bitrate"] = int(format_data.get("bit_rate", 0)) // 1000
         info["size"] = int(format_data.get("size", 0))
         info["format"] = format_data.get("format_long_name", "Unknown")
+        tags = format_data.get("tags", {})
+        info["artist"] = tags.get("artist") or tags.get("ARTIST") or tags.get("Artist")
+        info["title"] = tags.get("title") or tags.get("TITLE") or tags.get("Title")
 
     # Parse streams
     streams = data.get("streams", [])
@@ -89,7 +99,7 @@ async def get_detailed_media_info(path):
                 "codec": stream.get("codec_name", "Unknown").upper(),
                 "width": stream.get("width", 0),
                 "height": stream.get("height", 0),
-                "fps": eval(stream.get("r_frame_rate", "0/1")),
+                "fps": _parse_fraction(stream.get("r_frame_rate", "0/1")),
                 "bitrate": int(stream.get("bit_rate", 0)) // 1000,
             }
         elif stream_type == "audio":
@@ -108,6 +118,165 @@ async def get_detailed_media_info(path):
             info["subtitles"].append(sub_info)
 
     return info
+
+
+def _format_duration(duration):
+    duration = int(duration or 0)
+    if duration <= 0:
+        return ""
+    hours, remainder = divmod(duration, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours:
+        return f"{hours}:{minutes:02d}:{seconds:02d}"
+    return f"{minutes}:{seconds:02d}"
+
+
+def _normalize_codec(codec):
+    if not codec:
+        return ""
+    codec = str(codec).upper()
+    codec_map = {
+        "AVC1": "H.264",
+        "H264": "H.264",
+        "H265": "H.265",
+        "HEVC": "H.265",
+        "MPEG4": "MPEG-4",
+        "MPEG-4": "MPEG-4",
+        "AAC": "AAC",
+        "AC3": "AC-3",
+        "EAC3": "E-AC-3",
+    }
+    return codec_map.get(codec, codec)
+
+
+def _resolution_label(width, height):
+    width = int(width or 0)
+    height = int(height or 0)
+    if not width or not height:
+        return ""
+    if width >= 3840 or height >= 2160:
+        return "4K"
+    if width >= 2560 or height >= 1440:
+        return "1440p"
+    if width >= 1920 or height >= 1080:
+        return "1080p"
+    if width >= 1280 or height >= 720:
+        return "720p"
+    return f"{width}x{height}"
+
+
+def _audio_channel_label(channels):
+    channels = int(channels or 0)
+    if channels == 1:
+        return "Mono"
+    if channels == 2:
+        return "Stereo"
+    if channels == 6:
+        return "5.1"
+    if channels == 8:
+        return "7.1"
+    return f"{channels}ch" if channels else ""
+
+
+def _parse_fraction(value):
+    try:
+        numerator, denominator = value.split("/", 1)
+        denominator = float(denominator)
+        if denominator == 0:
+            return 0.0
+        return float(numerator) / denominator
+    except Exception:
+        return 0.0
+
+
+def _get_image_size(path):
+    with Image.open(path) as img:
+        return img.size
+
+
+def format_media_summary(info, kind):
+    if not info or kind not in {"video", "audio"}:
+        return ""
+
+    duration = _format_duration(info.get("duration", 0))
+
+    if kind == "video":
+        video = info.get("video") or {}
+        parts = [
+            part
+            for part in [
+                _resolution_label(video.get("width"), video.get("height")),
+                _normalize_codec(video.get("codec")),
+            ]
+            if part
+        ]
+        audio_tracks = info.get("audio") or []
+        if audio_tracks:
+            audio_codec = _normalize_codec(audio_tracks[0].get("codec"))
+            if audio_codec:
+                parts.append(audio_codec)
+        if duration:
+            parts.append(duration)
+        return f"🎬 {' • '.join(parts)}" if parts else "🎬 Video"
+
+    audio = (info.get("audio") or [{}])[0]
+    parts = [
+        part
+        for part in [
+            _normalize_codec(audio.get("codec")),
+            _audio_channel_label(audio.get("channels")),
+            duration,
+        ]
+        if part
+    ]
+    return f"🎵 {' • '.join(parts)}" if parts else "🎵 Audio"
+
+
+async def get_upload_media_details(path):
+    if is_archive(path) or is_archive_split(path) or re_search(
+        r".+(\.|_)(rar|7z|zip|bin)(\.0*\d+)?$", path
+    ):
+        return "document", None, ""
+
+    mime_type = await run_sync_to_async(get_mime_type, path)
+    if mime_type.startswith("image"):
+        try:
+            width, height = await run_sync_to_async(_get_image_size, path)
+            ext = ospath.splitext(path)[1].lstrip(".").upper() or "IMAGE"
+            return "image", None, f"🖼 {width}x{height} • {ext}"
+        except Exception:
+            return "image", None, "🖼 Image"
+
+    if not (
+        mime_type.startswith("video")
+        or mime_type.startswith("audio")
+        or mime_type.endswith("octet-stream")
+    ):
+        return "document", None, ""
+
+    info = await get_detailed_media_info(path)
+    if info is None:
+        duration, artist, title = await get_media_info(path)
+        info = {
+            "duration": duration,
+            "bitrate": 0,
+            "size": 0,
+            "format": "Unknown",
+            "artist": artist,
+            "title": title,
+            "video": None,
+            "audio": [],
+            "subtitles": [],
+        }
+
+    kind = "video" if info.get("video") or mime_type.startswith("video") else "audio"
+    if kind == "audio" and not (info.get("audio") or mime_type.startswith("audio")):
+        kind = "document"
+
+    if kind == "document":
+        return kind, None, ""
+
+    return kind, info, format_media_summary(info, kind)
 
 
 def format_media_info(info, filename):
@@ -151,6 +320,17 @@ Frame Rate: {video['fps']:.3f} fps
 Bitrate: {video['bitrate']} kbps</code>
 """
 
+    if info.get("artist") or info.get("title"):
+        msg += """
+
+🎵 <b>Metadata</b>
+<code>"""
+        if info.get("artist"):
+            msg += f"Artist: {info['artist']}\n"
+        if info.get("title"):
+            msg += f"Title: {info['title']}\n"
+        msg += "</code>"
+
     # Audio info
     for i, audio in enumerate(info["audio"], 1):
         channels_str = ""
@@ -185,9 +365,10 @@ Sample Rate: {audio['sample_rate']} Hz</code>
     return msg
 
 
-async def take_ss(video_file, ss_nb) -> list:
+async def take_ss(video_file, ss_nb, duration=None) -> list:
     ss_nb = min(ss_nb, 10)
-    duration = (await get_media_info(video_file))[0]
+    if duration is None:
+        duration = (await get_media_info(video_file))[0]
     if duration != 0:
         dirpath, name = video_file.rsplit("/", 1)
         name, _ = ospath.splitext(name)

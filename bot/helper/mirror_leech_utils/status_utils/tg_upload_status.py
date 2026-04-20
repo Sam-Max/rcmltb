@@ -24,6 +24,9 @@ class TgUploadStatus:
     def name(self):
         return self.__obj.name
 
+    def summary(self):
+        return self.__obj.summary()
+
     def progress_raw(self):
         try:
             return self.__obj.processed_bytes / self.__size * 100

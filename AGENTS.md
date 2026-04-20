@@ -176,7 +176,7 @@ Use `BotCommands` instead of raw strings. All commands are suffixed with
 | Mirror and leech | `mirror/m`, `leech/l`, `mirror_batch/mb`, `leech_batch/lb`, `mirror_select/ms`, `ytdl/y`, `ytdleech/yl`,  `jdmirror/jm`, `jdleech/jl` | `mirror_leech.py`, `leech.py`, `batch.py`, `mirror_select.py`, `ytdlp.py` |
 | Cloud transfer | `clone`, `copy`, `sync`, `bisync`, `rcfm`, `storage`, `cleanup`, `serve`, `count` | `clone.py`, `copy.py`, `sync.py`, `bisync.py`, `rcfm.py`, `storage.py`, `cleanup.py`, `serve.py`, `gd_count.py` |
 | Task control | `status`, `cancel`, `cancel_all`, `force_start/fs` | `status.py`, `cancel.py`, `force_start.py` |
-| Search and metadata | `torrsch`, `tmdb`, `mediainfo`, `sel` | `torr_search.py`, `tmdb.py`, `mediainfo.py`, `torr_select.py` |
+| Search and metadata | `torrsch`, `tmdb`, `sel` | `torr_search.py`, `tmdb.py`, `torr_select.py` |
 | Settings and admin | `files/bf`, `usetting`, `bsetting`, `shell`, `exec`, `restart`, `ping`, `ip`, `log` | `botfiles.py`, `user_settings.py`, `owner_settings.py`, `shell.py`, `exec.py`, `core/handlers.py` |
 | Help | `help` | `help_messages.py` |
 

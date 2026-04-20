@@ -131,7 +131,6 @@ def add_handlers():
         copy,
         force_start,
         leech,
-        mediainfo,
         mirror_leech,
         mirror_select,
         myfilesset,
