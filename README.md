@@ -85,7 +85,7 @@ Set these commands through [@BotFather](https://t.me/BotFather).
 | `mirror_select` or `/ms` | Select a fixed cloud/folder for mirror |
 | `jdmirror` or `/jm` | Mirror via JDownloader |
 | `ytdl` or `/y` | Mirror yt-dlp supported link |
-| `ytdl_leech` or `/yl` | Leech yt-dlp supported link |
+| `ytdleech` or `/yl` | Leech yt-dlp supported link |
 | `jdleech` or `/jl` | Leech via JDownloader |
 
 ### 📤 Leech Commands
@@ -114,8 +114,8 @@ Set these commands through [@BotFather](https://t.me/BotFather).
 | `mediainfo` | Get detailed media file information |
 | `cancel` | Cancel a task |
 | `force_start` or `/fs` | Force start a queued task |
-| `user_setting` | User settings |
-| `own_setting` | Owner settings |
+| `usetting` | User settings |
+| `bsetting` | Owner settings |
 | `tmdb` | Search titles |
 | `torrsch` | Search for torrents |
 | `cancel_all` | Cancel all tasks |

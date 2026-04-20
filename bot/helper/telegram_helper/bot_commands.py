@@ -11,7 +11,7 @@ class _BotCommands:
         self.LeechCommand = [f"leech{CMD_INDEX}", f"l{CMD_INDEX}"]
         self.LeechBatchCommand = [f"leech_batch{CMD_INDEX}", f"lb{CMD_INDEX}"]
         self.YtdlMirrorCommand = [f"ytdl{CMD_INDEX}", f"y{CMD_INDEX}"]
-        self.YtdlLeechCommand = [f"ytdl_leech{CMD_INDEX}", f"yl{CMD_INDEX}"]
+        self.YtdlLeechCommand = [f"ytdleech{CMD_INDEX}", f"yl{CMD_INDEX}"]
         self.BotFilesCommand = [f"files{CMD_INDEX}", f"bf{CMD_INDEX}"]
         self.CopyCommand = f"copy{CMD_INDEX}"
         self.CloneCommand = f"clone{CMD_INDEX}"
@@ -27,8 +27,8 @@ class _BotCommands:
         self.StorageCommand = f"storage{CMD_INDEX}"
         self.CleanupCommand = f"cleanup{CMD_INDEX}"
         self.BiSyncCommand = f"bisync{CMD_INDEX}"
-        self.UserSetCommand = f"user_setting{CMD_INDEX}"
-        self.OwnerSetCommand = f"own_setting{CMD_INDEX}"
+        self.UserSetCommand = f"usetting{CMD_INDEX}"
+        self.OwnerSetCommand = f"bsetting{CMD_INDEX}"
         self.CancelAllCommand = f"cancel_all{CMD_INDEX}"
         self.CancelCommand = f"cancel{CMD_INDEX}"
 
