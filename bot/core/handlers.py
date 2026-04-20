@@ -56,7 +56,7 @@ async def restart(_, message):
     await clean_all()
     await (
         await create_subprocess_exec(
-            "pkill", "-9", "-f", "gunicorn|aria2c|rclone|qbittorrent-nox|ffmpeg"
+            "pkill", "-9", "-f", "gunicorn|aria2c|rclone|qbittorrent-nox|ffmpeg|yt-dlp"
         )
     ).wait()
     await (await create_subprocess_exec("python3", "update.py")).wait()

@@ -135,7 +135,7 @@ async def _shutdown_bot():
         LOGGER.error(str(e))
     try:
         proc = await create_subprocess_exec(
-            "pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg"
+            "pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg|yt-dlp"
         )
         await proc.wait()
     except Exception as e:

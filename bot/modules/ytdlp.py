@@ -348,7 +348,7 @@ class YtDlp(TaskListener):
         try:
             await self.before_start()
         except Exception as e:
-            await sendMessage(self.message, str(e))
+            await sendMessage(str(e), self.message)
             return
 
         options = {"usenetrc": True, "cookiefile": "cookies.txt"}
@@ -528,4 +528,3 @@ bot.add_handler(
         & (CustomFilters.user_filter | CustomFilters.chat_filter),
     )
 )
-bot.add_handler(CallbackQueryHandler(select_format, filters=regex("^ytq")))
