@@ -616,7 +616,7 @@ class TaskListener(TaskConfig):
         else:
             await update_all_messages()
 
-    async def onDownloadError(self, error):
+    async def onDownloadError(self, error, button=None):
         async with status_dict_lock:
             if self.uid in status_dict.keys():
                 del status_dict[self.uid]
@@ -627,7 +627,10 @@ class TaskListener(TaskConfig):
             self.sameDir["total"] -= 1
 
         msg = f"{self.tag} Download stopped due to: {escape(error)}"
-        await sendMessage(msg, self.message)
+        if button:
+            await sendMarkup(msg, self.message, button)
+        else:
+            await sendMessage(msg, self.message)
 
         if count == 0:
             await self.clean()

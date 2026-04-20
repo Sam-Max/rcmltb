@@ -113,6 +113,24 @@ async def clean_target(path: str):
             LOGGER.error(str(e))
 
 
+async def remove_excluded_files(fpath, excluded_exts):
+    for root, _, files in await run_sync_to_async(oswalk, fpath):
+        if root.strip().endswith("/yt-dlp-thumb"):
+            continue
+        for f in files:
+            if f.strip().lower().endswith(tuple(excluded_exts)):
+                await aioremove(ospath.join(root, f))
+
+
+async def remove_non_included_files(fpath, included_exts):
+    for root, _, files in await run_sync_to_async(oswalk, fpath):
+        if root.strip().endswith("/yt-dlp-thumb"):
+            continue
+        for f in files:
+            if not f.strip().lower().endswith(tuple(included_exts)):
+                await aioremove(ospath.join(root, f))
+
+
 async def start_cleanup():
     await TorrentManager.qbittorrent.torrents.delete(hashes="all", delete_files=True)
     if not config_dict["LOCAL_MIRROR"]:

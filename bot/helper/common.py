@@ -29,6 +29,8 @@ from bot.helper.telegram_helper.message_utils import (
 from bot.helper.mirror_leech_utils.status_utils.extract_status import ExtractStatus
 from bot.helper.mirror_leech_utils.status_utils.split_status import SplitStatus
 from bot.helper.mirror_leech_utils.status_utils.zip_status import ZipStatus
+from bot.core.telegram_manager import TgClient
+from bot.helper.ext_utils.links_utils import is_gdrive_id, is_rclone_path
 
 
 class TaskConfig:
@@ -60,18 +62,101 @@ class TaskConfig:
         self.up_dest = ""
         self.user_transmission = False
         self.bot_transmission = False
+        self.is_ytdlp = False
+        self.is_super_chat = False
+        self.split_size = 0
+        self.max_split_size = 0
+        self.as_doc = False
+        self.as_med = False
+        self.thumb = None
+        self.name_sub = ""
+        self.thumbnail_layout = ""
+        self.rc_flags = ""
+        self.hybrid_leech = False
 
-    async def clean(self):
-        try:
-            from bot import Interval
+    async def before_start(self):
+        if not self.is_leech:
+            self.stop_duplicate = (
+                self.user_dict.get("STOP_DUPLICATE")
+                or "STOP_DUPLICATE" not in self.user_dict
+                and config_dict.get("STOP_DUPLICATE", False)
+            )
+            default_upload = (
+                self.user_dict.get("DEFAULT_UPLOAD", "") or config_dict.get("DEFAULT_UPLOAD", "")
+            )
+            if (not self.up_dest and default_upload == "rc") or self.up_dest == "rc":
+                self.up_dest = self.user_dict.get("RCLONE_PATH") or config_dict.get("RCLONE_PATH", "")
+            elif (not self.up_dest and default_upload == "gd") or self.up_dest == "gd":
+                self.up_dest = self.user_dict.get("GDRIVE_ID") or config_dict.get("GDRIVE_ID", "")
+            if not self.up_dest:
+                raise ValueError("No Upload Destination!")
+            if self.up_dest.startswith("rcl"):
+                from bot.helper.ext_utils.rclone_utils import is_rclone_config
+                if not await is_rclone_config(self.user_id, self.message):
+                    raise ValueError("Rclone config not found!")
+            elif self.up_dest.startswith("gdl"):
+                raise ValueError("Google Drive interactive selection not yet supported for yt-dlp.")
+            elif is_rclone_path(self.up_dest):
+                self.up_dest = self.up_dest.rstrip("/")
+            elif not is_gdrive_id(self.up_dest):
+                raise ValueError("Wrong Upload Destination!")
+        else:
+            self.up_dest = (
+                self.up_dest
+                or self.user_dict.get("LEECH_DUMP_CHAT")
+                or config_dict.get("LEECH_DUMP_CHAT", "")
+            )
 
-            if Interval:
-                Interval[0].cancel()
-                Interval.clear()
-            await TorrentManager.aria2.purgeDownloadResult()
-            await delete_all_messages()
-        except Exception:
-            pass
+            if self.user_transmission or self.bot_transmission:
+                if self.bot_transmission:
+                    self.user_transmission = False
+                    self.hybrid_leech = False
+                elif self.user_transmission:
+                    self.user_transmission = TgClient.IS_PREMIUM_USER
+
+            if self.hybrid_leech and not self.user_transmission:
+                self.hybrid_leech = TgClient.IS_PREMIUM_USER
+
+            if self.split_size:
+                if str(self.split_size).isdigit():
+                    self.split_size = int(self.split_size)
+                else:
+                    from bot.helper.ext_utils.bot_utils import get_size_bytes
+                    self.split_size = get_size_bytes(self.split_size)
+
+            self.split_size = (
+                self.split_size
+                or self.user_dict.get("split_size")
+                or config_dict.get("LEECH_SPLIT_SIZE", 0)
+            )
+            self.max_split_size = (
+                TgClient.MAX_SPLIT_SIZE if self.user_transmission else 2097152000
+            )
+            if self.split_size:
+                self.split_size = min(self.split_size, self.max_split_size)
+            else:
+                self.split_size = self.max_split_size
+
+            if not self.as_doc:
+                self.as_doc = (
+                    not self.as_med
+                    if self.as_med
+                    else (
+                        self.user_dict.get("AS_DOCUMENT", False)
+                        or config_dict.get("AS_DOCUMENT", False)
+                        and "AS_DOCUMENT" not in self.user_dict
+                    )
+                )
+
+            self.thumbnail_layout = (
+                self.thumbnail_layout
+                or self.user_dict.get("THUMBNAIL_LAYOUT", False)
+                or (
+                    config_dict.get("THUMBNAIL_LAYOUT", "")
+                    if "THUMBNAIL_LAYOUT" not in self.user_dict
+                    else ""
+                )
+            )
 
     async def proceed_extract(self, path, gid):
         """Extract archive files."""

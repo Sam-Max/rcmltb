@@ -239,6 +239,66 @@ YT_HELP_DICT = {
     "Quality": quality,
     "Options": options,
     "Multi": multi,
+    "Upload-Dest": """<b>Upload Destination:</b>
+
+<code>/cmd</code> link -up rcl: (interactive rclone selector)
+<code>/cmd</code> link -up gd: (interactive gdrive selector)
+<code>/cmd</code> link -up remote:path (rclone path)
+<code>/cmd</code> link -up gdrive_id (gdrive folder id)
+""",
+    "Rclone-Flags": """<b>Rclone Flags:</b>
+
+<code>/cmd</code> link -rcf --buffer-size 256M|--drive-chunk-size 512M
+
+Note: Separate flags with |
+""",
+    "Split-Size": """<b>Split Size:</b>
+
+<code>/cmd</code> link -sp 500m
+<code>/cmd</code> link -sp 2g
+
+Sets custom split size for leech uploads.
+""",
+    "Name-Sub": """<b>Name Substitute:</b>
+
+<code>/cmd</code> link -ns "old1:new1|old2:new2"
+
+Replaces text in filenames before upload.
+""",
+    "Thumb": """<b>Thumbnail:</b>
+
+<code>/cmd</code> link -t path/to/thumb.jpg
+
+Upload with custom thumbnail.
+""",
+    "Leech-Type": """<b>Leech Type:</b>
+
+<code>/cmd</code> link -doc (send as document)
+<code>/cmd</code> link -med (send as media)
+
+Overrides default leech mode (document/media).
+""",
+    "TG-Transmission": """<b>Telegram Transmission:</b>
+
+<code>/cmd</code> link -ut (upload via user session, 4GB for premium)
+<code>/cmd</code> link -bt (upload via bot session, 2GB limit)
+
+Controls which Telegram session uploads the files.
+""",
+    "Hybrid-Leech": """<b>Hybrid Leech:</b>
+
+<code>/cmd</code> link -hl
+
+Uses bot for files ≤2GB and userbot for files >2GB.
+Requires premium user session.
+""",
+    "Force-Start": """<b>Force Start:</b>
+
+<code>/cmd</code> link -f (force start: bypass both download and upload queue)
+<code>/cmd</code> link -fd (force download only: bypass download queue)
+<code>/cmd</code> link -fu (force upload only: bypass upload queue)
+""",
+    "Same-Directory": same_multi,
 }
 
 BATCH_HELP_DICT = {
