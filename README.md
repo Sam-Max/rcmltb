@@ -49,7 +49,7 @@ An **asynchronous** Telegram bot for transferring files between cloud storage se
 |---------|-------------|
 | **Queue System** | Advanced queuing with `QUEUE_ALL`, `QUEUE_DOWNLOAD`, `QUEUE_UPLOAD` limits |
 | **RSS Feed** | Monitor feeds with size detection, retry logic, and forum topic support |
-| **Private Channels** | Mirror/leech from private Telegram channels (`/pmirror`, `/pleech`) |
+| **Private Channels** | Mirror/leech from private Telegram channels |
 | **Upload Templates** | Dynamic paths with variables like `{username}`, `{date}`, `{category}` |
 | **MediaInfo** | Detailed media file analysis with `/mediainfo` |
 | **Screenshots** | User-configurable screenshot generation |
