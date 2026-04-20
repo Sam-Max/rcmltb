@@ -23,26 +23,29 @@ from bot.helper.ext_utils.rclone_data_holder import get_rclone_data, update_rclo
 
 
 async def is_remote_selected(user_id, message, open_selector=False):
-    if await CustomFilters.sudo_filter("", message):
-        if DEFAULT_OWNER_REMOTE := config_dict["DEFAULT_OWNER_REMOTE"]:
-            update_rclone_data("MIRROR_SELECT_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
-            return True
-    if config_dict["MULTI_RCLONE_CONFIG"]:
-        if get_rclone_data("MIRROR_SELECT_REMOTE", user_id):
-            return True
-        elif len(remotes_multi) > 0:
-            return True
-        else:
-            if open_selector:
-                await list_remotes(message, menu_type=Menus.MIRROR_SELECT)
+    try:
+        if await CustomFilters.sudo_filter("", message):
+            if DEFAULT_OWNER_REMOTE := config_dict["DEFAULT_OWNER_REMOTE"]:
+                update_rclone_data("MIRROR_SELECT_REMOTE", DEFAULT_OWNER_REMOTE, user_id)
+                return True
+        if config_dict["MULTI_RCLONE_CONFIG"]:
+            if get_rclone_data("MIRROR_SELECT_REMOTE", user_id):
+                return True
+            elif len(remotes_multi) > 0:
+                return True
             else:
-                await sendMessage(
-                    f"Select a cloud first, use /{BotCommands.MirrorSelectCommand[0]}",
-                    message,
-                )
-            return False
-    else:
-        return True
+                if open_selector:
+                    await list_remotes(message, menu_type=Menus.MIRROR_SELECT)
+                else:
+                    await sendMessage(
+                        f"Select a cloud first, use /{BotCommands.MirrorSelectCommand[0]}",
+                        message,
+                    )
+                return False
+        else:
+            return True
+    except NotRclonePathFound:
+        return False
 
 
 async def is_rclone_config(user_id, message, isLeech=False, show_prompt=False):

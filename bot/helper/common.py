@@ -58,6 +58,8 @@ class TaskConfig:
         self.force_run = False
         self.stop_duplicate = False
         self.up_dest = ""
+        self.user_transmission = False
+        self.bot_transmission = False
 
     async def clean(self):
         try:

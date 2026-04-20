@@ -1,6 +1,8 @@
 from asyncio import sleep, TimeoutError
 from bot import DOWNLOAD_DIR, app, bot
 from bot.helper.ext_utils.help_messages import BATCH_HELP_DICT
+from bot.helper.ext_utils.links_utils import is_telegram_link, get_tg_link_message
+from bot.helper.ext_utils.exceptions import TgLinkException
 from pyrogram.errors import FloodWait
 from pyrogram import filters
 from pyrogram.types import LinkPreviewOptions
@@ -147,26 +149,24 @@ async def download(message, link, multi, isLeech, value=0):
 
     path = f"{DOWNLOAD_DIR}{listener.uid}/"
 
-    if "t.me/c/" in link:
-        if not app:
-            await sendMessage("⚠️ <b>You need to set USER_SESSION_STRING!!</b>", message)
-            return
+    if is_telegram_link(link):
         try:
-            client = app
-            chat = int("-100" + link.split("/")[-2])
-            msg = await app.get_messages(chat, msg_id)
-        except Exception:
-            await sendMessage("Make sure you joined the channel!!", message)
+            msg, client = await get_tg_link_message(link)
+        except TgLinkException as e:
+            await sendMessage(str(e), message)
             return
     else:
         client = bot
         chat = link.split("/")[-2]
-        msg = await bot.get_messages(chat, msg_id)
-        if msg.empty:
+        try:
+            msg = await bot.get_messages(chat, msg_id)
+        except Exception:
+            msg = None
+        if msg is None or getattr(msg, 'empty', True):
             if app:
-                client = app
                 try:
                     msg = await app.get_messages(chat, msg_id)
+                    client = app
                 except Exception:
                     await sendMessage("⚠️ <b>Make sure you joined the channel!!</b>", message)
                     return
@@ -187,6 +187,10 @@ async def download(message, link, multi, isLeech, value=0):
         or msg.animation
         or None
     )
+
+    if client != bot:
+        listener.isSuperGroup = True
+        listener.user_transmission = True
 
     await TelegramDownloader(file, client, listener, path).download()
 

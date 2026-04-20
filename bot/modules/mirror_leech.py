@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from bot import DOWNLOAD_DIR, OWNER_ID, bot, config_dict, user_data
+from bot import DOWNLOAD_DIR, OWNER_ID, bot, app, config_dict, user_data, IS_PREMIUM_USER
 from asyncio import TimeoutError, sleep
 from bot.modules.queue import conditional_queue_add
 from pyrogram import filters
@@ -13,13 +13,15 @@ from bot.helper.ext_utils.bot_utils import (
     is_gdrive_link,
     is_magnet,
     is_url,
+    is_telegram_link,
     new_task,
     run_sync_to_async,
 )
 from bot.helper.mirror_leech_utils.download_utils.direct_link_generator import (
     direct_link_generator,
 )
-from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, TgLinkException
+from bot.helper.ext_utils.links_utils import get_tg_link_message
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.help_messages import MIRROR_HELP_DICT
 from bot.helper.ext_utils.menu_utils import Menus
@@ -58,7 +60,6 @@ async def handle_mirror(client, message):
 
 
 async def handle_jd_mirror(client, message):
-    """Handle JDownloader mirror command."""
     from bot.core.jdownloader_booter import jdownloader
 
     if not jdownloader.is_connected:
@@ -68,12 +69,10 @@ async def handle_jd_mirror(client, message):
         )
         return
 
-    # Force download mode (not leech) for JDownloader
     await mirror_leech(client, message, isLeech=False, sameDir=None, isJD=True)
 
 
 async def handle_jd_leech(client, message):
-    """Handle JDownloader leech command."""
     from bot.core.jdownloader_booter import jdownloader
 
     if not jdownloader.is_connected:
@@ -83,7 +82,6 @@ async def handle_jd_leech(client, message):
         )
         return
 
-    # Force leech mode for JDownloader
     await mirror_leech(client, message, isLeech=True, sameDir=None, isJD=True)
 
 
@@ -118,8 +116,9 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None, isJD=False)
     file = None
     seed_time = None
     ratio = None
+    user_trans = args.user_transmission
+    bot_trans = args.bot_transmission
 
-    # Apply name substitution if configured
     user_dict = user_data.get(user_id, {})
     name_sub = user_dict.get("name_sub") or config_dict.get("NAME_SUBSTITUTE", "")
     if name_sub and name:
@@ -168,6 +167,35 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None, isJD=False)
     else:
         tag = message.from_user.mention
 
+    listener = TaskListener(
+        message,
+        tag,
+        user_id,
+        compress,
+        extract,
+        select,
+        seed,
+        isLeech,
+        screenshots,
+        sameDir,
+    )
+
+    # Handle transmission flags
+    if bot_trans:
+        listener.user_transmission = False
+        listener.bot_transmission = True
+    elif user_trans:
+        if IS_PREMIUM_USER and app:
+            listener.user_transmission = True
+            listener.bot_transmission = False
+        else:
+            listener.user_transmission = False
+
+    # Determine download client (bot or userbot) and resolve telegram links
+    download_client = client
+    tg_link_resolved = False
+
+    # Check for reply-to-message with a file
     if reply_message := message.reply_to_message:
         file = (
             reply_message.document
@@ -191,6 +219,35 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None, isJD=False)
             link = await reply_message.download()
             file = None
 
+    # Resolve telegram links via userbot auto-detection
+    if is_telegram_link(link):
+        try:
+            msg, tg_client = await get_tg_link_message(link)
+        except TgLinkException as e:
+            await sendMessage(str(e), message)
+            return
+        tg_file = (
+            msg.document
+            or msg.video
+            or msg.audio
+            or msg.photo
+            or msg.voice
+            or msg.video_note
+            or msg.sticker
+            or msg.animation
+            or None
+        )
+        if tg_file is None:
+            await sendMessage("❌ <b>No file found in the Telegram link!</b>", message)
+            return
+        file = tg_file
+        download_client = tg_client
+        tg_link_resolved = True
+        if tg_client != client:
+            listener.isSuperGroup = True
+            listener.user_transmission = True
+        link = ""
+
     if (
         not is_url(link)
         and not is_magnet(link)
@@ -204,7 +261,9 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None, isJD=False)
         not is_magnet(link)
         and not is_gdrive_link(link)
         and not link.endswith(".torrent")
+        and not is_telegram_link(link)
         and file is None
+        and not tg_link_resolved
     ):
         content_type = await get_content_type(link)
         if content_type is None or re_match(r"text/html|text/plain", content_type):
@@ -214,19 +273,6 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None, isJD=False)
                 if str(e).startswith("ERROR:"):
                     await sendMessage(str(e), message)
                     return
-
-    listener = TaskListener(
-        message,
-        tag,
-        user_id,
-        compress,
-        extract,
-        select,
-        seed,
-        isLeech,
-        screenshots,
-        sameDir,
-    )
 
     # Check queue limits for downloads
     is_queued, event = await check_running_tasks(listener, state="dl")
@@ -243,8 +289,7 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None, isJD=False)
         if reply_message and not multi:
             buttons = ButtonMaker()
             file_name = file.file_name if hasattr(file, "file_name") else "None"
-            # Apply name substitution
-            if name_sub:
+            if name_sub and not tg_link_resolved:
                 file_name = apply_name_substitute(file_name, name_sub)
             msg = "📝 <b>Which name do you want to use?</b>\n\n"
             msg += f"<b>Name</b>: <code>{file_name}</code>\n\n"
@@ -253,14 +298,13 @@ async def mirror_leech(client, message, isLeech=False, sameDir=None, isJD=False)
             buttons.cb_buildbutton("✏️ Rename", "mirrormenu^rename")
             buttons.cb_buildbutton("ℹ️ Mirror Commands", "mirrormenu^commands")
             buttons.cb_buildbutton("✘ Close Menu", "mirrormenu^close", "footer")
-            listener_dict[message_id] = [listener, file, message, isLeech, user_id, ""]
+            listener_dict[message_id] = [listener, file, message, isLeech, user_id, "", download_client]
             await sendMarkup(msg, message, reply_markup=buttons.build_menu(2))
         else:
-            # Apply name substitution to custom name for Telegram downloads
             tg_name = name
             if name_sub and tg_name:
                 tg_name = apply_name_substitute(tg_name, name_sub)
-            tgdown = TelegramDownloader(file, client, listener, f"{path}/", tg_name)
+            tgdown = TelegramDownloader(file, download_client, listener, f"{path}/", tg_name)
             await conditional_queue_add(message, tgdown.download)
     elif is_gdrive_link(link):
         await conditional_queue_add(
@@ -299,8 +343,9 @@ async def mirror_menu(client, query):
     file = info[1]
     message = info[2]
     is_Leech = info[3]
+    download_client = info[6] if len(info) > 6 else client
 
-    if int(info[-2]) != user_id:
+    if int(info[4]) != user_id:
         await query.answer("⛔ This menu is not for you!", show_alert=True)
         return
     elif cmd[1] == "default":
@@ -309,7 +354,7 @@ async def mirror_menu(client, query):
             await list_remotes(message, menu_type=Menus.REMOTE_SELECT)
         else:
             tgdown = TelegramDownloader(
-                file, client, listener, f"{DOWNLOAD_DIR}{listener.uid}/"
+                file, download_client, listener, f"{DOWNLOAD_DIR}{listener.uid}/"
             )
             await conditional_queue_add(message, tgdown.download)
     elif cmd[1] == "rename":
@@ -332,7 +377,7 @@ async def mirror_menu(client, query):
                     else:
                         tgdown = TelegramDownloader(
                             file,
-                            client,
+                            download_client,
                             listener,
                             f"{DOWNLOAD_DIR}{listener.uid}/",
                             new_name,
@@ -362,8 +407,9 @@ async def mirror_select(client, callback_query):
     listener = info[0]
     file = info[1]
     new_name = info[5]
+    download_client = info[6] if len(info) > 6 else client
 
-    if int(info[-2]) != user_id:
+    if int(info[4]) != user_id:
         await query.answer("⛔ This menu is not for you!", show_alert=True)
         return
     elif cmd[1] == "remote":
@@ -374,7 +420,7 @@ async def mirror_select(client, callback_query):
         if user_id == OWNER_ID:
             config_dict.update({"DEFAULT_OWNER_REMOTE": cmd[2]})
         tgdown = TelegramDownloader(
-            file, client, listener, f"{DOWNLOAD_DIR}{listener.uid}/", new_name
+            file, download_client, listener, f"{DOWNLOAD_DIR}{listener.uid}/", new_name
         )
         await conditional_queue_add(message, tgdown.download)
     elif cmd[1] == "close":
@@ -427,6 +473,8 @@ parser.add_argument("-ap", nargs="?", default=None, dest="auth_pswd")
 parser.add_argument("-e", nargs="?", default=None, const="", dest="extractPswd")
 parser.add_argument("-z", nargs="?", default=None, const="", dest="zipPswd")
 parser.add_argument("-ss", nargs="?", default=None, dest="screenshots", type=int)
+parser.add_argument("-ut", action="store_true", default=False, dest="user_transmission")
+parser.add_argument("-bt", action="store_true", default=False, dest="bot_transmission")
 
 
 bot.add_handler(

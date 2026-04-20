@@ -140,7 +140,6 @@ def add_handlers():
         mirror_select,
         myfilesset,
         owner_settings,
-        pmirror,
         rcfm,
         stats,
         status,

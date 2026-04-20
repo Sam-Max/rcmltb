@@ -44,7 +44,15 @@ class TelegramUploader:
         self._last_uploaded = 0
         self._iteration = 0
         self.__user_id = listener.message.from_user.id
-        self.client = app if app else bot
+        self.__user_session = False
+        if IS_PREMIUM_USER and app:
+            if listener.user_transmission:
+                self.__user_session = True
+            elif listener.bot_transmission:
+                self.__user_session = False
+            else:
+                self.__user_session = listener.isSuperGroup
+        self.client = app if self.__user_session else bot
         self.__upload_path = ""
         self.__sent_msg = None
 
@@ -53,6 +61,13 @@ class TelegramUploader:
         if not res:
             return
         self.__user_settings()
+        hybrid_leech = (
+            IS_PREMIUM_USER
+            and app
+            and self.__listener.user_transmission
+            and not self.__listener.bot_transmission
+            and self.__listener.isSuperGroup
+        )
         if await aiopath.isdir(self.__path):
             for dirpath, _, filenames in sorted(walk(self.__path)):
                 if dirpath.endswith("/yt-dlp-thumb"):
@@ -87,6 +102,21 @@ class TelegramUploader:
                         continue
                     if self.__is_cancelled:
                         return
+                    if hybrid_leech:
+                        if f_size > 2097152000:
+                            self.__user_session = True
+                            self.client = app
+                            self.__sent_msg = await app.get_messages(
+                                chat_id=self.__listener.message.chat.id,
+                                message_ids=self.__listener.uid,
+                            )
+                        else:
+                            self.__user_session = False
+                            self.client = bot
+                            self.__sent_msg = await bot.get_messages(
+                                chat_id=self.__listener.message.chat.id,
+                                message_ids=self.__listener.uid,
+                            )
                     self._last_uploaded = 0
                     await self.__prepare_file(file, dirpath)
                     await self.__upload_file(self.__upload_path, file)
@@ -327,10 +357,10 @@ class TelegramUploader:
         self.__processed_bytes += chunk_size
 
     async def __msg_to_reply(self):
-        if IS_PREMIUM_USER:
+        if self.__user_session:
             if not self.__listener.isSuperGroup:
                 await self.__listener.onUploadError(
-                    "Use supergroup to leech with user_session_string"
+                    "Use supergroup to leech with user_transmission!"
                 )
                 return False
             self.__sent_msg = await app.get_messages(

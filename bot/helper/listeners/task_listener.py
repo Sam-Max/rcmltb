@@ -14,6 +14,7 @@ from bot import (
     user_data,
     config_dict,
 )
+from bot.core.telegram_manager import TgClient
 from bot.core.torrent_manager import TorrentManager
 from bot.helper.common import TaskConfig
 from bot.helper.ext_utils.bot_utils import cmd_exec
@@ -331,7 +332,11 @@ class TaskListener(TaskConfig):
                         f_path = ospath.join(dirpath, file_)
                         f_size = ospath.getsize(f_path)
                         if f_size > LEECH_SPLIT_SIZE:
-                            from bot import TG_MAX_SPLIT_SIZE
+                            if self.user_transmission:
+                                max_split = TgClient.MAX_SPLIT_SIZE
+                            else:
+                                from bot import TG_MAX_SPLIT_SIZE
+                                max_split = TG_MAX_SPLIT_SIZE
                             if not checked:
                                 checked = True
                                 async with status_dict_lock:
@@ -346,7 +351,7 @@ class TaskListener(TaskConfig):
                             if not res:
                                 return
                             if res == "errored":
-                                if f_size <= TG_MAX_SPLIT_SIZE:
+                                if f_size <= max_split:
                                     continue
                                 else:
                                     try:

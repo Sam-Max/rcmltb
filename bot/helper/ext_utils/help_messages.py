@@ -96,6 +96,30 @@ direct_link = """
 3. <b>By replying to link</b> 
 """
 
+tg_link = """
+<b>Telegram Link</b>
+
+<b>Public:</b> <code>https://t.me/channel_name/message_id</code>
+
+<b>Private:</b> <code>https://t.me/c/1234567890/message_id</code>
+
+<b>Auto-detection:</b> If the bot can't access the link, it automatically falls back to your userbot (requires USER_SESSION_STRING).
+
+<b>Upload flags:</b>
+- <code>-ut</code> → Upload via userbot (premium, 4GB limit)
+- <code>-bt</code> → Upload via bot (2GB limit, default)
+"""
+
+userbot = """
+<b>User Transmission</b>
+
+<code>/cmd</code> link -ut <b>(upload via userbot, 4GB for premium)</b>
+
+<code>/cmd</code> link -bt <b>(upload via bot, 2GB limit)</b>
+
+<b>Note:</b> -ut requires USER_SESSION_STRING and a supergroup. Files >2GB are automatically uploaded via userbot when -ut is used (hybrid leech).
+"""
+
 torr_select = """
 <b>Bittorrent selection:</b>  
 
@@ -225,6 +249,8 @@ MIRROR_HELP_DICT = {
     "🌱Seeding": torr_seed,
     "🎯TorrentSelect": torr_select,
     "🖼️Screenshots": screenshots,
+    "📡Telegram": tg_link,
+    "👤UserTrans": userbot,
 }
 
 LEECH_HELP_DICT = {
@@ -238,6 +264,8 @@ LEECH_HELP_DICT = {
     "Seed": torr_seed.replace("<code>/cmd</code>", ""),
     "Select": torr_select.replace("<code>/cmd</code>", ""),
     "Screenshot": screenshots.replace("<code>/cmd</code>", ""),
+    "Telegram": tg_link.replace("<code>/cmd</code>", ""),
+    "UserTrans": userbot.replace("<code>/cmd</code>", ""),
 }
 
 YT_HELP_DICT = {

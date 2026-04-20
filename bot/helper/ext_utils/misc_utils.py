@@ -1,4 +1,5 @@
 from asyncio import create_subprocess_exec
+import inspect
 from shutil import rmtree
 from aiohttp import ClientSession
 from bot.helper.ext_utils.bot_utils import (
@@ -456,7 +457,15 @@ def bt_selection_buttons(id_):
 async def getTaskByGid(gid):
     async with status_dict_lock:
         for dl in status_dict.values():
-            if await dl.gid() == gid:
+            attr = dl.gid
+            if callable(attr):
+                result = attr()
+                if inspect.iscoroutine(result):
+                    result = await result
+                dl_gid = result
+            else:
+                dl_gid = attr
+            if dl_gid == gid:
                 return dl
     return None
 
